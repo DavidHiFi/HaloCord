@@ -168,7 +168,7 @@ export default definePlugin({
     name: "CustomStreamPreview",
     description: "Set a custom image as your Discord stream preview.",
     tags: ["Voice", "Utility"],
-    authors: [{ name: "Testcord", id: 0n }],
+    authors: [{ name: "MochaCord", id: 0n }],
     dependencies: ["UserAreaAPI"],
     aliases: ["CustomScreenSharePreview"],
 

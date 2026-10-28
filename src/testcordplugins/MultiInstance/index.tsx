@@ -912,7 +912,7 @@ const MultiInstanceButtonWithBoundary = ErrorBoundary.wrap(MultiInstanceButton, 
 export default definePlugin({
     id: "MultiInstance",
     name: "MultiInstance",
-    description: "Opens extra Testcord windows with separate Discord sessions.",
+    description: "Opens extra MochaCord windows with separate Discord sessions.",
     authors: [{ name: "irritably", id: 928787166916640838n }],
     tags: ["Utility"],
     dependencies: ["HeaderBarAPI"],

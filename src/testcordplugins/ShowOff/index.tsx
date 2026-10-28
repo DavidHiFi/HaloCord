@@ -18,7 +18,7 @@ const logger = new Logger("ShowOff");
 const WIDTH = 1200;
 const HEIGHT = 630;
 const LOOK_FILENAME = "testcord-look.png";
-const CAPTION = "Check out my Testcord look! ✨";
+const CAPTION = "Check out my MochaCord look! ✨";
 
 async function loadImageCors(url: string): Promise<HTMLImageElement | null> {
     return new Promise(resolve => {
@@ -113,7 +113,7 @@ async function renderCard(): Promise<Blob | null> {
     ctx.fillText(`@${me.username}`, WIDTH / 2, 340);
 
     // Pill badge for Testcord
-    const pillText = "Testcord Client Mod";
+    const pillText = "MochaCord Client Mod";
     ctx.font = "600 22px sans-serif";
     const pw = ctx.measureText(pillText).width + 48;
     const px = (WIDTH - pw) / 2;
@@ -134,7 +134,7 @@ async function renderCard(): Promise<Blob | null> {
     // Footer
     ctx.font = "500 20px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-    ctx.fillText("Generated with Testcord ShowOff", WIDTH / 2, HEIGHT - 40);
+    ctx.fillText("Generated with MochaCord ShowOff", WIDTH / 2, HEIGHT - 40);
 
     return new Promise(resolve => canvas.toBlob(resolve, "image/png"));
 }

@@ -48,7 +48,7 @@ const settings = definePluginSettings({
         default: "",
         // git runs in the main process, so mirror it into the store that side reads
         async onChange(value) {
-            await Native.setGitPath(value);
+            await Native?.setGitPath(value);
         }
     },
     checkGit: {
@@ -212,6 +212,8 @@ export default definePlugin({
     startAt: StartAt.WebpackReady,
 
     start() {
+        // The web build has no native helpers, so there is no git and no UserPlugins tab to show.
+        if (!Native) return;
         if (!SettingsPlugin.customEntries.some(entry => entry.key === "vencord_userplugins")) {
             SettingsPlugin.customEntries.push({
                 key: "vencord_userplugins",
@@ -248,6 +250,7 @@ export default definePlugin({
     },
 
     renderMessageAccessory: props => {
+        if (!Native) return null;
         const { allowlistedChannels } = settings.plain;
         if (allowlistedChannels && !listed(allowlistedChannels).includes(props.message.channel_id)) return null;
 

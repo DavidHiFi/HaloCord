@@ -81,7 +81,7 @@ export const PluginTags = [
     "loader",
     "experimental",
     "legacy",
-    "Testcord Modified"
+    "MochaCord Modified"
 ] as const;
 
 export type PluginTag = typeof PluginTags[number];

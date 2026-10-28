@@ -16,7 +16,7 @@ function isEnabled() {
 }
 
 function getPreloadPath() {
-    const preloadDir = join(app.getPath("userData"), "Testcord");
+    const preloadDir = join(app.getPath("userData"), "MochaCord");
     if (!existsSync(preloadDir)) mkdirSync(preloadDir, { recursive: true });
     return join(preloadDir, PRELOAD_FILENAME);
 }

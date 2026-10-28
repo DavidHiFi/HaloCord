@@ -684,12 +684,12 @@ export const settings = definePluginSettings({
     },
     pronounsBadge: {
         type: OptionType.BOOLEAN,
-        description: "Show the Testcord badge by adding a hidden marker to your pronouns. Turn off to remove it.",
+        description: "Show the MochaCord badge by adding a hidden marker to your pronouns. Turn off to remove it.",
         default: true,
     },
     CarefulNetwork: {
         type: OptionType.BOOLEAN,
-        description: "Dedupe and briefly cache repeated Testcord plugin network requests.",
+        description: "Dedupe and briefly cache repeated MochaCord plugin network requests.",
         default: false,
     },
     iconColorSettings: {
@@ -740,7 +740,7 @@ export const settings = definePluginSettings({
     },
     performanceCarefulNetwork: {
         type: OptionType.BOOLEAN,
-        description: "Use Testcord's request coordinator for supported plugin requests without changing Discord payloads.",
+        description: "Use MochaCord's request coordinator for supported plugin requests without changing Discord payloads.",
         default: false,
     },
     performanceBoundRequestCache: {
@@ -756,7 +756,7 @@ export const settings = definePluginSettings({
     },
     performanceDisablePluginCards: {
         type: OptionType.BOOLEAN,
-        description: "Do not render Testcord plugin cards under chat messages.",
+        description: "Do not render MochaCord plugin cards under chat messages.",
         default: false,
     },
     disableProfilePopoutEmbeds: {
@@ -776,7 +776,7 @@ export const settings = definePluginSettings({
     },
     performanceNetworkOptimizations: {
         type: OptionType.BOOLEAN,
-        description: "Reduce network requests across Testcord plugins: share and dedupe repeated message fetches, cache immutable resources, warm up the connection, and parallelize independent requests. No change to what Discord receives.",
+        description: "Reduce network requests across MochaCord plugins: share and dedupe repeated message fetches, cache immutable resources, warm up the connection, and parallelize independent requests. No change to what Discord receives.",
         default: false,
     },
     performanceAggressiveNetwork: {
@@ -961,7 +961,7 @@ async function buildDebugReport() {
     const platform = IS_DISCORD_DESKTOP ? "Windows" : IS_WEB ? "Web" : "Unknown";
 
     const info = {
-        Testcord: `v${(globalThis as any).VERSION} • ${gitHashShort} — ${Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format((globalThis as any).BUILD_TIMESTAMP)}`,
+        MochaCord: `v${(globalThis as any).VERSION} • ${gitHashShort} — ${Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format((globalThis as any).BUILD_TIMESTAMP)}`,
         Client: `${RELEASE_CHANNEL} ~ ${client}`,
         Platform: platform,
         "JS Memory": getMemoryUsage(),
@@ -972,7 +972,7 @@ async function buildDebugReport() {
     const flags = {
         "Activity Sharing Disabled": tryOrElse(() => !ShowCurrentGame.getSetting(), false),
         "Link Embeds Disabled": tryOrElse(() => !RenderEmbeds.getSetting(), false),
-        "TestCord DevBuild": !IS_STANDALONE,
+        "MochaCord DevBuild": !IS_STANDALONE,
         "Equibop DevBuild": IS_EQUIBOP && tryOrElse(() => VesktopNative.app.isDevBuild?.(), false),
         "Platform Spoofed": (IS_EQUIBOP && tryOrElse(() => VesktopNative.app.getPlatformSpoofInfo?.(), null)?.spoofed) ?? false,
         ">2 Weeks Outdated": (globalThis as any).BUILD_TIMESTAMP < Date.now() - 12096e5,
@@ -1081,7 +1081,7 @@ function ChatPluginCard({ pluginName, description }: { pluginName: string; descr
     if (excludedPlugin || !p) {
         const toolTipText = excludedPlugin
             ? `${pluginName} is only available on the ${ExcludedReasons[ExcludedPlugins[pluginName]]}`
-            : "This plugin is not on this version of Testcord. Try updating!";
+            : "This plugin is not on this version of MochaCord. Try updating!";
 
         const card = (
             <AddonCard
@@ -1108,7 +1108,7 @@ function ChatPluginCard({ pluginName, description }: { pluginName: string; descr
 
     if (required) {
         const tooltipText = p.required || !dependents.length
-            ? "This plugin is required for Testcord to function."
+            ? "This plugin is required for MochaCord to function."
             : <PluginDependencyList deps={dependents} />;
 
         return (
@@ -1932,7 +1932,7 @@ let hotkeyHandler: ((e: KeyboardEvent) => void) | null = null;
 export default definePlugin({
     id: "TestcordHelper",
     name: "TestcordHelper",
-    description: "Helper plugin for Testcord features, including custom badge management, debug reporting, and plugin info cards.",
+    description: "Helper plugin for MochaCord features, including custom badge management, debug reporting, and plugin info cards.",
     tags: ["Utility", "Developers"],
     authors: [{ name: "x2b", id: 996137713432530976n }],
     required: true,

@@ -231,8 +231,8 @@ showToast(msg, Toasts.Type.FAILURE, {
         {
             condition: isTestcordPlugin,
             src: TestcordPluginIconUrl,
-            alt: "Testcord",
-            title: "Testcord Plugin"
+            alt: "MochaCord",
+            title: "MochaCord Plugin"
         },
         {
             condition: isBDPlugin,
@@ -259,8 +259,8 @@ showToast(msg, Toasts.Type.FAILURE, {
     const maxVisibleTags = warning ? 1 : 2;
     const tags = React.useMemo(() => {
         const list = [...(plugin.tags ?? [])];
-        if (isTestcordMod && !list.includes("Testcord Modified")) {
-            list.unshift("Testcord Modified");
+        if (isTestcordMod && !list.includes("MochaCord Modified")) {
+            list.unshift("MochaCord Modified");
         }
         return list;
     }, [plugin.tags, isTestcordMod]);

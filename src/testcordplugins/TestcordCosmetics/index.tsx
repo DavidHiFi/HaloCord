@@ -31,7 +31,7 @@ interface MessageContext {
 const HEX_RE = /^#[0-9a-f]{6}$/i;
 
 const PRESETS: Array<{ name: string; color1: string; color2: string; }> = [
-    { name: "Testcord", color1: "#8855FF", color2: "#00DDFF" },
+    { name: "MochaCord", color1: "#8855FF", color2: "#00DDFF" },
     { name: "Sunset", color1: "#FF7A59", color2: "#FFD46B" },
     { name: "Ocean", color1: "#58B9FF", color2: "#6BFFE3" },
     { name: "Lilac", color1: "#B58CFF", color2: "#FF8AC4" },

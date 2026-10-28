@@ -591,7 +591,7 @@ async function uptimeCommand(ctx: RemoteContext) {
     await replyInfo(ctx, [
         `⏱ Client up for ${formatDuration(performance.now(), true)}.`,
         `Plugin up for ${formatDuration(Date.now() - startedAt, true)}.`,
-        `Signed in as ${user.username} · Testcord ${VERSION}.`
+        `Signed in as ${user.username} · MochaCord ${VERSION}.`
     ].join("\n"));
 }
 

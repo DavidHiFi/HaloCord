@@ -22,12 +22,12 @@ const MAX_JSON_BYTES = 16 * 1024;
 const settings = definePluginSettings({
     shareMyActivity: {
         type: OptionType.BOOLEAN,
-        description: "Share my game and music status so my other Testcord windows can show it.",
+        description: "Share my game and music status so my other MochaCord windows can show it.",
         default: true
     },
     mirrorActivities: {
         type: OptionType.BOOLEAN,
-        description: "Show status shared by my other Testcord windows on this account.",
+        description: "Show status shared by my other MochaCord windows on this account.",
         default: true
     },
     onlyMusic: {
@@ -303,7 +303,7 @@ async function tick() {
 export default definePlugin({
     id: "RpcMirror",
     name: "RpcMirror",
-    description: "Share your Rich Presence with your other Testcord windows, so alts show the same music and game status as your main.",
+    description: "Share your Rich Presence with your other MochaCord windows, so alts show the same music and game status as your main.",
     authors: [TestcordDevs.x2b],
     tags: ["Activity", "Utility"],
     settings,

@@ -24,7 +24,7 @@ const PAUSE_GRACE_MS = 30_000;
 const settings = definePluginSettings({
     recolorThemes: {
         type: OptionType.BOOLEAN,
-        description: "Also recolor brand tokens and theme accent variables, not just Testcord panels",
+        description: "Also recolor brand tokens and theme accent variables, not just MochaCord panels",
         default: true
     }
 });
@@ -166,7 +166,7 @@ async function update() {
 export default definePlugin({
     id: "LivingAccent",
     name: "LivingAccent",
-    description: "Testcord's accent colour follows the album art of whatever you are playing on Spotify.",
+    description: "MochaCord's accent colour follows the album art of whatever you are playing on Spotify.",
     authors: [TestcordDevs.sirphantom89],
     tags: ["Appearance"],
     settings,

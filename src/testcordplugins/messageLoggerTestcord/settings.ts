@@ -169,7 +169,7 @@ export const settings = definePluginSettings({
     },
     imageCacheDir: {
         type: OptionType.STRING,
-        description: "Folder for saved attachments. Empty uses Testcord's data folder. Pick with the button below.",
+        description: "Folder for saved attachments. Empty uses MochaCord's data folder. Pick with the button below.",
         default: ""
     },
     chooseImageCacheDir: {

@@ -66,7 +66,7 @@ function VencordPopoutButton() {
                             e.stopPropagation();
                             setShow(prev => !prev);
                         }}
-                        tooltip="Testcord Toolbox"
+                        tooltip="MochaCord Toolbox"
                         icon={Icon}
                         selected={isShown}
                     />
@@ -80,7 +80,7 @@ migratePluginSettings("TestcordToolbox", "EquicordToolbox");
 export default definePlugin({
     id: "TestcordToolbox",
     name: "TestcordToolbox",
-    description: "Adds a button next to the inbox button in the channel header that houses Testcord quick actions",
+    description: "Adds a button next to the inbox button in the channel header that houses MochaCord quick actions",
     tags: ["Voice", "Accessibility"],
     authors: [Devs.Ven, Devs.AutumnVN],
     dependencies: ["HeaderBarAPI"],

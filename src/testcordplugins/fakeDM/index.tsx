@@ -1138,7 +1138,7 @@ export default definePlugin({
     name: "FakeDM",
     description: "Injects fake local messages and calls into any channel or DM with persistence across client restarts.",
     tags: ["Chat", "Utility"],
-    authors: [{ name: "Testcord", id: 0n }],
+    authors: [{ name: "MochaCord", id: 0n }],
     dependencies: ["ChatInputButtonAPI", "HeaderBarAPI"],
     settings: fakeDMSettings,
 

@@ -12,7 +12,7 @@ import { Button } from "@components/Button";
 import { Divider } from "@components/Divider";
 import { FormSwitch } from "@components/FormSwitch";
 import { Heading } from "@components/Heading";
-import { DiscordIcon, FolderIcon, GithubIcon, LogIcon, PaintbrushIcon, RestartIcon } from "@components/Icons";
+import { FolderIcon, GithubIcon, LogIcon, PaintbrushIcon, RestartIcon } from "@components/Icons";
 import { Notice } from "@components/Notice";
 import { Paragraph } from "@components/Paragraph";
 import { openContributorModal, openPluginModal, SettingsTab, wrapTab } from "@components/settings";
@@ -20,7 +20,6 @@ import { QuickAction, QuickActionCard } from "@components/settings/QuickAction";
 import { SpecialCard } from "@components/settings/SpecialCard";
 import BadgeAPI from "@plugins/_api/badges";
 import SettingsPlugin from "@plugins/_core/settings";
-import { gitRemote } from "@shared/vencordUserAgent";
 import { DONOR_ROLE_ID, EQUICORD_GUILD_ID, IS_WINDOWS, VC_DONOR_ROLE_ID, VC_GUILD_ID } from "@utils/constants";
 import { classNameFactory } from "@utils/css";
 import { Margins } from "@utils/margins";
@@ -55,8 +54,8 @@ function Switches() {
     const Switches = [
         {
             key: "useTestcordIcon",
-            title: "Use TestCord Icon",
-            description: "Replace the standard Discord logo icon with the custom TestCord icon.",
+            title: "Use MochaCord Icon",
+            description: "Replace the standard Discord logo icon with the custom MochaCord icon.",
         },
         {
             key: "useQuickCss",
@@ -185,7 +184,7 @@ function EquicordSettings() {
             ) : (
                 <SpecialCard
                     title="Support the Project"
-                    description="Please consider supporting the development of Testcord by donating!"
+                    description="MochaCord is built and kept running by DavidHiFi. If it helps you, a Ko-fi tip keeps it going."
                     cardImage={donateImage}
                     backgroundImage={DONOR_BACKGROUND_IMAGE}
                     backgroundColor="#c3a3ce"
@@ -193,15 +192,25 @@ function EquicordSettings() {
                     <DonateButtonComponent />
                 </SpecialCard>
             )}
-            {isAnyPluginDev(user?.id) && (
-                <SpecialCard
-                    title="Contributions"
-                    subtitle="Thank you for contributing!"
-                    description="Since you've contributed to Testcord you now have a cool new badge!"
-                    cardImage={COZY_CONTRIB_IMAGE}
-                    backgroundImage={CONTRIB_BACKGROUND_IMAGE}
-                    backgroundColor="#EDCC87"
+            <SpecialCard
+                title="Contributions"
+                subtitle={isAnyPluginDev(user?.id) ? "Thank you for contributing!" : undefined}
+                description="MochaCord takes pull requests on GitHub. Read the contributing guide, then open an issue or a pull request."
+                cardImage={COZY_CONTRIB_IMAGE}
+                backgroundImage={CONTRIB_BACKGROUND_IMAGE}
+                backgroundColor="#EDCC87"
+            >
+                <Button
+                    variant="none"
+                    size="medium"
+                    type="button"
+                    onClick={() => VencordNative.native.openExternal("https://github.com/DavidHiFi/MochaCord-Client/blob/main/CONTRIBUTING.md")}
+                    className="vc-contrib-button"
                 >
+                    <GithubIcon aria-hidden fill={"#000000"} className={"vc-contrib-github"} />
+                    Contribute on GitHub
+                </Button>
+                {isAnyPluginDev(user?.id) && (
                     <Button
                         variant="none"
                         size="medium"
@@ -209,11 +218,10 @@ function EquicordSettings() {
                         onClick={() => openContributorModal(user)}
                         className="vc-contrib-button"
                     >
-                        <GithubIcon aria-hidden fill={"#000000"} className={"vc-contrib-github"} />
                         See what you've contributed to
                     </Button>
-                </SpecialCard>
-            )}
+                )}
+            </SpecialCard>
 
             <Heading className={Margins.top16}>Quick Actions</Heading>
             <Paragraph className={Margins.bottom16}>
@@ -250,16 +258,7 @@ function EquicordSettings() {
                     text="View Source Code"
                     action={() =>
                         VencordNative.native.openExternal(
-                            "https://github.com/" + gitRemote,
-                        )
-                    }
-                />
-                <QuickAction
-                    Icon={DiscordIcon}
-                    text="Discord Server"
-                    action={() =>
-                        VencordNative.native.openExternal(
-                            "https://discord.gg/KTNXyDTXGb",
+                            "https://github.com/DavidHiFi/MochaCord-Client",
                         )
                     }
                 />
@@ -269,7 +268,7 @@ function EquicordSettings() {
 
             <Heading className={Margins.top20}>Client Settings</Heading>
             <Paragraph className={Margins.bottom16}>
-                Configure how Testcord behaves and integrates with Discord. These settings affect the Discord client's appearance and behavior.
+                Configure how MochaCord behaves and integrates with Discord. These settings affect the Discord client's appearance and behavior.
             </Paragraph>
             <Notice.Info className={Margins.bottom20} style={{ width: "100%" }}>
                 You can customize where this settings section appears in Discord's settings menu by configuring the{" "}

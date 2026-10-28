@@ -227,7 +227,7 @@ async function webFetchCordCatQuery(parsedId: string): Promise<NativeCordCatResu
         if (error instanceof TypeError) {
             return {
                 ok: false,
-                error: "CordCat blocked the browser request. DSA lookups need the TestCord browser extension with its network rules loaded, or the desktop app."
+                error: "CordCat blocked the browser request. DSA lookups need the MochaCord browser extension with its network rules loaded, or the desktop app."
             };
         }
         const reason = error instanceof Error ? error.message : String(error);

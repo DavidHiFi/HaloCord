@@ -129,7 +129,7 @@ export async function findLocalTokens(): Promise<string[]> {
     // Exposed over IPC, so any renderer script can call it — make the user confirm.
     const confirm = await dialog.showMessageBox({
         title: "Import local Discord tokens",
-        message: "TestCord is about to read the session tokens of every Discord installation on this computer and hand them to the requesting plugin. Continue?",
+        message: "MochaCord is about to read the session tokens of every Discord installation on this computer and hand them to the requesting plugin. Continue?",
         detail: "Only continue if you initiated this. A token grants full access to the matching Discord account.",
         type: "warning",
         buttons: ["Cancel", "Import tokens"],

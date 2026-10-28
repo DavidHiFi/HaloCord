@@ -9,7 +9,7 @@ import { DataStore } from "@api/index";
 import { settings } from ".";
 
 const SALT = "testcord";
-const CLIENT = "Testcord";
+const CLIENT = "MochaCord";
 const API_VERSION = "1.16.1";
 
 /** Discord application the activity is registered under. */

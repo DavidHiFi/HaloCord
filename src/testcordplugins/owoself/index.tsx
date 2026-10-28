@@ -118,7 +118,7 @@ function toOwoMessage(raw: unknown): OwoMessage | null {
 function OwoAbout() {
     return (
         <Forms.FormText>
-            OwO automation ported from NeuraSelf. Open the dashboard from the channel header button, the Testcord toolbox, or the owoself chat command. Type owoself start, stop, status or dashboard in chat. Extra tokens live under Dashboard, Accounts.
+            OwO automation ported from NeuraSelf. Open the dashboard from the channel header button, the MochaCord toolbox, or the owoself chat command. Type owoself start, stop, status or dashboard in chat. Extra tokens live under Dashboard, Accounts.
         </Forms.FormText>
     );
 }

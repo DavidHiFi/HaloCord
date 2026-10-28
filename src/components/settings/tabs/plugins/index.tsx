@@ -323,13 +323,13 @@ function PluginSettings() {
         for (const plugin of sortedPlugins) {
             const meta = PluginMeta[plugin.name];
             const folder = meta ? meta.folderName : "";
-            const category = folder.startsWith("src/testcordplugins/") ? "Testcord" : folder.startsWith("src/equicordplugins/") ? "Equicord" : folder.startsWith("src/plugins/") ? "Vencord" : "Other";
+            const category = folder.startsWith("src/testcordplugins/") ? "MochaCord" : folder.startsWith("src/equicordplugins/") ? "Equicord" : folder.startsWith("src/plugins/") ? "Vencord" : "Other";
             for (const author of (plugin.authors || [])) {
                 if (!author || !author.name) continue;
                 if (!authors.has(author.name)) authors.set(author.name, { category, github: (author as any).github });
             }
         }
-        const grouped: Record<string, string[]> = { Testcord: [], Equicord: [], Vencord: [], Other: [] };
+        const grouped: Record<string, string[]> = { MochaCord: [], Equicord: [], Vencord: [], Other: [] };
         for (const [name, info] of authors.entries()) grouped[info.category].push(name);
         const result: Array<{ label: string; value: string; github: string; }> = [];
         for (const [cat, names] of Object.entries(grouped)) {
@@ -387,7 +387,7 @@ function PluginSettings() {
         }
 
         if (tags.length && tags.some(t => {
-            if (t === "Testcord Modified") return !isTestcordModified(plugin, PluginMeta[plugin.name]?.folderName);
+            if (t === "MochaCord Modified") return !isTestcordModified(plugin, PluginMeta[plugin.name]?.folderName);
             return !plugin.tags?.includes(t);
         })) return false;
 
@@ -477,7 +477,7 @@ function PluginSettings() {
 
     const requiredPlugins = useMemo(() => requiredPluginDefs.map(p => {
         const tooltipText = p.required || !depMap[p.name]
-            ? "This plugin is required for Testcord to function."
+            ? "This plugin is required for MochaCord to function."
             : <PluginDependencyList deps={depMap[p.name]?.filter(d => settings.plugins[d].enabled)} />;
 
         return (
@@ -657,8 +657,8 @@ function PluginSettings() {
                             { label: "Show Enabled", value: SearchStatus.ENABLED },
                             { label: "Show Disabled", value: SearchStatus.DISABLED },
                             { label: "Show Equicord", value: SearchStatus.EQUICORD },
-                            { label: "Show Testcord", value: SearchStatus.TESTCORD },
-                            { label: "Show Testcord Modified", value: SearchStatus.TESTCORD_MODIFIED },
+                            { label: "Show MochaCord", value: SearchStatus.TESTCORD },
+                            { label: "Show MochaCord Modified", value: SearchStatus.TESTCORD_MODIFIED },
                             { label: "Show Vencord", value: SearchStatus.VENCORD },
                             { label: "Show New", value: SearchStatus.NEW },
                             hasUserPlugins && { label: "Show UserPlugins", value: SearchStatus.USER_PLUGINS },

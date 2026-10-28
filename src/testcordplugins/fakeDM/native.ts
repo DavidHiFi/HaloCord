@@ -11,7 +11,7 @@ import { join } from "path";
 const FAKE_DM_FILE = join(
     app.getPath("userData"),
     "..",
-    "TestCord",
+    "MochaCord",
     "fakeDM.json"
 );
 

@@ -158,7 +158,7 @@ async function runUpdateCheck() {
 
                 openUpdateAvailableModal({
                     commits: changes,
-                    title: "TestCord has updated!",
+                    title: "MochaCord has updated!",
                     confirmText: "View Updates",
                     onConfirm: () => openSettingsTabModal(UpdaterTab!),
                     onUpdate: relaunch,
@@ -173,7 +173,7 @@ async function runUpdateCheck() {
 
         openUpdateAvailableModal({
             commits: changes,
-            title: "A TestCord update is available!",
+            title: "A MochaCord update is available!",
             confirmText: "View Updates",
             onConfirm: () => openSettingsTabModal(UpdaterTab!),
             onUpdate: async () => {
@@ -195,7 +195,7 @@ function initTrayIpc() {
             VencordNative.tray.setUpdateState(isOutdated);
 
             if (isOutdated) {
-                showNotice("A Testcord update is available!", "View Update", () => openSettingsTabModal(UpdaterTab!));
+                showNotice("A MochaCord update is available!", "View Update", () => openSettingsTabModal(UpdaterTab!));
             } else {
                 showNotice("No updates available, you're on the latest version!", "OK", popNotice);
             }
@@ -244,7 +244,7 @@ async function init() {
                 "Webpack has finished initialising, but some patches haven't been applied yet.",
                 "This might be expected since some Modules are lazy loaded, but please verify",
                 "that all plugins are working as intended.",
-                "You are seeing this warning because this is a Development build of TestCord.",
+                "You are seeing this warning because this is a Development build of MochaCord.",
                 "\nThe following patches have not been applied:",
                 "\n\n" + pendingPatches.map(p => `${p.plugin}: ${p.find}`).join("\n")
             );
@@ -338,7 +338,7 @@ window.addEventListener("keydown", e => {
                 winApi.toggleDevTools();
             }
         } catch (err) {
-            console.error("[TestCord] Failed to open DevTools:", err);
+            console.error("[MochaCord] Failed to open DevTools:", err);
         }
     }
 }, true);

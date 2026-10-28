@@ -217,13 +217,13 @@ async function buildReport(asJson: boolean) {
 export default definePlugin({
     id: "testfetch",
     name: "Testfetch",
-    description: "System info card for Testcord, for bug reports",
+    description: "System info card for MochaCord, for bug reports",
     tags: ["Utility", "Developers", "Fun"],
     authors: [TestcordDevs.x2b, TestcordDevs.sirphantom89],
     commands: [
         {
             name: "testfetch",
-            description: "Show your Testcord system info",
+            description: "Show your MochaCord system info",
             inputType: ApplicationCommandInputType.BUILT_IN,
             options: [
                 {

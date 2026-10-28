@@ -76,7 +76,7 @@ function NewPluginsModal({ modalProps, newPlugins, newSettings }: ModalComponent
 
         if (isRequired) {
             const tooltipText = p.required
-                ? "This plugin is required for Testcord to function."
+                ? "This plugin is required for MochaCord to function."
                 : <PluginDependencyList deps={depMap[p.name]?.filter(d => settings.plugins[d].enabled)} />;
 
             requiredPluginCards.push(
@@ -135,7 +135,7 @@ function NewPluginsModal({ modalProps, newPlugins, newSettings }: ModalComponent
                     </BaseText>
                     <br />
                     <Notice.Info className={cl("notice")}>
-                        Testcord is Open Source Software. If you enjoy using it, consider supporting us <Link href="https://ko-fi.com/x2bkaneki" target="_blank" rel="noopener noreferrer">here</Link>.
+                        MochaCord is Open Source Software. If you enjoy using it, consider supporting us <Link href="https://ko-fi.com/x2bkaneki" target="_blank" rel="noopener noreferrer">here</Link>.
                     </Notice.Info>
                 </>
             }

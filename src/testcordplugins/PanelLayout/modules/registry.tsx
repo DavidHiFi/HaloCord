@@ -84,7 +84,7 @@ export const DEFAULT_USER_AREA_ORDER: UserAreaReorderItem[] = [
         id: "dev-banner",
         type: "module",
         name: "Developer Banner",
-        description: "Discord & Testcord client information banner",
+        description: "Discord & MochaCord client information banner",
         order: 2,
         enabled: true,
         installed: true,

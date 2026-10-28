@@ -431,7 +431,7 @@ function TestcordTabsEditor({ tabs }: { tabs: TestcordTabDescriptor[]; }) {
             <div className="vc-testcord-tab-editor-title-row">
                 <div>
                     <div className="vc-testcord-tab-editor-kicker">Settings tabs</div>
-                    <h2 className="vc-testcord-tab-editor-title">Testcord</h2>
+                    <h2 className="vc-testcord-tab-editor-title">MochaCord</h2>
                 </div>
                 <button
                     type="button"
@@ -445,7 +445,7 @@ function TestcordTabsEditor({ tabs }: { tabs: TestcordTabDescriptor[]; }) {
             <div className="vc-testcord-tab-editor-panel" aria-hidden={!isEditing}>
                 <div className="vc-testcord-tab-editor-panel-inner">
                     <div className="vc-testcord-tab-editor-copy">
-                        Choose which tabs stay under Testcord. Hidden tabs are saved and can be added back here anytime.
+                        Choose which tabs stay under MochaCord. Hidden tabs are saved and can be added back here anytime.
                         Changes apply instantly.
                         {hiddenCount > 0 && ` ${hiddenCount} hidden.`}
                     </div>
@@ -596,7 +596,7 @@ function InlineSettingsCategory({ title, Icon, Component }: {
 const settings = definePluginSettings({
     settingsLocation: {
         type: OptionType.SELECT,
-        description: "Where to put the Testcord settings section",
+        description: "Where to put the MochaCord settings section",
         options: [
             { label: "At the very top", value: "top" },
             { label: "Above Billing section", value: "aboveNitro", default: true },
@@ -608,36 +608,36 @@ const settings = definePluginSettings({
     },
     includeVencordInfoWhenCopying: {
         type: OptionType.BOOLEAN,
-        description: "Also copy Testcord info (Testcord, Electron, Chromium) when clicking the version info in the bottom left area of the Settings page",
+        description: "Also copy MochaCord info (MochaCord, Electron, Chromium) when clicking the version info in the bottom left area of the Settings page",
         default: true
     },
     visibleSettingsTabs: {
         type: OptionType.CUSTOM,
-        description: "Visible Testcord settings tabs",
+        description: "Visible MochaCord settings tabs",
         hidden: true,
         default: [] as string[]
     },
     knownSettingsTabs: {
         type: OptionType.CUSTOM,
-        description: "Testcord settings tabs the editor has already seen",
+        description: "MochaCord settings tabs the editor has already seen",
         hidden: true,
         default: [] as string[]
     },
     settingsTabOrder: {
         type: OptionType.CUSTOM,
-        description: "Testcord settings tab order",
+        description: "MochaCord settings tab order",
         hidden: true,
         default: [] as string[]
     },
     pinnedSettingsTabs: {
         type: OptionType.CUSTOM,
-        description: "Pinned Testcord settings tabs",
+        description: "Pinned MochaCord settings tabs",
         hidden: true,
         default: [] as string[]
     },
     inlineCategories: {
         type: OptionType.BOOLEAN,
-        description: "Show Testcord settings categories inline on the main Testcord page instead of as separate sidebar tabs",
+        description: "Show MochaCord settings categories inline on the main MochaCord page instead of as separate sidebar tabs",
         default: false
     },
     experimentalDataStoreExport: {
@@ -760,21 +760,21 @@ export default definePlugin({
             !IS_UPDATER_DISABLED && UpdaterTab && {
                 key: "testcord_updater",
                 title: "Updater",
-                panelTitle: "TestCord Updater",
+                panelTitle: "MochaCord Updater",
                 Component: UpdaterTab,
                 Icon: UpdaterIcon
             },
             {
                 key: "testcord_changelog",
                 title: "Changelog",
-                panelTitle: "TestCord Changelog",
+                panelTitle: "MochaCord Changelog",
                 Component: ChangelogTab,
                 Icon: LogIcon,
             },
             {
                 key: "testcord_stats",
                 title: "Stats",
-                panelTitle: "TestCord Stats",
+                panelTitle: "MochaCord Stats",
                 Component: StatsTab,
                 Icon: InfoIcon,
             },
@@ -788,7 +788,7 @@ export default definePlugin({
             {
                 key: "testcord_presets",
                 title: "Presets",
-                panelTitle: "TestCord Presets",
+                panelTitle: "MochaCord Presets",
                 Component: PresetsTab,
                 Icon: BookmarkIcon,
             },
@@ -822,8 +822,8 @@ export default definePlugin({
         const testcordEntries: SettingsLayoutNode[] = [
             buildEntry({
                 key: TESTCORD_MAIN_ENTRY_KEY,
-                title: "Testcord",
-                panelTitle: "Testcord Settings",
+                title: "MochaCord",
+                panelTitle: "MochaCord Settings",
                 Component: () => {
                     const { inlineCategories } = settings.use(["inlineCategories"]);
 
@@ -874,7 +874,7 @@ export default definePlugin({
         const testcordSection: SettingsLayoutNode = {
             key: "testcord_section",
             type: LayoutTypes.SECTION,
-            useTitle: () => "TestCord Settings",
+            useTitle: () => "MochaCord Settings",
             buildLayout: () => orderedTestcordEntries
         };
 
@@ -940,7 +940,7 @@ export default definePlugin({
     getInfoRows() {
         const { electronVersion, chromiumVersion, getVersionInfo } = this;
 
-        const rows = [`TestCord ${gitHashShort}${getVersionInfo()}`];
+        const rows = [`MochaCord ${gitHashShort}${getVersionInfo()}`];
 
         if (electronVersion) rows.push(`Electron ${electronVersion}`);
         if (chromiumVersion) rows.push(`Chromium ${chromiumVersion}`);

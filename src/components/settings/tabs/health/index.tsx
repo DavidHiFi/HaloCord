@@ -2817,7 +2817,7 @@ function HealthTab() {
                         <Card className="vc-health-guide-card">
                             <HeadingSecondary>Safe Mode & Crash Recovery</HeadingSecondary>
                             <Paragraph color="text-subtle">
-                                Safe Mode boots TestCord with optional plugins disabled to help isolate client stutter and crashes. A plugin that crashes three or more times within 24 hours is quarantined automatically and kept disabled at startup; you can restore it from the Crash Recovery card on the Overview tab.
+                                Safe Mode boots MochaCord with optional plugins disabled to help isolate client stutter and crashes. A plugin that crashes three or more times within 24 hours is quarantined automatically and kept disabled at startup; you can restore it from the Crash Recovery card on the Overview tab.
                             </Paragraph>
                         </Card>
                     </div>

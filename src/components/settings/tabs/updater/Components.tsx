@@ -70,7 +70,7 @@ export function Newer(props: CommonProps) {
                 <ConfirmModal
                     {...modalProps}
                     title="Discard local changes?"
-                    subtitle="This resets your local Testcord files to the selected remote branch and removes untracked files before updating."
+                    subtitle="This resets your local MochaCord files to the selected remote branch and removes untracked files before updating."
                     confirmText="Discard and Update"
                     cancelText="Cancel"
                     variant="primary"
@@ -165,7 +165,7 @@ export function Updatable(props: CommonProps) {
                 <ConfirmModal
                     {...modalProps}
                     title="Discard local changes?"
-                    subtitle="This resets your local Testcord files to the selected remote branch and removes untracked files before updating."
+                    subtitle="This resets your local MochaCord files to the selected remote branch and removes untracked files before updating."
                     confirmText="Discard and Update"
                     cancelText="Cancel"
                     variant="primary"
@@ -303,7 +303,7 @@ showToast(
                 </Paragraph>
             ) : (
                 <Paragraph>
-                    You're running the latest version of Testcord.
+                    You're running the latest version of MochaCord.
                 </Paragraph>
             )}
         </>

@@ -702,7 +702,7 @@ function SettingsAboutComponent() {
         <section>
             <HeadingSecondary>Name Style Preview & Bio Generator</HeadingSecondary>
             <Paragraph>
-                Customize your display name font, effects, and colors. Generate an invisible 3y3 tag to display your custom name style to other Testcord users.
+                Customize your display name font, effects, and colors. Generate an invisible 3y3 tag to display your custom name style to other MochaCord users.
             </Paragraph>
 
             <Divider className={classes(Margins.top16, Margins.bottom16)} />

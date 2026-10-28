@@ -1176,6 +1176,8 @@ export function PrivacySecurityPanel() {
 
     return (
         <SettingsTab>
+            {/* The MochaCord shell fills this with its own privacy options. */}
+            <div id="mochacord-privacy-host" />
             <div className="ps-command-center">
                 {ipcError && (
                     <div className="ps-alert-banner" role="alert">
@@ -1507,7 +1509,7 @@ export function PrivacySecurityPanel() {
                                 </div>
                             </div>
                             <div className="ps-card-subtitle">
-                                TestCord's privacy suite blocks Discord tracking and screens supported request paths for watched telemetry and recognised credential leaks.
+                                MochaCord's privacy suite blocks Discord tracking and screens supported request paths for watched telemetry and recognised credential leaks.
                             </div>
 
                             {alerts.some(a => !a.acknowledged) && (

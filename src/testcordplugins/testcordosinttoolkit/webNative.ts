@@ -121,7 +121,7 @@ export async function queryCordCat(
             error: isAbortError(error)
                 ? "The CordCat request timed out."
                 : error instanceof TypeError
-                    ? "CordCat blocked the browser request. CordCat lookups need the TestCord browser extension with its network rules loaded, or the desktop app."
+                    ? "CordCat blocked the browser request. CordCat lookups need the MochaCord browser extension with its network rules loaded, or the desktop app."
                     : "Could not reach CordCat."
         };
     }

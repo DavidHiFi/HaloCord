@@ -99,7 +99,7 @@ export function MarketplaceTab() {
 
                     const authorNames = Array.isArray(item.authors)
                         ? item.authors.map(a => (typeof a === "string" ? a : a.name)).join(", ")
-                        : "Testcord";
+                        : "MochaCord";
 
                     return (
                         <Card

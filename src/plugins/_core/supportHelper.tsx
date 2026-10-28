@@ -145,7 +145,7 @@ async function generateDebugInfoMessage() {
         : platformName();
 
     const info = {
-        Testcord:
+        MochaCord:
             `v${VERSION} • [${gitHashShort}](<https://github.com/TestcordDev/Testcord/commit/${gitHash}>)` +
             `${IS_EQUIBOP ? "" : SettingsPlugin.getVersionInfo()} - ${Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(BUILD_TIMESTAMP)}`,
         Client: `${RELEASE_CHANNEL} ~ ${clientString}`,
@@ -166,7 +166,7 @@ async function generateDebugInfoMessage() {
     const commonIssues = {
         "Activity Sharing Disabled": tryOrElse(() => !ShowCurrentGame.getSetting(), false),
         "Link Embeds Disabled": tryOrElse(() => !ShowEmbeds.getSetting(), false),
-        "TestCord DevBuild": !IS_STANDALONE,
+        "MochaCord DevBuild": !IS_STANDALONE,
         "Equibop DevBuild": IS_EQUIBOP && tryOrElse(() => VesktopNative.app.isDevBuild?.(), false),
         "Platform Spoofed": spoofInfo?.spoofed ?? false,
         ">2 Weeks Outdated": BUILD_TIMESTAMP < Date.now() - 12096e5,
@@ -396,12 +396,12 @@ export default definePlugin({
     commands: [
         {
             name: "testcord-debug",
-            description: "Send Testcord debug info",
+            description: "Send MochaCord debug info",
             execute: async () => ({ content: await generateDebugInfoMessage() })
         },
         {
             name: "testcord-plugins",
-            description: "Send Testcord plugin list",
+            description: "Send MochaCord plugin list",
             execute: async () => {
                 const channelId = SelectedChannelStore.getChannelId();
 
@@ -444,7 +444,7 @@ export default definePlugin({
                             onCancel={() => openSettingsTabModal(UpdaterTab!)}
                         >
                             <div>
-                                <Paragraph>You are using an outdated version of Testcord! Chances are, your issue is already fixed.</Paragraph>
+                                <Paragraph>You are using an outdated version of MochaCord! Chances are, your issue is already fixed.</Paragraph>
                                 <Paragraph className={Margins.top8}>
                                     Please first update before asking for support!
                                 </Paragraph>
@@ -470,7 +470,7 @@ export default definePlugin({
                         variant="primary"
                     >
                         <div>
-                            <Paragraph>You are using an externally updated Testcord version, which we may provide less support for!</Paragraph>
+                            <Paragraph>You are using an externally updated MochaCord version, which we may provide less support for!</Paragraph>
                             <Paragraph className={Margins.top8}>
                                 Please either switch to an <Link href="https://discord.gg/KTNXyDTXGb">officially supported version of Equicord</Link>, or
                                 contact your package maintainer for support instead.
@@ -601,7 +601,7 @@ renderContributorDmWarningCard: ErrorBoundary.wrap(({ channel }) => {
 
     return (
         <Card variant="warning" className={Margins.top8} defaultPadding>
-            Please do not private message Testcord / Equicord / Vencord Developers / Plugin Devs for support!
+            Please do not private message MochaCord / Equicord / Vencord Developers / Plugin Devs for support!
             <br />
             Instead, use the support channel: {Parser.parse("https://discord.com/channels/1434211283317690502/1434228141123047434")}
             {!ChannelStore.getChannel(SUPPORT_CHANNEL_ID) && " (Click the link to join)"}

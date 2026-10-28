@@ -29,11 +29,11 @@ export const DISCORD_SETTINGS_ROUTES: SettingsRoute[] = [
     { route: "authorized_apps", label: "Authorized Apps", keywords: ["oauth", "apps"] },
     { route: "family_center", label: "Family Center", keywords: ["family", "safety"] },
     { route: "advanced", label: "Advanced", keywords: ["developer"] },
-    { route: "testcord_main", label: "Testcord", keywords: ["vencord", "equicord"] },
-    { route: "testcord_plugins", label: "Testcord Plugins", keywords: ["plugins"] },
-    { route: "testcord_themes", label: "Testcord Themes", keywords: ["themes", "css"] },
-    { route: "testcord_updater", label: "Testcord Updater", keywords: ["update"] },
-    { route: "testcord_changelog", label: "Testcord Changelog", keywords: ["changelog", "news"] }
+    { route: "testcord_main", label: "MochaCord", keywords: ["vencord", "equicord"] },
+    { route: "testcord_plugins", label: "MochaCord Plugins", keywords: ["plugins"] },
+    { route: "testcord_themes", label: "MochaCord Themes", keywords: ["themes", "css"] },
+    { route: "testcord_updater", label: "MochaCord Updater", keywords: ["update"] },
+    { route: "testcord_changelog", label: "MochaCord Changelog", keywords: ["changelog", "news"] }
 ];
 
 const ROUTE_ALIASES = new Map<string, string[]>([

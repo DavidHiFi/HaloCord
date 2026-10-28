@@ -26,16 +26,16 @@ export interface ButtonAction {
 }
 
 export const actions: ButtonAction[] = [
-    { id: "openTestcordSettings", label: "Open Testcord tab", callback: async () => await SettingsRouter.openUserSettings("testcord_main_panel"), registrar: "Testcord" },
-    { id: "openPluginSettings", label: "Open Plugin tab", callback: () => SettingsRouter.openUserSettings("testcord_plugins_panel"), registrar: "Testcord" },
-    { id: "openThemesSettings", label: "Open Themes tab", callback: () => SettingsRouter.openUserSettings("testcord_themes_panel"), registrar: "Testcord" },
-    { id: "openUpdaterSettings", label: "Open Updater tab", callback: () => SettingsRouter.openUserSettings("testcord_updater_panel"), registrar: "Testcord" },
+    { id: "openTestcordSettings", label: "Open MochaCord tab", callback: async () => await SettingsRouter.openUserSettings("testcord_main_panel"), registrar: "MochaCord" },
+    { id: "openPluginSettings", label: "Open Plugin tab", callback: () => SettingsRouter.openUserSettings("testcord_plugins_panel"), registrar: "MochaCord" },
+    { id: "openThemesSettings", label: "Open Themes tab", callback: () => SettingsRouter.openUserSettings("testcord_themes_panel"), registrar: "MochaCord" },
+    { id: "openUpdaterSettings", label: "Open Updater tab", callback: () => SettingsRouter.openUserSettings("testcord_updater_panel"), registrar: "MochaCord" },
     { id: "openTestcordCloudSettings", label: "Open Cloud tab", callback: () => SettingsRouter.openUserSettings("etestcord_cloud_panel"), registrar: "EqTestcordicord" },
-    { id: "openBackupSettings", label: "Open Backup & Restore tab", callback: () => SettingsRouter.openUserSettings("testcord_backup_restore_panel"), registrar: "Testcord" },
-    { id: "restartClient", label: "Restart Client", callback: () => relaunch(), registrar: "Testcord" },
-    { id: "openQuickCSSFile", label: "Open Quick CSS File", callback: () => VencordNative.quickCss.openEditor(), registrar: "Testcord" },
-    { id: "openSettingsFolder", label: "Open Settings Folder", callback: async () => showItemInFolder(await VencordNative.settings.getSettingsDir()), registrar: "Testcord" },
-    { id: "openInGithub", label: "Open in Github", callback: async () => VencordNative.native.openExternal(await getRepo()), registrar: "Testcord" },
+    { id: "openBackupSettings", label: "Open Backup & Restore tab", callback: () => SettingsRouter.openUserSettings("testcord_backup_restore_panel"), registrar: "MochaCord" },
+    { id: "restartClient", label: "Restart Client", callback: () => relaunch(), registrar: "MochaCord" },
+    { id: "openQuickCSSFile", label: "Open Quick CSS File", callback: () => VencordNative.quickCss.openEditor(), registrar: "MochaCord" },
+    { id: "openSettingsFolder", label: "Open Settings Folder", callback: async () => showItemInFolder(await VencordNative.settings.getSettingsDir()), registrar: "MochaCord" },
+    { id: "openInGithub", label: "Open in Github", callback: async () => VencordNative.native.openExternal(await getRepo()), registrar: "MochaCord" },
 
     {
         id: "openInBrowser", label: "Open in Browser", callback: async () => {
@@ -123,7 +123,7 @@ export const actions: ButtonAction[] = [
 
             if (isOutdated) {
                 setTimeout(() => showNotification({
-                    title: "A Testcord update is available!",
+                    title: "A MochaCord update is available!",
                     body: "Click here to view the update",
                     permanent: true,
                     noPersist: true,

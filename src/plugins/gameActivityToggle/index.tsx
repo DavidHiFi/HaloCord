@@ -43,7 +43,7 @@ const settings = definePluginSettings({
         description: "Where to show the game activity toggle button",
         options: [
             { label: "Next to Mute/Deafen", value: "PANEL", default: true },
-            { label: "Testcord Toolbox", value: "TOOLBOX" }
+            { label: "MochaCord Toolbox", value: "TOOLBOX" }
         ],
         get hidden() {
             return !isPluginEnabled(testcordToolbox.name);
@@ -129,7 +129,7 @@ export default definePlugin({
     id: "GameActivityToggle",
     name: "GameActivityToggle",
     description: "Adds a button next to the mic and deafen button to toggle game activity.",
-    tags: ["Activity", "Shortcuts", "Testcord Modified"],
+    tags: ["Activity", "Shortcuts", "MochaCord Modified"],
     testcordModified: true,
     authors: [Devs.Nuckyz, Devs.RuukuLada, TestcordDevs.sirphantom89],
     dependencies: ["UserSettingsAPI", "UserAreaAPI"],

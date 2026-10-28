@@ -49,7 +49,7 @@ const settings = definePluginSettings({
     },
     syncWithFriends: {
         type: OptionType.BOOLEAN,
-        description: "Sync wallpapers with Testcord friends in DMs.",
+        description: "Sync wallpapers with MochaCord friends in DMs.",
         default: true,
         restartNeeded: false,
     },

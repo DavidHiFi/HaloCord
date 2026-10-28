@@ -1213,7 +1213,7 @@ function GoogleSyncModal({
     };
 
     const handleClear = async () => {
-        if (!confirm("Remove all synced Google Calendar events from TestCord?")) return;
+        if (!confirm("Remove all synced Google Calendar events from MochaCord?")) return;
         await clearGoogleNotes();
         setLastSync(null);
         setStatus("All synced Google events removed.");

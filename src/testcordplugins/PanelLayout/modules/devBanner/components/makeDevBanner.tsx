@@ -32,7 +32,7 @@ export function makeDevBanner(state?: string): string | JSX.Element | null {
         .replace(/{buildChannel}/g, buildChannel)
         .replace(/{buildNumber}/g, BUILD_NUMBER)
         .replace(/{buildHash}/g, VERSION_HASH.slice(0, 9))
-        .replace(/{testcordName}|{equicordName}|{vencordName}/g, "Testcord")
+        .replace(/{testcordName}|{equicordName}|{vencordName}/g, "MochaCord")
         .replace(/{testcordVersion}|{equicordVersion}|{vencordVersion}/g, VERSION)
         .replace(/{testcordHash}|{equicordHash}|{vencordHash}/g, gitHashShort)
         .replace(/{testcordBranch}|{equicordBranch}|{vencordBranch}/g, branchLabel)

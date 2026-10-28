@@ -203,7 +203,7 @@ function StatsTab() {
             <StatCard title="By category (enabled)" rows={s.categories.map(([tag, n]) => [tag, n])} />
 
             <StatCard title="By source" rows={[
-                ["TestCord-exclusive", fork("testcord")],
+                ["MochaCord-exclusive", fork("testcord")],
                 ["Equicord", fork("equicord")],
                 ["Vencord", fork("vencord")],
                 ...(s.forks.user.total > 0 ? [["User plugins", fork("user")] as [string, React.ReactNode]] : []),

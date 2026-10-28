@@ -146,7 +146,8 @@ export default definePlugin({
             if (!mediaEngineEmitter) return;
 
             connectionHandler = (connection: any) => {
-                if (connection.context === "default") {
+                // The web build's WebRTC connections have no native conn to patch.
+                if (connection.context === "default" && connection.conn) {
                     Connection = connection;
 
                     if (connection.conn._forceMonoOrig) {

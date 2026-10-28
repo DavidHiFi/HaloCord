@@ -434,7 +434,7 @@ export const themeCommands: PaletteCommand[] = [
     {
         id: "themes.openSettings",
         title: "Open Themes Settings",
-        subtitle: "Open the Themes tab in Testcord Settings",
+        subtitle: "Open the Themes tab in MochaCord Settings",
         section: SECTION,
         keywords: ["theme", "settings", "tab", "appearance"],
         icon: GearIcon,

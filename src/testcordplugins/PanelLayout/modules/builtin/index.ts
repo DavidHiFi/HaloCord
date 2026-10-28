@@ -57,7 +57,7 @@ export const MARKETPLACE_CATALOG: MarketplaceCatalogItem[] = [
     {
         id: "dev-banner",
         name: "Developer Banner",
-        description: "Displays Discord & Testcord build number, channel, commit hash, and client information.",
+        description: "Displays Discord & MochaCord build number, channel, commit hash, and client information.",
         authors: [EquicordDevs.KrystalSkull, Devs.thororen, TestcordDevs.sirphantom89],
         version: "1.0.0",
         tags: ["Developers", "Appearance"],

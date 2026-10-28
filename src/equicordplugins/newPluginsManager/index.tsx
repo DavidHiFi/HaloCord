@@ -14,7 +14,7 @@ import { openNewPluginsModal } from "./NewPluginsModal";
 export default definePlugin({
     id: "NewPluginsManager",
     name: "NewPluginsManager",
-    description: "Utility that notifies you when new plugins are added to Testcord",
+    description: "Utility that notifies you when new plugins are added to MochaCord",
     tags: ["Utility"],
     authors: [Devs.Sqaaakoi],
     enabledByDefault: true,

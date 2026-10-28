@@ -8,18 +8,18 @@ import type { PaletteCommand } from "../api/types";
 import { BoltIcon, GearIcon, PaintIcon, RestartIcon } from "../ui/icons";
 import { openSettingsPage } from "./openSettings";
 
-const SECTION = "Testcord";
+const SECTION = "MochaCord";
 
 export const testcordCommands: PaletteCommand[] = [
     {
         id: "testcord.settings",
-        title: "Open Testcord Settings",
+        title: "Open MochaCord Settings",
         section: SECTION,
         keywords: ["testcord", "equicord", "vencord", "settings"],
         icon: GearIcon,
         actions: [{
             id: "run",
-            label: "Open Testcord Settings",
+            label: "Open MochaCord Settings",
             run: () => void openSettingsPage("testcord_main")
         }]
     },
