@@ -36,13 +36,13 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
     {
         find: "getVideoQuality(e){let t=this.ladder.getResolution(e)",
         replacement: {
-            match: /return new a\(\{encode:\{\.\.\.t,framerate:\i\},capture:\{width:this\.options\.videoCapture\.width,height:this\.options\.videoCapture\.height,framerate:this\.options\.videoCapture\.framerate\}/,
-            replace: "return new a({encode:{...t,framerate:$self.getConfiguredStreamFps()},capture:{width:$self.getConfiguredStreamWidth(),height:$self.getConfiguredStreamHeight(),framerate:$self.getConfiguredStreamFps()}",
+            match: /return new (\i)\(\{encode:\{\.\.\.t,framerate:\i\},capture:\{width:this\.options\.videoCapture\.width,height:this\.options\.videoCapture\.height,framerate:this\.options\.videoCapture\.framerate\}/,
+            replace: "return new $1({encode:{...t,framerate:$self.getConfiguredStreamFps()},capture:{width:$self.getConfiguredStreamWidth(),height:$self.getConfiguredStreamHeight(),framerate:$self.getConfiguredStreamFps()}",
             noWarn: true
         }
     },
     {
-        find: "getDefaultGoliveQuality(){return new a({",
+        find: "getDefaultGoliveQuality(){",
         replacement: [
             {
                 match: /capture:\{width:1280,height:720,framerate:\i\.\i\}/,
@@ -109,7 +109,7 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
     {
         find: "onOneClickGoLive:",
         replacement: {
-            match: /onBeforeShowModal:(\i),onOneClickGoLive:(\i)(?=[^{}]*\}\))/,
+            match: /onBeforeShowModal:(\i),onOneClickGoLive:(\i)(?=[^{}]*,\})/,
             replace: "onBeforeShowModal:$1,onOneClickGoLive:$2,onContextMenu:e=>$self.openGoLiveButtonContextMenu(e,null)",
             noWarn: true
         }
@@ -327,10 +327,10 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         }
     },
     {
-        find: "case\"video\":(t?[P.UK.H265",
+        find: "case\"video\":(",
         replacement: {
-            match: /\(\i\?\[(\i)\.UK\.H265,\1\.UK\.H264,\1\.UK\.VP8,\1\.UK\.VP9\]:\[\1\.UK\.H264,\1\.UK\.VP8,\1\.UK\.VP9\]\)\.forEach/,
-            replace: "$self.getPreferredVideoCodecOrder($1.UK,t).forEach"
+            match: /\((\i)\?\[(\i)\.UK\.H265,\2\.UK\.H264,\2\.UK\.VP8,\2\.UK\.VP9\]:\[\2\.UK\.H264,\2\.UK\.VP8,\2\.UK\.VP9\]\)\.forEach/,
+            replace: "$self.getPreferredVideoCodecOrder($2.UK,$1).forEach"
         }
     },
     {
@@ -338,13 +338,6 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         replacement: {
             match: /setCodecs\((\i),(\i),(\i)\)\{/,
             replace: "setCodecs($1,$2,$3){$2=$self.getPreferredVideoCodecName($2,null!=$3);"
-        }
-    },
-    {
-        find: "videoCapture.width",
-        replacement: {
-            match: /width:this\.options\.videoCapture\.width,height:this\.options\.videoCapture\.height,framerate:this\.options\.videoCapture\.framerate/,
-            replace: "capture:{width:$self.getConfiguredStreamWidth(),height:$self.getConfiguredStreamHeight(),framerate:$self.getConfiguredStreamFps()}"
         }
     },
     {
@@ -433,7 +426,7 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         }
     },
     {
-        find: "function T(e){return null==e.maxResolution",
+        find: "null==e.maxResolution||null==e.maxFrameRate?null:",
         replacement: {
             match: /maxFrameRate:(\i)\.maxFrameRate,maxResolution:(\i)\.maxResolution/,
             replace: "maxFrameRate:$self.coerceParticipantFrameRate($1.maxFrameRate),maxResolution:$self.coerceParticipantResolution($2.maxResolution)"

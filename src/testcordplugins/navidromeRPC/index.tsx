@@ -112,6 +112,7 @@ async function buildActivity(track: NowPlaying) {
 
 let timer: number | undefined;
 let running = false;
+let failing = false;
 
 function schedule(delay: number) {
     if (!running) return;
@@ -129,13 +130,15 @@ async function tick() {
         const activity = track ? await buildActivity(track) : null;
         if (!running) return;
 
+        failing = false;
         FluxDispatcher.dispatch({ type: "LOCAL_ACTIVITY_UPDATE", activity, socketId: SOCKET_ID });
         schedule(settings.plain.delay);
     } catch (error) {
         if (!running) return;
 
         clearActivity();
-        showToast(`NavidromeRPC: ${(error as Error).message}`, Toasts.Type.FAILURE);
+        if (!failing) showToast(`NavidromeRPC: ${(error as Error).message}`, Toasts.Type.FAILURE);
+        failing = true;
         schedule(RETRY_DELAY);
     }
 }
@@ -161,6 +164,7 @@ export default definePlugin({
         }
 
         running = true;
+        failing = false;
         void tick();
     },
 

@@ -20,7 +20,7 @@ import "./checkNodeVersion.js";
 
 import { execFileSync, execSync } from "child_process";
 import { createHash } from "crypto";
-import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, rmSync } from "fs";
+import { createWriteStream, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, cpSync, rmSync } from "fs";
 import { dirname, join } from "path";
 import { Readable } from "stream";
 import { finished } from "stream/promises";
@@ -107,7 +107,40 @@ async function ensureBinary() {
     return outputFile;
 }
 
-const installerBin = await ensureBinary();
+// Local fallback: TestcordDev/TestCord went 404 on 2026-10-27, so the installer and its release data are gone.
+// dist is junctioned to the payload Stable and PTB load, so a build is already live; only the loader needs checking.
+const LOCAL_LOADER_SCRIPT = "H:/Discord Configuration/scripts/Install-TestCordClientLoader.ps1";
+const LOCAL_LOADER_INDEX = 'require("C:\\\\Users\\\\localuser\\\\AppData\\\\Local\\\\DiscordWorkspace\\\\TestCord\\\\dist\\\\desktop\\\\patcher.js");\r\n';
+
+function localInject() {
+    const clients = { Stable: "Discord", PTB: "DiscordPTB" };
+    const stale = Object.entries(clients).filter(([, dir]) => {
+        const root = join(process.env.LOCALAPPDATA, dir);
+        if (!existsSync(root)) return false;
+        const app = readdirSync(root).filter(name => name.startsWith("app-")).sort().reverse()[0];
+        if (!app) return false;
+        const index = join(root, app, "resources", "app.asar", "index.js");
+        return !existsSync(index) || readFileSync(index, "utf-8").trim() !== LOCAL_LOADER_INDEX.trim();
+    }).map(([name]) => name);
+
+    if (!stale.length) {
+        console.log("Stable and PTB already load this build. Restart Discord to pick up changes.");
+        return;
+    }
+    console.log("Installing the TestCord loader into: " + stale.join(", "));
+    for (const client of stale)
+        execFileSync("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", LOCAL_LOADER_SCRIPT, "-Clients", client], { stdio: "inherit" });
+}
+
+let installerBin;
+try {
+    installerBin = await ensureBinary();
+} catch (err) {
+    if (process.platform !== "win32" || !existsSync(LOCAL_LOADER_SCRIPT)) throw err;
+    console.log(err.message + ". Using the local loader instead.");
+    localInject();
+    process.exit(0);
+}
 
 console.log("Now running Installer...");
 

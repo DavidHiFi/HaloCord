@@ -1896,9 +1896,6 @@ async function startLiveFixServer() {
             logger.info(requireToken
                 ? `LiveFix integration started — HTTP server on port 18963, auth token: ${token}`
                 : "LiveFix integration started — HTTP server on port 18963, auth token disabled");
-            showToast(requireToken
-                ? `LiveFix started on port 18963 (token ${token.slice(0, 8)}…, full token in console)`
-                : "LiveFix started on port 18963 — auth token disabled", Toasts.Type.SUCCESS);
         } catch (e) {
             logger.error("Failed to start LiveFix server:", e);
             showToast(`LiveFix failed: ${e}`, Toasts.Type.FAILURE);

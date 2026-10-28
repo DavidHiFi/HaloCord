@@ -909,8 +909,8 @@ function advanceEnvelopes(now: number) {
             // Bars follow measured audio only. A flagged speaker with no level reads flat, never a made-up one.
             const heard = userId === me && selfVadLive(now) ? selfVadSpeaking : isHeard(userId);
             const value = heard ? normalize(meter.amplitude, floorDb) : 0;
-            // received audio counts as activity even before Discord's speaking flag arrives
-            noteActive(meter, normalize(meter.amplitude, floorDb), now);
+            // the speaking glow follows the bars, so it lights only when they move
+            noteActive(meter, value, now);
             const [panL, panR] = getPan(userId);
 
             smooth(meter, 0, value * panL, value * panL, now);

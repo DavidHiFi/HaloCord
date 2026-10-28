@@ -15,9 +15,8 @@ import { ChannelRTCStore, ChannelStore, IconUtils, SelectedChannelStore, UserPro
 
 import style from "./style.css?managed";
 
-// VoiceVUMeters broadcasts audio activity through a window event, since
-// Discord's speaking flag never fires for stream soundshare. This store turns
-// the event into tile re-renders.
+// VoiceVUMeters broadcasts each person's mic activity through a window event,
+// which can land before Discord's speaking flag. This store turns it into tile re-renders.
 const audioActivityListeners = new Set<() => void>();
 let audioActivityVersion = 0;
 const audioActivityStore = {
@@ -272,7 +271,7 @@ export default definePlugin({
                 : false;
             return speaking;
         }, [participantUserId]);
-        // soundshare never sets Discord's speaking flag
+        // mic activity from VoiceVUMeters can light the glow before Discord's flag does
         useStateFromStores([audioActivityStore], audioActivityStore.getVersion, []);
     },
 
@@ -290,7 +289,7 @@ export default definePlugin({
         const isStream = participantType !== undefined && STREAM_PARTICIPANT_TYPES.has(participantType);
         // Camera tiles keep Discord's own ring, there is no picture to glow
         const isCamera = !isStream && participant?.streamId != null;
-        // Discord's flag is mic-only, soundshare comes from the VoiceVUMeters levels
+        // Discord's flag and VoiceVUMeters' mic activity both mean the person is speaking
         const isSpeaking = (channelId
             ? ChannelRTCStore.getSpeakingParticipants(channelId).some(p => p.user.id === participantUserId && p.speaking)
             : false) || audioActiveNow(participantUserId);
