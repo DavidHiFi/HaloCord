@@ -1,166 +1,130 @@
-# Kurtcord
+<div align="center">
 
-A custom Discord desktop client built for voice. High fidelity audio, call guards that keep the chaos out, and real control over your microphone, camera, and screen share.
+<img src="https://socialify.git.ci/DavidHiFi/MochaCord-Client/image?description=1&font=Inter&language=1&name=1&owner=1&pattern=Plus&theme=Dark" alt="Socialify card for DavidHiFi/MochaCord-Client" width="100%">
 
-Current release: **2.8.3**
+# MochaCord
 
-## Download
+**A Windows Discord client built for voice, forked from KurtCord.**
 
-Everything is on the [latest release page](https://github.com/kurtzonaudio/kurtcord/releases/latest).
+96 kHz stereo voice, three call guards, camera control to 4K60, and a full Voice & Video quick panel.
 
-| File | What it is |
-| --- | --- |
-| `Kurtcord-2.8.3-Setup.exe` | Installer. Installs Kurtcord to your user folder and adds a Start menu entry. |
-| `Kurtcord-2.8.3-Portable.exe` | Portable. Run it from any folder or a USB drive, nothing gets installed. |
-| `Kurtcord-2.8.3-Setup.exe.zip` | The installer and the license in one zip, for passing around. |
+<a href="https://github.com/DavidHiFi/MochaCord-Client/releases/latest">
+<img src="https://img.shields.io/badge/%E2%AC%87%EF%B8%8F%20DOWNLOAD%20LATEST%20RELEASE-2EA043?style=for-the-badge&labelColor=161B22" alt="Download the latest release" height="42">
+</a>
 
-## What Kurtcord is
+<br><br>
 
-Kurtcord is a Windows desktop client for Discord. It runs Discord's own web app inside an Electron shell and adds a custom voice pipeline, extra audio and video controls, and a set of built-in plugins on top. Your account, servers, friends, and messages are the same as anywhere else. Kurtcord changes how your voice sounds and how a call behaves for you.
+<img src="https://img.shields.io/github/v/release/DavidHiFi/MochaCord-Client?style=flat-square&label=version&color=8957E5&labelColor=161B22" alt="Latest version">
+<img src="https://img.shields.io/github/downloads/DavidHiFi/MochaCord-Client/total?style=flat-square&label=downloads&color=1F6FEB&labelColor=161B22" alt="Total downloads">
+<img src="https://img.shields.io/badge/platform-Windows-DB6D28?style=flat-square&labelColor=161B22" alt="Platform: Windows">
 
-## 2.8.3
+</div>
 
-2.8.3 takes Stream Enhancer out of Kurtcord's own panels and trims the installers.
+---
 
-**Stream Enhancer removed from the client UI.** The Stream Enhancer section in the quick Voice & Video panel is gone, along with the code that mounted the plugin's settings there and the Better Screenshare shortcut that opened it. The plugin itself stays in the bundled plugin list, so it can still be enabled and configured from the plugin settings page, but Kurtcord no longer wires it into its own panels. Screen share quality now comes from Discord's own Go Live picker.
+## Installation
 
-**Smaller downloads.** The 2.8.2 installers carried a leftover 28 MB backup of an older client inside the install. That is gone, so the installer drops from 115.0 MB to 101.2 MB and the portable from 114.7 MB to 100.9 MB.
+1. Download `Kurtcord-2.8.3-Setup.exe` (installer) or `Kurtcord-2.8.3-Portable.exe` (portable, nothing gets installed) from the [latest release](https://github.com/DavidHiFi/MochaCord-Client/releases/latest).
+2. Run the file you downloaded. The portable runs from any folder or a USB drive.
+3. Log in with your Discord account. Settings live in `%APPDATA%\Kurtcord` while the client still runs under its original name.
 
-Everything from 2.8.2 carries over unchanged: Discord sounds, the speaking indicator, the voice playback lock, the camera path, and the voice guards.
+## Features
 
-## 2.8.2
+### Voice
 
-2.8.2 fixes Discord's sounds and finishes the last two call fixes.
+- **96 kHz HD voice** with stereo, when both ends support it.
+- **Opus controls** for bitrate, sample rate, frame time, complexity, FEC, DTX and CBR.
+- **Microphone chain** with gain, reverb and EQ, plus second and third microphone inputs with their own devices.
+- **Input bypass** that sends your microphone raw, past system processing.
 
-**Discord sounds fixed.** Discord's latest web update changed their sound player, and the bundled patch that adapts Kurtcord to it silently stopped applying. Every Discord sound — mute and unmute beeps, join and leave sounds, message pings, notification sounds — was built with a missing sound name and failed to play. The patch now matches the new code, so all sounds play again.
+### Voice guards
 
-**Speaking indicator.** The green speaking ring now analyzes the raw voice stream at a higher resolution, so quiet speech that used to be missed lights it up. It also ignores people you muted locally, and speaking events carry the context Discord's current build expects, so the ring turns on and off reliably.
+- **StereoGuard** locally mutes anyone whose audio is not fully mono, with a per-person allow list.
+- **MicSpamGuard** locally mutes anyone who gets too loud or spams the mic.
+- **MicSpamGuard DH** balances voice volumes automatically and protects against sustained extreme loudness.
+- Allow and un-allow anyone from the user context menu, under the volume slider.
 
-**Voice playback lock.** After switching channels, Discord could re-attach and un-silence its own hidden audio element and fight the shared 48 kHz playback engine, which could bring back doubled or hollow voice. Kurtcord now locks that element: whenever Discord touches or plays it, it is re-silenced and re-enforced immediately, and the shared engine re-attaches if it was dropped.
+### Camera and screen share
 
-## 2.8.1
+- **Camera presets** from 720p60 to 2160p60, plus 1080p120 and custom resolution, frame rate and bitrate.
+- **Constant bitrate camera encoder** instead of Discord's adaptive ladder.
+- **Advanced Camera Controls** and **Advanced Hardware Acceleration** for caps, rasterisation and decode.
+- **Native camera rendering** with no canvas re-encode when no filter is set.
 
-2.8.1 brings the whole maintained plugin set into the client and finishes the camera and call guard fixes.
+### Privacy
 
-**Plugin set.** All twelve maintained plugins are built in and current: ClickToUnmute, StaffTag, FakeVoice, LyricsStatus, StreamEnhancer, Custom Stream Quality, RoundedVCPFP, MicSpamGuard, StereoGuard, VoiceVUMeters, HasStrip, and PanelLayout. RoundedVCPFP and HasStrip are new to the client. If you want RoundedVCPFP, turn off the bundled FullVCPFP first.
+- Every setting lives on your machine. No analytics, no telemetry, no backend server.
+- A standard Chrome fingerprint with no automation flags.
 
-**Camera frame rate.** With no outgoing video filter set, the camera and screen share pass through untouched instead of being re-encoded through a canvas. That canvas was throttled whenever the client window was occluded, which dropped the camera to a fraction of its capture rate. Filters still apply when one is selected.
+### Built-in plugins
 
-**Camera bitrate.** The camera quality path now uses your Camera video bitrate setting at full ladder resolution with a constant min, target, and max, instead of Discord's adaptive 150-400 kbps ladder. The old screen share resolution override that starved the camera encoder is gone.
+- The Equicord plugin suite and the Testcord plugins, ready out of the box.
+- Twelve maintained voice plugins, including ClickToUnmute, StaffTag, FakeVoice, LyricsStatus, StreamEnhancer, Custom Stream Quality, RoundedVCPFP, MicSpamGuard, StereoGuard, VoiceVUMeters, HasStrip and PanelLayout.
 
-**MicSpamGuard live levels.** Kurtcord's custom voice engine reports no audio level in its RTC stats, so MicSpamGuard showed 0% for everyone and never balanced or muted. The guard now measures each participant's decoded audio directly, so live levels, automatic balancing, and extreme loudness mutes work.
+## Notes
 
-## 2.8.0
+> [!IMPORTANT]
+> **This is a preserved fork and the rebrand is still ahead.** The current release carries KurtCord 2.8.3's own files, byte for byte. The client still calls itself Kurtcord, stores settings in `%APPDATA%\Kurtcord`, and checks kurtzonaudio's releases for updates. The first MochaCord build lands in a later release.
 
-2.8.0 adds full control over what you send: your screen share, your camera, and every Voice & Video setting, all live.
+> [!WARNING]
+> **Third-party client.** Discord does not officially support third-party clients. KurtCord's own FAQ says the client-side cause of account flags was fixed in 2.7.7, but behavior no client controls, like mass friend requests or brand new accounts, can still draw action. Use it at your own risk.
 
-**StreamEnhancer.** The StreamEnhancer plugin now ships inside Kurtcord's Voice & Video page. It tunes the screen share you send and the streams you watch:
+<details>
+<summary><b>Binary verification</b></summary>
 
-- Screen share quality: resolution up to 8K, frame rate up to 240 fps, video bitrate and a minimum bitrate floor, codec choice (Auto, AV1, VP9, H.264), one high quality layer, adaptive max quality, HDR capture, keyframe interval, and an SDP bitrate boost.
-- Stream previews: scale, saturation, contrast, upload resolution, JPEG quality, refresh and retry timing, a custom preview URL, and an optional upload filter.
-- Viewer controls: a resize slider in the stream menu and outgoing video filters.
-- Stream telemetry: outgoing and observed stream stats on demand.
+<br>
 
-**Camera fixes.** The camera path is rebuilt:
+SHA-256 of the release files, matching the original [Kurtcord 2.8.3 release](https://github.com/kurtzonaudio/kurtcord/releases/tag/v2.8.3) byte for byte:
 
-- Cameras render natively again. The gray tiles some calls showed are gone.
-- When no video filter is set, the camera passes through untouched instead of being re-encoded through a canvas. That was capping the camera at a fraction of its capture rate.
-- The camera encoder now uses a constant bitrate target from the Camera video bitrate slider instead of Discord's adaptive 150-400 kbps ladder, and it no longer inherits the screen share resolution.
-- Camera presets run from 720p60 up to 2160p60, plus 1080p120, with custom resolution, frame rate, and bitrate.
+```
+C4B83AC7B436E0CFF54663982F3E7FF41E92096291FB394166C676D0EBEFD3E4  Kurtcord-2.8.3-Portable.exe
+D6079C7352EDB42749EC373B7BAB2379B67EFB497DEC19675E803F3D85D95B8A  Kurtcord-2.8.3-Setup.exe
+809162A951DC75F6A9B1314BFEE59DB26DE8407A2F81692A146EED33AE9DF8C7  Kurtcord-2.8.3-Setup.exe.zip
+```
 
-**Voice & Video quick panel.** The side panel now mirrors the whole Voice & Video page in a smaller panel:
+</details>
 
-- Voice: microphone, second and third microphone with their own device and volume, speaker, microphone and speaker volume, input profile (Voice Isolation, Studio, Custom), input sensitivity, noise suppression, echo cancellation, auto gain control, and push to talk.
-- Camera: always preview video, camera device, Advanced Camera Controls, quality preset, and Advanced Hardware Acceleration.
-- Streaming: stream previews.
-- Soundboard: soundboard volume.
-- Advanced: reset all Voice & Video settings.
-- Stream Enhancer: the full plugin panel.
-- The removed Opus codec, Spatial Audio, and VST sections are gone for good.
+## Contributing
 
-**Optimizations.** Kurtcord and StreamEnhancer telemetry are off, the duplicate VU meter implementation is disabled (the built-in meters stay), React DevTools is off, and the second message logger no longer caches server messages in memory.
+Bug reports with the client version and a screenshot help most right now, while the rebrand is in progress.
 
-The 2.7.9 voice output engine and the 2.7.7 account safety work are included.
+<a href="CONTRIBUTING.md">
+<img src="https://img.shields.io/badge/%F0%9F%A4%9D%20HOW%20TO%20CONTRIBUTE-8957E5?style=for-the-badge&labelColor=161B22" alt="How to contribute" height="36">
+</a>
 
-## 2.7.9
+## Star history
 
-2.7.9 rebuilt voice output so a call stays clean and audible the whole time. It fixed doubled or hollow voices (two playback paths per person, now one shared 48 kHz engine with the hidden media element silenced) and voice cutting out after switching channels (the engine now reattaches every output when its stream changes, reapplies your output device after a device reset, and rebuilds itself if its clock stalls). Per-user volume, local mutes, the live voice meter, and 96 kHz incoming voice all keep working.
+Thank you for starring the repo.
 
-## 2.7.7 and account safety
+<a href="https://www.star-history.com/?repos=DavidHiFi%2FMochaCord-Client&amp;type=date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=DavidHiFi/MochaCord-Client&amp;type=date&amp;theme=dark&amp;legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=DavidHiFi/MochaCord-Client&amp;type=date" />
+    <img alt="DavidHiFi/MochaCord-Client GitHub star history" src="https://api.star-history.com/chart?repos=DavidHiFi/MochaCord-Client&amp;type=date" />
+  </picture>
+</a>
 
-2.7.7 fixes the issue that could get accounts flagged for using Kurtcord.
+## Credits
 
-The previous build ran with a Chromium automation flag set, which made every page report `navigator.webdriver = true`. Discord and its captcha provider read that flag as "this browser is controlled by automation", so friend requests, server joins, and captchas could be scored as bot activity and end in a suspension. 2.7.7 removes it. The automation flag is disabled, remote debugging is off by default, and the client presents a fully consistent Chrome fingerprint: user agent, client hints, and the native user agent data all agree, with no JavaScript spoofing for a fingerprinting script to catch.
+- **Author:** Myself, [DavidHiFi](https://github.com/DavidHiFi)
 
-Users are no longer flagged for using Kurtcord.
+| Who | What |
+|---|---|
+| **Kurtzon** ([KurtCord](https://github.com/kurtzonaudio/kurtcord)) | The whole client: voice engine, guards, camera path, installers and plugins. MochaCord is a fork of KurtCord 2.8.3. |
+| **Equicord contributors** ([Equicord](https://github.com/Equicord/Equicord)) | The bundled Equicord plugin suite. |
+| **TestcordDev** ([TestCord](https://github.com/TestcordDev/TestCord)) | The bundled Testcord plugins. |
 
-## Voice
+Built on [Electron](https://www.electronjs.org/), running [Discord](https://discord.com)'s web app, with the [Equicord](https://github.com/Equicord/Equicord) plugin suite.
 
-- 96 kHz HD voice with stereo, when both ends support it.
-- Bitrate, sample rate, frame time, complexity, FEC, DTX, and CBR controls for Opus.
-- Bypass system input processing to send your microphone raw.
-- Microphone gain, plus a second and third microphone input, each with its own device and gain.
-- Reverb and EQ built into the mic chain.
+> Missing or wrong credit? [Open an issue](https://github.com/DavidHiFi/MochaCord-Client/issues/new) and I'll fix it.
 
-## Voice guards
+## Disclaimers
 
-Three guards watch the call and mute locally, so you keep hearing everyone else.
+This repository was set up with an AI coding agent working for the repo owner. The client itself is Kurtzon's work, and no code in it was written for MochaCord yet.
 
-- **StereoGuard** mutes anyone whose audio is not fully mono: panning, stereo width, panning around, and reverb tails all push the score up. Centered mono voice is never touched.
-- **MicSpamGuard** mutes anyone who gets too loud or spams their mic. You set the threshold, the sensitivity, and how long until the mute lifts.
-- **MicSpamGuard DH** balances voice volumes automatically and protects the call from sustained extreme loudness, with a 200% ceiling on quiet voice boost.
+The [DavidHiFi/MochaCord](https://github.com/DavidHiFi/MochaCord) theme is a separate project. It is a Catppuccin Mocha theme for Vencord-based clients, not this client.
 
-Each guard keeps a "never mute" list. To add someone to it, right click their name anywhere in Discord and pick **Allow through Stereo Guard** or **Allow through Mic Spam Guard** from the menu, directly under the volume slider. The same people can be managed from each plugin's settings, and the two stay in sync. The menu entry flips to "Stop allowing through ..." once someone is on the list.
-
-## Camera and screen share
-
-- Camera presets from 720p60 to 2160p60, plus 1080p120 and custom resolution, frame rate, and bitrate. The camera sends a constant bitrate you set, not a value Discord picks for you.
-- Advanced Camera Controls remove Discord's 720p cap, and Advanced Hardware Acceleration forces GPU rasterisation, zero copy, and accelerated video decode.
-- Screen share quality comes from Discord's own Go Live picker. Kurtcord's Stream Enhancer panel, which used to live in Voice & Video, is gone as of 2.8.3.
-
-## Privacy
-
-- Every setting lives on your machine.
-- No analytics and no telemetry. Kurtcord has no backend server.
-- The client reports a standard Chrome fingerprint.
-
-## Built-in mods
-
-Kurtcord ships with the Equicord plugin suite and the Testcord plugins, ready out of the box. The voice guards, the voice state fix, and the rest of the Testcord set are already installed. Plugins can be toggled and configured from the client's own plugin settings.
-
-## How it works
-
-- An Electron shell loads Discord's web app and keeps it patched at runtime.
-- The mic chain is built in the Web Audio graph, and the session description for each call is tuned before it goes out.
-- The camera and screen share paths are adjusted at the WebRTC layer.
-- The client checks GitHub for updates on startup and every few hours, using this repository's releases and `version.json`.
-- Kurtcord is closed source. This repository carries the client description, the license, the update manifest, and the release downloads. No source code is published or attached to releases.
-
-## Requirements
-
-- Windows 10 or Windows 11, 64 bit.
-- A Discord account.
-
-## Updating
-
-Run the newest installer or portable from the releases page. Your settings stay where they are. The client will also tell you when a new release is available.
-
-## FAQ
-
-**Will my account get banned for using Kurtcord?**
-The client side cause of the flags is fixed in 2.7.7, and the client now behaves like a normal Chrome session. Discord can still act on behavior and environment that no client controls: mass friend requests, mass server joins, VPN or proxy addresses, and brand new accounts. Third party clients are also not officially supported by Discord, so use Kurtcord at your own risk.
-
-**Does Kurtcord talk to any Kurtcord server?**
-No. There is no Kurtcord backend. The client talks to Discord, and to GitHub for updates.
-
-**Does it change anything for other people in the call?**
-No. The guards mute locally on your side, and your voice settings only change what you send.
-
-**Where are my settings stored?**
-In your own Windows user folder, under `%APPDATA%\Kurtcord`.
-
-## License
-
-MIT. Copyright (c) 2026 Kurtzon (Kurtzon Audio). See [LICENSE](LICENSE).
-
-Built and maintained by Kurtzon.
+<div align="center">
+<br>
+<sub>Not affiliated with Discord or Kurtzon Audio. Requires a Discord account.</sub>
+</div>
