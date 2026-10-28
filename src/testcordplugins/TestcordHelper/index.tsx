@@ -1859,7 +1859,8 @@ function handleLiveFixRequest(req: LiveFixRequest): any {
 }
 
 async function startLiveFixServer() {
-    if (!liveFixDesired || liveFixInterval) return;
+    // The LiveFix HTTP server lives in the desktop helper; web builds have none.
+    if (!NativeHelper || !liveFixDesired || liveFixInterval) return;
     if (liveFixStartPromise) {
         await liveFixStartPromise;
         if (liveFixDesired && !liveFixInterval) await startLiveFixServer();

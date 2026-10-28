@@ -217,7 +217,7 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
     {
         find: "fmtp.push({config:",
         replacement: {
-            match: /config:`minptime=10;useinbandfec=1;usedtx=\$\{\i\?"0":"1"\}`/,
+            match: /config:`minptime=10;useinbandfec=1;usedtx=\$\{\i\?"0":"1"\}(?:\$\{\i\?";stereo=1;sprop-stereo=1":""\})*`/,
             replace: "config:$self.getMicOpusFmtpConfig()"
         }
     },

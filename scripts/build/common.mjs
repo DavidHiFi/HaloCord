@@ -23,7 +23,7 @@ import "../checkNodeVersion.js";
 
 import { exec, execSync } from "child_process";
 import esbuild, { build, context } from "esbuild";
-import { constants as FsConstants, readFileSync } from "fs";
+import { constants as FsConstants, existsSync, readFileSync } from "fs";
 import { access, readdir, readFile } from "fs/promises";
 import { minify as minifyHtml } from "html-minifier-terser";
 import { dirname, join, relative, resolve } from "path";
@@ -226,6 +226,10 @@ export const makeAllPackagesExternalPlugin = {
     },
 };
 
+const MOCHACORD_DROP = existsSync("mochacord-plugins.json")
+    ? new Set(Object.keys(JSON.parse(readFileSync("mochacord-plugins.json", "utf-8")).drop))
+    : null;
+
 /**
  * @type {(kind: "web" | "discordDesktop" | "vesktop" | "equibop") => import("esbuild").Plugin}
  */
@@ -282,6 +286,10 @@ export const globPlugins = (kind) => ({
                         continue;
 
                     const target = getPluginTarget(fileName);
+
+                    // MochaCord leaves out the duplicates and broken plugins listed in mochacord-plugins.json.
+                    if (MOCHACORD_DROP && kind === "web"
+                        && MOCHACORD_DROP.has((await resolvePluginName(fullDir, file)) ?? "")) continue;
 
                     if (target && !IS_REPORTER) {
                         const excluded =

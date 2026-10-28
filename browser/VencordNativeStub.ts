@@ -55,7 +55,7 @@ window.VencordNative = {
 
     native: {
         getVersions: () => ({}),
-        supportsWindowsMaterial: () => false,
+        supportsWindowsMaterial: () => !!window.MochaCordNative,
         openExternal: async (url) => void open(url, "_blank"),
         getRendererCss: async () => {
             if (IS_USERSCRIPT)
@@ -133,7 +133,9 @@ window.VencordNative = {
         },
         set: async (s: Settings) => localStorage.setItem("EquicordSettings", JSON.stringify(s)),
         getSettingsDir: async () => "LocalStorage",
-        openFolder: async () => Promise.reject("settings:openFolder is not supported on web"),
+        openFolder: async () => window.MochaCordNative
+            ? window.MochaCordNative.openSettingsFolder()
+            : Promise.reject("settings:openFolder is not supported on web"),
     },
 
     presets: {

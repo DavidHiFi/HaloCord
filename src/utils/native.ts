@@ -21,6 +21,8 @@ export function relaunch() {
         window.DiscordNative.app.relaunch();
     else if (IS_VESKTOP || IS_EQUIBOP)
         window.VesktopNative.app.relaunch();
+    else if (window.MochaCordNative)
+        window.MochaCordNative.relaunch();
     else
         location.reload();
 }

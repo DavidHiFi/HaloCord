@@ -18,7 +18,7 @@
 
 import { Logger } from "@utils/Logger";
 import type * as t from "@vencord/discord-types";
-import { _resolveReady, filters, findByCodeLazy, findByProps, findByPropsLazy, findLazy, mapMangledModule, mapMangledModuleLazy, proxyLazyWebpack, waitFor } from "@webpack";
+import { _resolveReady, filters, find, findByCodeLazy, findByProps, findByPropsLazy, findLazy, mapMangledModule, mapMangledModuleLazy, proxyLazyWebpack, waitFor } from "@webpack";
 import type * as TSPattern from "ts-pattern";
 
 const logger = new Logger("WebpackCommon");
@@ -142,16 +142,17 @@ function isToastsModule(mod: any): mod is ToastsExports {
 
 // Discord's legacy normaliser. It shipped inside the toast module on some builds and
 // in a module of its own on others; current builds export no createToast at all, so
-// this is only a fallback for older branches. The code anchor resolves to a lazy
-// proxy that looks callable even when the find fails, so it gets probed instead of
-// trusted.
+// this is only a fallback for older branches. A found module still gets probed,
+// since the code anchor can match a function with a different shape.
 function resolveCreateToast(mod: ToastsExports): ((...args: any[]) => any) | undefined {
     if (typeof mod.createToast === "function") return mod.createToast;
     if (probedCreateToast) return cachedCreateToast;
 
     probedCreateToast = true;
     try {
-        const byCode = findByCodeLazy('variant:"default",icon:', ".duration");
+        // isIndirect: a miss is the normal case on current builds, so it must not log a find error
+        const byCode = find(filters.byCode('variant:"default",icon:', ".duration"), { isIndirect: true });
+        if (typeof byCode !== "function") return cachedCreateToast;
         // builds taking (message, type, options) answer the object probe with a
         // non-string text, older ones answer the positional probe with junk, so
         // try both before rejecting the normaliser

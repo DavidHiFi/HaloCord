@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { useSettings } from "@api/Settings";
+import { Settings, useSettings } from "@api/Settings";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Heading } from "@components/Heading";
 import { Margins } from "@components/margins";
@@ -12,10 +12,16 @@ import { Paragraph } from "@components/Paragraph";
 import { IS_WINDOWS } from "@utils/constants";
 import { Select } from "@webpack/common";
 
+// The MochaCord shell reads these when it creates the window, so mirror them over after every change.
+export function syncShellWindowPrefs() {
+    const { disableMinSize, transparent, winCtrlQ, windowsMaterial } = Settings;
+    window.MochaCordNative?.setWindowPrefs({ disableMinSize, transparent, winCtrlQ, windowsMaterial });
+}
+
 export function WindowsMaterialSettings() {
     const settings = useSettings(["windowsMaterial"]);
 
-    if (!IS_WINDOWS || IS_WEB || !VencordNative.native.supportsWindowsMaterial()) return null;
+    if (!IS_WINDOWS || !VencordNative.native.supportsWindowsMaterial()) return null;
 
     return (
         <ErrorBoundary noop>
@@ -46,7 +52,10 @@ export function WindowsMaterialSettings() {
                     }
                 ]}
                 closeOnSelect={true}
-                select={v => (settings.windowsMaterial = v)}
+                select={v => {
+                    settings.windowsMaterial = v;
+                    syncShellWindowPrefs();
+                }}
                 isSelected={v => v === settings.windowsMaterial}
                 serialize={s => s}
             />

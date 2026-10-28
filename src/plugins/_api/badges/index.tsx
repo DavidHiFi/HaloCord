@@ -204,7 +204,8 @@ async function loadAllBadges(noCache = false) {
     const urls = [
         { key: "vencord", url: "https://badges.vencord.dev/badges.json" },
         { key: "equicord", url: "https://badge.equicord.org/badges.json" },
-        { key: "testcord", url: TBADGES_JSON_URL }
+        // TestCord's badge list 404s since its repo went away (2026-10). Put this back if it returns:
+        // { key: "testcord", url: TBADGES_JSON_URL }
     ];
 
     const results = await Promise.allSettled(
