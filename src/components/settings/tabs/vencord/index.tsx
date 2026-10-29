@@ -43,8 +43,8 @@ const CONTRIB_BACKGROUND_IMAGE = "https://media.discordapp.net/stickers/13110701
 
 const cl = classNameFactory("vc-vencord-tab-");
 
-// The MochaCord desktop shell exposes its own window and app controls to the web build.
-const HAS_SHELL = IS_WEB && !!window.MochaCordNative;
+// The MochaCord shell owns its window and exposes its own window and app controls.
+const HAS_SHELL = !!window.MochaCordNative;
 
 type KeysOfType<Object, Type> = {
     [K in keyof Object]: Object[K] extends Type ? K : never;
@@ -64,13 +64,13 @@ function Switches() {
             title: "Enable Custom CSS",
             description: "Apply your configured QuickCSS"
         },
-        (!IS_WEB && !IS_DISCORD_DESKTOP || !IS_WINDOWS) && {
+        !HAS_SHELL && (!IS_WEB && !IS_DISCORD_DESKTOP || !IS_WINDOWS) && {
             key: "mainWindowFrameless",
             title: "Disable the Main Window Frame",
             description: "Remove the native window frame for a cleaner look. You can still move the window by dragging the title bar area.",
             restartRequired: true,
         },
-        !IS_WEB && (!IS_DISCORD_DESKTOP || !IS_WINDOWS
+        !IS_WEB && !HAS_SHELL && (!IS_DISCORD_DESKTOP || !IS_WINDOWS
             ? {
                 key: "frameless",
                 title: "Disable All Window Frames",

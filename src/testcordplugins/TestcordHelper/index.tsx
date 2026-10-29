@@ -947,7 +947,7 @@ function getClient() {
         const hash = tryOrElse(() => VesktopNative.app.getGitHash?.(), null);
         const dev = tryOrElse(() => VesktopNative.app.isDevBuild?.(), false);
         const spoof = tryOrElse(() => VesktopNative.app.getPlatformSpoofInfo?.(), null);
-        return `Equibop v${VesktopNative.app.getVersion()} [${hash?.slice(0, 7) ?? "?"}]${dev ? " DEV" : ""}${spoof?.spoofed ? ` (spoof: ${spoof.originalPlatform})` : ""}`;
+        return `MochaCord v${VesktopNative.app.getVersion()} [${hash?.slice(0, 7) ?? "?"}]${dev ? " DEV" : ""}${spoof?.spoofed ? ` (spoof: ${spoof.originalPlatform})` : ""}`;
     }
     if ("legcord" in window) return `LegCord v${(window as any).legcord.version}`;
     if ("goofcord" in window) return `GoofCord v${(window as any).goofcord.version}`;

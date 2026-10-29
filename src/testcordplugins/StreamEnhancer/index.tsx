@@ -21,13 +21,6 @@ import {
 import { ViewerControls } from "./components/ViewerControls";
 import { streamContextPatch, userContextPatch } from "./contextMenus";
 import { requestLocalPreview, setLocalPreviewChangeListener } from "./customPreviewImage";
-import {
-    installMicrophoneInterceptor,
-    prepareMicrophoneConstraints,
-    releaseMicrophoneStream,
-    uninstallMicrophoneInterceptor,
-    wrapMicrophoneStream
-} from "./microphone";
 import { streamEnhancerPatches } from "./patches";
 import { startPreviewSender, stopPreviewSender } from "./previewSender";
 import { getPreviewRefreshIntervalMs, getPreviewThumbnailDataUrl, refreshCustomPreview, shouldSpoofStreamPanelPreview, stopCustomPreviewLoader, streamEnhancerRuntime, streamEnhancerSettings } from "./settings";
@@ -63,7 +56,6 @@ const streamEnhancer = definePlugin({
     },
     patches: streamEnhancerPatches,
     start() {
-        installMicrophoneInterceptor();
         installOutgoingVideoFilterInterceptor();
         setLocalPreviewChangeListener(refreshCustomPreview);
         requestLocalPreview();
@@ -76,7 +68,6 @@ const streamEnhancer = definePlugin({
     },
     stop() {
         uninstallOutgoingVideoFilterInterceptor();
-        uninstallMicrophoneInterceptor();
         stopCustomPreviewLoader();
         stopPreviewSender();
         streamState.stopStreamEnhancerState();
@@ -129,9 +120,6 @@ const streamEnhancer = definePlugin({
     useRenderedStreamScaleVersion: streamState.useRenderedStreamScaleVersion,
     useRenderedStreamWidth: streamState.useRenderedStreamWidth,
     useRenderedWidthFromProps: streamState.useRenderedWidthFromProps,
-    prepareMicrophoneConstraints,
-    wrapMicrophoneStream,
-    releaseMicrophoneStream,
     ...streamEnhancerRuntime
 });
 

@@ -14,21 +14,14 @@ import { findByCode, findByPropsLazy, findStoreLazy } from "@webpack";
 import { ContextMenuApi, Menu, Select, Slider, TextInput, Toasts, useEffect, useState, useStateFromStores } from "@webpack/common";
 import type { MouseEvent, ReactNode } from "react";
 
-import { installMicrophoneInterceptor, syncLiveMicrophoneEffects } from "../microphone";
 import {
-    applyMicPresetAndSync,
-    applyShittyMicEffectPresetAndSync,
     applyStreamPreset,
     defaultStreamEnhancerConfig,
     getDefaultGoLiveSourceTypeValue,
     getSupportedStreamCodec,
     isStreamCodecAvailable,
-    micChannelRoutingOptions,
-    micPresetButtons,
     normalizeConfig,
     refreshAvailableVideoCodecs,
-    scheduleLiveMicrophoneRefresh,
-    shittyMicEffectPresetButtons,
     shouldOverrideStreamResolution,
     type StreamCodec,
     type StreamEnhancerConfig,
@@ -36,7 +29,6 @@ import {
     streamPresetButtons,
     streamResolutionOptions,
     syncCurrentGoLiveSource,
-    syncCurrentLiveMicConnections,
     syncCustomPreviewForKey
 } from "../settings";
 import { choiceAt, nearestChoice, showChoiceLabel, sliderChoices } from "../slider";
@@ -53,10 +45,6 @@ function StreamEnhancerSourceIcon({ className, height = 24, width = 24 }: { clas
 const codecOptions = ["auto", "av1", "vp9", "h264"] as const;
 const fpsOptions = [10, 30, 60, 120, 240, 320] as const;
 const streamBitrateOptions = [12000, 24000, 50000, 110000] as const;
-const micBitrateOptions = [1, 2, 4, 8, 12, 16, 24, 32, 64, 96, 128, 256, 320] as const;
-const hzMarkers = [16000, 48000, 96000, 192000] as const;
-const packetLossMarkers = [0, 2, 5, 10, 15, 20, 30] as const;
-const ptimeMarkers = [10, 20, 30, 40, 50, 60] as const;
 const previewScaleMarkers = [80, 90, 100, 110, 120, 140, 160] as const;
 const previewColorMarkers = [50, 75, 100, 125, 150, 175, 200] as const;
 const previewWidthMarkers = [640, 960, 1280, 1600, 1920, 2560, 3840] as const;
@@ -180,7 +168,6 @@ const getResolutionValue = (config: StreamEnhancerConfig) => `${config.streamWid
 const compactMarker = (value: number) => value < 1000
     ? String(Math.round(value))
     : `${value % 1000 === 0 ? value / 1000 : (value / 1000).toFixed(1).replace(/\.0$/, "")}k`;
-const hzMarker = (value: number) => compactMarker(value).replace(".1k", "k");
 const goLiveCustomPreset: GoLivePreset = 3;
 
 const toGoLiveResolution = (height: number): GoLiveResolution => {
@@ -328,7 +315,6 @@ function GoLiveQuickPanel({ selectedAudioSourceId }: { selectedAudioSourceId?: s
         vp9: false,
         h264: true
     });
-    const bypassSystemInputProcessing = useStateFromStores([mediaEngineStore], () => mediaEngineStore.getBypassSystemInputProcessing?.() ?? true);
     const qosEnabled = useStateFromStores([mediaEngineStore], () => mediaEngineStore.getQoS?.() ?? false);
     const [audioSources, setAudioSources] = useState<GoLiveAudioSource[]>([]);
     const [customPreviewUrl, setCustomPreviewUrl] = useState(normalized.customPreviewUrl);
@@ -353,10 +339,6 @@ function GoLiveQuickPanel({ selectedAudioSourceId }: { selectedAudioSourceId?: s
             syncCurrentGoLiveSource(updated);
         }
     };
-
-    useEffect(() => {
-        installMicrophoneInterceptor();
-    }, []);
 
     useEffect(() => {
         void refreshAvailableVideoCodecs().then(() => {
@@ -406,12 +388,16 @@ function GoLiveQuickPanel({ selectedAudioSourceId }: { selectedAudioSourceId?: s
             <div className={cl("go-live-hero")}>
                 <div className={cl("go-live-hero-copy")}>
                     <Heading tag="h2" className={cl("go-live-hero-title")}>Go Live Setup</Heading>
-                    <div className={cl("go-live-hero-subtitle")}>Use the quick controls below to pick your audio source, quality profile, and mic routing before you start streaming.</div>
+                    <div className={cl("go-live-hero-subtitle")}>Use the quick controls below to pick your audio source, resolution and frame rate before you start streaming.</div>
                 </div>
             </div>
 
             <div className={cl("go-live-grid")}>
                 <SettingsCard title="Resolution" subtitle="Set the main stream size and frame rate first.">
+                    <div className={cl("go-live-toggle-grid")}>
+                        <FormSwitch value={normalized.streamTweaksEnabled} onChange={value => setConfig({ streamTweaksEnabled: value })} title="Override FPS and resolution" />
+                    </div>
+                    <Divider />
                     <div className={cl("go-live-pill-row")}>
                         {streamPresetButtons.map(([preset, label]) => (
                             <QuickPillButton
@@ -468,17 +454,6 @@ function GoLiveQuickPanel({ selectedAudioSourceId }: { selectedAudioSourceId?: s
                     ) : (
                         <div className={cl("go-live-empty-state")}>No audio inputs were available when the modal opened.</div>
                     )}
-                    <Divider />
-                    <div className={cl("go-live-field-grid")}>
-                        <div className={cl("go-live-stat")}>
-                            <div className={cl("go-live-stat-label")}>Mic bitrate</div>
-                            <div className={cl("go-live-stat-value")}>{normalized.micBitrateKbps} kbps</div>
-                        </div>
-                        <div className={cl("go-live-stat")}>
-                            <div className={cl("go-live-stat-label")}>Sample rate</div>
-                            <div className={cl("go-live-stat-value")}>{normalized.micSampleRate} Hz</div>
-                        </div>
-                    </div>
                     <Divider />
                     <div className={cl("go-live-toggle-grid")}>
                         <FormSwitch value={currentGoLiveNotifyFriends} onChange={setGoLiveNotifyFriends} title="Notify friends" />
@@ -554,166 +529,6 @@ function GoLiveQuickPanel({ selectedAudioSourceId }: { selectedAudioSourceId?: s
                     </div>
                 </SettingsCard>
 
-                <SettingsCard title="Microphone" subtitle="Keep the mic controls grouped and obvious for quick changes.">
-                    <div className={cl("go-live-pill-row")}>
-                        {micPresetButtons.map(([preset, label]) => (
-                            <QuickPillButton
-                                key={preset}
-                                label={label}
-                                onClick={() => applyMicPresetAndSync(normalized, preset)}
-                            />
-                        ))}
-                    </div>
-                    <Divider />
-                    <div className={cl("go-live-field")}>
-                        <div className={cl("go-live-field-label")}>Mic bitrate</div>
-                        <div className={cl("go-live-pill-row")}>
-                            {micBitrateOptions.map(value => (
-                                <QuickPillButton
-                                    key={value}
-                                    active={normalized.micBitrateKbps === value}
-                                    label={`${value} kbps`}
-                                    onClick={() => setConfig({ micBitrateKbps: value })}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                    <div className={cl("go-live-field")}>
-                        <div className={cl("go-live-field-label")}>Channel routing</div>
-                        <Select
-                            options={micChannelRoutingOptions}
-                            isSelected={value => value === normalized.micChannelRouting}
-                            select={value => setConfig({ micChannelRouting: value as StreamEnhancerConfig["micChannelRouting"] })}
-                            serialize={value => value}
-                        />
-                    </div>
-                    <div className={cl("go-live-toggle-grid")}>
-                        <FormSwitch value={normalized.micStereo} onChange={value => setConfig({ micStereo: value })} title="Stereo mic" />
-                        <FormSwitch value={normalized.micEchoCancellation} onChange={value => setConfig({ micEchoCancellation: value })} title="Echo cancellation" />
-                        <FormSwitch value={normalized.micNoiseSuppression} onChange={value => setConfig({ micNoiseSuppression: value })} title="Noise suppression" />
-                        <FormSwitch value={normalized.micAutoGainControl} onChange={value => setConfig({ micAutoGainControl: value })} title="Auto gain control" />
-                    </div>
-                    <Divider />
-                    <div className={cl("go-live-field")}>
-                        <div className={cl("go-live-field-label")}>Voice effect</div>
-                        <div className={cl("go-live-pill-row")}>
-                            {shittyMicEffectPresetButtons.map(([preset, label]) => (
-                                <QuickPillButton
-                                    key={preset}
-                                    label={label}
-                                    onClick={() => applyShittyMicEffectPresetAndSync(normalized, preset)}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                    {normalized.micTweaksEnabled && (
-                        <>
-                            <div className={cl("go-live-toggle-grid")}>
-                                <SliderField
-                                    label="Voice pitch"
-                                    value={normalized.micShittyPitchShiftPercent}
-                                    min={-50}
-                                    max={100}
-                                    markers={[-50, -35, -20, 0, 20, 50, 70, 100]}
-                                    formatter={value => `${value}%`}
-                                    onChange={value => { setConfig({ micShittyPitchShiftPercent: value }); syncLiveMicrophoneEffects(); scheduleLiveMicrophoneRefresh(); }}
-                                />
-                                <SliderField
-                                    label="Echo"
-                                    value={normalized.micShittyEchoPercent}
-                                    min={0}
-                                    max={100}
-                                    markers={[0, 10, 20, 30, 40, 50, 60, 75, 100]}
-                                    formatter={value => `${value}%`}
-                                    onChange={value => { setConfig({ micShittyEchoPercent: value }); syncLiveMicrophoneEffects(); scheduleLiveMicrophoneRefresh(); }}
-                                />
-                                <SliderField
-                                    label="Bad mic amplifier"
-                                    value={normalized.micShittyVoiceBoostPercent}
-                                    min={0}
-                                    max={100}
-                                    markers={[0, 10, 20, 30, 40, 50, 60, 75, 100]}
-                                    formatter={value => `${value}%`}
-                                    onChange={value => { setConfig({ micShittyVoiceBoostPercent: value }); syncLiveMicrophoneEffects(); syncCurrentLiveMicConnections(); scheduleLiveMicrophoneRefresh(); }}
-                                />
-                                <SliderField
-                                    label="Bad mic bass boost"
-                                    value={normalized.micShittyBassBoostPercent}
-                                    min={0}
-                                    max={100}
-                                    markers={[0, 10, 20, 30, 40, 50, 60, 75, 100]}
-                                    formatter={value => `${value}%`}
-                                    onChange={value => { setConfig({ micShittyBassBoostPercent: value }); syncLiveMicrophoneEffects(); scheduleLiveMicrophoneRefresh(); }}
-                                />
-                                <SliderField
-                                    label="Bad mic bass resonance"
-                                    value={normalized.micShittyBassResonancePercent}
-                                    min={0}
-                                    max={100}
-                                    markers={[0, 10, 20, 30, 40, 50, 60, 75, 100]}
-                                    formatter={value => `${value}%`}
-                                    onChange={value => { setConfig({ micShittyBassResonancePercent: value }); syncLiveMicrophoneEffects(); scheduleLiveMicrophoneRefresh(); }}
-                                />
-                                <SliderField
-                                    label="Bad mic bitcrush"
-                                    value={normalized.micShittyBitcrushPercent}
-                                    min={0}
-                                    max={100}
-                                    markers={[0, 10, 20, 30, 40, 50, 60, 75, 100]}
-                                    formatter={value => `${value}%`}
-                                    onChange={value => { setConfig({ micShittyBitcrushPercent: value }); syncLiveMicrophoneEffects(); scheduleLiveMicrophoneRefresh(); }}
-                                />
-                                <SliderField
-                                    label="Robot ring mod"
-                                    value={normalized.micShittyFlutterPercent}
-                                    min={0}
-                                    max={100}
-                                    markers={[0, 10, 20, 30, 40, 50, 60, 75, 100]}
-                                    formatter={value => `${value}%`}
-                                    onChange={value => { setConfig({ micShittyFlutterPercent: value }); syncLiveMicrophoneEffects(); scheduleLiveMicrophoneRefresh(); }}
-                                />
-                                <SliderField
-                                    label="Bad mic muffle"
-                                    value={normalized.micShittyMufflePercent}
-                                    min={0}
-                                    max={100}
-                                    markers={[0, 10, 20, 30, 40, 50, 60, 75, 100]}
-                                    formatter={value => `${value}%`}
-                                    onChange={value => { setConfig({ micShittyMufflePercent: value }); syncLiveMicrophoneEffects(); scheduleLiveMicrophoneRefresh(); }}
-                                />
-                                <SliderField
-                                    label="Bad mic static"
-                                    value={normalized.micShittyStaticPercent}
-                                    min={0}
-                                    max={100}
-                                    markers={[0, 10, 20, 30, 40, 50, 60, 75, 100]}
-                                    formatter={value => `${value}%`}
-                                    onChange={value => { setConfig({ micShittyStaticPercent: value }); syncLiveMicrophoneEffects(); scheduleLiveMicrophoneRefresh(); }}
-                                />
-                                <SliderField
-                                    label="Bad mic dropout"
-                                    value={normalized.micShittyDropoutPercent}
-                                    min={0}
-                                    max={100}
-                                    markers={[0, 10, 20, 30, 40, 50, 60, 75, 100]}
-                                    formatter={value => `${value}%`}
-                                    onChange={value => { setConfig({ micShittyDropoutPercent: value }); syncLiveMicrophoneEffects(); scheduleLiveMicrophoneRefresh(); }}
-                                />
-                                <SliderField
-                                    label="Bad mic clipping"
-                                    value={normalized.micShittyClippingPercent}
-                                    min={0}
-                                    max={100}
-                                    markers={[0, 10, 20, 30, 40, 50, 60, 75, 100]}
-                                    formatter={value => `${value}%`}
-                                    onChange={value => { setConfig({ micShittyClippingPercent: value }); syncLiveMicrophoneEffects(); scheduleLiveMicrophoneRefresh(); }}
-                                />
-                                <FormSwitch value={normalized.micShittyHardCutout} onChange={value => { setConfig({ micShittyHardCutout: value }); syncLiveMicrophoneEffects(); scheduleLiveMicrophoneRefresh(); }} title="Cut out more aggressively" />
-                            </div>
-                        </>
-                    )}
-                </SettingsCard>
-
                 <SettingsCard title="Preview" subtitle="Keep preview behavior easy to understand and change.">
                     <div className={cl("go-live-field-grid")}>
                         <div className={cl("go-live-stat")}>
@@ -749,7 +564,7 @@ function GoLiveQuickPanel({ selectedAudioSourceId }: { selectedAudioSourceId?: s
                 <div className={cl("go-live-advanced-header")}>
                     <div className={cl("go-live-card-copy")}>
                         <Heading tag="h3" className={cl("go-live-card-title")}>Advanced</Heading>
-                        <div className={cl("go-live-card-subtitle")}>Extra controls for bitrate, preview behavior, and mic tuning.</div>
+                        <div className={cl("go-live-card-subtitle")}>Extra controls for bitrate, network and preview behavior.</div>
                     </div>
                     <Button
                         size="small"
@@ -764,10 +579,6 @@ function GoLiveQuickPanel({ selectedAudioSourceId }: { selectedAudioSourceId?: s
                 {showAdvanced && (
                     <div className={cl("go-live-advanced-grid")}>
                         <SettingsCard title="Stream Fine Tuning" subtitle="Dial in video behavior once your preset and resolution are set.">
-                            <div className={cl("go-live-toggle-grid")}>
-                                <FormSwitch value={normalized.streamTweaksEnabled} onChange={value => setConfig({ streamTweaksEnabled: value })} title="Override FPS and resolution" />
-                            </div>
-                            <Divider />
                             <SliderField label="Resolution scale" value={normalized.streamScalePercent} min={50} max={400} markers={[50, 75, 100, 125, 150, 200, 250, 300, 400]} onChange={value => setConfig({ streamScalePercent: value })} formatter={value => `${value}%`} />
                             <SliderField label="Minimum video bitrate" value={normalized.streamMinVideoBitrateKbps} min={250} max={120000} markers={streamBitrateOptions} onChange={value => setConfig({ streamMinVideoBitrateKbps: value })} formatter={value => `${compactMarker(value)} kbps`} />
                         </SettingsCard>
@@ -776,29 +587,6 @@ function GoLiveQuickPanel({ selectedAudioSourceId }: { selectedAudioSourceId?: s
                             <div className={cl("go-live-toggle-grid")}>
                                 <FormSwitch value={qosEnabled} onChange={value => audioSettingsActionCreators.setQoS?.(value)} title="QoS packets" />
                             </div>
-                        </SettingsCard>
-
-                        <SettingsCard title="Microphone Fine Tuning" subtitle="Everything beyond the quick mic profile lives here.">
-                            <div className={cl("go-live-toggle-grid")}>
-                                <FormSwitch value={normalized.micTweaksEnabled} onChange={value => setConfig({ micTweaksEnabled: value })} title="Improve microphone quality" />
-                                <FormSwitch value={normalized.receiveStereoAudio} onChange={value => setConfig({ receiveStereoAudio: value })} title="Prefer stereo playback" />
-                                <FormSwitch value={normalized.forceRemoteMonoAudio} onChange={value => setConfig({ forceRemoteMonoAudio: value })} title="Force incoming voices to mono" />
-                                <FormSwitch value={normalized.micDtx} onChange={value => setConfig({ micDtx: value })} title="Silence compression" />
-                                <FormSwitch value={normalized.micFec} onChange={value => setConfig({ micFec: value })} title="Forward error correction" />
-                                <FormSwitch value={normalized.micForceCbr} onChange={value => setConfig({ micForceCbr: value })} title="Use constant bitrate" />
-                                <FormSwitch value={normalized.micPriorityBoost} onChange={value => setConfig({ micPriorityBoost: value })} title="Favor mic quality" />
-                                <FormSwitch value={normalized.micBuiltInEchoCancellation} onChange={value => setConfig({ micBuiltInEchoCancellation: value })} title="Built in echo cancellation" />
-                                <FormSwitch value={normalized.micNativeNoiseCancellation} onChange={value => setConfig({ micNativeNoiseCancellation: value })} title="Native noise cancellation" />
-                                <FormSwitch value={normalized.micNativeKrisp} onChange={value => setConfig({ micNativeKrisp: value })} title="Native Krisp" />
-                                <FormSwitch value={bypassSystemInputProcessing} onChange={value => audioSettingsActionCreators.setBypassSystemInputProcessing?.(value)} title="Bypass system input processing" />
-                            </div>
-                            <Divider />
-                            <SliderField label="Input channels" value={normalized.micChannelCount} min={1} max={2} markers={[1, 2]} onChange={value => setConfig({ micChannelCount: value })} />
-                            <SliderField label="Mic gain" value={normalized.micGainPercent} min={25} max={300} markers={[25, 50, 75, 100, 125, 150, 200, 250, 300]} onChange={value => { setConfig({ micGainPercent: value }); syncLiveMicrophoneEffects(); syncCurrentLiveMicConnections(); scheduleLiveMicrophoneRefresh(); }} formatter={value => `${value}%`} />
-                            <SliderField label="Encoder quality" value={normalized.micOpusComplexity} min={0} max={10} markers={[0, 2, 4, 6, 8, 10]} onChange={value => setConfig({ micOpusComplexity: value })} />
-                            <SliderField label="Packet loss protection" value={normalized.micPacketLossPercent} min={0} max={30} markers={packetLossMarkers} onChange={value => setConfig({ micPacketLossPercent: value })} formatter={value => `${value}%`} />
-                            <SliderField label="Packet duration" value={normalized.micPtimeMs} min={10} max={60} markers={ptimeMarkers} onChange={value => setConfig({ micPtimeMs: value })} formatter={value => `${value} ms`} />
-                            <SliderField label="Playback rate hint" value={normalized.micMaxPlaybackRate} min={8000} max={192000} markers={hzMarkers} onChange={value => setConfig({ micMaxPlaybackRate: value })} formatter={value => `${hzMarker(value)} Hz`} />
                         </SettingsCard>
 
                         <SettingsCard title="Preview Pipeline And Viewer" subtitle="Keep preview tuning and viewer behavior in one place.">

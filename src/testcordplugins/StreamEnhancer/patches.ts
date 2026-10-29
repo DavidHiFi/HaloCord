@@ -187,122 +187,10 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         }
     },
     {
-        find: "mediaEngineConnectionId=`WebRTC-",
-        replacement: {
-            match: /voiceBitrate=\i\.\i;/,
-            replace: "voiceBitrate=$self.getConfiguredMicBitrate();"
-        }
-    },
-    {
-        find: "UnifiedConnection(",
-        replacement: {
-            match: /setBitRate\((\i)\)\{/,
-            replace: "setBitRate($1){$1=$self.getConfiguredMicBitrate();"
-        }
-    },
-    {
-        find: "this.conn.setTransportOptions(this.getCodecOptions(",
-        replacement: {
-            match: /setVoiceBitRate\((\i)\)\{/,
-            replace: "setVoiceBitRate($1){$1=$self.getConfiguredMicBitrate();"
-        }
-    },
-    {
-        find: "this.conn.setTransportOptions(this.getCodecOptions(",
-        replacement: {
-            match: /(\i)===(\i)\.(\i)\.STREAM&&\((\i)\.channels=2\)/,
-            replace: "$self.applyMicCodecPreference($4,this.codecs,$1,$2.$3)"
-        }
-    },
-    {
-        find: "fmtp.push({config:",
-        replacement: {
-            match: /config:`minptime=10;useinbandfec=1;usedtx=\$\{\i\?"0":"1"\}(?:\$\{\i\?";stereo=1;sprop-stereo=1":""\})*`/,
-            replace: "config:$self.getMicOpusFmtpConfig()"
-        }
-    },
-    {
         find: "setDesktopEncodingOptions(",
         replacement: {
             match: /setDesktopEncodingOptions\((\i),(\i),(\i)\)\{/,
             replace: "setDesktopEncodingOptions($1,$2,$3){if(this.destroyed)return;$1=$self.getConfiguredStreamWidth($1);$2=$self.getConfiguredStreamHeight($2);$3=$self.getConfiguredStreamFps($3);"
-        }
-    },
-    {
-        find: "automaticGainControlConfig:this.automaticGainControl",
-        replacement: [
-            {
-                match: /builtInEchoCancellation:!0/,
-                replace: "builtInEchoCancellation:$self.getMicBuiltInEchoCancellationEnabled()"
-            },
-            {
-                match: /echoCancellation:this\.echoCancellation/,
-                replace: "echoCancellation:$self.getMicEchoCancellationEnabled()"
-            },
-            {
-                match: /noiseSuppression:this\.noiseSuppression/,
-                replace: "noiseSuppression:$self.getMicNoiseSuppressionEnabled()"
-            },
-            {
-                match: /automaticGainControl:this\.automaticGainControl\.enabled/,
-                replace: "automaticGainControl:$self.getMicAutoGainControlEnabled()"
-            },
-            {
-                match: /automaticGainControlConfig:this\.automaticGainControl/,
-                replace: "automaticGainControlConfig:$self.getMicTransportAutomaticGainControlConfig(this.automaticGainControl)"
-            },
-            {
-                match: /noiseCancellation:this\.noiseCancellation/,
-                replace: "noiseCancellation:$self.getMicNativeNoiseCancellationEnabled()"
-            },
-            {
-                match: /noiseCancellationDuringProcessing:this\.noiseCancellationDuringProcessing/,
-                replace: "noiseCancellationDuringProcessing:$self.getMicNativeNoiseCancellationEnabled()"
-            },
-        ]
-    },
-    {
-        find: "prioritySpeakerDucking",
-        replacement: [
-            {
-                match: /fec:!0/,
-                replace: "fec:$self.getMicFecEnabled()"
-            },
-            {
-                match: /packetLossRate:\.3/,
-                replace: "packetLossRate:$self.getMicPacketLossRate()"
-            },
-            {
-                match: /encodingVoiceBitRate:this\.voiceBitrate/,
-                replace: "encodingVoiceBitRate:$self.getConfiguredMicBitrate()"
-            },
-            {
-                match: /callBitRate:\i\.\i/,
-                replace: "callBitRate:$self.getConfiguredMicBitrate()"
-            },
-            {
-                match: /callMinBitRate:\i\.\i/,
-                replace: "callMinBitRate:$self.getConfiguredMicBitrate()"
-            },
-            {
-                match: /callMaxBitRate:\i\.\i/,
-                replace: "callMaxBitRate:$self.getConfiguredMicBitrate()"
-            }
-        ]
-    },
-    {
-        find: "noiseCancellationSupported:I,noiseCancellationEnableStats:D,vadDuringPreProcess:T",
-        replacement: {
-            match: /vadDuringPreProcess:T/,
-            replace: "$&",
-            noWarn: true
-        }
-    },
-    {
-        find: "this.vadUseKrisp=",
-        replacement: {
-            match: /this\.vadThreshold=(\i)\.vadThreshold.{0,120}this\.vadTrailing=\1\.vadTrailing/,
-            replace: "this.vadThreshold=$1.vadThreshold,this.vadAutoThreshold=$1.vadAutoThreshold,this.vadUseKrisp=$self.getMicNativeKrispEnabled(),this.vadLeading=$1.vadLeading,this.vadTrailing=$1.vadTrailing"
         }
     },
     {
@@ -317,13 +205,6 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         replacement: {
             match: /return (\i)\.getConfig\(\{location:(\i)\}\)/,
             replace: "return $self.getGoLiveHdrExperimentConfig($1.getConfig({location:$2}))"
-        }
-    },
-    {
-        find: "AUDIO_VOLUME_CHANGE",
-        replacement: {
-            match: /\{inputVolume:(\i)\((\i)\)\}\),(\i)\.setInputVolume\(\2\)/,
-            replace: "{inputVolume:$1($2,$self.getMaxMicInputVolume())}),$3.setInputVolume($2)"
         }
     },
     {
