@@ -1,0 +1,363 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2024 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+import { disableStyle, enableStyle } from "@api/Styles";
+import { ButtonCompat } from "@components/Button";
+import { FormSwitch } from "@components/FormSwitch";
+import { HeadingSecondary } from "@components/Heading";
+import { Paragraph } from "@components/Paragraph";
+import { SettingsSection } from "@components/settings/tabs/plugins/components/Common";
+import { makeRange, OptionType } from "@utils/types";
+import { MaskedLink, Select, showToast, TextInput, Toasts } from "@webpack/common";
+
+import { defineModuleSettings } from "../moduleSettings";
+import hoverOnlyStyle from "./hoverOnly.css?managed";
+import betterSpotifyControlsStyle from "./spotify/betterSpotifyControls.css?managed";
+import { clearLyricsCache, removeTranslations } from "./spotify/lyrics/api";
+import languages from "./spotify/lyrics/providers/translator/languages";
+import { Provider } from "./spotify/lyrics/providers/types";
+
+const sliderOptions = {
+    markers: makeRange(-2500, 2500, 250),
+    stickToMarkers: true,
+};
+
+export function toggleHoverControls(value: boolean) {
+    (value ? enableStyle : disableStyle)(hoverOnlyStyle);
+    if (!value) {
+        document.querySelectorAll("#vc-spotify-player, #eq-tdl-player").forEach(player => {
+            player.classList.remove("vc-ctrl-active");
+        });
+    }
+}
+
+export function toggleBetterSpotifyControls(value: boolean) {
+    (value ? enableStyle : disableStyle)(betterSpotifyControlsStyle);
+}
+
+function InstallInstructions() {
+    return (
+        <section>
+            <HeadingSecondary>How to install</HeadingSecondary>
+            <Paragraph>
+                Install <MaskedLink href="https://github.com/Inrixia/TidaLuna#installation">TidaLuna</MaskedLink> from here, then go to TidalLuna settings &rarr; Plugin stores &rarr; Install <code>@vmohammad/api</code>
+            </Paragraph>
+        </section>
+    );
+}
+
+/** Settings that only affect Spicy Lyrics, shown only while it is the selected provider. */
+function SpicyLyricsSettings() {
+    const s = settings.use(["dynamicBackground", "lyricsAnimation", "seekFadeCompensation"]);
+
+    return (
+        <SettingsSection id="spicy-lyrics-options" name="Spicy Lyrics" description="Options for Spicy Lyrics only.">
+            <FormSwitch
+                title="Dynamic Background"
+                description="Animated album-art background behind the lyrics. Turn off to save GPU/CPU."
+                value={s.dynamicBackground}
+                onChange={v => { settings.store.dynamicBackground = v; }}
+            />
+            <FormSwitch
+                title="Lyrics Animation"
+                description="Word scale, lift and glow, held-word letters and the bouncing interlude dots. When off, words only get the colour sweep."
+                value={s.lyricsAnimation}
+                onChange={v => { settings.store.lyricsAnimation = v; }}
+            />
+            <FormSwitch
+                title="Seek Fade-in Compensation"
+                description="Clicking a lyric line starts 300 ms before it, so Spotify's fade-in doesn't clip the first word. Best for rap and fast songs."
+                value={s.seekFadeCompensation}
+                onChange={v => { settings.store.seekFadeCompensation = v; }}
+                hideBorder
+            />
+        </SettingsSection>
+    );
+}
+
+function LyricsProviderSettings() {
+    const { lyricsProvider } = settings.use(["lyricsProvider"]);
+
+    return (
+        <>
+            <SettingsSection id="lyrics-provider" name="Lyrics Provider" description="Where lyrics are fetched from.">
+                <Select
+                    options={[
+                        { value: Provider.Lrclib, label: "LRCLIB", default: true },
+                        { value: Provider.Spotify, label: "Spotify (Musixmatch)" },
+                        { value: Provider.SpicyLyrics, label: "Spicy Lyrics (experimental)" },
+                    ]}
+                    isSelected={v => v === settings.store.lyricsProvider}
+                    select={v => { settings.store.lyricsProvider = v as Provider; }}
+                    serialize={v => v}
+                    placeholder="Select a lyrics provider"
+                />
+            </SettingsSection>
+
+            {lyricsProvider === Provider.SpicyLyrics && <SpicyLyricsSettings />}
+
+            {settings.store.lyricsProvider === Provider.Spotify && (
+                <SettingsSection
+                    id="spotify-lyrics-provider"
+                    name="Spotify Lyrics API Base URL"
+                    description="Custom instance base URL (for example: http://localhost:8080)."
+                >
+                    <TextInput
+                        type="text"
+                        value={settings.store.spotifyLyricsApiUrl}
+                        onChange={v => {
+                            settings.store.spotifyLyricsApiUrl = v;
+                            void clearLyricsCache();
+                            showToast({ text: "Lyrics cache purged", variant: "success" });
+                        }}
+                        placeholder="https://spotify-lyrics-api-pi.vercel.app"
+                        maxLength={null}
+                    />
+                </SettingsSection>
+            )}
+        </>
+    );
+}
+
+export const settings = defineModuleSettings("MusicControls", {
+    hoverControls: {
+        description: "Show controls on hover, hold control or press twice in quick succession to cycle modes",
+        type: OptionType.BOOLEAN,
+        default: false,
+        onChange: v => toggleHoverControls(v)
+    },
+    showMusicNoteOnNoLyrics: {
+        description: "Show a music note icon when no lyrics are found",
+        type: OptionType.BOOLEAN,
+        default: true,
+    },
+    dynamicBackground: {
+        description: "Animated album-art background behind Spicy Lyrics (turn off to save GPU/CPU)",
+        type: OptionType.BOOLEAN,
+        default: true,
+        hidden: true,
+    },
+    lyricsAnimation: {
+        description: "Animate lyrics: word scale, lift and glow, held-word letters and the interlude dots' bounce. When off, words only get the colour sweep",
+        type: OptionType.BOOLEAN,
+        default: true,
+        hidden: true,
+    },
+    lyricsPosition: {
+        description: "Position of the lyrics",
+        type: OptionType.SELECT,
+        options: [
+            { value: "above", label: "Above Player(s)" },
+            { value: "below", label: "Below  Player(s)", default: true },
+        ],
+    },
+    lyricsProvider: {
+        description: "Where lyrics are fetched from",
+        type: OptionType.SELECT,
+        options: [
+            { value: Provider.Lrclib, label: "LRCLIB", default: true },
+            { value: Provider.Spotify, label: "Spotify (Musixmatch)" },
+            { value: Provider.SpicyLyrics, label: "Spicy Lyrics (experimental)" },
+        ],
+        hidden: true,
+    },
+    spotifyLyricsApiUrl: {
+        type: OptionType.STRING,
+        description: "Spotify lyrics API base URL.",
+        hidden: true,
+        default: "https://spotify-lyrics-api-pi.vercel.app",
+        onChange: async () => {
+            await clearLyricsCache();
+            showToast({ text: "Lyrics cache purged", variant: "success" });
+        }
+    },
+    spicyLyricsApiKey: {
+        type: OptionType.STRING,
+        description: "Spicy lyrics API key.",
+        hidden: true,
+        default: "sl_pk_SIdRGszanA0Rzk3vFne0LH1QT3RP03d4EymnxMhWkFs",
+        onChange: async () => {
+            await clearLyricsCache();
+            showToast("Lyrics cache purged", Toasts.Type.SUCCESS);
+        }
+    },
+    lyricsProviderSettings: {
+        type: OptionType.COMPONENT,
+        component: LyricsProviderSettings,
+    },
+    translateTo: {
+        description: "Translate lyrics to - Changing this will clear existing translations",
+        type: OptionType.SELECT,
+        options: languages,
+        onChange: async () => {
+            await removeTranslations();
+            showToast({ text: "Translations cleared", variant: "success" });
+        }
+    },
+    lyricsConversion: {
+        description: "Automatically translate or romanize lyrics",
+        type: OptionType.SELECT,
+        options: [
+            { value: Provider.None, label: "None", default: true },
+            { value: Provider.Translated, label: "Translate" },
+            { value: Provider.Romanized, label: "Romanize" },
+        ]
+    },
+    fallbackProvider: {
+        description: "When a lyrics provider fails, try other providers",
+        type: OptionType.BOOLEAN,
+        default: true,
+    },
+    showFailedToasts: {
+        description: "Show toasts when lyrics fail to fetch",
+        type: OptionType.BOOLEAN,
+        default: true,
+    },
+    lyricDelay: {
+        description: "Universal lyrics delay",
+        type: OptionType.SLIDER,
+        default: 0,
+        ...sliderOptions
+    },
+    purgeLyricsCache: {
+        description: "Purge the lyrics cache",
+        type: OptionType.COMPONENT,
+        component: () => (
+            <ButtonCompat
+                color={ButtonCompat.Colors.RED}
+                onClick={() => {
+                    clearLyricsCache();
+                    showToast({ text: "Lyrics cache purged", variant: "success" });
+                }}
+            >
+                Purge Cache
+            </ButtonCompat>
+        ),
+    },
+    spotifySectionTitle: {
+        type: OptionType.COMPONENT,
+        component: () => (
+            <section>
+                <HeadingSecondary>Spotify</HeadingSecondary>
+            </section>
+        )
+    },
+    showSpotifyControls: {
+        description: "Show Spotify Controls",
+        type: OptionType.BOOLEAN,
+        default: false,
+    },
+    fiveMinuteHide: {
+        description: "Hide the Spotify Controls after five minutes",
+        type: OptionType.BOOLEAN,
+        default: true,
+    },
+    betterSpotifyControls: {
+        description: "Use album cover as SpotifyControls background",
+        type: OptionType.BOOLEAN,
+        default: false,
+        onChange: v => toggleBetterSpotifyControls(v),
+    },
+    showSpotifyLyrics: {
+        description: "Show Spotify Lyrics",
+        type: OptionType.BOOLEAN,
+        default: false,
+    },
+    useSpotifyUris: {
+        type: OptionType.BOOLEAN,
+        description: "Open Spotify URIs instead of Spotify URLs. Will only work if you have Spotify installed and might not work on all platforms",
+        default: false
+    },
+    previousButtonRestartsTrack: {
+        type: OptionType.BOOLEAN,
+        description: "Restart currently playing track when pressing the previous button if playtime is >3s",
+        default: true
+    },
+    smoothScroll: {
+        type: OptionType.BOOLEAN,
+        description: "Smooth lyrics scrolling: glide to the active line. When off, the lyrics snap to it instead",
+        default: true
+    },
+    seekFadeCompensation: {
+        type: OptionType.BOOLEAN,
+        description: "Seek Fade-in Compensation: clicking a lyric line starts 300 ms before it, so Spotify's fade-in doesn't clip the first word. Best for rap and fast songs",
+        default: true,
+        hidden: true,
+    },
+    tdalSectionTitle: {
+        type: OptionType.COMPONENT,
+        component: () => (
+            <section>
+                <HeadingSecondary>Tidal</HeadingSecondary>
+            </section>
+        )
+    },
+    installTidalWithWS: {
+        type: OptionType.COMPONENT,
+        component: () => <InstallInstructions />
+    },
+    showTidalControls: {
+        description: "Show Tidal Player",
+        type: OptionType.BOOLEAN,
+        default: false,
+    },
+    showTidalLyrics: {
+        description: "Show Tidal Controls",
+        type: OptionType.BOOLEAN,
+        default: false,
+    },
+    websocketURL: {
+        type: OptionType.STRING,
+        description: "Default is ws://localhost:24123",
+        default: "ws://localhost:24123",
+        restartNeeded: true,
+    },
+
+    strawberrySectionTitle: {
+        type: OptionType.COMPONENT,
+        component: () => (
+            <section>
+                <HeadingSecondary>Strawberry Music Player</HeadingSecondary>
+            </section>
+        )
+    },
+    showStrawberryControls: {
+        description: "Show Strawberry Player",
+        type: OptionType.BOOLEAN,
+        default: false,
+    },
+    showStrawberryLyrics: {
+        description: "Show Strawberry Synced Lyrics",
+        type: OptionType.BOOLEAN,
+        default: false,
+    },
+    strawberryConnectionMode: {
+        description: "Connection method to Strawberry",
+        type: OptionType.SELECT,
+        options: [
+            { value: "auto", label: "Auto (Native MPRIS/CLI & WebSocket)", default: true },
+            { value: "native", label: "Native (MPRIS on Linux / CLI on Windows)" },
+            { value: "websocket", label: "WebSocket Bridge (e.g. ws://localhost:24124)" },
+            { value: "http", label: "HTTP Polling (e.g. http://localhost:6800)" },
+        ],
+    },
+    strawberryWebsocketUrl: {
+        type: OptionType.STRING,
+        description: "WebSocket URL for Strawberry (default: ws://localhost:24124)",
+        default: "ws://localhost:24124",
+        restartNeeded: true,
+    },
+    strawberryHttpUrl: {
+        type: OptionType.STRING,
+        description: "HTTP URL for Strawberry (default: http://localhost:6800)",
+        default: "http://localhost:6800",
+    },
+    strawberryBinaryPath: {
+        type: OptionType.STRING,
+        description: "Custom path to strawberry executable (optional)",
+        default: "",
+    }
+});

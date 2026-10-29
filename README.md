@@ -24,9 +24,18 @@
 
 ## Installation
 
-1. Download `Kurtcord-2.8.3-Setup.exe` (installer) or `Kurtcord-2.8.3-Portable.exe` (portable, nothing gets installed) from the [latest release](https://github.com/DavidHiFi/MochaCord-Client/releases/latest).
-2. Run the file you downloaded. The portable runs from any folder or a USB drive.
-3. Log in with your Discord account. Settings live in `%APPDATA%\Kurtcord` while the client still runs under its original name.
+There is no release right now. MochaCord is a work in progress, and installers come back once it is ready. Until then you can build it yourself; [docs/building.md](docs/building.md) has the steps.
+
+## Source
+
+| Folder | What it holds |
+|---|---|
+| `base/` | KurtCord 2.8.3's app files, unchanged, as the shell starts from them. |
+| `shell/` | MochaCord's own shell code: the acrylic window blur and the voice effects engine. |
+| `build/` | `assemble.py`, which patches the shell, adds the bundle and makes the installer. |
+| `web/` | The TestCord-based plugin bundle with MochaCord's changes. |
+| `brand/` | Icon sources. |
+| `tools/` | Small scripts for checking a running build over the debug port. |
 
 ## Features
 
@@ -36,6 +45,8 @@
 - **Opus controls** for bitrate, sample rate, frame time, complexity, FEC, DTX and CBR.
 - **Microphone chain** with gain, reverb and EQ, plus second and third microphone inputs with their own devices.
 - **Input bypass** that sends your microphone raw, past system processing.
+- **Voice effects** in Voice & Video: pitch, echo, robot, bitcrush, radio static and eleven presets, heard in the mic test.
+- **Screen share with audio**, captured without echo cancellation, noise suppression or gain control.
 
 ### Voice guards
 
@@ -51,6 +62,10 @@
 - **Advanced Camera Controls** and **Advanced Hardware Acceleration** for caps, rasterisation and decode.
 - **Native camera rendering** with no canvas re-encode when no filter is set.
 
+### Window
+
+- **Acrylic blur** behind the window on Windows 11, the same effect Windhawk's translucent-windows mod gives Discord.
+
 ### Privacy
 
 - Every setting lives on your machine. No analytics, no telemetry, no backend server.
@@ -64,29 +79,14 @@
 ## Notes
 
 > [!IMPORTANT]
-> **This is a preserved fork and the rebrand is still ahead.** The current release carries KurtCord 2.8.3's own files, byte for byte. The client still calls itself Kurtcord, stores settings in `%APPDATA%\Kurtcord`, and checks kurtzonaudio's releases for updates. The first MochaCord build lands in a later release.
+> **Work in progress.** The source here builds MochaCord 2.8.4, which already runs under its own name, stores settings in `%APPDATA%\MochaCord`, and checks this repo for updates. There is no release yet.
 
 > [!WARNING]
 > **Third-party client.** Discord does not officially support third-party clients. KurtCord's own FAQ says the client-side cause of account flags was fixed in 2.7.7, but behavior no client controls, like mass friend requests or brand new accounts, can still draw action. Use it at your own risk.
 
-<details>
-<summary><b>Binary verification</b></summary>
-
-<br>
-
-SHA-256 of the release files, matching the original [Kurtcord 2.8.3 release](https://github.com/kurtzonaudio/kurtcord/releases/tag/v2.8.3) byte for byte:
-
-```
-C4B83AC7B436E0CFF54663982F3E7FF41E92096291FB394166C676D0EBEFD3E4  Kurtcord-2.8.3-Portable.exe
-D6079C7352EDB42749EC373B7BAB2379B67EFB497DEC19675E803F3D85D95B8A  Kurtcord-2.8.3-Setup.exe
-809162A951DC75F6A9B1314BFEE59DB26DE8407A2F81692A146EED33AE9DF8C7  Kurtcord-2.8.3-Setup.exe.zip
-```
-
-</details>
-
 ## Contributing
 
-Bug reports with the client version and a screenshot help most right now, while the rebrand is in progress.
+Bug reports with the client version and a screenshot help most right now.
 
 <a href="CONTRIBUTING.md">
 <img src="https://img.shields.io/badge/%F0%9F%A4%9D%20HOW%20TO%20CONTRIBUTE-8957E5?style=for-the-badge&labelColor=161B22" alt="How to contribute" height="36">
@@ -112,7 +112,8 @@ Thank you for starring the repo.
 |---|---|
 | **Kurtzon** ([KurtCord](https://github.com/kurtzonaudio/kurtcord)) | The whole client: voice engine, guards, camera path, installers and plugins. MochaCord is a fork of KurtCord 2.8.3. |
 | **Equicord contributors** ([Equicord](https://github.com/Equicord/Equicord)) | The bundled Equicord plugin suite. |
-| **TestcordDev** ([TestCord](https://github.com/TestcordDev/TestCord)) | The bundled Testcord plugins. |
+| **TestcordDev** ([TestCord](https://github.com/TestcordDev/TestCord)) | The bundled Testcord plugins and the base of `web/`. |
+| **Vladimír Kalouš** ([koffi](https://github.com/Koromix/koffi)) | The library the shell uses to call Windows for the acrylic blur. |
 
 Built on [Electron](https://www.electronjs.org/), running [Discord](https://discord.com)'s web app, with the [Equicord](https://github.com/Equicord/Equicord) plugin suite.
 
@@ -120,7 +121,7 @@ Built on [Electron](https://www.electronjs.org/), running [Discord](https://disc
 
 ## Disclaimers
 
-This repository was set up with an AI coding agent working for the repo owner. The client itself is Kurtzon's work, and no code in it was written for MochaCord yet.
+This repository was set up with an AI coding agent working for the repo owner, and the MochaCord changes in `shell/`, `build/` and `web/` were written the same way. The client underneath is Kurtzon's work.
 
 The [DavidHiFi/MochaCord](https://github.com/DavidHiFi/MochaCord) theme is a separate project. It is a Catppuccin Mocha theme for Vencord-based clients, not this client.
 

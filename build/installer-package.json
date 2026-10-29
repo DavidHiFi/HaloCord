@@ -1,0 +1,38 @@
+{
+  "name": "mochacord",
+  "productName": "MochaCord",
+  "version": "2.8.4",
+  "description": "MochaCord",
+  "author": {
+    "name": "DavidHiFi",
+    "url": "https://github.com/DavidHiFi"
+  },
+  "build": {
+    "appId": "com.davidhifi.mochacord",
+    "productName": "MochaCord",
+    "copyright": "Copyright (c) 2026 DavidHiFi. Based on Kurtcord by Kurtzon.",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "../brand/mochacord.ico",
+      "executableName": "MochaCord",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "../brand/mochacord.ico",
+      "uninstallerIcon": "../brand/mochacord.ico",
+      "shortcutName": "MochaCord",
+      "uninstallDisplayName": "MochaCord",
+      "artifactName": "MochaCord-Setup-${version}.exe",
+      "deleteAppDataOnUninstall": false
+    },
+    "electronVersion": "37.6.0"
+  }
+}
