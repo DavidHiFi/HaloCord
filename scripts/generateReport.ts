@@ -42,6 +42,10 @@ let metaData = {
 const browser = await pup.launch({
     headless: true,
     executablePath: process.env.CHROMIUM_BIN,
+    // The renderer is saturated for minutes once all modules are required and
+    // the lazy find backlog runs; the default 180 s per-call timeout made one
+    // slow jsonValue crash the whole reporter before any report was printed.
+    protocolTimeout: 0,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
 });
 
@@ -50,6 +54,51 @@ const browserJs = readFileSync("./dist/browser/browser.js", "utf-8");
 const page = await browser.newPage();
 await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
 await page.setBypassCSP(true);
+
+// CPU profiling for hang hunts: attach before the page gets busy and snapshot
+// periodically, so a hard renderer freeze still leaves a usable profile on
+// disk. Set REPORTER_PROFILE to a .cpuprofile path to enable.
+const profilePath = process.env.REPORTER_PROFILE;
+const cdp = profilePath ? await page.createCDPSession() : null;
+let profileStopRequested = false;
+
+async function saveProfile(suffix: string) {
+    if (!cdp || !profilePath) return;
+
+    try {
+        const winner = await Promise.race([
+            cdp.send("Profiler.stop"),
+            new Promise<"timeout">(r => setTimeout(() => r("timeout"), 120_000))
+        ]);
+
+        if (winner === "timeout") {
+            logStderr("PROFILE stop timed out, renderer too busy");
+            return;
+        }
+
+        writeFileSync(profilePath + suffix, JSON.stringify(winner.profile));
+        logStderr("PROFILE saved " + profilePath + suffix);
+    } catch (e) {
+        logStderr("PROFILE save failed", e);
+    }
+}
+
+if (cdp) {
+    await cdp.send("Profiler.enable");
+    await cdp.send("Profiler.start");
+    void (async () => {
+        for (let i = 0; ; i++) {
+            await new Promise(r => setTimeout(r, 45_000));
+            await saveProfile(`-${i}`);
+            if (profileStopRequested) return;
+            try {
+                await cdp.send("Profiler.start");
+            } catch {
+                return; // browser gone or session closed
+            }
+        }
+    })();
+}
 
 async function maybeGetError(handle: JSHandle): Promise<string | undefined> {
     return await (handle as JSHandle<Error>)?.getProperty("message")
@@ -259,7 +308,7 @@ page.on("console", async e => {
 
     const firstArg = await rawArgs[0]?.jsonValue();
 
-    const isEquicord = firstArg === "[Equicord]" || firstArg === "[Testcord]";
+    const isEquicord = firstArg === "[Equicord]" || firstArg === "[Testcord]" || firstArg === "[MochaCord]";
     const isDebug = firstArg === "[PUP_DEBUG]";
     const isReporterMeta = firstArg === "[REPORTER_META]";
 
@@ -338,6 +387,10 @@ page.on("console", async e => {
                         report.badWebpackFinds.push({ find: otherMessage, source: source ?? "Unknown source" });
                         break;
                     case "Finished test":
+                        if (cdp) {
+                            profileStopRequested = true;
+                            await saveProfile("-final");
+                        }
                         await browser.close();
                         await printReport();
                         process.exit();
@@ -379,10 +432,14 @@ page.on("pageerror", (e: any) => {
 // The reporter can hang indefinitely on stalled chunk fetches or webpack finds.
 // Give GH Actions a hard self-imposed deadline so the step fails with a partial
 // report (and exits cleanly) instead of being force-killed at the workflow timeout.
-const REPORT_TIMEOUT_MS = 9 * 60_000;
-setTimeout(() => {
+const REPORT_TIMEOUT_MS = Number(process.env.REPORTER_TIMEOUT_MS) || 9 * 60_000;
+setTimeout(async () => {
     logStderr(`[Reporter] Failed to finish within ${REPORT_TIMEOUT_MS / 60_000} minutes, printing partial report`);
     process.exitCode = 1;
+    if (cdp) {
+        profileStopRequested = true;
+        await saveProfile("-timeout");
+    }
     // The page can be in a crashed/blocked state where browser.close() never
     // resolves, so kill the browser process instead of waiting on it.
     browser.process()?.kill("SIGKILL");

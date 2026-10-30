@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { addPatch } from "@api/PluginManager";
 import { initWs } from "@plugins/devCompanion.dev/initWs";
 import { Logger } from "@utils/Logger";
 import * as Webpack from "@webpack";
@@ -31,8 +32,24 @@ async function runReporter() {
     try {
         ReporterLogger.log("Starting test...");
 
-        await Webpack.onceReady;
-        await loadLazyChunks();
+        const { promise: loadLazyChunksDone, resolve: loadLazyChunksDoneResolve } = Promise.withResolvers<void>();
+
+        // The main patch for starting the reporter chunk loading
+        addPatch({
+            find: '"Could not find app-mount"',
+            replacement: {
+                match: /"Could not find app-mount"/,
+                replace: "(Vencord.Webpack._initReporter(),$&)"
+            }
+        }, "Equicord Reporter");
+
+        // initReporter is called in the patched entry point of Discord
+        // @ts-expect-error
+        Vencord.Webpack._initReporter = function () {
+            loadLazyChunks().then(loadLazyChunksDoneResolve);
+        };
+
+        await loadLazyChunksDone;
 
         // Manually require all modules to make sure all lazily required modules are patched
         for (const moduleId of Object.keys(Webpack.wreq.m)) {

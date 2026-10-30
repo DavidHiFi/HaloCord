@@ -119,6 +119,9 @@ jobs:
                       exit 0
                   fi
                   [[ -s report.md ]] || { echo "Reporter failed without a report"; exit 1; }
+                  # A run that timed out can leave an empty partial report; that is a reporter problem, not broken plugins.
+                  found=$(awk '/^## /{ignored=/Ignored/} /^- /&&!ignored{n++} END{print n+0}' report.md)
+                  [[ "$found" -gt 0 ]] || { echo "Reporter did not finish and found nothing broken"; exit 1; }
                   { echo "Latest run: $run_url"; echo; head -c 60000 report.md; } > body.md
                   if [[ -z "$issue" ]]; then
                       gh issue create --title "$title" --body-file body.md --assignee "${{ github.repository_owner }}"
