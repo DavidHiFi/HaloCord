@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { createHash } from "node:crypto";
+
 import { fetchBuffer, fetchJson } from "@main/utils/http";
 import { IpcEvents } from "@shared/IpcEvents";
 import { VENCORD_USER_AGENT } from "@shared/vencordUserAgent";
@@ -29,6 +31,7 @@ import { ASAR_FILE, serializeErrors, UpdateOutcome } from "./common";
 
 const API_BASE = `https://api.github.com/repos/${gitRemote}`;
 let PendingUpdate: string | null = null;
+let PendingChecksum: string | null = null;
 
 async function githubGet<T = any>(endpoint: string) {
     return fetchJson<T>(API_BASE + endpoint, {
@@ -65,18 +68,38 @@ async function fetchUpdate() {
         return false;
 
     const asset = data.assets.find(a => a.name === ASAR_FILE);
+    const checksum = data.assets.find(a => a.name === `${ASAR_FILE}.sha256`);
+    if (!asset || !checksum) {
+        throw new Error(`Latest release has no ${ASAR_FILE} with a matching ${ASAR_FILE}.sha256 checksum, refusing to update`);
+    }
+
     PendingUpdate = asset.browser_download_url;
+    PendingChecksum = checksum.browser_download_url;
 
     return true;
 }
 
 async function applyUpdate() {
     if (!PendingUpdate) return true;
+    if (!PendingChecksum) {
+        throw new Error("No checksum is recorded for the pending update, refusing to write it");
+    }
 
-    const data = await fetchBuffer(PendingUpdate);
+    const [data, checksumFile] = await Promise.all([fetchBuffer(PendingUpdate), fetchBuffer(PendingChecksum)]);
+    const expected = /^([a-f0-9]{64})/im.exec(checksumFile.toString("utf8"))?.[1];
+    if (!expected) {
+        throw new Error("The checksum file for the pending update could not be read, refusing to write it");
+    }
+
+    const actual = createHash("sha256").update(data).digest("hex");
+    if (actual !== expected) {
+        throw new Error(`Downloaded update failed its checksum: expected ${expected}, got ${actual}`);
+    }
+
     writeFileSync(__dirname, data, { flush: true });
 
     PendingUpdate = null;
+    PendingChecksum = null;
 
     return true;
 }
