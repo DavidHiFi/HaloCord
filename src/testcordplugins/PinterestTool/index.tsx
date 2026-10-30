@@ -686,7 +686,7 @@ function removeInjectedEntries() {
 }
 
 export default definePlugin({
-    id: "Pinterest Tool",
+    id: "PinterestTool",
     name: "Pinterest Tool",
     description: "Find profile icons and banners on Pinterest, then edit them before applying.",
     tags: ["Utility", "Customisation"],

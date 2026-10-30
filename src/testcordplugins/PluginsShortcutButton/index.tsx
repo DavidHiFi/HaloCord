@@ -29,7 +29,7 @@ function PluginsShortcutButton({
 }
 
 export default definePlugin({
-    id: "Plugins Shortcut Button",
+    id: "PluginsShortcutButton",
     name: "Plugins Shortcut Button",
     description: "Adds a shortcut button to the user area that opens the full MochaCord Plugins settings page.",
     authors: [TestcordDevs.szcx404],

@@ -303,7 +303,7 @@ pause`;
 }
 
 export default definePlugin({
-    id: "File Splitter",
+    id: "FileSplitter",
     name: "File Splitter",
     description:
         "Split large files into multiple parts to bypass size limits and share them easily.",

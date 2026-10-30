@@ -291,7 +291,7 @@ const ChannelContext: NavContextMenuPatchCallback = (children, { channel }) => {
 };
 
 export default definePlugin({
-    id: "Voice Channel Blacklist",
+    id: "VoiceChannelBlacklist",
     name: "Voice Channel Blacklist",
     description: "Kicks them from the room until you remove them",
     tags: ["Utility"],
