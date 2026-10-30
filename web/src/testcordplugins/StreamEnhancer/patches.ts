@@ -8,6 +8,15 @@ import type { Patch } from "@utils/types";
 
 export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
     {
+        // Web build: the Share Screen button streams at once. Ask for quality and sound first.
+        find: "getMediaEngine().getDesktopSource(",
+        predicate: () => !IS_DISCORD_DESKTOP,
+        replacement: {
+            match: /(\(0,\i\.\i\)\(\{preset:\i\.\i\.PRESET_CUSTOM,resolution:)(\i)\.height,frameRate:(\i\.\i\.FPS_30),soundshareEnabled:!0\}\),(\i\.\i\.getMediaEngine\(\)\.getDesktopSource)\(\2,!0\)(\.then\(\i=>\{\(0,\i\.\i\)\([^}]*\}\)\}\))/,
+            replace: "$self.openWebGoLive((mcSize,mcSound,mcFps)=>{$1mcSize.height,frameRate:mcFps,soundshareEnabled:mcSound}),$4(mcSize,mcSound)$5},$2,$3)"
+        }
+    },
+    {
         find: "ConnectionEventFramerateReducer",
         replacement: [
             {
@@ -57,13 +66,6 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         ]
     },
     {
-        find: "canUseQuestOrbMultiplier:g",
-        replacement: {
-            match: /canUseQuestOrbMultiplier:\i/,
-            replace: "canUseQuestOrbMultiplier:!0"
-        }
-    },
-    {
         find: "\"canStreamWithSettings\"",
         replacement: {
             match: /\}\)\.allowAutoQuality;/,
@@ -104,21 +106,6 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         replacement: {
             match: /(\i)\.width=512,\1\.height=288/,
             replace: "$1.width=$self.getPreviewUploadWidth(),$1.height=$self.getPreviewUploadHeight()"
-        }
-    },
-    {
-        find: "onOneClickGoLive:",
-        replacement: {
-            match: /onBeforeShowModal:(\i),onOneClickGoLive:(\i)(?=[^{}]*,\})/,
-            replace: "onBeforeShowModal:$1,onOneClickGoLive:$2,onContextMenu:e=>$self.openGoLiveButtonContextMenu(e,null)",
-            noWarn: true
-        }
-    },
-    {
-        find: "r.t.fjBNo1):r.intl.string(r.t.uQn9B8)",
-        replacement: {
-            match: /onMouseLeave:(\i=>\{.{0,80}\}),\.\.\.(\i)\}/,
-            replace: "onMouseLeave:$1,onContextMenu:e=>$self.openGoLiveButtonContextMenu(e,null),...$2}"
         }
     },
     {
@@ -329,13 +316,6 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         }
     },
     {
-        find: "m.intl.string(m.t.XjXqzh):m.intl.formatToPlainString(m.t.TEOC0I",
-        replacement: {
-            match: /resolution:e\.height/,
-            replace: "resolution:$self.getDisplayResolutionForLabel(e)"
-        }
-    },
-    {
         find: "handleFullScreenChange",
         replacement: {
             // Discord now emits a tracking call inside the fullscreen button's onClick
@@ -350,7 +330,7 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         }
     },
     {
-        find: "showParticipants:S=!0,width:R,height:L,idle:O,mode:P,popoutType:M,awaitingRemoteSessionInfo:w,callContainerDimensions:U}=e;l.useEffect",
+        find: /showParticipants:\i=!0,width:\i,height:\i,idle:\i,mode:\i,popoutType:\i,awaitingRemoteSessionInfo:\i,callContainerDimensions:\i\}=e;/,
         replacement: {
             match: /showParticipants:(\i)=!0,width:(\i),height:(\i),idle:(\i),mode:(\i),popoutType:(\i),awaitingRemoteSessionInfo:(\i),callContainerDimensions:(\i)\}=e;/,
             replace: "showParticipants:$1=!0,width:$2,height:$3,idle:$4,mode:$5,popoutType:$6,awaitingRemoteSessionInfo:$7,callContainerDimensions:$8}=e;globalThis.vcShowParticipants=$self.useShowStreamParticipants($1);"
@@ -464,7 +444,7 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         ]
     },
     {
-        find: "showParticipants:M=!0,className:w,width:U,height:D,layout:V,idle:k}=e,G=m.Ay",
+        find: /showParticipants:\i=!0,className:\i,width:\i,height:\i,layout:\i,idle:\i\}=e,\i=\i\.\i\.getVideoComponent\(\)/,
         replacement: [
             {
                 match: /showParticipants:(\i)=!0,className:(\i),width:(\i),height:(\i),layout:(\i),idle:(\i)\}=e,/,

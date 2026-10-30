@@ -95,6 +95,9 @@ for f in ("preload.js", "userscript.js"):
             ("'voicemeter':!!Q['voiceMeter']", "'voicemeter':!1"),
             # The Open Settings button no longer opens the old privacy overlay.
             ("try{Gn();}catch(nW){}", ""),
+            # Voice join crashed the renderer (Chromium CHECK, 0x80000003): forcing a=ptime:10 and
+            # a=maxptime:10 into Discord's remote answer is fatal. Keep ptime on the local offer only.
+            ("Gz=eT(Gz,", "Gz=GZ==='sRD'?Gz:eT(Gz,"),
         ]
         for a, b in fixes:
             assert s.count(a) == 1, a

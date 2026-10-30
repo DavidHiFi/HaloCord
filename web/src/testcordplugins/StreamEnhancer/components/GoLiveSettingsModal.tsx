@@ -9,6 +9,7 @@ import { Divider } from "@components/Divider";
 import { FormSwitch } from "@components/FormSwitch";
 import { Heading } from "@components/Heading";
 import { classNameFactory } from "@utils/css";
+import { ModalContent, ModalFooter, ModalHeader, ModalRoot, type ModalProps, ModalSize, openModal } from "@utils/modal";
 import type { SelectOption } from "@vencord/discord-types";
 import { findByCode, findByPropsLazy, findStoreLazy } from "@webpack";
 import { ContextMenuApi, Menu, Select, Slider, TextInput, Toasts, useEffect, useState, useStateFromStores } from "@webpack/common";
@@ -666,4 +667,31 @@ export const openGoLiveButtonContextMenu = (event: MouseEvent, pid: number | nul
             />
         </Menu.Menu>
     ));
+};
+
+// The web build starts a stream straight from the Share Screen button with no settings step
+// (Discord only opens its Go Live window on the desktop app), so MochaCord asks here first.
+function WebGoLiveModal({ modalProps, onStart }: { modalProps: ModalProps; onStart: (sound: boolean) => void; }) {
+    const [sound, setSound] = useState(currentGoLiveSoundEnabled);
+    return (
+        <ModalRoot {...modalProps} size={ModalSize.LARGE}>
+            <ModalHeader><Heading tag="h2">Screen Share</Heading></ModalHeader>
+            <ModalContent>
+                <GoLiveQuickPanel />
+                <FormSwitch value={sound} onChange={setSound} title="Share sound" description="Window shares send that app's sound only. Screen shares send everything except MochaCord, so your own voice and the call stay out." />
+            </ModalContent>
+            <ModalFooter>
+                <Button onClick={() => { currentGoLiveSoundEnabled = sound; modalProps.onClose(); onStart(sound); }}>Go Live</Button>
+                <Button variant="secondary" onClick={modalProps.onClose}>Cancel</Button>
+            </ModalFooter>
+        </ModalRoot>
+    );
+}
+
+export const openWebGoLive = (start: (size: { width: number; height: number; }, sound: boolean, fps: number) => void, size: { width: number; height: number; }, fps: number) => {
+    openModal(props => <WebGoLiveModal modalProps={props} onStart={sound => {
+        const c = normalizeConfig(streamEnhancerSettings.store.config);
+        if (c.streamTweaksEnabled) start({ width: c.streamWidth, height: c.streamHeight }, sound, c.streamMaxFps);
+        else start(size, sound, fps);
+    }} />);
 };
