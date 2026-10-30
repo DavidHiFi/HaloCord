@@ -9,7 +9,7 @@ import { Divider } from "@components/Divider";
 import { FormSwitch } from "@components/FormSwitch";
 import { Heading } from "@components/Heading";
 import { classNameFactory } from "@utils/css";
-import { ModalContent, ModalFooter, ModalHeader, ModalRoot, type ModalProps, ModalSize, openModal } from "@utils/modal";
+import { ModalContent, ModalFooter, ModalHeader, ModalRoot, ModalSize, openModal,type RenderModalProps } from "@utils/modal";
 import type { SelectOption } from "@vencord/discord-types";
 import { findByCode, findByPropsLazy, findStoreLazy } from "@webpack";
 import { ContextMenuApi, Menu, Select, Slider, TextInput, Toasts, useEffect, useState, useStateFromStores } from "@webpack/common";
@@ -671,7 +671,7 @@ export const openGoLiveButtonContextMenu = (event: MouseEvent, pid: number | nul
 
 // The web build starts a stream straight from the Share Screen button with no settings step
 // (Discord only opens its Go Live window on the desktop app), so MochaCord asks here first.
-function WebGoLiveModal({ modalProps, onStart }: { modalProps: ModalProps; onStart: (sound: boolean) => void; }) {
+function WebGoLiveModal({ modalProps, onStart }: { modalProps: RenderModalProps; onStart: (sound: boolean) => void; }) {
     const [sound, setSound] = useState(currentGoLiveSoundEnabled);
     return (
         <ModalRoot {...modalProps} size={ModalSize.LARGE}>

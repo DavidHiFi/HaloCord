@@ -28,15 +28,11 @@ export interface PluginWarningInfo {
 export const EXPERIMENTAL_PLUGINS: string[] = [
     "BadgeSpoofer",
     "AntilogPremium",
-    "ChromeTabs",
-    "FastDiscord",
     "TestcordOptimizer",
     "NoButtons",
     "NSFWGateBypass",
-    "PerformanceBoost",
     "TrustMeBro",
-    "trustmebro",
-    "OpenOptimizer"
+    "trustmebro"
 ];
 
 /**
@@ -49,7 +45,6 @@ export const LEGACY_PLUGINS: string[] = [
     "fakemuteanddeafen",
     "NitroSniper",
     "GuildCopier",
-    "TokenImporter",
     "UserAreaTweaks",
     "OSSpoofer",
     "BetterScreenshare",
@@ -71,6 +66,26 @@ export const LEGACY_PLUGINS: string[] = [
  * Matching is case-insensitive and ignores spaces, hyphens, and underscores.
  */
 export const LEGACY_REPLACEMENTS: Record<string, string> = {
+    "ChromeTabs": "ChannelTabs",
+    "ProfileMedia": "ViewIcons",
+    "AvatarGrabber": "ViewIcons",
+    "ZIP+": "ZipPreview",
+    "FileViewer": "PdfViewer",
+    "RecentDMSwitcher": "RecentChannelSwitcher",
+    "StaffScanner": "StaffTag",
+    "AntiMod": "StaffTag",
+    "ServerPruner": "RelationshipPruner",
+    "BulkFriendRemove": "RelationshipPruner",
+    "FriendsRemover": "RelationshipPruner",
+    "ChatsScrapper": "RelationshipPruner",
+    "CloseAllDms": "RelationshipPruner",
+    "PerformanceBoost": "TestcordOptimizer",
+    "FastDiscord": "TestcordOptimizer",
+    "Perf": "TestcordOptimizer",
+    "OpenOptimizer": "TestcordOptimizer",
+    "CacheResetButton": "TestcordOptimizer",
+    "ChatGPT": "TestcordAI",
+    "SummarizeAI": "TestcordAI",
     "CrashHandlerEnhanced": "CrashHandler",
     "HyprTilesPremium": "HyprTiles",
     "FollowVoiceUser": "FollowUser",
@@ -101,7 +116,7 @@ export const LEGACY_REPLACEMENTS: Record<string, string> = {
     "fakeprofile": "UnlimitedAccounts",
     "FakeUserProfile": "UnlimitedAccounts",
     "fakeuserprofile": "UnlimitedAccounts",
-    "AntiStereo": "Force Mono",
+    "AntiStereo": "StereoGuard",
     "antistereo": "Force Mono",
     "FakeMuteDeafen": "FakeVoiceStates",
     "FakeVoicePremium": "FakeVoiceStates",
@@ -113,10 +128,6 @@ export const LEGACY_REPLACEMENTS: Record<string, string> = {
     "NitroSniper": "AutoRedeem",
     "nitrosniper": "AutoRedeem",
     "OSSpoofer": "PlatformEmulator",
-    "StereoInstaller": "StereoLoader",
-    "stereoinstaller": "StereoLoader",
-    "TokenImporter": "DXTokenImporter",
-    "tokenimporter": "DXTokenImporter",
     "UserAreaTweaks": "PanelLayout",
     "userareatweaks": "PanelLayout",
     "BetterScreenshare": "StreamEnhancer",
@@ -134,7 +145,7 @@ export const LEGACY_REPLACEMENTS: Record<string, string> = {
     "ForceMono": "StereoGuard",
     "Fake Accounts": "UnlimitedAccounts",
     "fakeAccounts": "UnlimitedAccounts",
-    "FakeAccounts": "FakeUserSwitcher"
+    "FakeAccounts": "UnlimitedAccounts"
 };
 
 /**

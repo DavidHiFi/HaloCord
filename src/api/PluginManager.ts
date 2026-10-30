@@ -26,6 +26,7 @@ import { addMessageDecoration, removeMessageDecoration } from "@api/MessageDecor
 import { addMessageClickListener, addMessagePreEditListener, addMessagePreSendListener, removeMessageClickListener, removeMessagePreEditListener, removeMessagePreSendListener } from "@api/MessageEvents";
 import { addMessagePopoverButton, removeMessagePopoverButton } from "@api/MessagePopover";
 import { addNicknameIcon, removeNicknameIcon } from "@api/NicknameIcons";
+import { showNotification } from "@api/Notifications";
 import { PluginHealth } from "@api/PluginHealth";
 import { PluginProfiler } from "@api/PluginProfiler";
 import { PlainSettings, Settings, SettingsStore } from "@api/Settings";
@@ -288,6 +289,15 @@ export const startAllPlugins = traceFunction("startAllPlugins", async function s
     if (target === StartAt.WebpackReady) {
         const enabled = Object.keys(Plugins).filter(isPluginEnabled);
         PluginHealth.registerEnabledPlugins(enabled);
+        // A Discord update that breaks a patch should be noticed the same day, not when someone opens Plugin Health.
+        setTimeout(() => {
+            const broken = enabled.filter(p => PluginHealth.get(p)?.patchFailures.some(f => f.kind === "noEffect" || f.kind === "errored" || f.kind === "undoingGroup"));
+            if (!broken.length) return;
+            showNotification({
+                title: `${broken.length} plugin${broken.length === 1 ? "" : "s"} broke after a Discord update`,
+                body: `${broken.slice(0, 5).join(", ")}${broken.length > 5 ? ` and ${broken.length - 5} more` : ""}. Details in Plugin Health.`
+            });
+        }, 30_000);
     }
 });
 

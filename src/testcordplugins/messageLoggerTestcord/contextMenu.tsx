@@ -12,7 +12,6 @@ import { silentDeleteMessage } from "./antilog";
 import { clearEditHistoryCache, deleteLog, invalidateLoggedCaches, localRemoveLoggedMessage, removeChannelLogs, removeGuildLogs } from "./engine";
 import { addToOppositeAndList, isInList, type ListType,removeFromList } from "./lists";
 import { openLogs } from "./LogsModal";
-import { osintScanLoggedMessages } from "./osintBridge";
 import { settings } from "./settings";
 
 interface MenuProps {
@@ -370,26 +369,6 @@ function createContextMenuPatch(navId: string): NavContextMenuPatchCallback {
                 <Menu.MenuSeparator />
                 {Object.keys(idFunctions).map(IdType => renderListOption("blacklistedIds", IdType, props))}
                 {Object.keys(idFunctions).map(IdType => renderListOption("whitelistedIds", IdType, props))}
-
-                {isMessageMenu && message && (
-                    <>
-                        <Menu.MenuSeparator />
-                        <Menu.MenuItem
-                            id="testcord-ml-osint-logged"
-                            label="OSINT Analyze Logged Messages"
-                            action={() => void osintScanLoggedMessages(message.author.id)}
-                        />
-                        <Menu.MenuItem
-                            id="testcord-ml-osint-full"
-                            label="Full OSINT Scan Of Author"
-                            action={() => {
-                                void import("../testcordosinttoolkit/index").then(({ openOsintScanFor }) =>
-                                    openOsintScanFor(message.author.id, message.channel_id)
-                                );
-                            }}
-                        />
-                    </>
-                )}
 
                 {showSilentDelete && (
                     <>

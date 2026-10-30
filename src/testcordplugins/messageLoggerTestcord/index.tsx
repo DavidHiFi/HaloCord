@@ -54,7 +54,6 @@ import {
 } from "./engine";
 import { importMleLogs, importMleSettings } from "./io";
 import { openLogs } from "./LogsModal";
-import { osintScanLoggedMessages } from "./osintBridge";
 import { ensureDefaultDir, restoreAttachmentBlobs } from "./saveImage";
 import { settings } from "./settings";
 import type { EditRecord, FetchMessagesResponse, LoadMessagesPayload, LoggedMessage, LogRecord, MessageCreatePayload, MessageDeleteBulkPayload, MessageDeletePayload, MessageUpdatePayload } from "./types";
@@ -945,32 +944,6 @@ export default definePlugin({
             }],
             execute(args) {
                 openLogs(findOption(args, "query", ""));
-            }
-        },
-        {
-            name: "osintlogs",
-            description: "Run the OSINT analyzer over a user's logged deleted and edited messages.",
-            inputType: ApplicationCommandInputType.BUILT_IN,
-            options: [
-                {
-                    name: "user",
-                    description: "The user whose logged messages to analyze.",
-                    type: ApplicationCommandOptionType.USER,
-                    required: true
-                },
-                {
-                    name: "include_edits_only",
-                    description: "Only analyze edited messages (deleted are always included).",
-                    type: ApplicationCommandOptionType.BOOLEAN
-                }
-            ],
-            execute(args) {
-                const userId = findOption(args, "user", "") as string;
-                if (!userId) {
-                    showToast("Pick a user to analyze.", Toasts.Type.FAILURE);
-                    return;
-                }
-                void osintScanLoggedMessages(userId);
             }
         }
     ],
