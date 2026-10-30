@@ -5,6 +5,7 @@
  */
 
 import { definePluginSettings } from "@api/Settings";
+import { IS_WINDOWS } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
 import { Toasts } from "@webpack/common";
 
@@ -49,8 +50,9 @@ export default definePlugin({
     settings,
 
     async start() {
-        // Only run on Windows
-        if (process.platform !== "win32") return;
+        // Only run on Windows. process is not defined in the renderer (contextIsolation),
+        // so the platform check has to be the build-time constant.
+        if (!IS_WINDOWS) return;
 
         const Native = (window as any).VencordNative?.pluginHelpers?.GpuBinder;
         if (!Native) {
