@@ -1026,8 +1026,9 @@ export default definePlugin({
             find: ".handleImageLoad)",
             predicate: () => !isPluginEnabled("MessageLogger"),
             replacement: {
-                match: /(componentDidMount\(\)\{)(let\{readyState:\i\}=this\.state;if\(\i===)([\w.$]+)\.LOADING/,
-                replace: "$1if(this.props?.src?.startsWith('blob:') && this.props?.item?.type === 'VIDEO')return this.setState({readyState: $3.READY});$2$3.LOADING"
+                // ImageZoom also inserts code right after componentDidMount(){, so anchor on the readyState check instead
+                match: /(let\{readyState:\i\}=this\.state;if\(\i===)([\w.$]+)\.LOADING/,
+                replace: "if(this.props?.src?.startsWith('blob:') && this.props?.item?.type === 'VIDEO')return this.setState({readyState: $2.READY});$1$2.LOADING"
             }
         },
         // only check for expired attachments if the message is not deleted

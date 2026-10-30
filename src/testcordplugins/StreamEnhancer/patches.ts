@@ -375,7 +375,7 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         find: "#{intl::YCvOsO::raw}",
         replacement: [
             {
-                match: /let \i,\i,\i,\{participant:(\i).{0,220}?width:(\i).{0,190}?fit:(\i)=.{0,140}?controlsBottom:\i\}=e/,
+                match: /let (?:\i,)+\{participant:(\i).{0,220}?width:(\i).{0,190}?fit:(\i)=.{0,140}?controlsBottom:\i\}=e/,
                 replace: "$&,vcRenderedWidth=$self.useRenderedWidthFromProps({participant:$1},$2),vcState=$self.useRenderedStreamVideoState($1.id,$3)"
             },
             {

@@ -445,8 +445,9 @@ export default definePlugin({
         {
             find: "CAMERA_PREVIEW]:",
             replacement: {
-                match: /d\.set\(\i,\i\),(\i)===(\i\.\i)\.VIDEO.{0,100}?\2\.HAVEN&&null==\i&&\(\i=\i\)/,
-                replace: "(($1!==$2.ACTIVITY||$self.shouldOpenEmbeddedActivity())&&($1!==$2.VIDEO||$self.shouldOpenStreamPip()))&&($&)"
+                // Skip registering the PiP window (and its switch) when faking hides it
+                match: /switch\((\i\.set\(\i,\i\)),(\i)\)\{case (\i\.\i)\.VIDEO:/,
+                replace: "switch((($2!==$3.ACTIVITY||$self.shouldOpenEmbeddedActivity())&&($2!==$3.VIDEO||$self.shouldOpenStreamPip()))?($1,$2):null){case $3.VIDEO:"
             }
         }
     ],
