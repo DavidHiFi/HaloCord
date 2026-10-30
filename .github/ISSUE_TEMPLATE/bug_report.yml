@@ -1,0 +1,60 @@
+name: Bug or crash report
+description: Something in MochaCord is broken or crashes.
+labels: [bug]
+title: "[Bug] "
+
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Thanks for reporting. One bug per issue, please. Search the open issues first.
+
+    - type: input
+      id: version
+      attributes:
+          label: MochaCord version
+          description: Shown at the bottom of Settings, for example `mochacord/2.8.4`.
+      validations:
+          required: true
+
+    - type: textarea
+      id: what-happens
+      attributes:
+          label: What happens?
+          description: Where it happens, when, and how often.
+          placeholder: When I join a voice channel with StreamEnhancer on, the window goes white.
+      validations:
+          required: true
+
+    - type: textarea
+      id: expected
+      attributes:
+          label: What did you expect?
+      validations:
+          required: true
+
+    - type: textarea
+      id: steps
+      attributes:
+          label: Steps to reproduce
+          placeholder: |
+              1. Turn on ...
+              2. Join a voice channel
+              3. See ...
+      validations:
+          required: true
+
+    - type: textarea
+      id: plugins
+      attributes:
+          label: Plugins involved
+          description: The plugin you think causes it, and whether turning it off stops the bug.
+
+    - type: textarea
+      id: errors
+      attributes:
+          label: Errors or screenshots
+          description: Paste any red console errors between the backticks, or drop a screenshot here.
+          value: |
+              ```
+              ```

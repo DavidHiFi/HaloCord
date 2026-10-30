@@ -1,11 +1,11 @@
 # Building MochaCord
 
-MochaCord is built on Windows from three parts: KurtCord 2.8.3's packaged app, the plugin bundle in `web/`, and the shell code in `shell/`. `build/assemble.py` puts them together.
+MochaCord is built on Windows from three parts: the 2.8.3 base app, the plugin bundle in `web/`, and the shell code in `shell/`. `build/assemble.py` puts them together.
 
 ## What you need
 
 - Windows 11 x64, Python 3.12 or newer, Node.js 22 or newer and pnpm.
-- The KurtCord 2.8.3 portable or installed app folder, unpacked. `base/` holds the files from its `app.asar` for reference; the build reads the whole app folder because it also needs Electron.
+- The 2.8.3 base app folder, unpacked (the MIT-licensed Electron app `base/` comes from). `base/` holds the files from its `app.asar` for reference; the build reads the whole app folder because it also needs Electron.
 - koffi 2.16.3 from npm (`npm pack koffi@2.16.3`, then unpack it). Only its Windows x64 binary is used.
 - `rcedit-x64.exe` from [electron/rcedit](https://github.com/electron/rcedit/releases) in `tools/rcedit/`.
 
@@ -20,7 +20,7 @@ MochaCord is built on Windows from three parts: KurtCord 2.8.3's packaged app, t
 
    The output lands in `web/dist/equibop/`.
 
-2. Open `build/assemble.py` and point the paths at the top at your folders: `SRC_APP` is the KurtCord app folder, `BUNDLE` is `web/dist/equibop`, `KOFFI` is the unpacked koffi package and `OUT` is this repo's root. The script reads `shell/`, `brand/` and `tools/rcedit/` from there and builds into `app/`, `asar-src/` and `installer/`, which git ignores.
+2. Open `build/assemble.py` and point the paths at the top at your folders: `SRC_APP` is the base app folder, `BUNDLE` is `web/dist/equibop`, `KOFFI` is the unpacked koffi package and `OUT` is this repo's root. The script reads `shell/`, `brand/` and `tools/rcedit/` from there and builds into `app/`, `asar-src/` and `installer/`, which git ignores.
 
 3. Copy `build/installer-package.json` to `installer/package.json`, then run:
 

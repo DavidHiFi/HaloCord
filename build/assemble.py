@@ -1,4 +1,4 @@
-# Builds MochaCord 2.8.4: KurtCord 2.8.3 shell + MochaCord equibop bundle (work/mochacord-web), then the installer.
+# Builds MochaCord 2.8.4: the 2.8.3 base shell + MochaCord equibop bundle (work/mochacord-web), then the installer.
 import json, re, shutil, subprocess, sys
 from pathlib import Path
 W = Path(r"H:\Discord Configuration\work")

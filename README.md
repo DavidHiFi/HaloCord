@@ -1,21 +1,21 @@
 <div align="center">
 
-<img src="https://socialify.git.ci/DavidHiFi/MochaCord-Client/image?description=1&font=Inter&language=1&name=1&owner=1&pattern=Plus&theme=Dark" alt="Socialify card for DavidHiFi/MochaCord-Client" width="100%">
+<img src="docs/images/voice-effects.png" alt="MochaCord's Voice & Video settings with the voice effects panel open" width="100%">
 
-# MochaCord
+# <img src="brand/icon.png" width="36" align="center" alt=""> MochaCord
 
-**A Windows Discord client built for voice, forked from KurtCord.**
+**The Discord client built for voice.**
 
-96 kHz stereo voice, three call guards, camera control to 4K60, and a full Voice & Video quick panel.
+HD stereo voice, call guards, voice effects, full Go Live controls and hundreds of plugins, in one Windows app.
 
-<a href="https://github.com/DavidHiFi/MochaCord-Client/releases/latest">
-<img src="https://img.shields.io/badge/%E2%AC%87%EF%B8%8F%20DOWNLOAD%20LATEST%20RELEASE-2EA043?style=for-the-badge&labelColor=161B22" alt="Download the latest release" height="42">
+<a href="#installation">
+<img src="https://img.shields.io/badge/%F0%9F%9B%A0%EF%B8%8F%20IN%20DEVELOPMENT-2EA043?style=for-the-badge&labelColor=161B22" alt="In development: see installation" height="42">
 </a>
 
 <br><br>
 
-<img src="https://img.shields.io/github/v/release/DavidHiFi/MochaCord-Client?style=flat-square&label=version&color=8957E5&labelColor=161B22" alt="Latest version">
-<img src="https://img.shields.io/github/downloads/DavidHiFi/MochaCord-Client/total?style=flat-square&label=downloads&color=1F6FEB&labelColor=161B22" alt="Total downloads">
+<img src="https://img.shields.io/github/license/DavidHiFi/MochaCord-Client?style=flat-square&color=8957E5&labelColor=161B22" alt="License: MIT">
+<img src="https://img.shields.io/github/last-commit/DavidHiFi/MochaCord-Client?style=flat-square&label=updated&color=1F6FEB&labelColor=161B22" alt="Last commit">
 <img src="https://img.shields.io/badge/platform-Windows-DB6D28?style=flat-square&labelColor=161B22" alt="Platform: Windows">
 
 </div>
@@ -24,65 +24,46 @@
 
 ## Installation
 
-There is no release right now. MochaCord is a work in progress, and installers come back once it is ready. Until then you can build it yourself; [docs/building.md](docs/building.md) has the steps.
-
-## Source
-
-| Folder | What it holds |
-|---|---|
-| `base/` | KurtCord 2.8.3's app files, unchanged, as the shell starts from them. |
-| `shell/` | MochaCord's own shell code: the acrylic window blur and the voice effects engine. |
-| `build/` | `assemble.py`, which patches the shell, adds the bundle and makes the installer. |
-| `web/` | The TestCord-based plugin bundle with MochaCord's changes. |
-| `brand/` | Icon sources. |
-| `tools/` | Small scripts for checking a running build over the debug port. |
+There is no release yet. Installers come once MochaCord is ready. Until then you can build it yourself; [docs/building.md](docs/building.md) has the steps.
 
 ## Features
 
-### Voice
+- **96 kHz stereo voice** with full Opus control: bitrate, sample rate, frame time, complexity, FEC, DTX and CBR.
+- **Voice effects** you hear in the mic test: pitch, echo, robot, bitcrush, muffle, static and eleven presets.
+- **Call guards** that locally mute people who blast stereo noise, get too loud or spam their mic, with a per-person allow list.
+- **Go Live controls** before every stream: resolution, frame rate, bitrate and quality presets.
+- **Camera up to 4K60** and 1080p120, with a constant bitrate encoder in place of Discord's adaptive ladder.
+- **Microphone chain** with gain, reverb, EQ, extra inputs and a raw bypass that skips system processing.
+- **Hundreds of built-in plugins**, from the Vencord, Equicord and TestCord sets plus MochaCord's own voice plugins.
+- **Acrylic window** on Windows 11.
+- **Private by default.** Settings stay on your machine. No analytics, no telemetry, no MochaCord server.
 
-- **96 kHz HD voice** with stereo, when both ends support it.
-- **Opus controls** for bitrate, sample rate, frame time, complexity, FEC, DTX and CBR.
-- **Microphone chain** with gain, reverb and EQ, plus second and third microphone inputs with their own devices.
-- **Input bypass** that sends your microphone raw, past system processing.
-- **Voice effects** in Voice & Video: pitch, echo, robot, bitcrush, radio static and eleven presets, heard in the mic test.
-- **Screen share with audio**, captured without echo cancellation, noise suppression or gain control.
-
-### Voice guards
-
-- **StereoGuard** locally mutes anyone whose audio is not fully mono, with a per-person allow list.
-- **MicSpamGuard** locally mutes anyone who gets too loud or spams the mic.
-- **MicSpamGuard DH** balances voice volumes automatically and protects against sustained extreme loudness.
-- Allow and un-allow anyone from the user context menu, under the volume slider.
-
-### Camera and screen share
-
-- **Camera presets** from 720p60 to 2160p60, plus 1080p120 and custom resolution, frame rate and bitrate.
-- **Constant bitrate camera encoder** instead of Discord's adaptive ladder.
-- **Advanced Camera Controls** and **Advanced Hardware Acceleration** for caps, rasterisation and decode.
-- **Native camera rendering** with no canvas re-encode when no filter is set.
-
-### Window
-
-- **Acrylic blur** behind the window on Windows 11, the same effect Windhawk's translucent-windows mod gives Discord.
-
-### Privacy
-
-- Every setting lives on your machine. No analytics, no telemetry, no backend server.
-- A standard Chrome fingerprint with no automation flags.
-
-### Built-in plugins
-
-- The Equicord plugin suite and the Testcord plugins, ready out of the box.
-- Twelve maintained voice plugins, including ClickToUnmute, StaffTag, FakeVoice, LyricsStatus, StreamEnhancer, Custom Stream Quality, RoundedVCPFP, MicSpamGuard, StereoGuard, VoiceVUMeters, HasStrip and PanelLayout.
+<div align="center">
+<img src="docs/images/go-live.png" alt="The Go Live window with resolution, frame rate and bitrate controls" width="70%">
+</div>
 
 ## Notes
 
 > [!IMPORTANT]
-> **Work in progress.** The source here builds MochaCord 2.8.4, which already runs under its own name, stores settings in `%APPDATA%\MochaCord`, and checks this repo for updates. There is no release yet.
+> **Work in progress.** MochaCord 2.8.4 builds and runs from this source. It stores settings in `%APPDATA%\MochaCord` and checks this repo for updates. There is no release yet.
 
 > [!WARNING]
-> **Third-party client.** Discord does not officially support third-party clients. KurtCord's own FAQ says the client-side cause of account flags was fixed in 2.7.7, but behavior no client controls, like mass friend requests or brand new accounts, can still draw action. Use it at your own risk.
+> **Third-party client.** Discord does not support third-party clients. Spam-like behavior, such as mass friend requests, can get an account actioned. Use it at your own risk.
+
+<details>
+<summary>What is in this repo</summary>
+
+| Folder | What it holds |
+|---|---|
+| `base/` | The 2.8.3 Electron app files MochaCord's shell starts from, unchanged. |
+| `shell/` | MochaCord's shell code: the acrylic window and the voice effects engine. |
+| `build/` | `assemble.py`, which patches the shell, adds the plugin bundle and makes the installer. |
+| `web/` | The plugin bundle: MochaCord's mod layer and every built-in plugin. |
+| `brand/` | Icon sources. |
+| `tools/` | Small scripts that check a running build over the debug port. |
+| `docs/` | Build steps and README images. |
+
+</details>
 
 ## Contributing
 
@@ -110,22 +91,24 @@ Thank you for starring the repo.
 
 | Who | What |
 |---|---|
-| **Kurtzon** ([KurtCord](https://github.com/kurtzonaudio/kurtcord)) | The whole client: voice engine, guards, camera path, installers and plugins. MochaCord is a fork of KurtCord 2.8.3. |
-| **Equicord contributors** ([Equicord](https://github.com/Equicord/Equicord)) | The bundled Equicord plugin suite. |
-| **TestcordDev** ([TestCord](https://github.com/TestcordDev/TestCord)) | The bundled Testcord plugins and the base of `web/`. |
-| **Vladimír Kalouš** ([koffi](https://github.com/Koromix/koffi)) | The library the shell uses to call Windows for the acrylic blur. |
+| **[Kurtzon](https://github.com/kurtzonaudio)** | The original Electron shell and voice engine MochaCord's shell is built from, under the MIT license. |
+| **[Vencord](https://github.com/Vendicated/Vencord) and [Equicord](https://github.com/Equicord/Equicord) contributors** | The mod framework and plugin suites bundled in `web/`. |
+| **[TestcordDev](https://github.com/TestcordDev/TestCord)** | The TestCord plugins and the base of `web/`. |
+| **[Vladimír Kalouš](https://github.com/Koromix/koffi)** | koffi, which the shell uses to call Windows for the acrylic window. |
 
-Built on [Electron](https://www.electronjs.org/), running [Discord](https://discord.com)'s web app, with the [Equicord](https://github.com/Equicord/Equicord) plugin suite.
+Built on [Electron](https://www.electronjs.org/), running [Discord](https://discord.com)'s web app, with [Equicord](https://github.com/Equicord/Equicord), [pnpm](https://pnpm.io/) and [electron-builder](https://www.electron.build/).
 
 > Missing or wrong credit? [Open an issue](https://github.com/DavidHiFi/MochaCord-Client/issues/new) and I'll fix it.
 
 ## Disclaimers
 
-This repository was set up with an AI coding agent working for the repo owner, and the MochaCord changes in `shell/`, `build/` and `web/` were written the same way. The client underneath is Kurtzon's work.
+MochaCord is built with AI coding agents (Claude Code) working for the repo owner. The owner directs, tests and runs every build.
 
-The [DavidHiFi/MochaCord](https://github.com/DavidHiFi/MochaCord) theme is a separate project. It is a Catppuccin Mocha theme for Vencord-based clients, not this client.
+The [DavidHiFi/MochaCord](https://github.com/DavidHiFi/MochaCord) theme is a separate project: a Catppuccin Mocha theme for Vencord-based clients.
+
+Client mods are against Discord's Terms of Service. If your account matters a lot to you, think before you use any of them. Discord is a trademark of Discord Inc., named here only to say what MochaCord works with.
 
 <div align="center">
 <br>
-<sub>Not affiliated with Discord or Kurtzon Audio. Requires a Discord account.</sub>
+<sub>Not affiliated with Discord. Requires a Discord account.</sub>
 </div>

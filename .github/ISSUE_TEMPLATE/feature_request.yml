@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest a feature or a plugin change.
+labels: [enhancement]
+title: "[Feature] "
+
+body:
+    - type: textarea
+      id: what
+      attributes:
+          label: What do you want?
+          description: Describe the feature and where it would live in the client.
+      validations:
+          required: true
+
+    - type: textarea
+      id: why
+      attributes:
+          label: Why?
+          description: The problem it solves for you.
+      validations:
+          required: true
+
+    - type: textarea
+      id: mockup
+      attributes:
+          label: Mock-up or example
+          description: A sketch, a screenshot from another client, or a link.
