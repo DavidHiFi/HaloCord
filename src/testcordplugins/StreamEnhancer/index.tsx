@@ -15,6 +15,7 @@ import {
     getGoLiveStreamEnhanceSourceOption,
     getGoLiveStreamEnhanceSourceType,
     openGoLiveButtonContextMenu,
+    openWebGoLive,
     renderGoLiveStreamEnhancePanel,
     syncGoLiveModalState,
 } from "./components/GoLiveSettingsModal";
@@ -77,6 +78,7 @@ const streamEnhancer = definePlugin({
     getGoLiveStreamEnhanceSourceOption,
     getGoLiveStreamEnhanceSourceType,
     openGoLiveButtonContextMenu,
+    openWebGoLive,
     renderGoLiveStreamEnhancePanel,
     syncGoLiveModalState,
     renderViewerControls(participant: StreamParticipant, className?: string) {
