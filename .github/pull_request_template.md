@@ -1,12 +1,11 @@
-<!--
-Before submitting your PR:
-- Read CONTRIBUTING.md
--->
+## What this changes
 
-## Describe your Changes
+## How you tested it
+<!-- The build you ran, what you clicked, what you saw. -->
 
-## Screenshots (if applicable)
+## Screenshots (if visual)
 
-## Checklist before submitting
-- [ ] I have read the contribution rules and made sure this pull request complies with it
-
+## Checklist
+- [ ] I read [CONTRIBUTING.md](https://github.com/DavidHiFi/MochaCord-Client/blob/main/CONTRIBUTING.md).
+- [ ] This pull request makes one change.
+- [ ] It keeps existing license headers and author credits.

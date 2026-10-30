@@ -52,3 +52,7 @@ misc/scripts
 
 # local test harness
 tests/
+
+# MochaCord desktop build output
+/desktop/out/
+__pycache__/

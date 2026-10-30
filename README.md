@@ -1,123 +1,119 @@
-<img src="./browser/icon.png" width="50" align="left" alt="Testcord">Testcord
+<div align="center">
 
-[![Release](https://img.shields.io/github/v/release/TestcordDev/TestCord?label=Latest+Release&color=blue)](https://github.com/TestcordDev/TestCord/releases/tag/untagged-5c75afbdfad18f944bcb)
-[![Discord](https://img.shields.io/discord/1434211283317690502?color=5865F2&label=Discord&logo=discord&logoColor=white)](https://discord.gg/EMDpkV57gW)
-[![CO-Owner](https://img.shields.io/badge/Owner-Mixiruri-ff69b4?logo=github&logoColor=white)](https://github.com/Mixiruri)
-[![Owner](https://img.shields.io/badge/Owner-x2b1-red?logo=github&logoColor=white)](https://github.com/x2b1)
-[![CO-Owner](https://img.shields.io/badge/Owner-dxrx99-orange?logo=github&logoColor=white)](https://github.com/dxrx99)
+<img src="docs/images/voice-effects.png" alt="MochaCord's Voice & Video settings with the voice effects panel open" width="100%">
 
-Testcord is a fork of [Equicord](https://github.com/Equicord/Equicord) which is a fork of [Vencord](https://github.com/Vendicated/Vencord), with over 750 plugins.
+# <img src="desktop/brand/icon.png" width="36" align="center" alt=""> MochaCord
 
-You can join our [Discord server](https://discord.gg/UjAbZCgXtB) for commits, changes, chatting, or even support.
+**The Discord client built for voice.**
 
-## What makes Testcord different?
+HD stereo voice, call guards, voice effects, full Go Live controls and hundreds of plugins, in one Windows app.
 
-- **750+ plugins**, more than any other fork
-- **No rules** on which plugins can be added
-- You decide what plugins you wanna use, not some admin that might not be comfortable with it (indi reference)
-- Less stable, more fun
+<a href="#installation">
+<img src="https://img.shields.io/badge/%F0%9F%9B%A0%EF%B8%8F%20IN%20DEVELOPMENT-2EA043?style=for-the-badge&labelColor=161B22" alt="In development: see installation" height="42">
+</a>
 
-## Included Plugins
+<br><br>
 
-Testcord's included plugins can be found [here](https://Testcord.dev).
+<img src="https://img.shields.io/github/license/DavidHiFi/MochaCord?style=flat-square&color=8957E5&labelColor=161B22" alt="License">
+<img src="https://img.shields.io/github/last-commit/DavidHiFi/MochaCord?style=flat-square&label=updated&color=1F6FEB&labelColor=161B22" alt="Last commit">
+<img src="https://img.shields.io/badge/platform-Windows-DB6D28?style=flat-square&labelColor=161B22" alt="Platform: Windows">
 
-## Installing / Uninstalling
+</div>
 
-**Windows**
+---
 
-- [CLI](https://github.com/TestcordDev/TestCord/releases/download/latest/Windows_Testcord_installer-rel_cli.exe)
-- [GUI](https://github.com/TestcordDev/TestCord/releases/download/latest/Windows_Testcord_installer-rel.exe)
+## Installation
 
-**MacOS**
+There is no release yet. Installers come once MochaCord is ready. Until then you can build it yourself; [docs/building.md](docs/building.md) has the steps.
 
-- [GoofCord Guide](GoofCordGuide.md)
+## Features
 
-**Linux**
+- **96 kHz stereo voice** with full Opus control: bitrate, sample rate, frame time, complexity, FEC, DTX and CBR.
+- **Voice effects** you hear in the mic test: pitch, echo, robot, bitcrush, muffle, static and eleven presets.
+- **Call guards** that locally mute people who blast stereo noise, get too loud or spam their mic, with a per-person allow list.
+- **Go Live controls** before every stream: resolution, frame rate, bitrate and quality presets.
+- **Camera up to 4K60** and 1080p120, with a constant bitrate encoder in place of Discord's adaptive ladder.
+- **Microphone chain** with gain, reverb, EQ, extra inputs and a raw bypass that skips system processing.
+- **Hundreds of built-in plugins**, from the Vencord, Equicord and TestCord sets plus MochaCord's own voice plugins.
+- **Acrylic window** on Windows 11.
+- **Private by default.** Settings stay on your machine. No analytics, no telemetry, no MochaCord server.
 
-- [CLI x11 & Wayland](https://github.com/TestcordDev/TestCord/releases/download/latest/Linux_Testcord_installer-rel_cli)
-- [GUI x11 & Wayland](https://github.com/TestcordDev/TestCord/releases/download/latest/Linux_Testcord_installer-rel)
-- [Wayland only](https://github.com/TestcordDev/TestCord/releases/download/latest/Linux_Testcord_installer-rel_wayland)
-- [x11 only](https://github.com/TestcordDev/TestCord/releases/download/latest/Linux_Testcord_installer-rel_x11)
+<div align="center">
+<img src="docs/images/go-live.png" alt="The Go Live window with resolution, frame rate and bitrate controls" width="70%">
+</div>
 
-## Installing Testcord Devbuild — recommended
+## Notes
 
-shell:
+> [!IMPORTANT]
+> **Work in progress.** MochaCord 2.8.4 builds and runs from this source. It stores settings in `%APPDATA%\MochaCord` and checks this repo for updates. There is no release yet.
 
-```sh
-bash -c "$(curl -sS https://raw.githubusercontent.com/TestcordDev/Testcord/refs/heads/main/misc/install.sh)"
-```
+> [!WARNING]
+> **Third-party client.** Discord does not support third-party clients. Spam-like behavior, such as mass friend requests, can get an account actioned. Use it at your own risk.
 
-### Dependencies
+> [!NOTE]
+> **Kept up to date on its own.** Every 6 hours a GitHub check loads Discord and tests every plugin's patches. When a Discord update breaks one, an issue opens with the list and closes again once it is fixed. Each Monday, Equicord's latest changes (which include Vencord's) arrive as a pull request.
 
-[Git](https://git-scm.com/) and [Node.JS LTS](https://nodejs.org/) are required.
+<details>
+<summary>What is in this repo</summary>
 
-Install `pnpm`:
+The root follows the Vencord and Equicord layout, so upstream changes merge cleanly.
 
-> ❗ This next command may need to be run as admin/root depending on your system, and you may need to close and reopen your terminal for pnpm to be in your PATH.
+| Folder | What it holds |
+|---|---|
+| `src/` | The mod layer, APIs and every built-in plugin. |
+| `src/plugins/` | Plugins from Vencord. |
+| `src/equicordplugins/` | Plugins from Equicord. |
+| `src/testcordplugins/` | TestCord plugins and MochaCord's own voice plugins. |
+| `scripts/` | Build, lint and the patch reporter. |
+| `desktop/` | The Windows app: the base Electron shell, MochaCord's shell code, icons and the installer build. |
+| `docs/` | Build steps and README images. |
 
-```sh
-npm i -g pnpm
-```
+</details>
 
-> ❗ **IMPORTANT** — Make sure you aren't using an admin/root terminal from here onwards. It will mess up your Discord/Testcord instance, and you will most likely have to reinstall.
+## Contributing
 
-Clone Testcord:
+Bug reports with the client version and a screenshot help most right now.
 
-```sh
-git clone https://github.com/TestcordDev/TestCord
-cd TestCord
-```
+<a href="CONTRIBUTING.md">
+<img src="https://img.shields.io/badge/%F0%9F%A4%9D%20HOW%20TO%20CONTRIBUTE-8957E5?style=for-the-badge&labelColor=161B22" alt="How to contribute" height="36">
+</a>
 
-Install dependencies:
+## Star history
 
-```sh
-pnpm install --frozen-lockfile
-```
+Thank you for starring the repo.
 
-Build Testcord:
-
-```sh
-pnpm build
-```
-
-You can also build dev (additional plugins) (not required):
-
-```sh
-pnpm dev
-```
-
-Inject Testcord into your desktop client:
-
-```sh
-pnpm inject
-```
-
-Build Testcord for web:
-
-```sh
-pnpm buildWeb
-```
-
-After building Testcord's web extension, locate the appropriate ZIP file in the `dist` directory and follow your browser's guide for installing custom extensions, if supported.
-
-> Note: Firefox extension zip requires Firefox for Developers
+<a href="https://www.star-history.com/?repos=DavidHiFi%2FMochaCord&amp;type=date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=DavidHiFi/MochaCord&amp;type=date&amp;theme=dark&amp;legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=DavidHiFi/MochaCord&amp;type=date" />
+    <img alt="DavidHiFi/MochaCord GitHub star history" src="https://api.star-history.com/chart?repos=DavidHiFi/MochaCord&amp;type=date" />
+  </picture>
+</a>
 
 ## Credits
 
-- [Thororen](https://github.com/thororen1234) for creating [Equicord](https://github.com/Equicord/Equicord)
-- [Vendicated](https://github.com/Vendicated) for creating [Vencord](https://github.com/Vendicated/Vencord)
-- [verticalsync](https://github.com/verticalsync) for [Suncord](https://github.com/verticalsync/Suncord)
+- **Author:** Myself, [DavidHiFi](https://github.com/DavidHiFi)
 
-## Star History
+| Who | What |
+|---|---|
+| **[Kurtzon](https://github.com/kurtzonaudio)** | Co-built the desktop shell. Its MIT notice is in [desktop/LICENSE](desktop/LICENSE). |
+| **[Vencord](https://github.com/Vendicated/Vencord) and [Equicord](https://github.com/Equicord/Equicord) contributors** | The mod framework and plugin suites this repo is built on. |
+| **[TestcordDev](https://github.com/TestcordDev/TestCord)** | The TestCord plugins. |
+| **[Vladimír Kalouš](https://github.com/Koromix/koffi)** | koffi, which the shell uses to call Windows for the acrylic window. |
 
-[![Star History Chart](https://api.star-history.com/svg?repos=TestcordDev/testcord&type=Date)](https://www.star-history.com/#TestcordDev/Testcord&type=date&legend=bottom-right)
+Built on [Electron](https://www.electronjs.org/), running [Discord](https://discord.com)'s web app, with [Equicord](https://github.com/Equicord/Equicord), [pnpm](https://pnpm.io/) and [electron-builder](https://www.electron.build/).
 
-## Disclaimer
+> Missing or wrong credit? [Open an issue](https://github.com/DavidHiFi/MochaCord/issues/new) and I'll fix it.
 
-Discord is a trademark of Discord Inc., and solely mentioned for the sake of descriptivity. Mentioning it does not imply any affiliation with or endorsement by Discord Inc. Testcord is not affiliated with Equicord or Vencord.
+## Disclaimers
 
-<details>
-<summary>⚠️ Using Testcord, Equicord or Vencord violates Discord's Terms of Service</summary>
-    <br>
-    <p>Any Discord custom client is against TOS. Though we haven't seen anyone get banned for it yet. Unless you abuse (and by that I mean really abuse) risky plugins like statusRotation/sendtoalldms, etc. If you use these risky plugins with care, you'll be okay.</p>
-</details>
+MochaCord is built with AI coding agents (Claude Code) working for the repo owner. The owner directs, tests and runs every build.
+
+The [MochaCord Theme](https://github.com/DavidHiFi/MochaCord-Theme) is a separate project: a Catppuccin Mocha theme for Vencord-based clients. Old links to `MochaCord.css` in this repo forward to it.
+
+Client mods are against Discord's Terms of Service. If your account matters a lot to you, think before you use any of them. Discord is a trademark of Discord Inc., named here only to say what MochaCord works with.
+
+<div align="center">
+<br>
+<sub>Not affiliated with Discord. Requires a Discord account.</sub>
+</div>

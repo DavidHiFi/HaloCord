@@ -26,8 +26,12 @@ on:
                 description: "Git reference to test patches on. This can be a branch, tag, or commit SHA."
                 required: false
     schedule:
-        #   # Every day at midnight
-        - cron: 0 0 * * *
+        # Every 6 hours, so a Discord update that breaks a plugin is caught the same day
+        - cron: 17 */6 * * *
+
+permissions:
+    contents: read
+    issues: write
 
 env:
     FORCE_COLOR: true
@@ -41,7 +45,7 @@ jobs:
             - uses: actions/checkout@v7
               with:
                   repository: ${{ inputs.repository || github.repository }}
-                  ref: ${{ inputs.ref || (github.event_name == 'schedule' && 'dev' || github.ref) }}
+                  ref: ${{ inputs.ref || github.ref }}
 
             - name: Setup PNPM
               uses: pnpm/setup@v2.1.0
@@ -57,6 +61,8 @@ jobs:
               run: pnpm buildReporter
 
             - name: Run Reporter
+              id: reporter
+              continue-on-error: true
               timeout-minutes: 15
               run: |
                   export PATH="$PWD/node_modules/.bin:$PATH"
@@ -91,8 +97,32 @@ jobs:
                       fi
                   done
 
-                  cat "$stable_output_file" "$canary_output_file" >> $GITHUB_STEP_SUMMARY
+                  cat "$stable_output_file" "$canary_output_file" > report.md
+                  cat report.md >> $GITHUB_STEP_SUMMARY
                   exit $exit_code
               env:
                   WEBHOOK_URL: ${{ inputs.webhook_url || secrets.WEBHOOK_URL }}
                   WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+
+            # One open issue tracks broken patches. It is updated when the list changes and closed when a run is clean.
+            - name: Update the broken patches issue
+              if: github.event_name == 'schedule' || inputs.repository == ''
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  OUTCOME: ${{ steps.reporter.outcome }}
+              run: |
+                  title="Plugins broken by a Discord update"
+                  issue=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')
+                  run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  if [[ "$OUTCOME" = "success" ]]; then
+                      [[ -n "$issue" ]] && gh issue close "$issue" --comment "Clean run, every patch matches again: $run_url"
+                      exit 0
+                  fi
+                  [[ -s report.md ]] || { echo "Reporter failed without a report"; exit 1; }
+                  { echo "Latest run: $run_url"; echo; head -c 60000 report.md; } > body.md
+                  if [[ -z "$issue" ]]; then
+                      gh issue create --title "$title" --body-file body.md --assignee "${{ github.repository_owner }}"
+                  elif ! diff -q <(gh issue view "$issue" --json body --jq .body | tail -n +3) <(tail -n +3 body.md) > /dev/null; then
+                      gh issue edit "$issue" --body-file body.md
+                      gh issue comment "$issue" --body "The list of broken patches changed: $run_url"
+                  fi
