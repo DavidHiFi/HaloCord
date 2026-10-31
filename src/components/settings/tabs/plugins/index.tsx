@@ -171,6 +171,7 @@ const SearchStatus = {
     EXPERIMENTAL: 11,
     LEGACY: 12,
     TESTCORD_MODIFIED: 13,
+    HALOCORD: 14,
 } as const;
 
 type SearchStatus = typeof SearchStatus[keyof typeof SearchStatus];
@@ -323,10 +324,11 @@ function PluginSettings() {
         for (const plugin of sortedPlugins) {
             const meta = PluginMeta[plugin.name];
             const folder = meta ? meta.folderName : "";
-            const category = folder.startsWith("src/testcordplugins/") ? (isHaloCordPlugin(folder) ? "HaloCord" : "TestCord") : folder.startsWith("src/equicordplugins/") ? "Equicord" : folder.startsWith("src/plugins/") ? "Vencord" : "Other";
+            const category = isHaloCordPlugin(plugin) ? "HaloCord" : folder.startsWith("src/testcordplugins/") ? "TestCord" : folder.startsWith("src/equicordplugins/") ? "Equicord" : folder.startsWith("src/plugins/") ? "Vencord" : "Other";
             for (const author of (plugin.authors || [])) {
                 if (!author || !author.name) continue;
-                if (!authors.has(author.name)) authors.set(author.name, { category, github: (author as any).github });
+                // An author of any HaloCord plugin is listed under HaloCord, whatever plugin was seen first
+                if (!authors.has(author.name) || (category === "HaloCord" && authors.get(author.name)!.category !== "HaloCord")) authors.set(author.name, { category, github: (author as any).github });
             }
         }
         const grouped: Record<string, string[]> = { HaloCord: [], TestCord: [], Equicord: [], Vencord: [], Other: [] };
@@ -383,6 +385,9 @@ function PluginSettings() {
                 break;
             case SearchStatus.TESTCORD_MODIFIED:
                 if (!isTestcordModified(plugin, PluginMeta[plugin.name]?.folderName)) return false;
+                break;
+            case SearchStatus.HALOCORD:
+                if (!isHaloCordPlugin(plugin)) return false;
                 break;
         }
 
@@ -656,6 +661,7 @@ function PluginSettings() {
                             { label: "Show Favorites", value: SearchStatus.FAVORITES },
                             { label: "Show Enabled", value: SearchStatus.ENABLED },
                             { label: "Show Disabled", value: SearchStatus.DISABLED },
+                            { label: "Show HaloCord", value: SearchStatus.HALOCORD },
                             { label: "Show Equicord", value: SearchStatus.EQUICORD },
                             { label: "Show TestCord", value: SearchStatus.TESTCORD },
                             { label: "Show TestCord Modified", value: SearchStatus.TESTCORD_MODIFIED },

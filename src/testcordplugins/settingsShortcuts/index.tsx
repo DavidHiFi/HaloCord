@@ -9,7 +9,6 @@ import definePlugin from "@utils/types";
 import { Button } from "@webpack/common";
 
 import { openMicrophoneSettingsModal } from "../betterMicrophone.desktop/modals";
-import { openScreenshareModal } from "../betterScreenshare.desktop/modals";
 
 const SettingsShortcutsElement = () => (
     <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -20,20 +19,13 @@ const SettingsShortcutsElement = () => (
         >
             {"Better Microphone Settings"}
         </Button>
-        <Button
-            size={Button.Sizes.SMALL}
-            color={Button.Colors.PRIMARY}
-            onClick={openScreenshareModal}
-        >
-            {"Better Screenshare Settings"}
-        </Button>
     </div>
 );
 
 export default definePlugin({
     id: "SettingsShortcuts",
     name: "SettingsShortcuts",
-    description: "Adds Better Microphone and Better Screenshare shortcut buttons to Discord settings.",
+    description: "Adds a Better Microphone shortcut button to Discord settings.",
     tags: ["Shortcuts", "Utility"],
     authors: [TestcordDevs.x2b],
     start() {
@@ -46,7 +38,7 @@ export default definePlugin({
         const sectionFactory = () => ({
             section: "privcord.settings-shortcuts",
             label: "Privcord Shortcuts",
-            searchableTitles: ["Privcord Shortcuts", "Better Microphone", "Better Screenshare"],
+            searchableTitles: ["Privcord Shortcuts", "Better Microphone"],
             element: SettingsShortcutsElement,
             id: "PrivcordSettingsShortcuts",
         });
