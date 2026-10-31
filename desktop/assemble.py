@@ -72,7 +72,7 @@ m = m.replace(WIN, 'spellcheck:!0},...mcWinOpts()});mcWinPrefs().winCtrlQ&&win.w
                    '"keyDown"===t.type&&t.control&&!t.alt&&!t.shift&&"q"===String(t.key).toLowerCase()&&app.quit()});'
                    'mcAcrylic(win);const e=win.webContents.session;')
 m += ('\nfunction mcWinFile(){return require("path").join(app.getPath("userData"),"halocord-window.json")}'
-      'function mcWinPrefs(){try{return JSON.parse(require("fs").readFileSync(mcWinFile(),"utf8"))||{}}catch(e){return{}}}'
+      'function mcWinPrefs(){const fs=require("fs"),f=mcWinFile(),old=require("path").join(app.getPath("userData"),"mochacord-window.json");try{fs.existsSync(f)||!fs.existsSync(old)||fs.copyFileSync(old,f)}catch(e){}try{return JSON.parse(fs.readFileSync(f,"utf8"))||{}}catch(e){return{}}}'
       'function mcWinOpts(){const p=mcWinPrefs(),o={};p.disableMinSize&&(o.minWidth=0,o.minHeight=0);'
       'p.transparent&&(o.transparent=!0,o.backgroundColor="#00000000");'
       '"win32"===process.platform&&["mica","tabbed"].includes(p.windowsMaterial)&&(o.backgroundMaterial=p.windowsMaterial,o.backgroundColor="#00000000");'
