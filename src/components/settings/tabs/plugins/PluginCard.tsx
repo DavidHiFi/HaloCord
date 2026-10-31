@@ -229,7 +229,7 @@ showToast(msg, Toasts.Type.FAILURE, {
             title: "Vencord Plugin"
         },
         {
-            condition: isHaloCordPlugin(pluginMeta.folderName),
+            condition: isHaloCordPlugin(plugin),
             src: HaloCordPluginIconUrl,
             alt: "HaloCord",
             title: "HaloCord Plugin"

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { Settings } from "@api/Settings";
 import { BaseText } from "@components/BaseText";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Flex } from "@components/Flex";
@@ -1072,15 +1071,6 @@ function getActiveNameplate(user: any): { src?: string; video?: string; poster?:
             }
         }
 
-        const plugins = (Settings?.plugins || {}) as any;
-        const fup = (plugins.fakeUserProfile || {}) as any;
-        if (fup.manualNameplateAsset) {
-            return { src: `https://cdn.discordapp.com/media/v1/collectibles-shop/${fup.manualNameplateAsset}/static` };
-        }
-        const fp = (plugins.FakeProfile || {}) as any;
-        if (fp.nameplateAsset) {
-            return { src: `https://cdn.discordapp.com/media/v1/collectibles-shop/${fp.nameplateAsset}/static` };
-        }
     } catch { }
     return null;
 }
