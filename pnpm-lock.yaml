@@ -264,8 +264,8 @@ importers:
         specifier: ^1.2.1
         version: 1.2.2(eslint@10.6.0(supports-color@10.2.2))
       eslint-plugin-simple-import-sort:
-        specifier: ^13.0.0
-        version: 13.0.0(eslint@10.6.0(supports-color@10.2.2))
+        specifier: ^14.0.0
+        version: 14.0.0(eslint@10.6.0(supports-color@10.2.2))
       eslint-plugin-unused-imports:
         specifier: ^4.4.1
         version: 4.4.1(@typescript-eslint/eslint-plugin@8.66.0(@typescript-eslint/parser@8.66.0(eslint@10.6.0(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@10.6.0(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@10.6.0(supports-color@10.2.2))
@@ -346,13 +346,13 @@ importers:
         version: 26.0.1
       '@types/react':
         specifier: ^19.0.10
-        version: 19.0.12
+        version: 19.1.0
       '@types/react-dom':
         specifier: 19.0.4
-        version: 19.0.4(@types/react@19.0.12)
+        version: 19.0.4(@types/react@19.1.0)
       '@vencord/discord-types':
         specifier: ^1.0.2
-        version: 1.0.2(@types/react@19.0.12)
+        version: 1.0.2(@types/react@19.1.0)
       highlight.js:
         specifier: 11.11.1
         version: 11.11.1
@@ -784,9 +784,6 @@ packages:
     resolution: {integrity: sha512-21E2zejNNRtjG4hKIyJz4aWswGEcNFTgttA0bZIRGjj1HA/tbSUxIJnIcYbn98pwJck0cS1bsQhn6eaKqbcFWw==}
     peerDependencies:
       '@types/react': ^19.0.0
-
-  '@types/react@19.0.12':
-    resolution: {integrity: sha512-V6Ar115dBDrjbtXSrS+/Oruobc+qVbbUxDFC1RSbRqLt5SYvxxyIDrSC85RWml54g+jfNeEMZhEj7wW07ONQhA==}
 
   '@types/react@19.1.0':
     resolution: {integrity: sha512-UaicktuQI+9UKyA4njtDOGBD/67t8YEBt2xdfqu8+gP9hqPUPsiXlNPcpS2gVdjmis5GKPG3fCxbQLVgxsQZ8w==}
@@ -1281,8 +1278,8 @@ packages:
     peerDependencies:
       eslint: '>=8.41.0'
 
-  eslint-plugin-simple-import-sort@13.0.0:
-    resolution: {integrity: sha512-McAc+/Nlvcg4byY/CABGH8kqnefWBj8s3JA2okEtz8ixbECQgU46p0HkTUKa4YS7wvgGceimlc34p1nXqbWqtA==}
+  eslint-plugin-simple-import-sort@14.0.0:
+    resolution: {integrity: sha512-NUJO0+XFCkk+o5EsAJruTgnfMEpeWrPWeJS15UVF60GgXmqz1BJ9/3hzlvG7lkL8Bubzos5cCLptThbFfPnSMQ==}
     peerDependencies:
       eslint: '>=5.0.0'
 
@@ -2790,17 +2787,13 @@ snapshots:
     dependencies:
       undici-types: 8.3.0
 
-  '@types/react-dom@19.0.4(@types/react@19.0.12)':
+  '@types/react-dom@19.0.4(@types/react@19.1.0)':
     dependencies:
-      '@types/react': 19.0.12
+      '@types/react': 19.1.0
 
   '@types/react-dom@19.1.0(@types/react@19.1.0)':
     dependencies:
       '@types/react': 19.1.0
-
-  '@types/react@19.0.12':
-    dependencies:
-      csstype: 3.2.3
 
   '@types/react@19.1.0':
     dependencies:
@@ -2914,9 +2907,9 @@ snapshots:
       vscode-oniguruma: 1.7.0
       vscode-textmate: 5.2.0
 
-  '@vencord/discord-types@1.0.2(@types/react@19.0.12)':
+  '@vencord/discord-types@1.0.2(@types/react@19.1.0)':
     dependencies:
-      '@types/react': 19.0.12
+      '@types/react': 19.1.0
       moment: 2.22.2
       type-fest: 5.7.0
 
@@ -3490,7 +3483,7 @@ snapshots:
     dependencies:
       eslint: 10.6.0(supports-color@10.2.2)
 
-  eslint-plugin-simple-import-sort@13.0.0(eslint@10.6.0(supports-color@10.2.2)):
+  eslint-plugin-simple-import-sort@14.0.0(eslint@10.6.0(supports-color@10.2.2)):
     dependencies:
       eslint: 10.6.0(supports-color@10.2.2)
 
