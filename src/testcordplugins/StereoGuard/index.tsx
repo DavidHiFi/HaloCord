@@ -181,7 +181,7 @@ const settings = definePluginSettings({
     }
 });
 
-// --- Force Mono, ported from deracul's Force Mono plugin ---
+// --- Force Mono, ported from deracul's Force Mono plugin (Discord id 1454268753629024529) ---
 
 let monoConnection: any;
 let monoEmitter: any;
@@ -931,8 +931,9 @@ export default definePlugin({
     id: "StereoGuard",
     name: "StereoGuard",
     description: "Locally silences anyone whose audio is not fully mono: slight panning, stereo width, panning around, or reverb tails. Centered mono voice is never touched.",
-    // deracul wrote Force Mono, ported here from the legacy plugin.
-    authors: [TestcordDevs.Kurtzon, TestcordDevs.DavidHiFi, { name: "deracul", id: 1454268753629024529n }],
+    // Force Mono is deracul's code (credited in its section above). deracul stays out of authors so
+    // StereoGuard keeps the HaloCord badge, which needs DavidHiFi plus only HaloCord co-authors.
+    authors: [TestcordDevs.Kurtzon, TestcordDevs.DavidHiFi],
     tags: ["Voice", "Utility"],
     enabledByDefault: false,
     settings,

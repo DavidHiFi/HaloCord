@@ -35,7 +35,8 @@ const DEFAULT_KEY = "Shift+`";
 const PAGE_KEY = "halocord_overlay";
 
 const settings = definePluginSettings({
-    enabled: { type: OptionType.BOOLEAN, description: "Enable in-game overlay", default: false, onChange: sync },
+    // Not "enabled": that key is the plugin's own on/off flag, so the overlay was always on (2026-11-01).
+    overlayOn: { type: OptionType.BOOLEAN, description: "Enable in-game overlay", default: false, onChange: sync },
     keybind: { type: OptionType.STRING, description: "Toggle overlay lock", default: DEFAULT_KEY },
     showOn: {
         type: OptionType.SELECT, description: "Show the overlay over", onChange: sync, options: [
@@ -170,9 +171,9 @@ function feed(on: boolean) {
 
 function sync() {
     const s = settings.store, api = bridge();
-    feed(!!api && s.enabled);
+    feed(!!api && s.overlayOn);
     return api?.setConfig({
-        enabled: s.enabled, keybind: s.keybind || DEFAULT_KEY, showOn: s.showOn, avatarSize: s.avatarSize,
+        enabled: s.overlayOn, keybind: s.keybind || DEFAULT_KEY, showOn: s.showOn, avatarSize: s.avatarSize,
         displayNames: s.displayNames, displayUsers: s.displayUsers, notifPos: s.notifPos, textNotifs: s.textNotifs, opacity: s.opacity,
     });
 }
@@ -260,7 +261,7 @@ function Choice({ id, title }: { id: "showOn" | "avatarSize" | "displayNames" | 
 }
 
 function GameOverlayPage() {
-    const s = settings.use(["enabled", "textNotifs", "showContent", "opacity"]);
+    const s = settings.use(["overlayOn", "textNotifs", "showContent", "opacity"]);
     if (!bridge()) return <Paragraph>The game overlay needs the HaloCord desktop app.</Paragraph>;
     return (
         <>
@@ -268,7 +269,7 @@ function GameOverlayPage() {
                 HaloCord draws the overlay as a click-through window on top of your game. It shows over games in windowed or
                 borderless fullscreen mode, not over exclusive fullscreen; switch those games to borderless.
             </Paragraph>
-            <FormSwitch title="Enable in-game overlay" value={s.enabled} onChange={v => { settings.store.enabled = v; }} />
+            <FormSwitch title="Enable in-game overlay" value={s.overlayOn} onChange={v => { settings.store.overlayOn = v; }} />
             <div className={Margins.top20} />
             <KeybindRecorder />
             <Choice id="showOn" title="Show the overlay over" />
