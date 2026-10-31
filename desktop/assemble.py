@@ -39,6 +39,13 @@ if not sd.exists():
     subprocess.run(f'"{D / "streamdeck" / "build.cmd"}"', **NW)
 (app / "resources" / "streamdeck").mkdir(exist_ok=True)
 shutil.copy2(sd, app / "resources" / "streamdeck" / sd.name)
+# hc-keys: global keybinds. shell/hc-keys.js runs keys/hckeys.exe (resources\keys) and feeds the haloKeybinds plugin.
+shutil.copy2(D / "shell" / "hc-keys.js", asrc / "hc-keys.js")
+hk = D / "keys" / "hckeys.exe"
+if not hk.exists():
+    subprocess.run(f'"{D / "keys" / "build.cmd"}"', **NW)
+(app / "resources" / "keys").mkdir(exist_ok=True)
+shutil.copy2(hk, app / "resources" / "keys" / hk.name)
 m = (asrc / "main.js").read_text(encoding="utf-8")
 assert m.count('UPD_REPO="kurtzonaudio/kurtcord"') == 1
 m = m.replace('UPD_REPO="kurtzonaudio/kurtcord"', 'UPD_REPO="DavidHiFi/HaloCord"')
@@ -89,6 +96,8 @@ m += ('\nfunction mcWinFile(){return require("path").join(app.getPath("userData"
       'ipcMain.handle("halocord:open-settings-folder",()=>shell.openPath(app.getPath("userData")));'
       'ipcMain.handle("halocord:set-window-prefs",(e,t)=>{const p={};for(const k of["disableMinSize","transparent","winCtrlQ"])p[k]=!!(t&&t[k]);'
       'p.windowsMaterial=t&&"string"==typeof t.windowsMaterial?t.windowsMaterial:"none";require("fs").writeFileSync(mcWinFile(),JSON.stringify(p))});\n')
+# hc-keys: start the keybind bridge in main.
+m += '\nrequire("./hc-keys.js").init();\n'
 (asrc / "main.js").write_text(m, encoding="utf-8")
 # Display text only; lowercase ids (kurtcordDirect, KurtcordMLKEM, wire tags) stay so P2P and E2EE still talk to Kurtcord users.
 for f in ("preload.js", "userscript.js"):
@@ -109,6 +118,12 @@ for f in ("preload.js", "userscript.js"):
                              'stopShareAudio:()=>ipcRenderer.invoke("halocord:share-audio-stop"),'
                              'takeShareAudio:A=>{ipcRenderer.removeAllListeners("halocord:share-audio");'
                              'ipcRenderer.on("halocord:share-audio",(B,C)=>A(new Uint8Array(C)));return!0}}),')
+        # hc-keys: HaloCordKeys, the page side of shell/hc-keys.js.
+        a = 'contextBridge.exposeInMainWorld("__kurtcord",__kcBridge),'
+        assert s.count(a) == 1
+        s = s.replace(a, a + 'contextBridge.exposeInMainWorld("HaloCordKeys",{setFilter:(A,B)=>ipcRenderer.send("halocord:keys-filter",Array.isArray(A)?A.map(String):[],!!B),'
+                             'onEvent:A=>{ipcRenderer.removeAllListeners("halocord:keys-event");'
+                             'ipcRenderer.on("halocord:keys-event",(B,C,D,E)=>A(C,D,E));return!0}}),')
         a = s[s.index("function injectEquicord(){"):s.index("try{var __kcBridge=")]
         s = s.replace(a, 'function injectEquicord(){try{contextBridge.exposeInMainWorld("VesktopNative",{app:{'
                          'getVersion:()=>require("./package.json").version,getGitHash:()=>"",isDevBuild:()=>!1,'
