@@ -8,12 +8,12 @@ import type { Patch } from "@utils/types";
 
 export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
     {
-        // Web build: the Share Screen button streams at once. Ask for quality and sound first.
+        // Web build: the Share Screen button streams at once. Open the share picker first.
         find: "getMediaEngine().getDesktopSource(",
         predicate: () => !IS_DISCORD_DESKTOP,
         replacement: {
             match: /(\(0,\i\.\i\)\(\{preset:\i\.\i\.PRESET_CUSTOM,resolution:)(\i)\.height,frameRate:(\i\.\i\.FPS_30),soundshareEnabled:!0\}\),(\i\.\i\.getMediaEngine\(\)\.getDesktopSource)\(\2,!0\)(\.then\(\i=>\{\(0,\i\.\i\)\([^}]*\}\)\}\))/,
-            replace: "$self.openWebGoLive((mcSize,mcSound,mcFps)=>{$1mcSize.height,frameRate:mcFps,soundshareEnabled:mcSound}),$4(mcSize,mcSound)$5},$2,$3)"
+            replace: "$self.openWebGoLive((mcSize,mcSound,mcFps)=>{$1mcSize.height,frameRate:mcFps,soundshareEnabled:mcSound}),$4(mcSize,mcSound)$5})"
         }
     },
     {

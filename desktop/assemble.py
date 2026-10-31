@@ -27,6 +27,12 @@ for f in ("index.js", "package.json", "LICENSE.txt"):
 (kd / "build" / "koffi" / "win32_x64").mkdir(parents=True)
 shutil.copy2(KOFFI / "build" / "koffi" / "win32_x64" / "koffi.node", kd / "build" / "koffi" / "win32_x64" / "koffi.node")
 shutil.copy2(D / "shell" / "mcblur.js", asrc / "mcblur.js")
+shutil.copy2(D / "shell" / "shareaudio.js", asrc / "shareaudio.js")
+# halocord-loopback.exe sits next to app.asar (process.resourcesPath); build it if it is missing.
+lb = D / "loopback" / "halocord-loopback.exe"
+if not lb.exists():
+    subprocess.run(f'"{D / "loopback" / "build.cmd"}"', **NW)
+shutil.copy2(lb, app / "resources" / lb.name)
 m = (asrc / "main.js").read_text(encoding="utf-8")
 assert m.count('UPD_REPO="kurtzonaudio/kurtcord"') == 1
 m = m.replace('UPD_REPO="kurtzonaudio/kurtcord"', 'UPD_REPO="DavidHiFi/HaloCord"')
@@ -39,13 +45,24 @@ m = m.replace('app.setAppUserModelId("com.kurtcord.desktop")', 'app.setAppUserMo
 a = 'Menu:Menu}=require("electron");'
 assert m.count(a) == 1
 m = m.replace(a, a + 'process.env.TESTCORD_USER_DATA_DIR=require("path").join(app.getPath("appData"),"HaloCord","TestCord");require("./equicord/main.js");')
-# Screen share: hand Chromium system audio too when the page asks for it. loopbackWithoutChrome
-# leaves out HaloCord's own playback, so viewers don't hear the call echoed back.
-for a, b in [("setDisplayMediaRequestHandler(async(e,t)=>{try{const e=await dvxPickSource(",
-              "setDisplayMediaRequestHandler(async(mcReq,t)=>{try{const e=await dvxPickSource("),
-             ("t(e?{video:e}:{})", "t(e?{video:e,...(mcReq&&mcReq.audioRequested?{audio:\"loopbackWithoutChrome\"}:{})}:{})")]:
-    assert m.count(a) == 2, a
+# Screen share: the page's share picker (StreamEnhancer SharePicker) preselects the source, so the
+# old "Choose what to share" window only opens when nothing was picked. Chromium gets video only;
+# the sound comes from shell/shareaudio.js, which leaves HaloCord's own playback out.
+# Three picker calls (two share handlers, one ac:pick-screenshare-source IPC); two hand video to Chromium.
+for a, b, k in [("const e=await dvxPickSource(", "const e=await hcPickShare(", 3), ("t(e?{video:e}:{})", "hcShareSource=e,t(e?{video:e}:{})", 2)]:
+    assert m.count(a) == k, a
     m = m.replace(a, b)
+m += ('\nlet hcShareSel=null,hcShareSource=null;'
+      'async function hcPickShare(o){const p=hcShareSel;hcShareSel=null;if(p&&Date.now()-p.t<2e4)try{'
+      'const s=(await desktopCapturer.getSources({types:["screen","window"],thumbnailSize:{width:0,height:0}})).find(x=>x.id===p.id);'
+      'if(s&&!(o&&o.windowsOnly&&!s.id.startsWith("window:")))return s}catch(e){}return dvxPickSource(o)}'
+      'ipcMain.handle("halocord:share-sources",async()=>{const own=BrowserWindow.getAllWindows().map(w=>w.getMediaSourceId());'
+      'return(await desktopCapturer.getSources({types:["window","screen"],thumbnailSize:{width:384,height:216},fetchWindowIcons:!0}))'
+      '.filter(s=>s.name&&!own.includes(s.id)).map(s=>({id:s.id,name:s.name,thumb:s.thumbnail.toDataURL(),'
+      'icon:s.appIcon&&!s.appIcon.isEmpty()?s.appIcon.toDataURL():void 0}))});'
+      'ipcMain.handle("halocord:share-select",(e,t)=>{hcShareSel={id:String(t),t:Date.now()}});'
+      'ipcMain.handle("halocord:share-audio-start",e=>require("./shareaudio.js").start(hcShareSource,e.sender));'
+      'ipcMain.handle("halocord:share-audio-stop",()=>require("./shareaudio.js").stop());\n')
 m, n = re.subn(r"Kurtcord(?![A-Za-z])", "HaloCord", m)
 # Shell controls for the HaloCord settings tab: relaunch, settings folder, and window prefs
 # (min size, transparency, background material, Ctrl+Q) read from halocord-window.json at window creation.
@@ -78,7 +95,13 @@ for f in ("preload.js", "userscript.js"):
         assert s.count(a) == 1
         s = s.replace(a, a + 'contextBridge.exposeInMainWorld("HaloCordNative",{relaunch:()=>ipcRenderer.invoke("halocord:relaunch"),'
                              'openSettingsFolder:()=>ipcRenderer.invoke("halocord:open-settings-folder"),'
-                             'setWindowPrefs:A=>ipcRenderer.invoke("halocord:set-window-prefs",A)}),')
+                             'setWindowPrefs:A=>ipcRenderer.invoke("halocord:set-window-prefs",A),'
+                             'getShareSources:()=>ipcRenderer.invoke("halocord:share-sources"),'
+                             'selectShareSource:A=>ipcRenderer.invoke("halocord:share-select",String(A)),'
+                             'startShareAudio:()=>ipcRenderer.invoke("halocord:share-audio-start"),'
+                             'stopShareAudio:()=>ipcRenderer.invoke("halocord:share-audio-stop"),'
+                             'takeShareAudio:A=>{ipcRenderer.removeAllListeners("halocord:share-audio");'
+                             'ipcRenderer.on("halocord:share-audio",(B,C)=>A(new Uint8Array(C)));return!0}}),')
         a = s[s.index("function injectEquicord(){"):s.index("try{var __kcBridge=")]
         s = s.replace(a, 'function injectEquicord(){try{contextBridge.exposeInMainWorld("VesktopNative",{app:{'
                          'getVersion:()=>require("./package.json").version,getGitHash:()=>"",isDevBuild:()=>!1,'

@@ -660,6 +660,10 @@ export const streamEnhancerSettings = definePluginSettings({
         description: "Persistent StreamEnhancer tuning values.",
         default: defaultStreamEnhancerConfig,
     },
+    // Screen share picker choices (components/SharePicker.tsx); 0 height means the screen's own size.
+    shareHeight: { type: OptionType.NUMBER, description: "Screen share resolution", default: 1080, hidden: true },
+    shareMute: { type: OptionType.BOOLEAN, description: "Mute stream audio", default: false, hidden: true },
+    shareAudio: { type: OptionType.STRING, description: "Screen share audio source", default: "default", hidden: true },
     controlPanel: {
         type: OptionType.COMPONENT,
         component: StreamEnhancerControlPanel

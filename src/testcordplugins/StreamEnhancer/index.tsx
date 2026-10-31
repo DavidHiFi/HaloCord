@@ -15,16 +15,17 @@ import {
     getGoLiveStreamEnhanceSourceOption,
     getGoLiveStreamEnhanceSourceType,
     openGoLiveButtonContextMenu,
-    openWebGoLive,
     renderGoLiveStreamEnhancePanel,
     syncGoLiveModalState,
 } from "./components/GoLiveSettingsModal";
+import { openSharePicker } from "./components/SharePicker";
 import { ViewerControls } from "./components/ViewerControls";
 import { streamContextPatch, userContextPatch } from "./contextMenus";
 import { requestLocalPreview, setLocalPreviewChangeListener } from "./customPreviewImage";
 import { streamEnhancerPatches } from "./patches";
 import { startPreviewSender, stopPreviewSender } from "./previewSender";
 import { getPreviewRefreshIntervalMs, getPreviewThumbnailDataUrl, refreshCustomPreview, shouldSpoofStreamPanelPreview, stopCustomPreviewLoader, streamEnhancerRuntime, streamEnhancerSettings } from "./settings";
+import { installShareCapture, uninstallShareCapture } from "./shareCapture";
 import * as streamState from "./state";
 import managedStyle from "./styles.css?managed";
 import type { StreamParticipant } from "./types";
@@ -58,6 +59,7 @@ const streamEnhancer = definePlugin({
     patches: streamEnhancerPatches,
     start() {
         installOutgoingVideoFilterInterceptor();
+        installShareCapture();
         setLocalPreviewChangeListener(refreshCustomPreview);
         requestLocalPreview();
         startPreviewSender({
@@ -68,6 +70,7 @@ const streamEnhancer = definePlugin({
         streamState.startAutoWatch();
     },
     stop() {
+        uninstallShareCapture();
         uninstallOutgoingVideoFilterInterceptor();
         stopCustomPreviewLoader();
         stopPreviewSender();
@@ -78,7 +81,7 @@ const streamEnhancer = definePlugin({
     getGoLiveStreamEnhanceSourceOption,
     getGoLiveStreamEnhanceSourceType,
     openGoLiveButtonContextMenu,
-    openWebGoLive,
+    openWebGoLive: openSharePicker,
     renderGoLiveStreamEnhancePanel,
     syncGoLiveModalState,
     renderViewerControls(participant: StreamParticipant, className?: string) {
