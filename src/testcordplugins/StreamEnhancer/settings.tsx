@@ -568,6 +568,13 @@ function SettingsSection({ title, children }: SettingsSectionProps) {
     );
 }
 
+export type PickerTab = "apps" | "screens" | "devices";
+export const pickerTabs: Array<{ label: string; value: PickerTab; }> = [
+    { label: "Applications", value: "apps" },
+    { label: "Entire Screen", value: "screens" },
+    { label: "Devices", value: "devices" }
+];
+
 export function StreamEnhancerControlPanel() {
     const { config } = streamEnhancerSettings.use(["config"]);
     const normalized = normalizeConfig(config);
@@ -666,6 +673,8 @@ export const streamEnhancerSettings = definePluginSettings({
     shareAudio: { type: OptionType.STRING, description: "Screen share audio source", default: "default", hidden: true },
     // On: clicking a window or screen in the picker starts the stream, like Discord desktop. Off: pick, then Go Live.
     shareInstant: { type: OptionType.BOOLEAN, description: "Start sharing on the first click", default: true, hidden: true },
+    // Tab the share picker opens on: one of pickerTabs' values.
+    pickerTab: { type: OptionType.STRING, description: "Share picker opens on", default: "apps", hidden: true },
     controlPanel: {
         type: OptionType.COMPONENT,
         component: StreamEnhancerControlPanel

@@ -5,12 +5,13 @@
  */
 
 import ErrorBoundary from "@components/ErrorBoundary";
+import { Switch } from "@components/Switch";
 import { classNameFactory } from "@utils/css";
 import { ModalRoot, ModalSize, openModal, type RenderModalProps } from "@utils/modal";
-import { useEffect, useState } from "@webpack/common";
+import { Select, useEffect, useState } from "@webpack/common";
 
 import { applyLive, frameRates, heavyNote, isHeavy, loadSaved, modeFor, modes, resolutions, type Saved } from "../quality";
-import { StreamEnhancerControlPanel, streamEnhancerSettings } from "../settings";
+import { pickerTabs, StreamEnhancerControlPanel, streamEnhancerSettings } from "../settings";
 
 const cl = classNameFactory("vc-stream-enhancer-share-");
 const ccl = classNameFactory("vc-stream-enhancer-camera-");
@@ -27,7 +28,17 @@ export function useAudioInputs() {
     return inputs;
 }
 
-// Stream mode, resolution, frame rate and sound: the share picker's gear menu and the stream settings modal both show this.
+// A labelled row with the same pill switch the plugin list uses; the whole row toggles it.
+export function ToggleRow({ label, checked, onChange, disabled, title }: { label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean; title?: string; }) {
+    return (
+        <label className={cl("toggle", disabled && "toggle-off")} title={title}>
+            <span>{label}</span>
+            <Switch checked={checked} onChange={onChange} disabled={disabled} />
+        </label>
+    );
+}
+
+// Stream mode, resolution, frame rate and sound, shown in the stream settings modal (the share picker's gear opens it).
 export function QualityPanel({ opts, set, inputs }: { opts: Saved; set: (next: Partial<Saved>) => void; inputs: MediaDeviceInfo[]; }) {
     const [advanced, setAdvanced] = useState(opts.audio !== "default");
     const mode = modeFor(opts.height, opts.fps);
@@ -51,9 +62,7 @@ export function QualityPanel({ opts, set, inputs }: { opts: Saved; set: (next: P
             <div className={cl("label")}>Frame Rate</div>
             <div className={cl("pills")}>{frameRates.map(f => pill(opts.fps === f, `${f} FPS`, () => set({ fps: f })))}</div>
             {isHeavy(opts.height, opts.fps) && <p className={cl("warn")}>{heavyNote}</p>}
-            <button className={cl("row", "check")} role="switch" aria-checked={opts.mute} onClick={() => set({ mute: !opts.mute })}>
-                <span>Mute stream audio</span><span className={cl("box", opts.mute && "box-on")} />
-            </button>
+            <ToggleRow label="Mute stream audio" checked={opts.mute} onChange={mute => set({ mute })} />
             <button className={cl("row", "check")} onClick={() => setAdvanced(!advanced)}>
                 <span>Audio source</span><span className={cl("note")}>{advanced ? "▾" : "▸"}</span>
             </button>
@@ -70,7 +79,7 @@ export function QualityPanel({ opts, set, inputs }: { opts: Saved; set: (next: P
 const StreamSettings = ErrorBoundary.wrap(function StreamSettings({ modalProps }: { modalProps: RenderModalProps; }) {
     const [opts, setOpts] = useState<Saved>(loadSaved);
     const inputs = useAudioInputs();
-    const { showPanelButton } = streamEnhancerSettings.use(["showPanelButton"]);
+    const { showPanelButton, pickerTab } = streamEnhancerSettings.use(["showPanelButton", "pickerTab"]);
     // Changes here apply to a running stream right away and become the defaults for the next one.
     const set = (next: Partial<Saved>) => {
         setOpts(o => ({ ...o, ...next }));
@@ -85,11 +94,16 @@ const StreamSettings = ErrorBoundary.wrap(function StreamSettings({ modalProps }
             </div>
             <div className={ccl("body")}>
                 <QualityPanel opts={opts} set={set} inputs={inputs} />
+                <div className={cl("label")}>Picker opens on</div>
+                <Select
+                    options={pickerTabs}
+                    isSelected={v => v === pickerTab}
+                    select={v => { streamEnhancerSettings.store.pickerTab = v; }}
+                    serialize={v => v}
+                />
                 <StreamEnhancerControlPanel />
-                <button className={cl("row", "check")} role="switch" aria-checked={showPanelButton}
-                    onClick={() => { streamEnhancerSettings.store.showPanelButton = !showPanelButton; }}>
-                    <span>Show a stream settings button in the user panel</span><span className={cl("box", showPanelButton && "box-on")} />
-                </button>
+                <ToggleRow label="Show a stream settings button in the user panel" checked={showPanelButton}
+                    onChange={v => { streamEnhancerSettings.store.showPanelButton = v; }} />
             </div>
             <div className={cl("foot")}>
                 <div className={cl("spacer")} />

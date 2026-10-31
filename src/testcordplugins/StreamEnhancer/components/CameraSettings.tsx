@@ -10,6 +10,8 @@ import { ModalRoot, ModalSize, openModal, type RenderModalProps } from "@utils/m
 import type { VideoDevice } from "@vencord/discord-types";
 import { FluxDispatcher, MediaEngineStore, useEffect, useRef, useState, useStateFromStores } from "@webpack/common";
 
+import { ToggleRow } from "./StreamSettings";
+
 const cl = classNameFactory("vc-stream-enhancer-share-");
 const ccl = classNameFactory("vc-stream-enhancer-camera-");
 
@@ -55,9 +57,7 @@ function Preview({ deviceId }: { deviceId: string; }) {
             <div className={ccl("preview")}>
                 {on ? <video ref={video} autoPlay muted playsInline /> : <span>{failed ? "The camera could not be opened." : "Preview is off."}</span>}
             </div>
-            <button className={cl("row", "check")} role="switch" aria-checked={on} onClick={() => setOn(!on)}>
-                <span>Camera preview</span><span className={cl("box", on && "box-on")} />
-            </button>
+            <ToggleRow label="Camera preview" checked={on} onChange={setOn} />
         </>
     );
 }
@@ -99,9 +99,7 @@ const CameraSettings = ErrorBoundary.wrap(function CameraSettings({ modalProps }
                 </select>
                 <Preview deviceId={current} />
                 <div className={cl("label")}>Advanced Camera Controls</div>
-                <button className={cl("row", "check")} role="switch" aria-checked={unlocked} disabled={!api} onClick={toggle}>
-                    <span>Unlocked camera, removes Discord's 720p limit</span><span className={cl("box", unlocked && "box-on")} />
-                </button>
+                <ToggleRow label="Unlocked camera, removes Discord's 720p limit" checked={unlocked} disabled={!api} onChange={toggle} />
                 <p className={ccl("hint")}>{api
                     ? "Resolution is negotiated up to the preset below. Your camera and connection decide the real result, and more cameras on a call cost more CPU and GPU."
                     : "Advanced camera controls need the HaloCord desktop shell. They are not available in this window."}</p>
