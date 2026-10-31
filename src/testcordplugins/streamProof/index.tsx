@@ -9,7 +9,8 @@ import "./styles.css";
 import { ChatBarButton, ChatBarButtonFactory } from "@api/ChatButtons";
 import { addChannelToolbarButton, addHeaderBarButton, ChannelToolbarButton, HeaderBarButton, removeChannelToolbarButton, removeHeaderBarButton } from "@api/HeaderBar";
 import { definePluginSettings } from "@api/Settings";
-import { EquicordDevs } from "@utils/constants";
+import { UserAreaButton, type UserAreaRenderProps } from "@api/UserArea";
+import { EquicordDevs, TestcordDevs } from "@utils/constants";
 import definePlugin, { OptionType, PluginNative } from "@utils/types";
 import { findByPropsLazy } from "@webpack";
 import { ContextMenuApi, Menu, React, useEffect, UserStore, useState, useStateFromStores } from "@webpack/common";
@@ -30,6 +31,7 @@ const settings = definePluginSettings({
             { label: "Chat bar", value: "chatbar", default: true },
             { label: "Header bar", value: "headerbar" },
             { label: "Channel toolbar", value: "channeltoolbar" },
+            { label: "User area (next to mute and deafen)", value: "userarea" },
             { label: "Disabled", value: "disabled" },
         ],
         restartNeeded: true,
@@ -305,19 +307,49 @@ const StreamProofButton: ChatBarButtonFactory = ({ isMainChat }) => {
     );
 };
 
+// ── User Area Button ───────────────────────────────────────────────────────────
+
+function StreamProofUserAreaButton({ iconForeground, hideTooltips, nameplate }: UserAreaRenderProps) {
+    const { location } = settings.use(["location"]);
+    const [, forceUpdate] = useState({});
+    useEffect(() => subscribeActive(() => forceUpdate({})), []);
+
+    if (location !== "userarea") return null;
+
+    const active = streamProofActive;
+    const Icon = active ? EyeSlashIcon : EyeIcon;
+    return (
+        <UserAreaButton
+            icon={<span className={iconForeground} style={{ display: "flex", color: active ? "var(--status-danger)" : undefined }}><Icon /></span>}
+            tooltipText={hideTooltips ? undefined : active ? "Disable StreamProof" : "Enable StreamProof"}
+            aria-label="StreamProof"
+            role="switch"
+            aria-checked={active}
+            plated={nameplate != null}
+            onClick={toggleStreamProof}
+            onContextMenu={openStreamProofContextMenu}
+        />
+    );
+}
+
 // ── Plugin ─────────────────────────────────────────────────────────────────────
 
 export default definePlugin({
     id: "StreamProof",
     name: "StreamProof",
     description: "Hides messages, links, images, DMs, but not the screen share/voice grid. Toggle via button (right-click for options).",
-    authors: [EquicordDevs.TheArmagan],
+    authors: [EquicordDevs.TheArmagan, TestcordDevs.DavidHiFi],
     dependencies: ["ChatInputButtonAPI", "HeaderBarAPI"],
     settings,
 
     chatBarButton: {
         icon: () => (streamProofActive ? <EyeSlashIcon /> : <EyeIcon />),
         render: StreamProofButton,
+    },
+
+    userAreaButton: {
+        icon: () => (streamProofActive ? <EyeSlashIcon /> : <EyeIcon />),
+        render: StreamProofUserAreaButton,
     },
 
     flux: {

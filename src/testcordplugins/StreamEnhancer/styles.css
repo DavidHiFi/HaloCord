@@ -464,12 +464,23 @@ img[src*="/streams/"] {
 .vc-stream-enhancer-share-head { display: flex; align-items: center; padding: 24px 24px 8px; }
 .vc-stream-enhancer-share-title { flex: 1; margin: 0; font-size: 24px; font-weight: 700; color: var(--text-strong, var(--header-primary)); }
 .vc-stream-enhancer-share-close { background: none; border: 0; color: var(--interactive-text-default, var(--interactive-normal)); font-size: 16px; cursor: pointer; padding: 6px 8px; border-radius: 4px; }
-.vc-stream-enhancer-share-close:hover { color: var(--interactive-text-hover, var(--interactive-hover)); background: var(--background-modifier-hover); }
-.vc-stream-enhancer-share-tabs { display: flex; justify-content: center; gap: 8px; padding: 12px 24px; border-bottom: 1px solid var(--border-subtle, var(--background-modifier-accent)); }
-.vc-stream-enhancer-share-tab { background: none; border: 0; padding: 8px 18px; border-radius: 8px; color: var(--interactive-text-default, var(--interactive-normal)); font-size: 15px; font-weight: 500; cursor: pointer; }
-.vc-stream-enhancer-share-tab:hover { color: var(--interactive-text-hover, var(--interactive-hover)); background: var(--background-modifier-hover); }
-.vc-stream-enhancer-share-tab-on, .vc-stream-enhancer-share-tab-on:hover { color: var(--interactive-text-active, var(--interactive-active)); background: var(--background-modifier-selected); }
-.vc-stream-enhancer-share-tab:focus-visible, .vc-stream-enhancer-share-tile:focus-visible, .vc-stream-enhancer-share-row:focus-visible, .vc-stream-enhancer-share-pill:focus-visible, .vc-stream-enhancer-share-summary:focus-visible { outline: 2px solid var(--focus-primary, var(--brand-500)); outline-offset: 2px; }
+.vc-stream-enhancer-share-close:hover { color: var(--interactive-text-hover, var(--interactive-hover)); background: var(--interactive-background-hover, var(--background-modifier-hover)); }
+.vc-stream-enhancer-share-tabs { display: flex; justify-content: center; padding: 12px 24px 14px; border-bottom: 1px solid var(--border-subtle, var(--background-modifier-accent)); }
+/* Three equal tabs, so the selected pill and the hover bubble move between them with translateX alone. */
+.vc-stream-enhancer-share-tablist { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: min(600px, 100%); padding: 4px; box-sizing: border-box; }
+.vc-stream-enhancer-share-tab-selected, .vc-stream-enhancer-share-tab-bubble { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / 3); border-radius: var(--radius-round, 999px); pointer-events: none; }
+.vc-stream-enhancer-share-tab-selected { background: var(--interactive-background-selected, var(--background-modifier-selected)); transition: transform 180ms cubic-bezier(.23, 1, .32, 1); }
+.vc-stream-enhancer-share-tab-bubble { background: var(--interactive-background-hover, var(--background-modifier-hover)); opacity: 0; transition: opacity 160ms cubic-bezier(.23, 1, .32, 1); }
+.vc-stream-enhancer-share-tab-bubble-on { opacity: 1; }
+.vc-stream-enhancer-share-tab-bubble-slide { transition: opacity 160ms cubic-bezier(.23, 1, .32, 1), transform 180ms cubic-bezier(.23, 1, .32, 1); }
+.vc-stream-enhancer-share-tablist:active .vc-stream-enhancer-share-tab-bubble { background: var(--interactive-background-active, var(--background-modifier-active)); }
+.vc-stream-enhancer-share-tab { position: relative; z-index: 1; background: none; border: 0; padding: 12px 20px; border-radius: var(--radius-round, 999px); color: var(--interactive-text-default, var(--interactive-normal)); font-size: 16px; font-weight: 600; line-height: 20px; white-space: nowrap; cursor: pointer; }
+.vc-stream-enhancer-share-tab:hover { color: var(--interactive-text-hover, var(--interactive-hover)); }
+.vc-stream-enhancer-share-tab-on, .vc-stream-enhancer-share-tab-on:hover { color: var(--interactive-text-active, var(--interactive-active)); }
+@media (prefers-reduced-motion: reduce) {
+    .vc-stream-enhancer-share-tab-selected, .vc-stream-enhancer-share-tab-bubble, .vc-stream-enhancer-share-tab-bubble-slide { transition: none; }
+}
+.vc-stream-enhancer-share-tab:focus-visible, .vc-stream-enhancer-share-tile:focus-visible, .vc-stream-enhancer-share-row:focus-visible, .vc-stream-enhancer-share-pill:focus-visible, .vc-stream-enhancer-share-summary:focus-visible { outline: 2px solid var(--border-focus, var(--brand-500)); outline-offset: 2px; }
 .vc-stream-enhancer-share-grid { flex: 1 1 auto; min-height: 0; display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; gap: 20px 16px; padding: 20px 24px; overflow-y: auto; }
 .vc-stream-enhancer-share-empty { flex: 1 0 100%; padding: 80px 0; text-align: center; color: var(--text-subtle, var(--text-muted)); }
 .vc-stream-enhancer-share-tile { flex: 1 1 230px; max-width: 320px; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; color: var(--text-default, var(--text-normal)); }
@@ -483,28 +494,25 @@ img[src*="/streams/"] {
 .vc-stream-enhancer-share-icon { width: 16px; height: 16px; flex: none; }
 .vc-stream-enhancer-share-foot { position: relative; flex: none; display: flex; align-items: center; gap: 8px; padding: 16px 24px; background: var(--modal-footer-background, var(--background-secondary)); border-radius: 0 0 var(--radius-md, 8px) var(--radius-md, 8px); }
 .vc-stream-enhancer-share-summary { display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 6px 10px; border-radius: 6px; color: var(--text-default, var(--text-normal)); font-size: 14px; font-weight: 500; cursor: pointer; }
-.vc-stream-enhancer-share-summary:hover { background: var(--background-modifier-hover); }
+.vc-stream-enhancer-share-summary:hover { background: var(--interactive-background-hover, var(--background-modifier-hover)); }
 .vc-stream-enhancer-share-spacer { flex: 1; }
 .vc-stream-enhancer-share-cancel { background: none; border: 0; color: var(--text-default, var(--text-normal)); font-size: 14px; font-weight: 500; padding: 8px 14px; cursor: pointer; }
 .vc-stream-enhancer-share-cancel:hover { text-decoration: underline; }
 .vc-stream-enhancer-share-go { background: var(--button-filled-brand-background, var(--brand-500)); color: var(--button-filled-brand-text, var(--white, #fff)); border: 0; border-radius: 8px; padding: 9px 22px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .vc-stream-enhancer-share-go:hover { background: var(--button-filled-brand-background-hover, var(--brand-560, var(--brand-500))); }
 .vc-stream-enhancer-share-go:disabled { opacity: .5; cursor: not-allowed; }
-.vc-stream-enhancer-share-menu { position: absolute; left: 20px; bottom: calc(100% + 6px); width: 320px; max-height: 70vh; overflow-y: auto; padding: 8px; border-radius: var(--radius-md, 8px); border: 1px solid var(--border-subtle, var(--background-modifier-accent)); background: var(--background-surface-high, var(--modal-background, var(--background-floating))); box-shadow: var(--elevation-high, 0 8px 16px rgb(0 0 0 / 24%)); z-index: 10; }
 .vc-stream-enhancer-share-label { padding: 10px 8px 4px; font-size: 12px; font-weight: 600; color: var(--text-subtle, var(--text-muted)); }
 .vc-stream-enhancer-share-row { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: 0; padding: 8px; border-radius: 4px; color: var(--interactive-text-default, var(--interactive-normal)); font-size: 14px; text-align: left; cursor: pointer; }
-.vc-stream-enhancer-share-row:hover { background: var(--background-modifier-hover); color: var(--interactive-text-hover, var(--interactive-hover)); }
+.vc-stream-enhancer-share-row:hover { background: var(--interactive-background-hover, var(--background-modifier-hover)); color: var(--interactive-text-hover, var(--interactive-hover)); }
 .vc-stream-enhancer-share-row-on { color: var(--interactive-text-active, var(--interactive-active)); }
 .vc-stream-enhancer-share-check { justify-content: space-between; margin-top: 4px; }
 .vc-stream-enhancer-share-note { margin-left: auto; color: var(--text-subtle, var(--text-muted)); font-size: 12px; }
 .vc-stream-enhancer-share-summary .vc-stream-enhancer-share-note { margin-left: 0; }
 .vc-stream-enhancer-share-radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentcolor; box-sizing: border-box; flex: none; }
 .vc-stream-enhancer-share-row-on .vc-stream-enhancer-share-radio { border: 5px solid var(--brand-500, var(--brand-experiment)); }
-.vc-stream-enhancer-share-box { width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--interactive-text-default, var(--interactive-normal)); box-sizing: border-box; }
-.vc-stream-enhancer-share-box-on { background: var(--brand-500, var(--brand-experiment)); border-color: var(--brand-500, var(--brand-experiment)); }
 .vc-stream-enhancer-share-pills { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 8px 6px; }
 .vc-stream-enhancer-share-pill { flex: 1 1 0; padding: 6px 0; border-radius: 6px; border: 1px solid var(--border-subtle, var(--background-modifier-accent)); background: none; color: var(--interactive-text-default, var(--interactive-normal)); font-size: 13px; cursor: pointer; }
-.vc-stream-enhancer-share-pill:hover { background: var(--background-modifier-hover); color: var(--interactive-text-hover, var(--interactive-hover)); }
+.vc-stream-enhancer-share-pill:hover { background: var(--interactive-background-hover, var(--background-modifier-hover)); color: var(--interactive-text-hover, var(--interactive-hover)); }
 .vc-stream-enhancer-share-pill-on, .vc-stream-enhancer-share-pill-on:hover { background: var(--brand-500, var(--brand-experiment)); border-color: var(--brand-500, var(--brand-experiment)); color: var(--white, #fff); }
 .vc-stream-enhancer-share-select { width: calc(100% - 16px); margin: 2px 8px 6px; padding: 8px; border-radius: 6px; background: var(--input-background-default, var(--background-base-lowest, var(--background-tertiary))); color: var(--text-default, var(--text-normal)); border: 1px solid var(--border-subtle, var(--background-modifier-accent)); }
 .vc-stream-enhancer-camera-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
@@ -518,6 +526,9 @@ img[src*="/streams/"] {
 .vc-stream-enhancer-camera-body .vc-stream-enhancer-share-row { padding: 8px 0; }
 .vc-stream-enhancer-share-pill:disabled, .vc-stream-enhancer-share-row:disabled { opacity: .5; cursor: not-allowed; }
 .vc-stream-enhancer-share-warn { margin: 2px 8px 6px; padding: 8px 10px; border-radius: 6px; background: color-mix(in srgb, var(--status-warning, #f0b232) 14%, transparent); color: var(--text-default, var(--text-normal)); font-size: 12px; line-height: 1.4; }
-/* "Start on click" switch to the right of Go Live in the share picker. */
-.vc-stream-enhancer-share-instant { display: flex; align-items: center; gap: 8px; margin-left: 4px; padding: 8px 10px; border: 0; border-radius: 8px; background: none; color: var(--text-default, var(--text-normal)); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
-.vc-stream-enhancer-share-instant:hover { background: var(--background-modifier-hover); }
+/* Labelled pill switches (ToggleRow in components/StreamSettings.tsx); the Switch is the plugin list's. */
+.vc-stream-enhancer-share-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; padding: 8px; color: var(--interactive-text-default, var(--interactive-normal)); font-size: 14px; cursor: pointer; }
+.vc-stream-enhancer-share-toggle:hover { color: var(--interactive-text-hover, var(--interactive-hover)); }
+.vc-stream-enhancer-share-toggle-off, .vc-stream-enhancer-share-toggle-off:hover { color: var(--text-muted); cursor: not-allowed; }
+.vc-stream-enhancer-share-foot .vc-stream-enhancer-share-toggle { margin: 0 0 0 4px; padding: 8px 10px; color: var(--text-default, var(--text-normal)); font-size: 13px; font-weight: 500; white-space: nowrap; }
+.vc-stream-enhancer-camera-body .vc-stream-enhancer-share-toggle { padding: 8px 0; }
