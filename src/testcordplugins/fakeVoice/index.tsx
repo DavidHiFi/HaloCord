@@ -7,12 +7,12 @@
 import { NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { UserAreaButton, UserAreaRenderProps } from "@api/UserArea";
 import ErrorBoundary from "@components/ErrorBoundary";
-import { EquicordDevs } from "@utils/constants";
+import { EquicordDevs, TestcordDevs } from "@utils/constants";
 import { useForceUpdater } from "@utils/react";
 import definePlugin from "@utils/types";
 import type { Channel, VoiceState } from "@vencord/discord-types";
 import { findByCode, findByProps, findStore, findStoreLazy } from "@webpack";
-import { ChannelStore, ContextMenuApi, MediaEngineStore, Menu, PermissionsBits, PermissionStore, React, SelectedChannelStore, UserStore, VoiceActions } from "@webpack/common";
+import { ApplicationStreamingStore, ChannelStore, ContextMenuApi, MediaEngineStore, Menu, PermissionsBits, PermissionStore, React, SelectedChannelStore, UserStore, VoiceActions } from "@webpack/common";
 
 import { settings } from "./settings";
 
@@ -38,6 +38,11 @@ let micCutoffApplied = false;
 let selfMuteBeforeMicCutoff = false;
 let micCutoffTimeout: ReturnType<typeof setTimeout> | null = null;
 let fakeStreamActive = false;
+// Key of the stream FakeVoice started, so only that one is ever stopped (never a real or watched stream).
+let fakeStreamKey: string | null = null;
+let fakeGameStarted = false;
+let fakeGameLaunching = false;
+let fakeGameFailed = false;
 
 function getSelectedVoiceChannel() {
     const selected = SelectedChannelStore.getVoiceChannelId();
@@ -82,11 +87,11 @@ function getEmbeddedActivityLocation(channelId: string) {
     };
 }
 
-async function startActivity(channelId: string) {
+async function startActivity(channelId: string): Promise<boolean> {
     const activityApi = findByProps("su", "_H");
-    if (!activityApi?.su) return;
+    if (!activityApi?.su) return false;
 
-    await activityApi.su({
+    return await activityApi.su({
         channelId,
         applicationId: WATCH_TOGETHER_APPLICATION_ID,
         isStart: true,
@@ -99,9 +104,15 @@ function hasFakeActivity(channelId: string) {
     return embeddedActivitiesStore?.getSelfEmbeddedActivityForChannel?.(channelId)?.applicationId === WATCH_TOGETHER_APPLICATION_ID;
 }
 
-function hasFakeStream() {
-    const connectionStore = findStore("StreamRTCConnectionStore");
-    return connectionStore?.getAllActiveStreamKeys?.().length > 0;
+// The current user's own live stream (real or fake). Watched streams are not included.
+function getOwnLiveStream() {
+    const stream = ApplicationStreamingStore.getCurrentUserActiveStream() as (ReturnType<typeof ApplicationStreamingStore.getCurrentUserActiveStream> & { state?: string; }) | null;
+    if (!stream || stream.state === "ENDED" || stream.state === "FAILED") return null;
+    return stream;
+}
+
+function encodeStreamKey({ streamType, guildId, channelId, ownerId }: { streamType: string; guildId: string | null; channelId: string; ownerId: string; }) {
+    return (streamType === "guild" ? [streamType, guildId, channelId, ownerId] : [streamType, channelId, ownerId]).join(":");
 }
 
 function leaveActivity(channelId?: string) {
@@ -164,18 +175,18 @@ function scheduleMicCutoffSync(enabled: boolean, delay = 0) {
     }, delay);
 }
 
-async function startStream() {
-    const startStream = findByCode('type:"STREAM_START"');
-    const stopStream = findByCode('type:"STREAM_STOP"');
-    const ConnectionStore = findStore("StreamRTCConnectionStore");
+// Fake Stream: a Go Live with no capture source. STREAM_START makes the gateway send STREAM_CREATE,
+// which is what puts the LIVE badge on you for everyone else; nothing is captured or sent.
+function syncFakeStream() {
+    const channel = getSelectedVoiceChannel();
+    fakeStreamActive = Boolean(faked && settings.store.fakeStream && channel && PermissionStore.can(STREAM, channel));
+    const ownStream = getOwnLiveStream();
 
-    const selected = SelectedChannelStore.getVoiceChannelId();
-    if (!selected) return;
-
-    const channel = ChannelStore.getChannel(selected);
-
-    if (settings.store.fakeStream) {
-        startStream(channel.guild_id, selected, {
+    if (fakeStreamActive && channel) {
+        if (ownStream) return;
+        const startStream = findByCode('type:"STREAM_START"');
+        const guildId = channel.guild_id ?? null;
+        startStream(guildId, channel.id, {
             pid: null,
             sourceId: null,
             sourceName: null,
@@ -183,11 +194,36 @@ async function startStream() {
             sound: false,
             previewDisabled: true
         });
-    } else {
-        for (const streamKey of ConnectionStore.getAllActiveStreamKeys()) {
-            stopStream(streamKey, { streamKey, appContext: "app" });
-            break;
-        }
+        fakeStreamKey = encodeStreamKey({ streamType: guildId != null ? "guild" : "call", guildId, channelId: channel.id, ownerId: UserStore.getCurrentUser().id });
+        return;
+    }
+
+    if (fakeStreamKey && ownStream && encodeStreamKey(ownStream) === fakeStreamKey) {
+        findByCode('type:"STREAM_STOP"')(fakeStreamKey);
+    }
+    fakeStreamKey = null;
+}
+
+// Fake Game: launches Watch Together in the voice channel; the patches below keep its window closed.
+function syncFakeGame() {
+    const channel = getSelectedVoiceChannel();
+    if (faked && settings.store.fakeGame && channel && canUseFakeActivity(channel)) {
+        if (fakeGameLaunching || fakeGameFailed || hasFakeActivity(channel.id)) return;
+        fakeGameLaunching = true;
+        startActivity(channel.id)
+            .then(ok => {
+                fakeGameStarted ||= ok;
+                fakeGameFailed = !ok;
+            })
+            .catch(() => { fakeGameFailed = true; })
+            .finally(() => { fakeGameLaunching = false; });
+        return;
+    }
+
+    fakeGameFailed = false;
+    if (fakeGameStarted) {
+        fakeGameStarted = false;
+        leaveActivity(channel?.id);
     }
 }
 
@@ -217,37 +253,16 @@ function setFakeVoiceEnabled(enabled: boolean) {
 
     const channel = getSelectedVoiceChannel();
 
-    if (!enabled && settings.store.fakeGame) {
-        leaveActivity(channel?.id);
-    }
+    syncFakeStream();
+    syncFakeGame();
 
     if (!channel) {
-        fakeStreamActive = false;
         scheduleMicCutoffSync(false);
         return;
     }
 
-    fakeStreamActive = enabled && settings.store.fakeStream && PermissionStore.can(STREAM, channel);
-
-    if (fakeStreamActive) {
-        startStream();
-    }
-
-    if (settings.store.fakeGame && enabled && canUseFakeActivity(channel)) {
-        void startActivity(channel.id);
-    }
-
     if (settings.store.fakeCam && canUseFakeCamera(channel) && MediaEngineStore.isVideoEnabled() !== enabled) {
         VoiceActions.setVideoEnabled(enabled);
-    }
-
-    if (!enabled) {
-        const ConnectionStore = findStore("StreamRTCConnectionStore");
-        const stopStream = findByCode('type:"STREAM_STOP"');
-        for (const streamKey of ConnectionStore.getAllActiveStreamKeys()) {
-            stopStream(streamKey, { streamKey, appContext: "app" });
-            break;
-        }
     }
 
     if (settings.store.fakeMute || settings.store.fakeDeafen || settings.store.fakeCam) {
@@ -275,9 +290,11 @@ const fakeVoiceSetters = {
     camera: setFakeCameraEnabled,
     stream: (value: boolean) => {
         settings.store.fakeStream = value;
+        syncFakeStream();
     },
     game: (value: boolean) => {
         settings.store.fakeGame = value;
+        syncFakeGame();
     },
     cutmic: (value: boolean) => {
         settings.store.cutMicTransmission = value;
@@ -448,7 +465,7 @@ const VoiceChannelContext: NavContextMenuPatchCallback = (children, { channel }:
 export default definePlugin({
     name: "FakeVoiceStates",
     description: "Allows you to have a fake deafen, mute, stream, and game and adds a context-menu option to the button.",
-    authors: [EquicordDevs.omaw],
+    authors: [EquicordDevs.omaw, TestcordDevs.DavidHiFi],
     contextMenus: {
         "channel-context": VoiceChannelContext
     },
@@ -495,34 +512,16 @@ export default definePlugin({
         }
     ],
     flux: {
-        async VOICE_STATE_UPDATES({ voiceStates }: { voiceStates: VoiceState[]; }) {
+        VOICE_STATE_UPDATES({ voiceStates }: { voiceStates: VoiceState[]; }) {
             const myId = UserStore.getCurrentUser().id;
             const selected = SelectedChannelStore.getVoiceChannelId();
             if (!selected) return;
-            const channel = ChannelStore.getChannel(selected);
-            const myVoiceState = voiceStates.find(state => state.userId === myId && state.channelId === selected);
 
             scheduleMicCutoffSync(faked);
 
-            if (settings.store.fakeGame && faked && myVoiceState && canUseFakeActivity(channel) && !hasFakeActivity(selected)) {
-                void startActivity(selected);
-            }
-
-            if (settings.store.fakeStream && faked && myVoiceState && PermissionStore.can(STREAM, channel)) {
-                fakeStreamActive = true;
-
-                if (!hasFakeStream()) {
-                    const startStream = findByCode('type:"STREAM_START"');
-                    startStream(channel.guild_id, selected, {
-                        pid: null,
-                        sourceId: null,
-                        sourceName: null,
-                        audioSourceId: null,
-                        sound: false,
-                        previewDisabled: true
-                    });
-                }
-            }
+            if (!faked || !voiceStates.some(state => state.userId === myId && state.channelId === selected)) return;
+            syncFakeGame();
+            syncFakeStream();
         }
     },
     FakeVoiceOptionToggleButton: ErrorBoundary.wrap(FakeVoiceOptionToggleButton, { noop: true }),
