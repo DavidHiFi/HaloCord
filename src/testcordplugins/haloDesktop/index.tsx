@@ -8,8 +8,7 @@ import { isPluginEnabled, setPluginEnabled } from "@api/PluginManager";
 import { useSettings } from "@api/Settings";
 import { Button } from "@components/Button";
 import ErrorBoundary from "@components/ErrorBoundary";
-import { FormSwitch } from "@components/FormSwitch";
-import { Paragraph } from "@components/Paragraph";
+import { HaloRow, HaloSection, HaloSwitchRow } from "@components/HaloUI";
 import { openPluginModal } from "@components/settings/tabs/plugins/PluginModal";
 import SettingsPlugin from "@plugins/_core/settings";
 import { TestcordDevs } from "@utils/constants";
@@ -52,29 +51,28 @@ function WindowsSettings() {
     if (!prefs) return null;
     const startup = prefs.canAutostart;
     return (
-        <>
-            <FormSwitch
+        <HaloSection>
+            <HaloSwitchRow
                 title={discordString("3BeZti", "Automatically open HaloCord when your computer starts up")}
                 description={startup ? undefined : "Only the installed HaloCord can open at startup."}
                 value={prefs.openOnStartup}
                 disabled={!startup}
                 onChange={v => set("openOnStartup", v)}
             />
-            <FormSwitch
+            <HaloSwitchRow
                 title={discordString("GfBL83", "Start HaloCord minimised")}
                 description={discordString("XGyhhc", "Start HaloCord in the background, out of your way.")}
                 value={prefs.openOnStartup && prefs.startMinimized}
                 disabled={!prefs.openOnStartup}
                 onChange={v => set("startMinimized", v)}
             />
-            <FormSwitch
+            <HaloSwitchRow
                 title={discordString("dJ5MUh", "Minimise HaloCord to System Tray")}
                 description={discordString("nQavHr", "Clicking X minimises HaloCord instead of closing it completely.")}
                 value={prefs.minimizeToTray}
                 onChange={v => set("minimizeToTray", v)}
-                hideBorder
             />
-        </>
+        </HaloSection>
     );
 }
 
@@ -88,29 +86,32 @@ function BuildSelector() {
     const [prefs, set] = useDesktopPrefs();
     if (!prefs) return null;
     return (
-        <>
-            <Paragraph style={{ marginBottom: 8 }}>
-                Which Discord web build HaloCord loads. Each build is its own site, so you log in again the first time and plugin data
-                kept in the page (like the voice panel) starts fresh there.
-            </Paragraph>
-            <Select
-                options={BUILDS}
-                closeOnSelect
-                isSelected={v => v === prefs.build}
-                serialize={String}
-                select={async v => {
-                    if (v === prefs.build) return;
-                    await set("build", v);
-                    Alerts.show({
-                        title: "Restart HaloCord?",
-                        body: `HaloCord loads ${BUILDS.find(b => b.value === v)!.label} after a restart.`,
-                        confirmText: "Restart now",
-                        cancelText: "Later",
-                        onConfirm: () => window.HaloCordNative?.relaunch()
-                    });
-                }}
-            />
-        </>
+        <HaloSection>
+            <HaloRow
+                title="Discord build"
+                description="Which Discord web build HaloCord loads. Each build is its own site, so you log in again the first time and plugin data kept in the page (like the voice panel) starts fresh there."
+            >
+                <div style={{ width: 160 }}>
+                    <Select
+                        options={BUILDS}
+                        closeOnSelect
+                        isSelected={v => v === prefs.build}
+                        serialize={String}
+                        select={async v => {
+                            if (v === prefs.build) return;
+                            await set("build", v);
+                            Alerts.show({
+                                title: "Restart HaloCord?",
+                                body: `HaloCord loads ${BUILDS.find(b => b.value === v)!.label} after a restart.`,
+                                confirmText: "Restart now",
+                                cancelText: "Later",
+                                onConfirm: () => window.HaloCordNative?.relaunch()
+                            });
+                        }}
+                    />
+                </div>
+            </HaloRow>
+        </HaloSection>
     );
 }
 
@@ -130,24 +131,22 @@ function CallSettings() {
     useSettings(["plugins.DisableCallIdle.enabled", "plugins.VoiceRejoin.enabled"]);
     const rejoin = isPluginEnabled("VoiceRejoin");
     return (
-        <>
-            <FormSwitch
+        <HaloSection>
+            <HaloSwitchRow
                 title="Stay in calls when idle"
                 description="Stops Discord from dropping you from a DM call after 3 minutes alone or moving you to the AFK channel."
                 value={isPluginEnabled("DisableCallIdle")}
                 onChange={v => togglePlugin("DisableCallIdle", v)}
             />
-            <FormSwitch
+            <HaloSwitchRow
                 title="Rejoin calls after a restart"
                 description="Puts you back in the DM or server call you were in when HaloCord restarts."
                 value={rejoin}
                 onChange={v => togglePlugin("VoiceRejoin", v)}
-                hideBorder
-            />
-            {rejoin && (
-                <Button variant="secondary" size="small" style={{ alignSelf: "flex-start" }} onClick={() => openPluginModal(Plugins.VoiceRejoin)}>Rejoin options</Button>
-            )}
-        </>
+            >
+                {rejoin && <Button variant="secondary" size="small" className="hc-ui-btn-quiet" onClick={() => openPluginModal(Plugins.VoiceRejoin)}>Options</Button>}
+            </HaloSwitchRow>
+        </HaloSection>
     );
 }
 

@@ -23,7 +23,7 @@ Stereo voice up to 96 kHz, call guards, voice effects, Go Live controls and hund
 
 ## Installation
 
-1. Download `HaloCord-Setup-2.8.4.exe` from the [latest release](https://github.com/DavidHiFi/HaloCord/releases/latest).
+1. Download the `HaloCord-Setup` installer from the [latest release](https://github.com/DavidHiFi/HaloCord/releases/latest).
 2. Run it. The installer is not code signed, so Windows may show a SmartScreen warning: choose **More info**, then **Run anyway**.
 3. Pick an install folder, finish the setup and log in with your Discord account.
 
@@ -51,10 +51,10 @@ To build it yourself, follow [docs/building.md](docs/building.md).
 > **Third-party client.** Discord does not support third-party clients. Spam-like behavior, such as mass friend requests, can get an account actioned. Use it at your own risk.
 
 > [!NOTE]
-> **Updates.** HaloCord checks this repo for new releases and tells you when one is out; download the new installer and run it over the old install. Settings live in `%APPDATA%\HaloCord` and survive updates.
+> **Updates.** HaloCord updates itself. With **Update automatically** on, it downloads each new release in the background, checks it against the SHA-256 published with the release, and installs it the next time you restart or close HaloCord. **Settings > Updater** has **Check for updates** and **Update and restart**. Settings live in `%APPDATA%\HaloCord` and survive updates. Version 2.8.4 only shows a notice, so install 2.9.0 over it once by hand.
 
 > [!NOTE]
-> **Plugin checks.** Every 6 hours a GitHub check loads Discord and tests every plugin's patches. When a Discord update breaks one, an issue opens with the list and closes again once it is fixed. Each Monday, Equicord's latest changes (which include Vencord's) arrive as a pull request.
+> **Plugin checks.** Every 6 hours a GitHub check loads Discord and tests every plugin's patches. When a Discord update breaks one, an issue opens with the list and closes again once it is fixed. Each day, new changes from Equicord (which include Vencord's) and from TestCord arrive as pull requests and ship in the next release.
 
 <details>
 <summary>What is in this repo</summary>

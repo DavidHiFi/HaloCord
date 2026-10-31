@@ -1,0 +1,360 @@
+/* HaloCord settings look: the voice panel's dark rounded rows and green accent (desktop/base/userscript.js),
+   used for options HaloCord adds to Discord. */
+:root {
+    --hc-accent: #afe37f;
+    --hc-accent-2: #63c98f;
+    --hc-accent-ink: #10151a;
+    --hc-row-bg: var(--background-secondary, #2b2d31);
+    --hc-row-border: var(--background-modifier-accent, rgb(255 255 255 / 6%));
+}
+
+.hc-ui {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hc-ui + .hc-ui,
+.hc-ui-hero + .hc-ui {
+    margin-top: 22px;
+}
+
+.hc-ui-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 2px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--hc-accent);
+}
+
+.hc-ui-title::before {
+    content: "";
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, var(--hc-accent), var(--hc-accent-2));
+    box-shadow: 0 0 12px rgb(175 227 127 / 45%);
+}
+
+.hc-ui-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 40px;
+    padding: 12px 14px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 11px;
+    background: var(--hc-row-bg);
+    transition: border-color 0.15s ease;
+}
+
+.hc-ui-row:hover {
+    border-color: rgb(175 227 127 / 22%);
+}
+
+.hc-ui-row-accent {
+    border-color: rgb(175 227 127 / 30%);
+    background: linear-gradient(90deg, rgb(175 227 127 / 10%), rgb(175 227 127 / 2%)), var(--hc-row-bg);
+}
+
+.hc-ui-row-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.hc-ui-row-disabled .hc-ui-row-text {
+    opacity: 0.4;
+}
+
+.hc-ui-row-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--header-primary, #f2f3f5);
+}
+
+.hc-ui-row-desc {
+    margin-top: 3px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--text-muted, #949ba4);
+}
+
+.hc-ui-row-side {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+}
+
+.hc-ui-switch {
+    position: relative;
+    flex: none;
+    width: 42px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 13px;
+    background: var(--background-modifier-active, #4e5058);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.hc-ui-switch-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.hc-ui-switch-on {
+    background: var(--hc-accent);
+}
+
+.hc-ui-switch-on .hc-ui-switch-knob {
+    transform: translateX(18px);
+    background: var(--hc-accent-ink);
+}
+
+.hc-ui-switch:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.hc-ui-switch:focus-visible {
+    outline: 2px solid var(--hc-accent);
+    outline-offset: 2px;
+}
+
+/* Status pill with a lit dot (after Sudocord's settings status pills). */
+.hc-ui-pill {
+    --hc-tone: var(--text-muted, #949ba4);
+
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
+    padding: 0 9px;
+    border: 1px solid color-mix(in srgb, var(--hc-tone) 40%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--hc-tone) 10%, transparent);
+    color: var(--hc-tone);
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.hc-ui-pill-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentcolor;
+    box-shadow: 0 0 6px currentcolor;
+}
+
+.hc-ui-pill-good { --hc-tone: var(--hc-accent); }
+.hc-ui-pill-info { --hc-tone: var(--hc-accent-2); }
+.hc-ui-pill-warn { --hc-tone: var(--status-warning, #f0b232); }
+.hc-ui-pill-bad { --hc-tone: var(--status-danger, #f23f42); }
+
+/* Header card at the top of a HaloCord page (after Sudocord's settings hero). */
+.hc-ui-hero {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    border: 1px solid rgb(175 227 127 / 24%);
+    border-radius: 16px;
+    background:
+        radial-gradient(circle at 100% 0%, rgb(99 201 143 / 14%), transparent 45%),
+        linear-gradient(135deg, rgb(175 227 127 / 9%), transparent 55%),
+        var(--hc-row-bg);
+    box-shadow: inset 0 1px rgb(255 255 255 / 3%);
+}
+
+.hc-ui-hero-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px 16px;
+}
+
+.hc-ui-hero-title {
+    margin: 6px 0 0;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--header-primary, #f2f3f5);
+}
+
+.hc-ui-hero-text {
+    max-width: 600px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-muted, #949ba4);
+}
+
+.hc-ui-hero-error {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--status-danger, #f23f42);
+    overflow-wrap: anywhere;
+}
+
+.hc-ui-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.hc-ui .hc-ui-btn-accent,
+.hc-ui-hero .hc-ui-btn-accent {
+    background: var(--hc-accent);
+    color: var(--hc-accent-ink);
+    font-weight: 700;
+}
+
+.hc-ui .hc-ui-btn-accent:hover:not(:disabled),
+.hc-ui-hero .hc-ui-btn-accent:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--hc-accent) 85%, #fff);
+}
+
+.hc-ui .hc-ui-btn-quiet,
+.hc-ui-hero .hc-ui-btn-quiet {
+    border: 1px solid rgb(175 227 127 / 30%);
+    background: var(--background-tertiary, #1e1f22);
+    color: var(--hc-accent);
+    font-weight: 700;
+}
+
+.hc-ui .hc-ui-btn-quiet:hover:not(:disabled),
+.hc-ui-hero .hc-ui-btn-quiet:hover:not(:disabled) {
+    border-color: rgb(175 227 127 / 55%);
+    background: rgb(175 227 127 / 10%);
+}
+
+.hc-ui-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+}
+
+.hc-ui-stat {
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 11px;
+    background: var(--background-tertiary, #1e1f22);
+}
+
+.hc-ui-stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted, #949ba4);
+}
+
+.hc-ui-stat-value {
+    margin-top: 4px;
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--header-primary, #f2f3f5);
+    overflow-wrap: anywhere;
+}
+
+.hc-ui-hash {
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgb(175 227 127 / 10%);
+    color: var(--hc-accent);
+    font-family: var(--font-code, monospace);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+a.hc-ui-hash:hover {
+    background: rgb(175 227 127 / 18%);
+}
+
+/* Privacy & Security: the same rows and switches. */
+.ps-command-center .ps-toggle-row {
+    padding: 12px 14px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 11px;
+    background: var(--hc-row-bg);
+    transition: border-color 0.15s ease;
+}
+
+.ps-command-center .ps-toggle-row:hover {
+    border-color: rgb(175 227 127 / 22%);
+}
+
+.ps-command-center .ps-toggle-title {
+    font-size: 15px;
+    color: var(--header-primary, #f2f3f5);
+}
+
+.ps-command-center .ps-toggle-desc {
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+
+.ps-command-center .ps-toggle-switch {
+    width: 42px;
+    height: 24px;
+    border-radius: 13px;
+    background: var(--background-modifier-active, #4e5058);
+}
+
+.ps-command-center .ps-toggle-knob {
+    top: 3px;
+    left: 3px;
+}
+
+.ps-command-center .ps-toggle-switch-on {
+    background: var(--hc-accent);
+}
+
+.ps-command-center .ps-toggle-switch-on .ps-toggle-knob {
+    background: var(--hc-accent-ink);
+}
+
+.ps-command-center .ps-toggle-switch:focus-visible {
+    outline: 2px solid var(--hc-accent);
+    outline-offset: 2px;
+}
+
+.ps-command-center .ps-card {
+    border-radius: 14px;
+}
+
+.ps-command-center .ps-badge-green {
+    background: rgb(175 227 127 / 12%);
+    color: var(--hc-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hc-ui-row,
+    .hc-ui-switch,
+    .hc-ui-switch-knob,
+    .ps-command-center .ps-toggle-row {
+        transition: none;
+    }
+}
