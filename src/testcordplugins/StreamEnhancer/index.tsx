@@ -5,10 +5,8 @@
  */
 
 import { addGlobalContextMenuPatch, removeGlobalContextMenuPatch } from "@api/ContextMenu";
-import { plugins } from "@api/PluginManager";
 import { UserAreaButton, type UserAreaRenderProps } from "@api/UserArea";
 import { ScreenshareIcon } from "@components/Icons";
-import { openPluginModal } from "@components/settings";
 import { EquicordDevs, TestcordDevs } from "@utils/constants";
 import definePlugin from "@utils/types";
 
@@ -20,6 +18,7 @@ import {
     syncGoLiveModalState,
 } from "./components/GoLiveSettingsModal";
 import { openSharePicker } from "./components/SharePicker";
+import { openStreamSettings } from "./components/StreamSettings";
 import { ViewerControls } from "./components/ViewerControls";
 import { mediaButtonMenuPatch, streamContextPatch, userContextPatch } from "./contextMenus";
 import { requestLocalPreview, setLocalPreviewChangeListener } from "./customPreviewImage";
@@ -37,10 +36,10 @@ export function StreamEnhancerButton({ iconForeground, hideTooltips, nameplate }
     if (!showPanelButton) return null;
     return <UserAreaButton
         icon={<ScreenshareIcon className={iconForeground} />}
-        tooltipText={hideTooltips ? undefined : "Stream Enhancer"}
-        aria-label="Stream Enhancer"
+        tooltipText={hideTooltips ? undefined : "Stream Settings"}
+        aria-label="Stream Settings"
         plated={nameplate != null}
-        onClick={() => openPluginModal(plugins.StreamEnhancer)}
+        onClick={openStreamSettings}
     />;
 }
 
@@ -49,6 +48,9 @@ const streamEnhancer = definePlugin({
     name: "StreamEnhancer",
     description: "Stream tuning, native camera previews, viewer controls, and optional spoofed stream badges. DavidHiFi fork.",
     authors: [EquicordDevs.omaw, TestcordDevs.DavidHiFi],
+    // Built into HaloCord: always on, kept out of the plugin list, configured from the stream menu.
+    required: true,
+    hidden: true,
     requiresRestart: true,
     managedStyle,
     settings: streamEnhancerSettings,

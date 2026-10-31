@@ -10,6 +10,7 @@ import { Menu, React } from "@webpack/common";
 import type { ReactElement } from "react";
 
 import { openCameraSettings } from "./components/CameraSettings";
+import { openStreamSettings } from "./components/StreamSettings";
 import { applyLive, frameRates, loadSaved, resolutions } from "./quality";
 import { applicationStreamingStore } from "./runtime";
 import * as streamState from "./state";
@@ -112,6 +113,7 @@ const streamQualityItems = () => {
                 ))}
             </Menu.MenuGroup>
         </Menu.MenuItem>,
+        <Menu.MenuItem id="stream-enhancer-advanced" key="stream-enhancer-advanced" label="Advanced Stream Settings" action={openStreamSettings} />,
         <Menu.MenuCheckboxItem id="stream-enhancer-audio" key="stream-enhancer-audio" label="Share stream audio"
             checked={!mute} action={() => applyLive({ mute: !mute })} />
     ];

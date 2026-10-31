@@ -6,10 +6,12 @@
 
 import { classNameFactory } from "@utils/css";
 import { ModalRoot, ModalSize, openModal, type RenderModalProps } from "@utils/modal";
-import { useEffect, useState } from "@webpack/common";
+import { useEffect, useRef, useState } from "@webpack/common";
 
-import { frameRates, heavyNote, isHeavy, loadSaved, modeFor, modes, resolutions, save, type Saved, type Size, sizeFor } from "../quality";
+import { loadSaved, modeFor, modes, resolutions, save, type Saved, type Size, sizeFor } from "../quality";
+import { streamEnhancerSettings } from "../settings";
 import { setPendingShare, type ShareChoice } from "../shareCapture";
+import { QualityPanel, useAudioInputs } from "./StreamSettings";
 
 const cl = classNameFactory("vc-stream-enhancer-share-");
 
@@ -27,23 +29,34 @@ function SharePicker({ modalProps, onStart }: { modalProps: RenderModalProps; on
     const [tab, setTab] = useState<Tab>("apps");
     const [sources, setSources] = useState<Source[] | null>(null);
     const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
-    const [inputs, setInputs] = useState<MediaDeviceInfo[]>([]);
+    const inputs = useAudioInputs();
     const [picked, setPicked] = useState<string | null>(null);
     const [gear, setGear] = useState(false);
-    const [advanced, setAdvanced] = useState(false);
     const [opts, setOpts] = useState<Saved>(loadSaved);
+    const { shareInstant } = streamEnhancerSettings.use(["shareInstant"]);
+    const menu = useRef<HTMLDivElement>(null);
+    const gearButton = useRef<HTMLButtonElement>(null);
     const set = (next: Partial<Saved>) => setOpts(o => ({ ...o, ...next }));
+
+    // A click anywhere outside the open gear menu closes it.
+    useEffect(() => {
+        if (!gear) return;
+        const close = (e: MouseEvent) => {
+            const t = e.target as Node;
+            if (!menu.current?.contains(t) && !gearButton.current?.contains(t)) setGear(false);
+        };
+        document.addEventListener("mousedown", close, true);
+        return () => document.removeEventListener("mousedown", close, true);
+    }, [gear]);
 
     useEffect(() => {
         let live = true;
         const load = () => Native()?.getShareSources?.().then(s => live && setSources(s ?? [])).catch(() => live && setSources([]));
         load();
         const timer = setInterval(load, 3000);
-        navigator.mediaDevices.enumerateDevices().then(d => {
-            if (!live) return;
-            setCameras(d.filter(x => x.kind === "videoinput" && x.deviceId));
-            setInputs(d.filter(x => x.kind === "audioinput" && x.deviceId && x.deviceId !== "default" && x.deviceId !== "communications"));
-        }).catch(() => { });
+        navigator.mediaDevices.enumerateDevices()
+            .then(d => live && setCameras(d.filter(x => x.kind === "videoinput" && x.deviceId)))
+            .catch(() => { });
         return () => { live = false; clearInterval(timer); };
     }, []);
 
@@ -55,21 +68,18 @@ function SharePicker({ modalProps, onStart }: { modalProps: RenderModalProps; on
     const summary = `${mode === "custom" ? "Custom" : modes[mode].label} ${resLabel} · ${opts.fps}fps`;
     const audioName = opts.audio === "default" ? "Default" : inputs.find(i => i.deviceId === opts.audio)?.label || "Default";
 
-    const go = () => {
-        if (!picked) return;
+    const go = (id = picked) => {
+        if (!id) return;
         save(opts);
         modalProps.onClose();
-        const choice: ShareChoice = picked.startsWith("device:")
-            ? { kind: "device", id: picked.slice(7), audio: opts.audio, muted: opts.mute }
-            : { kind: "desktop", id: picked, audio: opts.audio, muted: opts.mute };
+        const choice: ShareChoice = id.startsWith("device:")
+            ? { kind: "device", id: id.slice(7), audio: opts.audio, muted: opts.mute }
+            : { kind: "desktop", id, audio: opts.audio, muted: opts.mute };
         onStart(choice, sizeFor(opts.height), opts.fps, true);
     };
 
     const tabButton = (id: Tab, label: string) => (
         <button className={cl("tab", tab === id && "tab-on")} onClick={() => { setTab(id); setPicked(null); }}>{label}</button>
-    );
-    const pill = (on: boolean, label: string, onClick: () => void) => (
-        <button key={label} className={cl("pill", on && "pill-on")} onClick={onClick}>{label}</button>
     );
 
     return (
@@ -87,7 +97,7 @@ function SharePicker({ modalProps, onStart }: { modalProps: RenderModalProps; on
                 {sources == null && tab !== "devices" && <div className={cl("empty")}>Loading…</div>}
                 {(sources != null || tab === "devices") && !tiles.length && <div className={cl("empty")}>{tab === "devices" ? "No cameras or capture devices found." : "Nothing to share here."}</div>}
                 {tiles.map(t => (
-                    <button key={t.id} className={cl("tile", picked === t.id && "tile-on")} onClick={() => setPicked(t.id)}>
+                    <button key={t.id} className={cl("tile", picked === t.id && "tile-on")} onClick={() => shareInstant ? go(t.id) : setPicked(t.id)}>
                         <div className={cl("thumb")}>{t.thumb ? <img src={t.thumb} alt="" /> : <span className={cl("cam")}>🎥</span>}</div>
                         <div className={cl("name")}>{t.icon && <img className={cl("icon")} src={t.icon} alt="" />}<span>{t.name}</span></div>
                     </button>
@@ -95,44 +105,21 @@ function SharePicker({ modalProps, onStart }: { modalProps: RenderModalProps; on
             </div>
             <div className={cl("foot")}>
                 {gear && (
-                    <div className={cl("menu")}>
-                        <div className={cl("label")}>Stream Mode</div>
-                        {(Object.keys(modes) as Array<keyof typeof modes>).map(k => (
-                            <button key={k} className={cl("row", mode === k && "row-on")} onClick={() => set({ height: modes[k].height, fps: modes[k].fps })}>
-                                <span className={cl("radio")} /><span>{modes[k].label}</span><span className={cl("note")}>{modes[k].note}</span>
-                            </button>
-                        ))}
-                        <button className={cl("row", mode === "custom" && "row-on")} onClick={() => mode !== "custom" && set({ height: 1080, fps: 30 })}>
-                            <span className={cl("radio")} /><span>Custom</span>
-                        </button>
-                        <div className={cl("label")}>Screen Resolution</div>
-                        <div className={cl("pills")}>{resolutions.map(r => pill(opts.height === r.height, r.label, () => set({ height: r.height })))}</div>
-                        <div className={cl("label")}>Frame Rate</div>
-                        <div className={cl("pills")}>{frameRates.map(f => pill(opts.fps === f, `${f} FPS`, () => set({ fps: f })))}</div>
-                        {isHeavy(opts.height, opts.fps) && <p className={cl("warn")}>{heavyNote}</p>}
-                        <button className={cl("row", "check")} onClick={() => set({ mute: !opts.mute })}>
-                            <span>Mute stream audio</span><span className={cl("box", opts.mute && "box-on")} />
-                        </button>
-                        <button className={cl("row", "check")} onClick={() => setAdvanced(!advanced)}>
-                            <span>Advanced</span><span className={cl("note")}>{advanced ? "▾" : "▸"}</span>
-                        </button>
-                        {advanced && (
-                            <>
-                                <div className={cl("label")}>Audio Source</div>
-                                <select className={cl("select")} value={opts.audio} disabled={opts.mute} onChange={e => set({ audio: e.currentTarget.value })}>
-                                    <option value="default">Default: app or screen sound, without HaloCord</option>
-                                    {inputs.map(i => <option key={i.deviceId} value={i.deviceId}>{i.label || "Input device"}</option>)}
-                                </select>
-                            </>
-                        )}
+                    <div ref={menu} className={cl("menu")}>
+                        <QualityPanel opts={opts} set={set} inputs={inputs} />
                     </div>
                 )}
-                <button className={cl("summary")} onClick={() => setGear(!gear)}>
+                <button ref={gearButton} className={cl("summary")} onClick={() => setGear(!gear)}>
                     <GearIcon /><span>{summary}</span>{!opts.mute && opts.audio !== "default" && <span className={cl("note")}>· {audioName}</span>}{opts.mute && <span className={cl("note")}>· muted</span>}
                 </button>
                 <div className={cl("spacer")} />
                 <button className={cl("cancel")} onClick={modalProps.onClose}>Cancel</button>
-                <button className={cl("go")} disabled={!picked} onClick={go}>Go Live</button>
+                <button className={cl("go")} disabled={!picked} onClick={() => go()}>Go Live</button>
+                <button className={cl("instant", shareInstant && "instant-on")} role="switch" aria-checked={shareInstant}
+                    title={shareInstant ? "Clicking a window or screen starts the stream right away. Click to pick first and press Go Live." : "Pick a window or screen, then press Go Live. Click to start the stream on the first click instead."}
+                    onClick={() => { streamEnhancerSettings.store.shareInstant = !shareInstant; setPicked(null); }}>
+                    <span className={cl("box", shareInstant && "box-on")} /><span>Start on click</span>
+                </button>
             </div>
         </ModalRoot>
     );

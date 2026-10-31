@@ -4,7 +4,10 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { type ChildProcess, spawn } from "child_process";
 import type { IpcMainInvokeEvent, WebContents } from "electron";
+import { existsSync } from "fs";
+import { join } from "path";
 
 import { createPipeServer, type PipeEvent, type PipeServer } from "./pipeServer";
 
@@ -12,6 +15,22 @@ const BRIDGE = "__streamDeckRpcBridge";
 
 let target: WebContents | null = null;
 let pipe: PipeServer | null = null;
+let standIn: ChildProcess | null = null;
+
+// The Elgato plugin ignores key presses unless a process named Discord.exe is running. The HaloCord
+// installer ships a do-nothing Discord.exe that exits with this process; other builds don't have it.
+function startStandIn() {
+    if (standIn || process.platform !== "win32") return;
+    const exe = join(process.resourcesPath ?? "", "streamdeck", "Discord.exe");
+    if (!existsSync(exe)) return;
+    try {
+        standIn = spawn(exe, [String(process.pid)], { stdio: "ignore", windowsHide: true });
+        standIn.once("exit", () => { standIn = null; });
+        standIn.once("error", () => { standIn = null; });
+    } catch {
+        standIn = null;
+    }
+}
 
 // Main only moves frames. Every command runs in the renderer, inside Discord's own RPC server.
 async function deliver(event: PipeEvent) {
@@ -37,6 +56,7 @@ export async function start(event: IpcMainInvokeEvent): Promise<{ ok: boolean; p
         pipe?.stop();
     }
 
+    startStandIn();
     pipe ??= createPipeServer({ deliver, log: m => console.log(`[StreamDeckRpc] ${m}`) });
     try {
         return { ok: true, path: await pipe.start() };
@@ -47,6 +67,8 @@ export async function start(event: IpcMainInvokeEvent): Promise<{ ok: boolean; p
 
 export function stop() {
     target = null;
+    standIn?.kill();
+    standIn = null;
     pipe?.stop();
     pipe = null;
 }

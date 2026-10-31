@@ -518,3 +518,6 @@ img[src*="/streams/"] {
 .vc-stream-enhancer-camera-body .vc-stream-enhancer-share-row { padding: 8px 0; }
 .vc-stream-enhancer-share-pill:disabled, .vc-stream-enhancer-share-row:disabled { opacity: .5; cursor: not-allowed; }
 .vc-stream-enhancer-share-warn { margin: 2px 8px 6px; padding: 8px 10px; border-radius: 6px; background: color-mix(in srgb, var(--status-warning, #f0b232) 14%, transparent); color: var(--text-default, var(--text-normal)); font-size: 12px; line-height: 1.4; }
+/* "Start on click" switch to the right of Go Live in the share picker. */
+.vc-stream-enhancer-share-instant { display: flex; align-items: center; gap: 8px; margin-left: 4px; padding: 8px 10px; border: 0; border-radius: 8px; background: none; color: var(--text-default, var(--text-normal)); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.vc-stream-enhancer-share-instant:hover { background: var(--background-modifier-hover); }

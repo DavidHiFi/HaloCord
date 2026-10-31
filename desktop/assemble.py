@@ -33,6 +33,12 @@ lb = D / "loopback" / "halocord-loopback.exe"
 if not lb.exists():
     subprocess.run(f'"{D / "loopback" / "build.cmd"}"', **NW)
 shutil.copy2(lb, app / "resources" / lb.name)
+# Discord.exe stand-in for the Elgato Stream Deck plugin (desktop/streamdeck), in resources\streamdeck.
+sd = D / "streamdeck" / "Discord.exe"
+if not sd.exists():
+    subprocess.run(f'"{D / "streamdeck" / "build.cmd"}"', **NW)
+(app / "resources" / "streamdeck").mkdir(exist_ok=True)
+shutil.copy2(sd, app / "resources" / "streamdeck" / sd.name)
 m = (asrc / "main.js").read_text(encoding="utf-8")
 assert m.count('UPD_REPO="kurtzonaudio/kurtcord"') == 1
 m = m.replace('UPD_REPO="kurtzonaudio/kurtcord"', 'UPD_REPO="DavidHiFi/HaloCord"')
