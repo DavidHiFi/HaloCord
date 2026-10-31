@@ -129,7 +129,7 @@ export default definePlugin({
     id: "GameActivityToggle",
     name: "GameActivityToggle",
     description: "Adds a button next to the mic and deafen button to toggle game activity.",
-    tags: ["Activity", "Shortcuts", "HaloCord Modified"],
+    tags: ["Activity", "Shortcuts", "TestCord Modified"],
     testcordModified: true,
     authors: [Devs.Nuckyz, Devs.RuukuLada, TestcordDevs.sirphantom89],
     dependencies: ["UserSettingsAPI", "UserAreaAPI"],

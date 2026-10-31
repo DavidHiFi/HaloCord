@@ -86,7 +86,7 @@ section[class*="panels_"] > div[class*="container_"]:not(:has([class*="avatarWra
 export default definePlugin({
     id: "UserAreaTweaks",
     name: "UserAreaTweaks",
-    description: "Creates an elegant floating dock for HaloCord plugins using pure CSS, preventing overlap and crashes.",
+    description: "Creates an elegant floating dock for TestCord plugins using pure CSS, preventing overlap and crashes.",
     tags: ["Appearance", "Nightcord"],
     authors: [{ name: "Nightcord", id: 0n }],
 

@@ -41,7 +41,7 @@ import { PluginTarget } from "@utils/pluginTargets";
 import { isExperimentalPlugin, isLegacyPlugin } from "@utils/pluginWarnings";
 import { promptToRestart } from "@utils/promptToRestart";
 import { useAwaiter, useCleanupEffect, useIntersection } from "@utils/react";
-import { isTestcordModified } from "@utils/testcordIcons";
+import { isHaloCordPlugin, isTestcordModified } from "@utils/testcordIcons";
 import { Plugin, PluginTag, PluginTags } from "@utils/types";
 import { Alerts, Parser, React, SearchableSelect, Select, showToast, TextInput, Toasts, Tooltip, useCallback, useEffect, useMemo, useRef, useState } from "@webpack/common";
 
@@ -323,13 +323,13 @@ function PluginSettings() {
         for (const plugin of sortedPlugins) {
             const meta = PluginMeta[plugin.name];
             const folder = meta ? meta.folderName : "";
-            const category = folder.startsWith("src/testcordplugins/") ? "HaloCord" : folder.startsWith("src/equicordplugins/") ? "Equicord" : folder.startsWith("src/plugins/") ? "Vencord" : "Other";
+            const category = folder.startsWith("src/testcordplugins/") ? (isHaloCordPlugin(folder) ? "HaloCord" : "TestCord") : folder.startsWith("src/equicordplugins/") ? "Equicord" : folder.startsWith("src/plugins/") ? "Vencord" : "Other";
             for (const author of (plugin.authors || [])) {
                 if (!author || !author.name) continue;
                 if (!authors.has(author.name)) authors.set(author.name, { category, github: (author as any).github });
             }
         }
-        const grouped: Record<string, string[]> = { HaloCord: [], Equicord: [], Vencord: [], Other: [] };
+        const grouped: Record<string, string[]> = { HaloCord: [], TestCord: [], Equicord: [], Vencord: [], Other: [] };
         for (const [name, info] of authors.entries()) grouped[info.category].push(name);
         const result: Array<{ label: string; value: string; github: string; }> = [];
         for (const [cat, names] of Object.entries(grouped)) {
@@ -387,7 +387,7 @@ function PluginSettings() {
         }
 
         if (tags.length && tags.some(t => {
-            if (t === "HaloCord Modified") return !isTestcordModified(plugin, PluginMeta[plugin.name]?.folderName);
+            if (t === "TestCord Modified") return !isTestcordModified(plugin, PluginMeta[plugin.name]?.folderName);
             return !plugin.tags?.includes(t);
         })) return false;
 
@@ -657,8 +657,8 @@ function PluginSettings() {
                             { label: "Show Enabled", value: SearchStatus.ENABLED },
                             { label: "Show Disabled", value: SearchStatus.DISABLED },
                             { label: "Show Equicord", value: SearchStatus.EQUICORD },
-                            { label: "Show HaloCord", value: SearchStatus.TESTCORD },
-                            { label: "Show HaloCord Modified", value: SearchStatus.TESTCORD_MODIFIED },
+                            { label: "Show TestCord", value: SearchStatus.TESTCORD },
+                            { label: "Show TestCord Modified", value: SearchStatus.TESTCORD_MODIFIED },
                             { label: "Show Vencord", value: SearchStatus.VENCORD },
                             { label: "Show New", value: SearchStatus.NEW },
                             hasUserPlugins && { label: "Show UserPlugins", value: SearchStatus.USER_PLUGINS },

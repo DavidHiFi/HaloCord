@@ -8,10 +8,20 @@ import { isEquicordPluginDev, isTestcordPluginDev } from "@utils/misc";
 import type { Plugin } from "@utils/types";
 import equicordTestcordModifiedIconBase64 from "file://../../browser/Equicord_Testcord_Modified_PluginIcon.png?base64";
 import equicordVencordTestcordModifiedIconBase64 from "file://../../browser/Equicord_Vencord_Testcord_Modified_PluginIcon.png?base64";
+import haloCordPluginIconBase64 from "file://../../browser/HaloCord_PluginIcon.png?base64";
 import testcordPluginIconBase64 from "file://../../browser/icon.png?base64";
 import vencordTestcordModifiedIconBase64 from "file://../../browser/Vencord_Testcord_Modified_PluginIcon.png?base64";
 
 export const TestcordPluginIconUrl = `data:image/png;base64,${testcordPluginIconBase64}`;
+export const HaloCordPluginIconUrl = `data:image/png;base64,${haloCordPluginIconBase64}`;
+
+// Plugins that exist only in HaloCord. Everything else under src/testcordplugins comes from TestCord.
+const HALOCORD_PLUGIN_FOLDERS = new Set(["fakeVoice", "stereoMode", "streamDeckRpc"]);
+
+export function isHaloCordPlugin(folderName?: string) {
+    const m = /^src\/testcordplugins\/([^/]+)/.exec(folderName ?? "");
+    return !!m && HALOCORD_PLUGIN_FOLDERS.has(m[1]);
+}
 export const EquicordTestcordModifiedIconUrl = `data:image/png;base64,${equicordTestcordModifiedIconBase64}`;
 export const VencordTestcordModifiedIconUrl = `data:image/png;base64,${vencordTestcordModifiedIconBase64}`;
 export const EquicordVencordTestcordModifiedIconUrl = `data:image/png;base64,${equicordVencordTestcordModifiedIconBase64}`;

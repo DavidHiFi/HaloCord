@@ -5,7 +5,7 @@ HaloCord has two halves. The repo root is the mod and plugin bundle, laid out li
 ## What you need
 
 - Windows 11 x64, Python 3.12 or newer, Node.js 22 or newer and pnpm.
-- The unpacked 2.8.3 base app folder (Electron plus `resources\app.asar`). `desktop/base/` holds the files from that `app.asar` for reference.
+- The unpacked 2.8.3 base app folder (Electron plus `resources\app.asar`). `desktop/base/` holds the files from that `app.asar`. `assemble.py` builds from `desktop/base/userscript.js`, so edit that file for userscript changes; the other files there are for reference.
 - koffi 2.16.3 from npm (`npm pack koffi@2.16.3`, then unpack it). Only its Windows x64 binary is used.
 - `rcedit-x64.exe` from [electron/rcedit](https://github.com/electron/rcedit/releases).
 

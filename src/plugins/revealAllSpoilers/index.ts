@@ -33,7 +33,7 @@ export default definePlugin({
     name: "RevealAllSpoilers",
     description: "Reveal all spoilers in a message by Ctrl-clicking a spoiler, or in the chat with Ctrl+Shift-click. Enable auto-reveal to never see spoilers at all.",
     authors: [Devs.whqwert, TestcordDevs.x2b],
-    tags: ["Accessibility", "Chat", "Shortcuts", "Utility", "HaloCord Modified"],
+    tags: ["Accessibility", "Chat", "Shortcuts", "Utility", "TestCord Modified"],
     testcordModified: true,
     settings,
     patches: [

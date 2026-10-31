@@ -30,7 +30,7 @@ const AutocompleteClasses = findCssClassesLazy(
     "base"
 );
 
-export type ProviderType = "HaloCord" | "Equicord" | "Vencord" | "BetterDiscord" | "User";
+export type ProviderType = "TestCord" | "Equicord" | "Vencord" | "BetterDiscord" | "User";
 
 export interface ProviderInfo {
     provider: ProviderType;
@@ -45,7 +45,7 @@ export function getPluginProvider(pluginName: string): ProviderInfo {
 
     if (isTestcordModified(plugin, folder)) {
         const details = getTestcordModifiedDetails(plugin, folder);
-        let provider: ProviderType = "HaloCord";
+        let provider: ProviderType = "TestCord";
         if (folder.startsWith("src/equicordplugins/") || details.title.includes("Equicord")) {
             provider = "Equicord";
         } else if (folder.startsWith("src/plugins/") || details.title.includes("Vencord")) {
@@ -59,7 +59,7 @@ export function getPluginProvider(pluginName: string): ProviderInfo {
 
     if (folder.startsWith("src/testcordplugins/")) {
         return {
-            provider: "HaloCord",
+            provider: "TestCord",
             iconUrl: TestcordPluginIconUrl
         };
     }
@@ -94,7 +94,7 @@ export function getPluginProvider(pluginName: string): ProviderInfo {
         };
     }
     return {
-        provider: "HaloCord",
+        provider: "TestCord",
         iconUrl: TestcordPluginIconUrl
     };
 }
@@ -154,7 +154,7 @@ function getPluginRowClass(): any {
                         className={AutocompleteClasses.autocompleteRowIcon}
                         style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24 }}
                     >
-                        {provider === "HaloCord" ? (
+                        {provider === "TestCord" ? (
                             <TestCordIcon size={18} />
                         ) : (
                             <img
@@ -189,10 +189,10 @@ let origFindMatching: ((...args: any[]) => any) | null = null;
 let hookedModule: any = null;
 let isInitialized = false;
 
-function filterPlugins(query: string, targetCategory?: "HaloCord" | "Vencord" | "Equicord" | "All" | "Modified"): Plugin[] {
+function filterPlugins(query: string, targetCategory?: "TestCord" | "Vencord" | "Equicord" | "All" | "Modified"): Plugin[] {
     const matchesCategory = (folder: string, plugin: Plugin) => {
         if (targetCategory === "Modified") return isTestcordModified(plugin, folder);
-        if (targetCategory === "HaloCord") return folder.startsWith("src/testcordplugins/");
+        if (targetCategory === "TestCord") return folder.startsWith("src/testcordplugins/");
         if (targetCategory === "Vencord") return folder.startsWith("src/plugins/");
         if (targetCategory === "Equicord") return folder.startsWith("src/equicordplugins/");
         if (targetCategory === "All") {
@@ -243,7 +243,7 @@ function filterPlugins(query: string, targetCategory?: "HaloCord" | "Vencord" | 
         .slice(0, 50);
 }
 
-type Category = "HaloCord" | "Vencord" | "Equicord" | "All" | "Modified";
+type Category = "TestCord" | "Vencord" | "Equicord" | "All" | "Modified";
 
 const SENTINEL_RE = /^(tcp|testcordplugin|vcp|vencordplugin|eqp|equicordplugin|plg|plugins?|tcm|testcordmodified):/i;
 const TRAILING_SENTINEL_RE = /(?:^|\s)(tcp|testcordplugin|vcp|vencordplugin|eqp|equicordplugin|plg|plugins?|tcm|testcordmodified):(\S*)$/i;
@@ -273,7 +273,7 @@ function getCategory(keyword: string): { category: Category; title: string; type
         case "testcordmodified":
             return { category: "Modified", title: "TESTCORD MODIFIED PLUGINS", type: "TESTCORD_MODIFIED_PLUGINS" };
         default:
-            return { category: "HaloCord", title: "TESTCORD PLUGINS", type: "TESTCORD_PLUGINS" };
+            return { category: "TestCord", title: "TESTCORD PLUGINS", type: "TESTCORD_PLUGINS" };
     }
 }
 

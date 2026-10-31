@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { addGlobalContextMenuPatch, removeGlobalContextMenuPatch } from "@api/ContextMenu";
 import { plugins } from "@api/PluginManager";
 import { UserAreaButton, type UserAreaRenderProps } from "@api/UserArea";
 import { ScreenshareIcon } from "@components/Icons";
@@ -20,7 +21,7 @@ import {
 } from "./components/GoLiveSettingsModal";
 import { openSharePicker } from "./components/SharePicker";
 import { ViewerControls } from "./components/ViewerControls";
-import { streamContextPatch, userContextPatch } from "./contextMenus";
+import { mediaButtonMenuPatch, streamContextPatch, userContextPatch } from "./contextMenus";
 import { requestLocalPreview, setLocalPreviewChangeListener } from "./customPreviewImage";
 import { streamEnhancerPatches } from "./patches";
 import { startPreviewSender, stopPreviewSender } from "./previewSender";
@@ -60,6 +61,7 @@ const streamEnhancer = definePlugin({
     start() {
         installOutgoingVideoFilterInterceptor();
         installShareCapture();
+        addGlobalContextMenuPatch(mediaButtonMenuPatch);
         setLocalPreviewChangeListener(refreshCustomPreview);
         requestLocalPreview();
         startPreviewSender({
@@ -71,6 +73,7 @@ const streamEnhancer = definePlugin({
     },
     stop() {
         uninstallShareCapture();
+        removeGlobalContextMenuPatch(mediaButtonMenuPatch);
         uninstallOutgoingVideoFilterInterceptor();
         stopCustomPreviewLoader();
         stopPreviewSender();

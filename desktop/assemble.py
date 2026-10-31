@@ -86,7 +86,8 @@ m += ('\nfunction mcWinFile(){return require("path").join(app.getPath("userData"
 (asrc / "main.js").write_text(m, encoding="utf-8")
 # Display text only; lowercase ids (kurtcordDirect, KurtcordMLKEM, wire tags) stay so P2P and E2EE still talk to Kurtcord users.
 for f in ("preload.js", "userscript.js"):
-    s = (asrc / f).read_text(encoding="utf-8")
+    # userscript.js comes from desktop/base (the 2.8.3 original plus HaloCord's direct edits); the fixes below still apply on top.
+    s = ((D / "base" / f) if f == "userscript.js" else (asrc / f)).read_text(encoding="utf-8")
     s, k = re.subn(r"Kurtcord(?![A-Za-z])", "HaloCord", s)
     s = s.replace(r"Made\x20with\x20❤\x20by\x20<a\x20href=\x22https://www.youtube.com/@unpbeatsuk\x22\x20target=\x22_blank\x22>UNP\x20Beats\x20UK</a>\x20·\x20<a\x20href=\x22https://www.youtube.com/@Kurtzonaudio\x22\x20target=\x22_blank\x22>Kurtzon</a>",
                   r"HaloCord\x20by\x20<a\x20href=\x22https://github.com/DavidHiFi\x22\x20target=\x22_blank\x22>DavidHiFi</a>")
@@ -146,8 +147,7 @@ for f in ("preload.js", "userscript.js"):
             s = s.replace(a, b)
         # Voice & Video wording: Kurt's "kurtopus" codec name becomes plain Opus 1.6 HD.
         for a, b in [
-            (r"'Experimental\x20QEXT\x20Layer','kurtopus\x201.6\x20HD\x20experimental\x20QEXT\x20layer'",
-             r"'Opus\x201.6\x20HD','Experimental\x20QEXT\x20quality\x20layer,\x20up\x20to\x20530\x20kbps.\x20Both\x20ends\x20need\x20it\x20on.'"),
+            # No QEXT row any more: stock Discord peers can't decode it, so HaloCord stays at 510 kbps.
             (r"'Enable\x20Experimental\x20QEXT\x20Layer'", r"'Enable\x20Opus\x201.6\x20HD'"),
             (r"\x20kurtopus\x201.6\x20HD\x20Kurtzon", r"\x20·\x20Opus\x201.6\x20HD"),
             ("/kurtopus/i", r"/Opus\x201\.6\x20HD/i"),

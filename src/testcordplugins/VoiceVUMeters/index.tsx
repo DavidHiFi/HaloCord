@@ -507,10 +507,37 @@ function webSelf(conn: VoiceConnection): AudioOutput | undefined {
     return webSelfOutput;
 }
 
+// Web clients: a screen share's sound arrives on its own stream connection. Viewers get it as
+// that connection's output; the streamer's own sound is the connection's input.
+function webStreamOutputs() {
+    const found: Record<string, AudioOutput> = {};
+    const engine = MediaEngineStore.getMediaEngine();
+    if (!engine?.connections) return found;
+    const me = UserStore.getCurrentUser()?.id;
+    for (const conn of engine.connections as Iterable<VoiceConnection>) {
+        const owner = conn?.context === "stream" ? conn.streamUserId : undefined;
+        if (!owner) continue;
+        const key = STREAM_KEY(owner);
+        const output = Object.values(conn.outputs ?? {}).find(o => o?.stream?.getAudioTracks().length);
+        if (output) {
+            found[key] = output;
+            continue;
+        }
+        const track = owner === me ? conn.input?.stream?.getAudioTracks()[0] : undefined;
+        if (!track) continue;
+        if (webStreamInputs.get(key)?.stream.getAudioTracks()[0] !== track) webStreamInputs.set(key, { id: key, stream: new MediaStream([track]) });
+        found[key] = webStreamInputs.get(key)!;
+    }
+    return found;
+}
+
+const webStreamInputs = new Map<string, AudioOutput>();
+
 function syncWebMeters(conn: VoiceConnection) {
     const outputs = { ...conn.outputs };
     const self = webSelf(conn);
     if (self) outputs[self.id] = self;
+    Object.assign(outputs, webStreamOutputs());
     const source = { ...conn, outputs };
 
     for (const userId of Object.keys(outputs)) {
@@ -1050,7 +1077,8 @@ function tick() {
         updateAudioActive();
 
         for (const userId of [...meters.keys()]) {
-            if (userId.startsWith("stream:") && now - (meters.get(userId)?.lastStreamAt ?? 0) > STREAM_RELEASE_MS) dropMeter(userId);
+            const meter = meters.get(userId);
+            if (userId.startsWith("stream:") && !meter?.tap && now - (meter?.lastStreamAt ?? 0) > STREAM_RELEASE_MS) dropMeter(userId);
         }
 
         // only structural changes notify components, levels ride the rAF loop

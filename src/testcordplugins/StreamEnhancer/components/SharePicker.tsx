@@ -8,53 +8,14 @@ import { classNameFactory } from "@utils/css";
 import { ModalRoot, ModalSize, openModal, type RenderModalProps } from "@utils/modal";
 import { useEffect, useState } from "@webpack/common";
 
-import { normalizeConfig, streamEnhancerSettings } from "../settings";
-import { setPendingShare,type ShareChoice } from "../shareCapture";
+import { frameRates, heavyNote, isHeavy, loadSaved, modeFor, modes, resolutions, save, type Saved, type Size, sizeFor } from "../quality";
+import { setPendingShare, type ShareChoice } from "../shareCapture";
 
 const cl = classNameFactory("vc-stream-enhancer-share-");
 
 type Tab = "apps" | "screens" | "devices";
-type Mode = "gaming" | "screenshare" | "custom";
 interface Source { id: string; name: string; thumb: string; icon?: string; }
 interface Tile { id: string; name: string; thumb?: string; icon?: string; }
-type Size = { width: number; height: number; };
-
-const resolutions = [
-    { label: "720p", height: 720 },
-    { label: "1080p", height: 1080 },
-    { label: "1440p", height: 1440 },
-    { label: "Source", height: 0 }
-] as const;
-const frameRates = [15, 30, 60] as const;
-const modes: Record<Exclude<Mode, "custom">, { label: string; note: string; height: number; fps: number; }> = {
-    gaming: { label: "Gaming", note: "1440p · 60fps", height: 1440, fps: 60 },
-    screenshare: { label: "Screenshare", note: "Source · 15fps", height: 0, fps: 15 }
-};
-
-const sourceSize = (): Size => ({
-    width: Math.round(screen.width * devicePixelRatio / 2) * 2,
-    height: Math.round(screen.height * devicePixelRatio / 2) * 2
-});
-const sizeFor = (height: number): Size => height ? { width: Math.round(height * 16 / 9 / 2) * 2, height } : sourceSize();
-const modeFor = (height: number, fps: number): Mode =>
-    (Object.keys(modes) as Array<keyof typeof modes>).find(k => modes[k].height === height && modes[k].fps === fps) ?? "custom";
-
-interface Saved { height: number; fps: number; mute: boolean; audio: string; }
-const loadSaved = (): Saved => {
-    const c = normalizeConfig(streamEnhancerSettings.store.config);
-    const s = streamEnhancerSettings.store;
-    const height = resolutions.some(r => r.height === s.shareHeight) ? s.shareHeight : 1080;
-    const fps = (frameRates as readonly number[]).includes(c.streamMaxFps) ? c.streamMaxFps : 60;
-    return { height, fps, mute: !!s.shareMute, audio: s.shareAudio || "default" };
-};
-const save = (v: Saved) => {
-    const { store } = streamEnhancerSettings;
-    store.shareHeight = v.height;
-    store.shareMute = v.mute;
-    store.shareAudio = v.audio;
-    const size = sizeFor(v.height);
-    store.config = normalizeConfig({ ...normalizeConfig(store.config), streamTweaksEnabled: true, streamWidth: size.width, streamHeight: size.height, streamMaxFps: v.fps });
-};
 
 const Native = () => (window as { HaloCordNative?: { getShareSources?: () => Promise<Source[]>; }; }).HaloCordNative;
 
@@ -99,9 +60,9 @@ function SharePicker({ modalProps, onStart }: { modalProps: RenderModalProps; on
         save(opts);
         modalProps.onClose();
         const choice: ShareChoice = picked.startsWith("device:")
-            ? { kind: "device", id: picked.slice(7), audio: opts.mute ? "none" : opts.audio }
-            : { kind: "desktop", id: picked, audio: opts.mute ? "none" : opts.audio };
-        onStart(choice, sizeFor(opts.height), opts.fps, !opts.mute);
+            ? { kind: "device", id: picked.slice(7), audio: opts.audio, muted: opts.mute }
+            : { kind: "desktop", id: picked, audio: opts.audio, muted: opts.mute };
+        onStart(choice, sizeFor(opts.height), opts.fps, true);
     };
 
     const tabButton = (id: Tab, label: string) => (
@@ -148,6 +109,7 @@ function SharePicker({ modalProps, onStart }: { modalProps: RenderModalProps; on
                         <div className={cl("pills")}>{resolutions.map(r => pill(opts.height === r.height, r.label, () => set({ height: r.height })))}</div>
                         <div className={cl("label")}>Frame Rate</div>
                         <div className={cl("pills")}>{frameRates.map(f => pill(opts.fps === f, `${f} FPS`, () => set({ fps: f })))}</div>
+                        {isHeavy(opts.height, opts.fps) && <p className={cl("warn")}>{heavyNote}</p>}
                         <button className={cl("row", "check")} onClick={() => set({ mute: !opts.mute })}>
                             <span>Mute stream audio</span><span className={cl("box", opts.mute && "box-on")} />
                         </button>

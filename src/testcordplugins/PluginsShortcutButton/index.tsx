@@ -31,7 +31,7 @@ function PluginsShortcutButton({
 export default definePlugin({
     id: "PluginsShortcutButton",
     name: "Plugins Shortcut Button",
-    description: "Adds a shortcut button to the user area that opens the full HaloCord Plugins settings page.",
+    description: "Adds a shortcut button to the user area that opens the full TestCord Plugins settings page.",
     authors: [TestcordDevs.szcx404],
 
     dependencies: ["UserAreaAPI"],

@@ -257,6 +257,59 @@ function setFakeVoiceEnabled(enabled: boolean) {
     scheduleMicCutoffSync(enabled, enabled ? 450 : 0);
 }
 
+let refreshButton: (() => void) | null = null;
+
+const fakeVoiceSetters = {
+    enabled: (value: boolean) => {
+        setFakeVoiceEnabled(value);
+        refreshButton?.();
+    },
+    mute: (value: boolean) => {
+        settings.store.fakeMute = value;
+        if (faked) syncFakeVoiceState();
+    },
+    deafen: (value: boolean) => {
+        settings.store.fakeDeafen = value;
+        if (faked) syncFakeVoiceState();
+    },
+    camera: setFakeCameraEnabled,
+    stream: (value: boolean) => {
+        settings.store.fakeStream = value;
+    },
+    game: (value: boolean) => {
+        settings.store.fakeGame = value;
+    },
+    cutmic: (value: boolean) => {
+        settings.store.cutMicTransmission = value;
+        scheduleMicCutoffSync(faked);
+    }
+};
+
+type FakeVoiceKind = keyof typeof fakeVoiceSetters;
+
+function getFakeVoiceStates(): Record<FakeVoiceKind, boolean> {
+    return {
+        enabled: faked,
+        mute: settings.store.fakeMute,
+        deafen: settings.store.fakeDeafen,
+        camera: settings.store.fakeCam,
+        stream: settings.store.fakeStream,
+        game: settings.store.fakeGame,
+        cutmic: settings.store.cutMicTransmission
+    };
+}
+
+const fakeVoiceBridge = {
+    state: getFakeVoiceStates,
+    set(kind: FakeVoiceKind, value: boolean) {
+        if (getFakeVoiceStates()[kind] !== value) fakeVoiceSetters[kind](value);
+        return getFakeVoiceStates();
+    },
+    toggle(kind: FakeVoiceKind) {
+        return this.set(kind, !getFakeVoiceStates()[kind]);
+    }
+};
+
 function renderFakeVoiceMenuItems(includeEnabledToggle = false, enabled = faked, setEnabled?: (value: boolean) => void) {
     return [
         includeEnabledToggle && (
@@ -277,57 +330,42 @@ function renderFakeVoiceMenuItems(includeEnabledToggle = false, enabled = faked,
             key="update-mute"
             label="Fake Mute"
             checked={settings.store.fakeMute}
-            action={() => {
-                settings.store.fakeMute = !settings.store.fakeMute;
-                if (faked) syncFakeVoiceState();
-            }}
+            action={() => fakeVoiceSetters.mute(!settings.store.fakeMute)}
         />,
         <Menu.MenuCheckboxItem
             id="update-deafen"
             key="update-deafen"
             label="Fake Deafen"
             checked={settings.store.fakeDeafen}
-            action={() => {
-                settings.store.fakeDeafen = !settings.store.fakeDeafen;
-                if (faked) syncFakeVoiceState();
-            }}
+            action={() => fakeVoiceSetters.deafen(!settings.store.fakeDeafen)}
         />,
         <Menu.MenuCheckboxItem
             id="update-camera"
             key="update-camera"
             label="Fake Camera"
             checked={settings.store.fakeCam}
-            action={() => {
-                setFakeCameraEnabled(!settings.store.fakeCam);
-            }}
+            action={() => fakeVoiceSetters.camera(!settings.store.fakeCam)}
         />,
         <Menu.MenuCheckboxItem
             id="update-stream"
             key="update-stream"
             label="Fake Stream"
             checked={settings.store.fakeStream}
-            action={() => {
-                settings.store.fakeStream = !settings.store.fakeStream;
-            }}
+            action={() => fakeVoiceSetters.stream(!settings.store.fakeStream)}
         />,
         <Menu.MenuCheckboxItem
             id="update-game"
             key="update-game"
             label="Fake Game"
             checked={settings.store.fakeGame}
-            action={() => {
-                settings.store.fakeGame = !settings.store.fakeGame;
-            }}
+            action={() => fakeVoiceSetters.game(!settings.store.fakeGame)}
         />,
         <Menu.MenuCheckboxItem
             id="update-cut-mic"
             key="update-cut-mic"
             label="Cut Mic Transmission"
             checked={settings.store.cutMicTransmission}
-            action={() => {
-                settings.store.cutMicTransmission = !settings.store.cutMicTransmission;
-                scheduleMicCutoffSync(faked);
-            }}
+            action={() => fakeVoiceSetters.cutmic(!settings.store.cutMicTransmission)}
         />
     ];
 }
@@ -335,6 +373,11 @@ function renderFakeVoiceMenuItems(includeEnabledToggle = false, enabled = faked,
 function FakeVoiceOptionToggleButton({ iconForeground, hideTooltips, nameplate }: UserAreaRenderProps) {
     const forceUpdate = useForceUpdater();
     const Icon = makeIcon(!faked);
+
+    React.useEffect(() => {
+        refreshButton = forceUpdate;
+        return () => { refreshButton = null; };
+    }, []);
 
     return (
         <div className="button-container">
@@ -484,7 +527,11 @@ export default definePlugin({
     },
     FakeVoiceOptionToggleButton: ErrorBoundary.wrap(FakeVoiceOptionToggleButton, { noop: true }),
     settings,
+    start() {
+        Object.assign(window, { __fakeVoice: fakeVoiceBridge });
+    },
     stop() {
+        Reflect.deleteProperty(window, "__fakeVoice");
         setFakeVoiceEnabled(false);
     },
     shouldOpenEmbeddedActivity: () => !(faked && settings.store.fakeGame),

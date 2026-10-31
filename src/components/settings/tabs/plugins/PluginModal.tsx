@@ -197,8 +197,8 @@ export default function PluginModal({ plugin, onRestartNeeded, onClose, transiti
     const isTestcordMod = isTestcordModified(plugin, pluginMeta?.folderName);
     const modalTags = useMemo(() => {
         const list = [...(plugin.tags ?? [])];
-        if (isTestcordMod && !list.includes("HaloCord Modified")) {
-            list.unshift("HaloCord Modified");
+        if (isTestcordMod && !list.includes("TestCord Modified")) {
+            list.unshift("TestCord Modified");
         }
         return list;
     }, [plugin.tags, isTestcordMod]);
