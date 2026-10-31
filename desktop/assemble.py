@@ -99,6 +99,11 @@ for f in ("preload.js", "userscript.js"):
             # Voice join crashed the renderer (Chromium CHECK, 0x80000003): forcing a=ptime:10 and
             # a=maxptime:10 into Discord's remote answer is fatal. Keep ptime on the local offer only.
             ("Gz=eT(Gz,", "Gz=GZ==='sRD'?Gz:eT(Gz,"),
+            # The mic guard waited 15 s after each failed rebuild and a minute after four, so a mic
+            # another app held for a while (FreeDictate's mic privacy holds it for a whole take)
+            # stayed dead long after it was free. Retry every 2 s with no lockout (2026-10-31).
+            ("dvxMicBusy=!![];dvxMicNext=Date['now']()+15e3;", "dvxMicBusy=!![];dvxMicNext=Date['now']()+2e3;"),
+            ("if(dvxMicFail>3&&Date['now']()<dvxMicNext+6e4)return;", ""),
         ]
         for a, b in fixes:
             assert s.count(a) == 1, a
