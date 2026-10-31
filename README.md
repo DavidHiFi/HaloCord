@@ -102,6 +102,7 @@ Thank you for starring the repo.
 | **[Kurtzon](https://github.com/kurtzonaudio) and [UNP Beats UK](https://www.youtube.com/@unpbeatsuk)** | Made Kurtcord, the desktop shell HaloCord is built on. Its MIT notice is in [desktop/LICENSE](desktop/LICENSE). |
 | **[Vencord](https://github.com/Vendicated/Vencord) and [Equicord](https://github.com/Equicord/Equicord) contributors** | The mod framework and plugin suites this repo is built on. |
 | **[TestCord](https://codeberg.org/Testcord/TestCord) contributors** | The TestCord plugins. |
+| **Sudocord** | The layout of the Updater page header and its status pills. |
 | **[Niels Martignène](https://github.com/Koromix/koffi)** | koffi, which the shell uses to call Windows for the acrylic window. |
 
 Built on [Electron](https://www.electronjs.org/), running [Discord](https://discord.com)'s web app, with [Equicord](https://github.com/Equicord/Equicord), [pnpm](https://pnpm.io/) and [electron-builder](https://www.electron.build/).
