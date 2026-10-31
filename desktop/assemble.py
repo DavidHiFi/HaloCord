@@ -43,6 +43,13 @@ if not sd.exists():
     subprocess.run(f'"{D / "streamdeck" / "build.cmd"}"', **NW)
 (app / "resources" / "streamdeck").mkdir(exist_ok=True)
 shutil.copy2(sd, app / "resources" / "streamdeck" / sd.name)
+# hc-keys: global keybinds. shell/hc-keys.js runs keys/hckeys.exe (resources\keys) and feeds the haloKeybinds plugin.
+shutil.copy2(D / "shell" / "hc-keys.js", asrc / "hc-keys.js")
+hk = D / "keys" / "hckeys.exe"
+if not hk.exists():
+    subprocess.run(f'"{D / "keys" / "build.cmd"}"', **NW)
+(app / "resources" / "keys").mkdir(exist_ok=True)
+shutil.copy2(hk, app / "resources" / "keys" / hk.name)
 m = (asrc / "main.js").read_text(encoding="utf-8")
 assert m.count('UPD_REPO="kurtzonaudio/kurtcord"') == 1
 m = m.replace('UPD_REPO="kurtzonaudio/kurtcord"', 'UPD_REPO="DavidHiFi/HaloCord"')
@@ -103,6 +110,8 @@ for a, b in [('win=new BrowserWindow({width:1400,height:900,', 'win=new BrowserW
 m += '\nconst hcDesk=require("./hc-desktop.js").init({win:()=>win,tray:()=>tray,show:showWindow});\n'
 # hc-overlay: IPC halocord:overlay-* and the overlay window live in shell/hc-overlay-main.js.
 m += '\nrequire("./hc-overlay-main.js");\n'
+# hc-keys: start the keybind bridge in main.
+m += '\nrequire("./hc-keys.js").init();\n'
 (asrc / "main.js").write_text(m, encoding="utf-8")
 # Display text only; lowercase ids (kurtcordDirect, KurtcordMLKEM, wire tags) stay so P2P and E2EE still talk to Kurtcord users.
 for f in ("preload.js", "userscript.js"):
@@ -133,6 +142,12 @@ for f in ("preload.js", "userscript.js"):
         assert s.count(a) == 1
         s = s.replace(a, a + ',contextBridge.exposeInMainWorld("HaloCordOverlay",{setConfig:A=>ipcRenderer.invoke("halocord:overlay-config",A),'
                              'voice:A=>ipcRenderer.send("halocord:overlay-voice",A),notify:A=>ipcRenderer.send("halocord:overlay-notify",A)})')
+        # hc-keys: HaloCordKeys, the page side of shell/hc-keys.js.
+        a = 'contextBridge.exposeInMainWorld("__kurtcord",__kcBridge),'
+        assert s.count(a) == 1
+        s = s.replace(a, a + 'contextBridge.exposeInMainWorld("HaloCordKeys",{setFilter:(A,B)=>ipcRenderer.send("halocord:keys-filter",Array.isArray(A)?A.map(String):[],!!B),'
+                             'onEvent:A=>{ipcRenderer.removeAllListeners("halocord:keys-event");'
+                             'ipcRenderer.on("halocord:keys-event",(B,C,D,E)=>A(C,D,E));return!0}}),')
         a = s[s.index("function injectEquicord(){"):s.index("try{var __kcBridge=")]
         s = s.replace(a, 'function injectEquicord(){try{contextBridge.exposeInMainWorld("VesktopNative",{app:{'
                          'getVersion:()=>require("./package.json").version,getGitHash:()=>"",isDevBuild:()=>!1,'
