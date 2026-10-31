@@ -5,13 +5,13 @@
  */
 
 import { isPluginEnabled } from "@api/PluginManager";
-import { definePluginSettings } from "@api/Settings";
+import { definePluginSettings, Settings, useSettings } from "@api/Settings";
 import usrbg from "@plugins/usrbg";
 import { EquicordDevs, TestcordDevs } from "@utils/constants";
 import { fetchUserProfile } from "@utils/discord";
 import { getUserAvatarUrl } from "@utils/misc";
 import definePlugin, { makeRange, OptionType } from "@utils/types";
-import { ChannelRTCStore, ChannelStore, IconUtils, SelectedChannelStore, UserProfileStore, UserStore, useStateFromStores, VoiceStateStore } from "@webpack/common";
+import { ChannelRTCStore, ChannelStore, IconUtils, MediaEngineStore, SelectedChannelStore, UserProfileStore, UserStore, useStateFromStores, VoiceStateStore } from "@webpack/common";
 
 import style from "./style.css?managed";
 
@@ -273,6 +273,9 @@ export default definePlugin({
         }, [participantUserId]);
         // mic activity from VoiceVUMeters can light the glow before Discord's flag does
         useStateFromStores([audioActivityStore], audioActivityStore.getVersion, []);
+        // the glow hides while deafened unless VoiceVUMeters' option keeps it
+        useStateFromStores([MediaEngineStore], () => MediaEngineStore.isDeaf(), []);
+        useSettings(["plugins.VoiceVUMeters.showWhileDeafened"]);
     },
 
     getVoiceBackgroundStyles({ className, participantUserId, children }: { className?: string; participantUserId?: string; children?: unknown; }) {
@@ -296,7 +299,9 @@ export default definePlugin({
         // Only voice tiles showing the participant's picture glow. Like Discord's
         // own border, the speaking glow belongs to the person, not their screen
         // share or activity, so stream and activity tiles never light up.
-        const speakingGlow = isSpeaking && (participantType === undefined || participantType === 2);
+        // Deafened, you hear nobody, so nobody glows unless the owner opted in.
+        const glowOff = MediaEngineStore.isDeaf() && !Settings.plugins.VoiceVUMeters?.showWhileDeafened;
+        const speakingGlow = !glowOff && isSpeaking && (participantType === undefined || participantType === 2);
 
         // Fallback chain from the local FullVCPFP fix: getUserAvatarUrl's guild
         // branch can return undefined, which used to render blank tiles.
@@ -351,6 +356,8 @@ export default definePlugin({
             "--vc-pfp-stream": isStream ? "1" : "",
             // camera tiles keep the native tile border in picture mode
             "--vc-pfp-camera": isCamera ? "1" : "",
+            // deafened: Discord's own speaking border hides too
+            "--vc-pfp-deaf": glowOff ? "1" : "",
             // Marks this plugin version for theme handoff: themes drop their own
             // fallback glow when the slot is present. The filter string carries the
             // configured color; themes and any other stylesheet consume it.
