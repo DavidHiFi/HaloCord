@@ -7,10 +7,16 @@ updates:
     groups:
       npm-updates:
         patterns: ["*"]
+      npm-security:
+        applies-to: security-updates
+        patterns: ["*"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
     groups:
       githubactions-updates:
+        patterns: ["*"]
+      githubactions-security:
+        applies-to: security-updates
         patterns: ["*"]
