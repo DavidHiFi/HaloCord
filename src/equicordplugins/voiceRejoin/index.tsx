@@ -54,6 +54,8 @@ export default definePlugin({
     description: "Rejoins DM/Server call automatically when restarting Discord.",
     tags: ["Servers", "Utility", "Voice"],
     authors: [EquicordDevs.omaw, EquicordDevs.keircn],
+    // Switched in Voice & Video > Calls (HaloDesktop), not the plugin list.
+    hidden: true,
     settings,
 
     flux: {

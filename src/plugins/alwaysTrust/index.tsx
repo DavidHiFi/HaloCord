@@ -63,6 +63,8 @@ export default definePlugin({
     description: "Removes the annoying untrusted domain and suspicious file popup",
     tags: ["Utility"],
     authors: [Devs.zt, Devs.Trwy],
+    // Switched in HaloCord Settings > Privacy & Security, not the plugin list.
+    hidden: true,
     isModified: true,
     settings,
     patches: [

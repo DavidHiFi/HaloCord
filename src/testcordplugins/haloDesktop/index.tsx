@@ -4,14 +4,21 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { isPluginEnabled, setPluginEnabled } from "@api/PluginManager";
+import { useSettings } from "@api/Settings";
+import { Button } from "@components/Button";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { FormSwitch } from "@components/FormSwitch";
 import { Paragraph } from "@components/Paragraph";
+import { openPluginModal } from "@components/settings/tabs/plugins/PluginModal";
 import SettingsPlugin from "@plugins/_core/settings";
 import { TestcordDevs } from "@utils/constants";
+import { relaunch } from "@utils/native";
 import definePlugin from "@utils/types";
 import { Alerts, i18n, Select, useEffect, useState } from "@webpack/common";
 import type { ComponentType } from "react";
+
+import Plugins from "~plugins";
 
 // Shell side: desktop/shell/hc-desktop.js, exposed by the preload as window.HaloCordDesktop.
 interface DesktopPrefs {
@@ -107,12 +114,49 @@ function BuildSelector() {
     );
 }
 
-// Puts a category at the top of one of Discord's own settings panels (Settings plugin layoutHooks).
-function addCategory(panelKey: string, key: string, title: () => string, terms: string[], Component: ComponentType) {
+function togglePlugin(name: string, enabled: boolean) {
+    if (!setPluginEnabled(name, enabled)) return;
+    Alerts.show({
+        title: "Restart HaloCord?",
+        body: "This change applies after a restart.",
+        confirmText: "Restart now",
+        cancelText: "Later",
+        onConfirm: relaunch
+    });
+}
+
+// DisableCallIdle and VoiceRejoin are hidden from the plugin list; they are switched here instead.
+function CallSettings() {
+    useSettings(["plugins.DisableCallIdle.enabled", "plugins.VoiceRejoin.enabled"]);
+    const rejoin = isPluginEnabled("VoiceRejoin");
+    return (
+        <>
+            <FormSwitch
+                title="Stay in calls when idle"
+                description="Stops Discord from dropping you from a DM call after 3 minutes alone or moving you to the AFK channel."
+                value={isPluginEnabled("DisableCallIdle")}
+                onChange={v => togglePlugin("DisableCallIdle", v)}
+            />
+            <FormSwitch
+                title="Rejoin calls after a restart"
+                description="Puts you back in the DM or server call you were in when HaloCord restarts."
+                value={rejoin}
+                onChange={v => togglePlugin("VoiceRejoin", v)}
+                hideBorder
+            />
+            {rejoin && (
+                <Button variant="secondary" size="small" style={{ alignSelf: "flex-start" }} onClick={() => openPluginModal(Plugins.VoiceRejoin)}>Rejoin options</Button>
+            )}
+        </>
+    );
+}
+
+// Puts a category at the top (or end) of one of Discord's own settings panels (Settings plugin layoutHooks).
+function addCategory(panelKey: string, key: string, title: () => string, terms: string[], Component: ComponentType, atEnd = false) {
     const Wrapped = () => <ErrorBoundary noop><Component /></ErrorBoundary>;
     SettingsPlugin.layoutHooks[panelKey] = (layout, types) => {
         if (!native() || layout.some(n => n?.key === key)) return;
-        layout.unshift({
+        layout[atEnd ? "push" : "unshift"]({
             type: types.CATEGORY,
             key,
             useTitle: title,
@@ -128,7 +172,7 @@ function addCategory(panelKey: string, key: string, title: () => string, terms: 
 
 export default definePlugin({
     name: "HaloDesktop",
-    description: "Desktop client behaviour for HaloCord: startup and tray settings, Discord build choice, update notice, no web download prompts.",
+    description: "Desktop client behaviour for HaloCord: startup and tray settings, Discord build choice, call options in Voice & Video, update notice, no web download prompts.",
     authors: [TestcordDevs.DavidHiFi],
     required: true,
     hidden: true,
@@ -176,5 +220,7 @@ export default definePlugin({
             ["Windows Settings", "startup", "tray", "minimise", "minimize"], WindowsSettings);
         addCategory("developer_options_panel", "halocord_build_category", () => "Discord Build",
             ["Discord Build", "Stable", "PTB", "Canary"], BuildSelector);
+        addCategory("voice_and_video_panel", "halocord_calls_category", () => "Calls",
+            ["Calls", "idle", "AFK", "rejoin", "reconnect"], CallSettings, true);
     }
 });
