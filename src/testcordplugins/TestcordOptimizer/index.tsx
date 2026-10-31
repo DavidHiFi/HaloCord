@@ -6,13 +6,10 @@
 
 import { RuntimeInteractions, RuntimeInterposition, RuntimeInterpositionPriority } from "@api/RuntimeInterposition";
 import { definePluginSettings, SettingsStore } from "@api/Settings";
-import { CogWheel } from "@components/Icons";
-import SettingsPlugin from "@plugins/_core/settings";
 import { resetCacheLimits } from "@utils/cacheLimits";
 import { TestcordDevs } from "@utils/constants";
 import { classNameToSelector } from "@utils/css";
 import { Logger } from "@utils/Logger";
-import { removeFromArray } from "@utils/misc";
 import { escapeRegExp } from "@utils/text";
 import definePlugin, { OptionType } from "@utils/types";
 import { filters, find, findAll, findByPropsLazy, proxyLazyWebpack } from "@webpack";
@@ -154,8 +151,6 @@ function avatarImgSelector(): string {
 function avatarClosestSelector(): string {
     return orSel(AvatarClasses.avatar, MemberClasses.member);
 }
-
-export const OPTIMIZER_SETTINGS_ENTRY_KEY = "TestcordOptimizerTab";
 
 export const settings = definePluginSettings({
     domThrottle: {
@@ -1071,6 +1066,8 @@ export default definePlugin({
     description: "All-in-one performance suite: webpack patches (tooltip, emoji, spinner, confetti, analytics, reactions, Sentry, member list throttle, audio reset reload prevention), bounded image cache, react-spring skip, offscreen media pause, MutationObserver DOM throttle, CSS containment (messages, members, DMs, embeds, servers, channels, forum, guild list, search), backdrop-blur/sticker/effect/upsell/spoiler/box-shadow/text-shadow/filter/backdrop suppression, lazy images/iframes, rAF reduction, passive listeners, console suppression (log/debug/info/warn/group/count/assert/dir/timers), ResizeObserver throttle, memory manager, GIF freeze (canvas/css), concurrency limit, message cache trimmer, animated avatar freeze, avatar quality reducer, cache limits, idle callback optimizer, drag-and-drop suppression, spellcheck opt-out, overscroll contain, link preview suppress, canvas effects hide, chat input containment (typing lag), large text attachment containment, attachment image grid containment.",
     tags: ["Utility", "Developers", "Performance"],
     authors: [TestcordDevs.x2b, TestcordDevs.SirPhantom89],
+    // Options live in HaloCord Settings > Performance (OptimizerTab), not the plugin list.
+    hidden: true,
     settings,
 
     patches: [
@@ -1240,15 +1237,6 @@ export default definePlugin({
     start() {
         if (settings.store.verboseLogging) logger.info("Starting optimizer suite");
 
-        if (!SettingsPlugin.customEntries.some(entry => entry.key === OPTIMIZER_SETTINGS_ENTRY_KEY)) {
-            SettingsPlugin.customEntries.push({
-                key: OPTIMIZER_SETTINGS_ENTRY_KEY,
-                title: "Optimizer",
-                Component: require("./OptimizerTab").default,
-                Icon: CogWheel,
-            });
-        }
-
         if (
             settings.store.pauseOffscreenMedia
             || settings.store.freezeGifsUntilHover && settings.store.gifFreezeMethod !== "css"
@@ -1318,8 +1306,6 @@ export default definePlugin({
 
     stop() {
         if (settings.store.verboseLogging) logger.info("Stopping, restoring originals");
-
-        removeFromArray(SettingsPlugin.customEntries, entry => entry.key === OPTIMIZER_SETTINGS_ENTRY_KEY);
 
         this.teardownConsolidatedObserver();
         this.teardownDomThrottle();
