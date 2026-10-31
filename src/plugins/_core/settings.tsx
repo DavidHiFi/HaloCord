@@ -6,7 +6,7 @@
 
 import { definePluginSettings, useSettings } from "@api/Settings";
 import { Heading } from "@components/Heading";
-import { BackupRestoreIcon, BookmarkIcon, CloudIcon, InfoIcon, LogIcon, PaintbrushIcon, PatchHelperIcon, PluginsIcon, SafetyIcon, TestCordIcon, UpdaterIcon } from "@components/Icons";
+import { BackupRestoreIcon, BookmarkIcon, CloudIcon, CogWheel, InfoIcon, LogIcon, PaintbrushIcon, PatchHelperIcon, PluginsIcon, SafetyIcon, TestCordIcon, UpdaterIcon } from "@components/Icons";
 import { Paragraph } from "@components/Paragraph";
 import {
     BackupAndRestoreTab,
@@ -110,6 +110,12 @@ interface SettingsLayoutBuilder {
 }
 
 const TESTCORD_MAIN_ENTRY_KEY = "testcord_main";
+
+// Lazy so importing the Settings plugin does not pull the TestcordOptimizer module in early.
+function PerformanceTab() {
+    const { default: OptimizerTab } = require("@testcordplugins/TestcordOptimizer/OptimizerTab") as typeof import("@testcordplugins/TestcordOptimizer/OptimizerTab");
+    return <OptimizerTab />;
+}
 
 // PURE: no writes. Must return the same result no matter which caller (editor
 // or sidebar sync) runs first, otherwise the editor row and the live sidebar
@@ -784,6 +790,13 @@ export default definePlugin({
                 panelTitle: "Plugin Health",
                 Component: HealthTab,
                 Icon: SafetyIcon,
+            },
+            {
+                key: "testcord_performance",
+                title: "Performance",
+                panelTitle: "Performance",
+                Component: PerformanceTab,
+                Icon: CogWheel,
             },
             {
                 key: "testcord_presets",
