@@ -90,7 +90,8 @@ const desktopOnlyAutoCompleteQuestTypes = new Set<QuestTaskType>([
 ]);
 
 export function isDesktopCompatible(questType: QuestTaskType): boolean {
-    return IS_DISCORD_DESKTOP || !desktopOnlyAutoCompleteQuestTypes.has(questType);
+    // HaloCord's shell sends quest heartbeats with the desktop app's user agent, so play quests work there too.
+    return IS_DISCORD_DESKTOP || "HaloCordNative" in window || !desktopOnlyAutoCompleteQuestTypes.has(questType);
 }
 
 export type AutoCompleteQuestTypes = Partial<Record<QuestTaskType, boolean>>;

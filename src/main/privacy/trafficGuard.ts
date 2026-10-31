@@ -200,6 +200,9 @@ function isFirstParty(host: string): boolean {
     return FIRST_PARTY_HOSTS.some(h => host === h || host.endsWith("." + h));
 }
 
+const QUEST_HEARTBEAT = /^https:\/\/(?:\w+\.)?discord\.com\/api\/v\d+\/quests\/\d+\/heartbeat(?:\?|$)/;
+const DESKTOP_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9266 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36";
+
 class TrafficGuardEngine {
     private isInitialized = false;
     private shields: CoveredSurfacesState = { ...DEFAULT_SURFACES };
@@ -630,6 +633,13 @@ class TrafficGuardEngine {
 
         session.defaultSession.webRequest.onBeforeSendHeaders(filter, (details, callback) => {
             const { url } = details;
+
+            // Discord only counts play-quest heartbeats from its desktop app, which it tells apart by
+            // the user agent, so those requests (and only those) carry the desktop app's.
+            if (QUEST_HEARTBEAT.test(url)) {
+                const uaKey = Object.keys(details.requestHeaders).find(k => k.toLowerCase() === "user-agent") ?? "User-Agent";
+                details.requestHeaders[uaKey] = DESKTOP_USER_AGENT;
+            }
 
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
                 return callback({ requestHeaders: details.requestHeaders });
