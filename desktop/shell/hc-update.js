@@ -3,8 +3,10 @@
 // the installer's SHA-256 against it and installs it silently on restart. Plugins from Vencord,
 // Equicord and TestCord ship inside each release, so this one path updates the client and its plugins.
 // Release downloads are not under GitHub's API limit of 60 calls an hour per network.
+// The repo is private, so anonymous requests get 404; on a PC where the GitHub CLI is signed in to an
+// account that can read the repo, the same files come through the API with that login.
 const { app, ipcMain, net } = require("electron");
-const { spawn } = require("child_process");
+const { execFile, spawn } = require("child_process");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
@@ -30,21 +32,60 @@ function isNewer(a, b) {
     return false;
 }
 
-async function get(url) {
+const NOT_FOUND = "No HaloCord release with an update file was found on GitHub";
+
+async function get(url, headers) {
     let res;
     try {
-        res = await net.fetch(url, { headers: UA, cache: "no-store" });
+        res = await net.fetch(url, { headers: { ...UA, ...headers }, cache: "no-store" });
     } catch (e) {
         throw new Error(`Could not reach GitHub (${e.message}). Check your connection and try again.`);
     }
-    if (res.status === 404) throw new Error("No HaloCord release with an update file was found on GitHub");
+    if (res.status === 404) throw Object.assign(new Error(NOT_FOUND), { notFound: true });
     if (!res.ok) throw new Error(`GitHub answered ${res.status} ${res.statusText}`.trim());
     return res;
 }
 
+const ghToken = () => new Promise(resolve => execFile("gh", ["auth", "token"], { windowsHide: true, timeout: 10000 },
+    (e, out) => resolve(e ? null : String(out).trim() || null)));
+
+// The API answers an asset request with a redirect to a signed download link that needs no login.
+// Read the link without following it: Electron 37 crashes when a request hook (TrafficGuard's token
+// guard) removes a header while net.fetch follows a redirect, and the login stays on api.github.com.
+const assetLink = (url, headers) => new Promise((resolve, reject) => {
+    const req = net.request({ url, redirect: "manual" });
+    for (const [k, v] of Object.entries({ ...UA, ...headers })) req.setHeader(k, v);
+    req.on("redirect", (_status, _method, to) => { req.abort(); resolve(to); });
+    req.on("response", res => { req.abort(); reject(new Error(`GitHub answered ${res.statusCode} instead of a download link`)); });
+    req.on("error", e => reject(new Error(`Could not reach GitHub (${e.message}). Check your connection and try again.`)));
+    req.end();
+});
+
+// Reads the newest release's HaloCord-update.json. Returns it with `open(url)`, which downloads a file
+// that release names: directly, or through the API with the GitHub CLI login when the repo is private.
+// The token stays in this process.
+async function readFeed() {
+    try {
+        return { m: await (await get(FEED + "HaloCord-update.json")).json(), open: url => get(url) };
+    } catch (e) {
+        if (TEST_FEED || !e.notFound) throw e;
+    }
+    const token = await ghToken();
+    if (!token) throw new Error(`${NOT_FOUND}. The repo is private: sign in with the GitHub CLI (gh auth login) to get updates.`);
+    const auth = { Authorization: `Bearer ${token}` };
+    const release = await (await get(`https://api.github.com/repos/${REPO}/releases/latest`, { ...auth, Accept: "application/vnd.github+json" })).json();
+    const assets = new Map((release.assets ?? []).map(a => [a.name, a.url]));
+    const open = async url => {
+        const name = decodeURIComponent(url.split("/").pop());
+        if (!assets.has(name)) throw new Error(`${name} is missing from the newest HaloCord release`);
+        return get(await assetLink(assets.get(name), { ...auth, Accept: "application/octet-stream" }));
+    };
+    return { m: await (await open("HaloCord-update.json")).json(), open };
+}
+
 // HaloCord-update.json: { version, url, sha256, notes: [...] }, written by the release script.
 async function check() {
-    const m = await (await get(FEED + "HaloCord-update.json")).json();
+    const { m, open } = await readFeed();
     const version = String(m.version ?? "").replace(/^v/i, "");
     if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error("The update file names no version");
     if (!isNewer(version, app.getVersion())) {
@@ -56,7 +97,7 @@ async function check() {
     if (!sha256 || !url.startsWith(TEST_FEED || DOWNLOADS))
         throw new Error(`The update file for HaloCord ${version} is incomplete, so nothing was downloaded`);
     if (latest?.version !== version) staged = null;
-    latest = { version, url, sha256 };
+    latest = { version, sha256, fetch: () => open(url) };
     const notes = Array.isArray(m.notes) && m.notes.length ? m.notes : [`HaloCord ${version}`];
     return { changes: notes.map(message => ({ hash: `v${version}`, author: "HaloCord", message: String(message) })), diverged: false };
 }
@@ -71,7 +112,7 @@ async function fetchInstaller() {
     fs.rmSync(DIR, { recursive: true, force: true });
     fs.mkdirSync(DIR, { recursive: true });
     const file = path.join(DIR, `HaloCord-Setup-${latest.version}.exe`), part = file + ".part";
-    const res = await get(latest.url);
+    const res = await latest.fetch();
     if (!res.body) throw new Error("The installer download came back empty");
     const hash = crypto.createHash("sha256"), out = fs.createWriteStream(part);
     try {
