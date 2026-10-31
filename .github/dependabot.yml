@@ -7,6 +7,7 @@ updates:
     groups:
       npm-updates:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
       npm-security:
         applies-to: security-updates
         patterns: ["*"]
@@ -17,6 +18,7 @@ updates:
     groups:
       githubactions-updates:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
       githubactions-security:
         applies-to: security-updates
         patterns: ["*"]
