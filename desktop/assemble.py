@@ -131,6 +131,15 @@ for f in ("preload.js", "userscript.js"):
             ("dvxMicBusy=!![];dvxMicNext=Date['now']()+15e3;", "dvxMicBusy=!![];dvxMicNext=Date['now']()+2e3;"),
             ("if(dvxMicFail>3&&Date['now']()<dvxMicNext+6e4)return;", ""),
             ("dvxMicMutedNext=Date['now']()+9e4;", "dvxMicMutedNext=Date['now']()+2e3;"),
+            # Swapping a fresh track into the sender left Discord's own input on the ended track, so its
+            # voice activity never fired and nobody heard the owner until a rejoin. Reopen Discord's input.
+            ("function dvxMicCloseOld(dvxG,dvxNewT){",
+             "function dvxMicDcAudio(){var r=null;try{Vencord.Webpack.findStore('MediaEngineStore').getMediaEngine().connections.forEach(function(c){var a=c&&c.context==='default'&&c.input&&c.input.audio;if(a&&!a.destroyed&&!r)r=a;});}catch(x){}return r;}"
+             "function dvxMicDcEnded(){var a=dvxMicDcAudio();if(!a)return ![];var t=a.stream&&a.stream.getAudioTracks()[0];return !t||t.readyState==='ended';}"
+             "function dvxMicCloseOld(dvxG,dvxNewT){"),
+            ("try{dvxP=navigator['mediaDevices']['getUserMedia']({'audio':dvxMicLastGumAudio||!![],'video':![]});}",
+             "try{var dvxA=dvxMicDcAudio();dvxP=dvxA?dvxA.enable():navigator['mediaDevices']['getUserMedia']({'audio':dvxMicLastGumAudio||!![],'video':![]});}"),
+            ("if(!dvxT||dvxT['readyState']!=='live')dvxWhy=", "if(dvxMicDcEnded())dvxWhy='discord input ended';else if(!dvxT||dvxT['readyState']!=='live')dvxWhy="),
         ]
         for a, b in fixes:
             assert s.count(a) == 1, a
