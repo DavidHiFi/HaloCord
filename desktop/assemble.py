@@ -28,6 +28,7 @@ for f in ("index.js", "package.json", "LICENSE.txt"):
 shutil.copy2(KOFFI / "build" / "koffi" / "win32_x64" / "koffi.node", kd / "build" / "koffi" / "win32_x64" / "koffi.node")
 shutil.copy2(D / "shell" / "mcblur.js", asrc / "mcblur.js")
 shutil.copy2(D / "shell" / "shareaudio.js", asrc / "shareaudio.js")
+shutil.copy2(D / "shell" / "hc-desktop.js", asrc / "hc-desktop.js")  # hc-desktop: startup, tray, build choice
 # halocord-loopback.exe sits next to app.asar (process.resourcesPath); build it if it is missing.
 lb = D / "loopback" / "halocord-loopback.exe"
 if not lb.exists():
@@ -89,6 +90,14 @@ m += ('\nfunction mcWinFile(){return require("path").join(app.getPath("userData"
       'ipcMain.handle("halocord:open-settings-folder",()=>shell.openPath(app.getPath("userData")));'
       'ipcMain.handle("halocord:set-window-prefs",(e,t)=>{const p={};for(const k of["disableMinSize","transparent","winCtrlQ"])p[k]=!!(t&&t[k]);'
       'p.windowsMaterial=t&&"string"==typeof t.windowsMaterial?t.windowsMaterial:"none";require("fs").writeFileSync(mcWinFile(),JSON.stringify(p))});\n')
+# hc-desktop: shell/hc-desktop.js owns Windows startup, start minimised, minimise to tray and the
+# Stable / PTB / Canary choice. The window stays hidden when launched with --start-minimized, and
+# the app page skips the HTTP cache so every launch gets Discord's newest web build.
+for a, b in [('win=new BrowserWindow({width:1400,height:900,', 'win=new BrowserWindow({show:!hcDesk.hidden,width:1400,height:900,'),
+             ('win.loadURL("https://discord.com/app")', 'win.loadURL(hcDesk.appUrl(),{extraHeaders:"Cache-Control: no-cache\\n"})')]:
+    assert m.count(a) == 1, a
+    m = m.replace(a, b)
+m += '\nconst hcDesk=require("./hc-desktop.js").init({win:()=>win,tray:()=>tray,show:showWindow});\n'
 (asrc / "main.js").write_text(m, encoding="utf-8")
 # Display text only; lowercase ids (kurtcordDirect, KurtcordMLKEM, wire tags) stay so P2P and E2EE still talk to Kurtcord users.
 for f in ("preload.js", "userscript.js"):
@@ -109,6 +118,11 @@ for f in ("preload.js", "userscript.js"):
                              'stopShareAudio:()=>ipcRenderer.invoke("halocord:share-audio-stop"),'
                              'takeShareAudio:A=>{ipcRenderer.removeAllListeners("halocord:share-audio");'
                              'ipcRenderer.on("halocord:share-audio",(B,C)=>A(new Uint8Array(C)));return!0}}),')
+        # hc-desktop: settings bridge for the HaloDesktop plugin.
+        a = 'contextBridge.exposeInMainWorld("__kurtcord",__kcBridge),'
+        assert s.count(a) == 1
+        s = s.replace(a, a + 'contextBridge.exposeInMainWorld("HaloCordDesktop",{get:()=>ipcRenderer.invoke("halocord-desktop:get"),'
+                             'set:(A,B)=>ipcRenderer.invoke("halocord-desktop:set",String(A),B)}),')
         a = s[s.index("function injectEquicord(){"):s.index("try{var __kcBridge=")]
         s = s.replace(a, 'function injectEquicord(){try{contextBridge.exposeInMainWorld("VesktopNative",{app:{'
                          'getVersion:()=>require("./package.json").version,getGitHash:()=>"",isDevBuild:()=>!1,'

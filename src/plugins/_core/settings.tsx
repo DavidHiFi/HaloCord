@@ -734,6 +734,7 @@ export default definePlugin({
 
     buildLayout(originalLayoutBuilder: SettingsLayoutBuilder) {
         const layout = originalLayoutBuilder.buildLayout();
+        if (Array.isArray(layout)) this.layoutHooks[originalLayoutBuilder.key!]?.(layout, LayoutTypes);
         if (originalLayoutBuilder.key !== "$Root") return layout;
         if (!Array.isArray(layout)) return layout;
         if (layout.some(s => s?.key === "testcord_section")) return layout;
@@ -918,6 +919,8 @@ export default definePlugin({
 
     customSections: [] as ((SectionTypes: Record<string, string>) => { section: string; element: ComponentType; label: string; id?: string; })[],
     customEntries: [] as EntryOptions[],
+    // Other plugins add nodes to one of Discord's own settings panels, keyed by layout key (haloDesktop).
+    layoutHooks: {} as Record<string, (layout: SettingsLayoutNode[], types: typeof LayoutTypes) => void>,
 
     get electronVersion() {
         return VencordNative.native.getVersions().electron ?? window.legcord?.electron ?? null;
