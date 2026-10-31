@@ -900,11 +900,32 @@ export default definePlugin({
 
         layout.splice(idx, 0, testcordSection);
 
+        // Entries that belong inside one of Discord's own sections (HaloCord's Game Overlay sits in
+        // Games & Apps after Discord's hidden native one). Copies the section node, never mutates it.
+        for (const section of new Set(this.sectionEntries.map(e => e.section))) {
+            const i = layout.findIndex(s => s?.key === section);
+            const node = layout[i];
+            if (!node?.buildLayout) continue;
+            const extra = this.sectionEntries.filter(e => e.section === section);
+            layout[i] = {
+                ...node,
+                buildLayout: () => {
+                    const items = node.buildLayout!();
+                    for (const { after, entry } of extra) {
+                        const j = items.findIndex(c => c?.key === after);
+                        items.splice(j === -1 ? items.length : j + 1, 0, buildEntry(entry));
+                    }
+                    return items;
+                }
+            };
+        }
+
         return layout;
     },
 
     customSections: [] as ((SectionTypes: Record<string, string>) => { section: string; element: ComponentType; label: string; id?: string; })[],
     customEntries: [] as EntryOptions[],
+    sectionEntries: [] as { section: string; after?: string; entry: EntryOptions; }[],
 
     get electronVersion() {
         return VencordNative.native.getVersions().electron ?? window.legcord?.electron ?? null;

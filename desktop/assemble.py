@@ -28,6 +28,9 @@ for f in ("index.js", "package.json", "LICENSE.txt"):
 shutil.copy2(KOFFI / "build" / "koffi" / "win32_x64" / "koffi.node", kd / "build" / "koffi" / "win32_x64" / "koffi.node")
 shutil.copy2(D / "shell" / "mcblur.js", asrc / "mcblur.js")
 shutil.copy2(D / "shell" / "shareaudio.js", asrc / "shareaudio.js")
+# hc-overlay: in-game overlay window (main side, its preload and page), next to main.js.
+for f in ("hc-overlay-main.js", "hc-overlay-preload.js", "hc-overlay.html", "hc-overlay.js"):
+    shutil.copy2(D / "shell" / f, asrc / f)
 # halocord-loopback.exe sits next to app.asar (process.resourcesPath); build it if it is missing.
 lb = D / "loopback" / "halocord-loopback.exe"
 if not lb.exists():
@@ -89,6 +92,8 @@ m += ('\nfunction mcWinFile(){return require("path").join(app.getPath("userData"
       'ipcMain.handle("halocord:open-settings-folder",()=>shell.openPath(app.getPath("userData")));'
       'ipcMain.handle("halocord:set-window-prefs",(e,t)=>{const p={};for(const k of["disableMinSize","transparent","winCtrlQ"])p[k]=!!(t&&t[k]);'
       'p.windowsMaterial=t&&"string"==typeof t.windowsMaterial?t.windowsMaterial:"none";require("fs").writeFileSync(mcWinFile(),JSON.stringify(p))});\n')
+# hc-overlay: IPC halocord:overlay-* and the overlay window live in shell/hc-overlay-main.js.
+m += '\nrequire("./hc-overlay-main.js");\n'
 (asrc / "main.js").write_text(m, encoding="utf-8")
 # Display text only; lowercase ids (kurtcordDirect, KurtcordMLKEM, wire tags) stay so P2P and E2EE still talk to Kurtcord users.
 for f in ("preload.js", "userscript.js"):
@@ -109,6 +114,11 @@ for f in ("preload.js", "userscript.js"):
                              'stopShareAudio:()=>ipcRenderer.invoke("halocord:share-audio-stop"),'
                              'takeShareAudio:A=>{ipcRenderer.removeAllListeners("halocord:share-audio");'
                              'ipcRenderer.on("halocord:share-audio",(B,C)=>A(new Uint8Array(C)));return!0}}),')
+        # hc-overlay: page side of the overlay (HaloOverlay plugin), its own bridge object.
+        a = 'contextBridge.exposeInMainWorld("__audiocord",__kcBridge)'
+        assert s.count(a) == 1
+        s = s.replace(a, a + ',contextBridge.exposeInMainWorld("HaloCordOverlay",{setConfig:A=>ipcRenderer.invoke("halocord:overlay-config",A),'
+                             'voice:A=>ipcRenderer.send("halocord:overlay-voice",A),notify:A=>ipcRenderer.send("halocord:overlay-notify",A)})')
         a = s[s.index("function injectEquicord(){"):s.index("try{var __kcBridge=")]
         s = s.replace(a, 'function injectEquicord(){try{contextBridge.exposeInMainWorld("VesktopNative",{app:{'
                          'getVersion:()=>require("./package.json").version,getGitHash:()=>"",isDevBuild:()=>!1,'
