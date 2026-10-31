@@ -1,0 +1,38 @@
+{
+  "name": "halocord",
+  "productName": "HaloCord",
+  "version": "2.8.4",
+  "description": "HaloCord",
+  "author": {
+    "name": "DavidHiFi",
+    "url": "https://github.com/DavidHiFi"
+  },
+  "build": {
+    "appId": "com.davidhifi.halocord",
+    "productName": "HaloCord",
+    "copyright": "Copyright (c) 2026 DavidHiFi",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "../brand/halocord.ico",
+      "executableName": "HaloCord",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "../brand/halocord.ico",
+      "uninstallerIcon": "../brand/halocord.ico",
+      "shortcutName": "HaloCord",
+      "uninstallDisplayName": "HaloCord",
+      "artifactName": "HaloCord-Setup-${version}.exe",
+      "deleteAppDataOnUninstall": false
+    },
+    "electronVersion": "37.6.0"
+  }
+}

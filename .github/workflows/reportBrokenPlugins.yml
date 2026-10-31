@@ -1,0 +1,131 @@
+name: Test Patches
+on:
+    workflow_dispatch:
+        inputs:
+            discord_branch:
+                type: choice
+                description: "Discord Branch to test patches on"
+                options:
+                    - both
+                    - stable
+                    - canary
+                default: both
+            webhook_url:
+                type: string
+                description:
+                    "Webhook URL that the report will be posted to. This will be
+                    visible for everyone, so DO NOT pass sensitive webhooks like
+                    discord webhook. This is meant to be used by Equibot."
+                required: false
+            repository:
+                type: string
+                description: repository to test patches on
+                required: false
+            ref:
+                type: string
+                description: "Git reference to test patches on. This can be a branch, tag, or commit SHA."
+                required: false
+    schedule:
+        # Every 6 hours, so a Discord update that breaks a plugin is caught the same day
+        - cron: 17 */6 * * *
+
+permissions:
+    contents: read
+    issues: write
+
+env:
+    FORCE_COLOR: true
+
+jobs:
+    TestPlugins:
+        name: Test Patches
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  repository: ${{ inputs.repository || github.repository }}
+                  ref: ${{ inputs.ref || github.ref }}
+
+            - name: Setup PNPM
+              uses: pnpm/setup@v2.1.0
+              with:
+                  runtime: node@v24
+                  require-lockfile: true
+
+            - name: Install dependencies
+              run: |
+                  pnpm install --frozen-lockfile --prefer-offline
+
+            - name: Build Equicord Reporter Version
+              run: pnpm buildReporter
+
+            - name: Run Reporter
+              id: reporter
+              continue-on-error: true
+              timeout-minutes: 15
+              run: |
+                  export PATH="$PWD/node_modules/.bin:$PATH"
+                  export CHROMIUM_BIN=/usr/bin/google-chrome
+
+                  esbuild scripts/generateReport.ts > dist/report.mjs
+
+                  stable_output_file=$(mktemp)
+                  canary_output_file=$(mktemp)
+
+                  pids=""
+
+                  branch="${{ inputs.discord_branch }}"
+                  if [[ "${{ github.event_name }}" = "schedule" ]]; then
+                    branch="both"
+                  fi
+
+                  if [[ "$branch" = "both" || "$branch" = "stable" ]]; then
+                    node dist/report.mjs > "$stable_output_file" &
+                    pids+=" $!"
+                  fi
+
+                  if [[ "$branch" = "both" || "$branch" = "canary" ]]; then
+                    USE_CANARY=true node dist/report.mjs > "$canary_output_file" &
+                    pids+=" $!"
+                  fi
+
+                  exit_code=0
+                  for pid in $pids; do
+                      if ! wait "$pid"; then
+                        exit_code=1
+                      fi
+                  done
+
+                  cat "$stable_output_file" "$canary_output_file" > report.md
+                  cat report.md >> $GITHUB_STEP_SUMMARY
+                  exit $exit_code
+              env:
+                  WEBHOOK_URL: ${{ inputs.webhook_url || secrets.WEBHOOK_URL }}
+                  WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+
+            # One open issue tracks broken patches. It is updated when the list changes and closed when a run is clean.
+            - name: Update the broken patches issue
+              if: github.event_name == 'schedule' || inputs.repository == ''
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  OUTCOME: ${{ steps.reporter.outcome }}
+              run: |
+                  title="Plugins broken by a Discord update"
+                  issue=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')
+                  run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  if [[ "$OUTCOME" = "success" ]]; then
+                      [[ -n "$issue" ]] && gh issue close "$issue" --comment "Clean run, every patch matches again: $run_url"
+                      exit 0
+                  fi
+                  [[ -s report.md ]] || { echo "Reporter failed without a report"; exit 1; }
+                  # A run that timed out can leave an empty partial report; that is a reporter problem, not broken plugins.
+                  found=$(awk '/^## /{ignored=/Ignored/} /^- /&&!ignored{n++} END{print n+0}' report.md)
+                  [[ "$found" -gt 0 ]] || { echo "Reporter did not finish and found nothing broken"; exit 1; }
+                  { echo "Latest run: $run_url"; echo; head -c 60000 report.md; } > body.md
+                  if [[ -z "$issue" ]]; then
+                      gh issue create --title "$title" --body-file body.md --assignee "${{ github.repository_owner }}"
+                  elif ! diff -q <(gh issue view "$issue" --json body --jq .body | tail -n +3) <(tail -n +3 body.md) > /dev/null; then
+                      gh issue edit "$issue" --body-file body.md
+                      gh issue comment "$issue" --body "The list of broken patches changed: $run_url"
+                  fi

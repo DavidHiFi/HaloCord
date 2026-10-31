@@ -1,0 +1,61 @@
+/* Works around a very strange issue where *something* (electron?) will inject body { app-region: drag } when using online themes.
+   `initial` (== none) defeats that injected drag while, unlike `no-drag`, it does not contribute a subtracting region that can
+   swallow the titlebar's drag area. */
+body {
+    -webkit-app-region: initial !important;
+    app-region: initial !important;
+}
+
+/* keep titlebar draggable */
+[class*="typeWindows_"],
+[class*="titleBar_"] {
+    -webkit-app-region: drag;
+}
+
+[class*="typeWindows_"] [class*="winButton"],
+[class*="typeWindows_"] .tc-chrometabs-tab {
+    -webkit-app-region: no-drag;
+}
+
+/* Newer Visual Refresh builds dropped the typeWindows_/titleBar_ names in
+   favour of bar_/title_ (e.g. bar_c38106). Target the real titlebar without
+   depending on the hashed suffix, by selecting the bar that owns the window
+   buttons. Without this the legacy selectors above match nothing and dragging
+   depends entirely on Discord's own stylesheet. */
+[class*="bar_"]:has([class*="winButtons_"]) {
+    -webkit-app-region: drag;
+}
+
+[class*="bar_"]:has([class*="winButtons_"]) [class*="winButton"],
+[class*="bar_"]:has([class*="winButtons_"]) [class*="backForwardButtons"],
+[class*="bar_"]:has([class*="winButtons_"]) [class*="trailing"] {
+    -webkit-app-region: no-drag;
+}
+
+/* Modern Discord Visual Refresh Close Button styles */
+.vc-modal-close-btn,
+button[class*="closeButton"],
+button[class*="closeWithCircleBackground"],
+button[aria-label="Close"],
+button[aria-label="Close Modal"] {
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.vc-modal-close-btn:hover,
+button[class*="closeButton"]:hover,
+button[class*="closeWithCircleBackground"]:hover,
+button[aria-label="Close"]:hover,
+button[aria-label="Close Modal"]:hover {
+    background-color: var(--background-modifier-hover, rgb(255 255 255 / 8%));
+}
+
+.vc-modal-close-btn:active,
+button[class*="closeButton"]:active,
+button[class*="closeWithCircleBackground"]:active,
+button[aria-label="Close"]:active,
+button[aria-label="Close Modal"]:active {
+    background-color: var(--background-modifier-active, rgb(255 255 255 / 16%));
+}
+

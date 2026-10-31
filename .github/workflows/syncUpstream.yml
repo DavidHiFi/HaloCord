@@ -1,0 +1,60 @@
+name: Sync Equicord
+on:
+    workflow_dispatch:
+    schedule:
+        # Mondays. Equicord already merges Vencord, so this brings in both.
+        - cron: 41 5 * * 1
+
+permissions:
+    actions: write
+    contents: write
+    pull-requests: write
+    issues: write
+
+jobs:
+    Sync:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  fetch-depth: 0
+
+            # HaloCord keeps its own squashed history, so the merge runs against the last synced
+            # Equicord commit (.github/equicord-base) and lands as one normal commit on top of main.
+            # A clean merge goes to a pull request so the Test workflow checks it first.
+            # A merge with conflicts opens an issue that lists the files to fix by hand.
+            - name: Merge Equicord dev
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  git config user.name "DavidHiFi"
+                  git config user.email "106938608+DavidHiFi@users.noreply.github.com"
+                  git remote add equicord https://github.com/Equicord/Equicord.git
+                  git fetch --no-tags equicord dev
+                  base=$(cat .github/equicord-base)
+                  head=$(git rev-parse equicord/dev)
+                  if [[ "$base" = "$head" ]]; then echo "Up to date with Equicord"; exit 0; fi
+                  behind=$(git rev-list --count "$base..$head")
+
+                  if out=$(git merge-tree --write-tree --name-only --no-messages --merge-base="$base" HEAD "$head"); then
+                      branch="sync/equicord-$(date +%Y-%m-%d)"
+                      git switch -c "$branch"
+                      git reset -q --hard "$(git commit-tree "$(head -n1 <<<"$out")" -p HEAD -m "Sync Equicord dev ($behind commits)")"
+                      echo "$head" > .github/equicord-base
+                      git commit -qam "Record Equicord sync base"
+                      git push -u origin "$branch"
+                      gh pr create --base main --head "$branch" --title "Sync Equicord dev ($behind commits)" --body "Weekly upstream sync. Merge after the Test check passes and a local build starts cleanly."
+                      # Pull requests opened with the workflow token do not trigger other workflows, so start Test by hand.
+                      gh workflow run test.yml --ref "$branch"
+                      exit 0
+                  fi
+
+                  files=$(tail -n +2 <<<"$out" | sed 's/^/- `/; s/$/`/')
+                  title="Equicord sync needs a manual merge"
+                  body=$(printf 'Equicord dev is %s commits ahead and the merge conflicts in:\n\n%s\n\nMerge locally: `git fetch https://github.com/Equicord/Equicord.git dev && git replace --graft HEAD $(cat .github/equicord-base) && git merge --squash FETCH_HEAD`, fix the conflicts, run `git replace -d HEAD`, write the FETCH_HEAD hash to .github/equicord-base, then commit.' "$behind" "$files")
+                  issue=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')
+                  if [[ -z "$issue" ]]; then
+                      gh issue create --title "$title" --body "$body" --assignee "${{ github.repository_owner }}"
+                  else
+                      gh issue edit "$issue" --body "$body"
+                  fi
