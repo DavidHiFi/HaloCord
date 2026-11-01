@@ -236,6 +236,7 @@ function applyToPopout(popoutWindow: Window | undefined, key: string) {
     }
 
     doc.documentElement.appendChild(clonedRoot);
+    doc.documentElement.classList.toggle("hc-theming", Settings.haloTheming);
 }
 
 function updatePopoutWindows() {

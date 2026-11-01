@@ -1,13 +1,33 @@
 /* HaloCord settings look: the voice panel's dark rounded rows and green accent (desktop/base/userscript.js),
-   used for options HaloCord adds to Discord. */
+   used for options HaloCord adds to Discord. Without html.hc-theming the variables fall back to stock Discord. */
 :root {
+    --hc-accent: var(--brand-500, #5865f2);
+    --hc-accent-2: var(--brand-360, #949cf7);
+    --hc-accent-ink: var(--white, #fff);
+    --hc-accent-rgb: 88 101 242;
+    --hc-row-bg: var(--background-mod-subtle, rgb(78 80 88 / 12%));
+    --hc-row-border: var(--border-subtle, rgb(255 255 255 / 6%));
+    --hc-panel-bg: var(--background-base-lower, #2b2d31);
+    --hc-panel-border: var(--border-muted, rgb(255 255 255 / 8%));
+    --hc-window-bg: var(--modal-background, var(--background-base-low, #313338));
+    --hc-text: var(--text-default, #dbdee1);
+    --hc-text-muted: var(--text-muted, #949ba4);
+    --hc-scroll-thumb: var(--scrollbar-thin-thumb, rgb(255 255 255 / 14%));
+}
+
+html.hc-theming {
     --hc-accent: #afe37f;
     --hc-accent-2: #63c98f;
     --hc-accent-ink: #10151a;
+    --hc-accent-rgb: 175 227 127;
     --hc-row-bg: rgb(0 0 0 / 20%);
     --hc-row-border: rgb(255 255 255 / 6%);
     --hc-panel-bg: rgb(0 0 0 / 13%);
     --hc-panel-border: rgb(255 255 255 / 8%);
+    --hc-window-bg: var(--background-base-lower, #1e1f22);
+    --hc-text: var(--text-strong, #f2f3f5);
+    --hc-text-muted: var(--text-muted, #949ba4);
+    --hc-scroll-thumb: rgb(255 255 255 / 14%);
 }
 
 .hc-ui {
@@ -45,7 +65,7 @@
     height: 9px;
     border-radius: 3px;
     background: linear-gradient(135deg, var(--hc-accent), var(--hc-accent-2));
-    box-shadow: 0 0 12px rgb(175 227 127 / 45%);
+    box-shadow: 0 0 12px rgb(var(--hc-accent-rgb) / 45%);
 }
 
 .hc-ui-row {
@@ -62,12 +82,12 @@
 }
 
 .hc-ui-row:hover {
-    border-color: rgb(175 227 127 / 22%);
+    border-color: rgb(var(--hc-accent-rgb) / 22%);
 }
 
 .hc-ui-row-accent {
-    border-color: rgb(175 227 127 / 30%);
-    background: linear-gradient(90deg, rgb(175 227 127 / 10%), rgb(175 227 127 / 2%)), var(--hc-row-bg);
+    border-color: rgb(var(--hc-accent-rgb) / 30%);
+    background: linear-gradient(90deg, rgb(var(--hc-accent-rgb) / 10%), rgb(var(--hc-accent-rgb) / 2%)), var(--hc-row-bg);
 }
 
 .hc-ui-row-text {
@@ -83,14 +103,14 @@
     font-size: 15px;
     font-weight: 600;
     line-height: 1.3;
-    color: var(--header-primary, #f2f3f5);
+    color: var(--hc-text);
 }
 
 .hc-ui-row-desc {
     margin-top: 3px;
     font-size: 12.5px;
     line-height: 1.45;
-    color: var(--text-muted, #949ba4);
+    color: var(--hc-text-muted);
 }
 
 .hc-ui-row-side {
@@ -145,7 +165,7 @@
 
 /* Status pill with a lit dot (after Sudocord's settings status pills). */
 .hc-ui-pill {
-    --hc-tone: var(--text-muted, #949ba4);
+    --hc-tone: var(--hc-text-muted);
 
     display: inline-flex;
     align-items: center;
@@ -181,11 +201,11 @@
     flex-direction: column;
     gap: 16px;
     padding: 20px;
-    border: 1px solid rgb(175 227 127 / 24%);
+    border: 1px solid rgb(var(--hc-accent-rgb) / 24%);
     border-radius: 16px;
     background:
-        radial-gradient(circle at 100% 0%, rgb(99 201 143 / 14%), transparent 45%),
-        linear-gradient(135deg, rgb(175 227 127 / 9%), transparent 55%),
+        radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--hc-accent-2) 14%, transparent), transparent 45%),
+        linear-gradient(135deg, rgb(var(--hc-accent-rgb) / 9%), transparent 55%),
         var(--hc-row-bg);
     box-shadow: inset 0 1px rgb(255 255 255 / 3%);
 }
@@ -203,7 +223,7 @@
     font-size: 24px;
     font-weight: 800;
     letter-spacing: -0.01em;
-    color: var(--header-primary, #f2f3f5);
+    color: var(--hc-text);
 }
 
 .hc-ui-hero-text {
@@ -211,7 +231,7 @@
     margin: 0;
     font-size: 13px;
     line-height: 1.5;
-    color: var(--text-muted, #949ba4);
+    color: var(--hc-text-muted);
 }
 
 .hc-ui-hero-error {
@@ -244,16 +264,16 @@
 
 .hc-ui .vc-btn-base.hc-ui-btn-quiet,
 .hc-ui-hero .vc-btn-base.hc-ui-btn-quiet {
-    border: 1px solid rgb(175 227 127 / 30%);
-    background-color: rgb(0 0 0 / 25%) !important;
+    border: 1px solid rgb(var(--hc-accent-rgb) / 30%);
+    background-color: var(--hc-row-bg) !important;
     color: var(--hc-accent) !important;
     font-weight: 700;
 }
 
 .hc-ui .vc-btn-base.hc-ui-btn-quiet:hover:not(:disabled),
 .hc-ui-hero .vc-btn-base.hc-ui-btn-quiet:hover:not(:disabled) {
-    border-color: rgb(175 227 127 / 55%);
-    background-color: rgb(175 227 127 / 10%) !important;
+    border-color: rgb(var(--hc-accent-rgb) / 55%);
+    background-color: rgb(var(--hc-accent-rgb) / 10%) !important;
 }
 
 .hc-ui-stats {
@@ -267,7 +287,7 @@
     padding: 10px 12px;
     border: 1px solid var(--hc-row-border);
     border-radius: 11px;
-    background: var(--background-tertiary, #1e1f22);
+    background: var(--hc-window-bg);
 }
 
 .hc-ui-stat-label {
@@ -275,7 +295,7 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--text-muted, #949ba4);
+    color: var(--hc-text-muted);
 }
 
 .hc-ui-stat-value {
@@ -283,14 +303,14 @@
     font-size: 14px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
-    color: var(--header-primary, #f2f3f5);
+    color: var(--hc-text);
     overflow-wrap: anywhere;
 }
 
 .hc-ui-hash {
     padding: 2px 6px;
     border-radius: 6px;
-    background: rgb(175 227 127 / 10%);
+    background: rgb(var(--hc-accent-rgb) / 10%);
     color: var(--hc-accent);
     font-family: var(--font-code, monospace);
     font-size: 12px;
@@ -299,7 +319,7 @@
 }
 
 a.hc-ui-hash:hover {
-    background: rgb(175 227 127 / 18%);
+    background: rgb(var(--hc-accent-rgb) / 18%);
 }
 
 /* Privacy & Security: the same rows and switches. */
@@ -312,12 +332,12 @@ a.hc-ui-hash:hover {
 }
 
 .ps-command-center .ps-toggle-row:hover {
-    border-color: rgb(175 227 127 / 22%);
+    border-color: rgb(var(--hc-accent-rgb) / 22%);
 }
 
 .ps-command-center .ps-toggle-title {
     font-size: 15px;
-    color: var(--header-primary, #f2f3f5);
+    color: var(--hc-text);
 }
 
 .ps-command-center .ps-toggle-desc {
@@ -355,7 +375,7 @@ a.hc-ui-hash:hover {
 }
 
 .ps-command-center .ps-badge-green {
-    background: rgb(175 227 127 / 12%);
+    background: rgb(var(--hc-accent-rgb) / 12%);
     color: var(--hc-accent);
 }
 
@@ -369,7 +389,7 @@ a.hc-ui-hash:hover {
 }
 
 /* Every HaloCord settings page (Plugins, Themes, Performance, Stats, Health, Presets, Cloud, Backup...) in the voice panel's look. */
-.vc-settings-tab {
+html.hc-theming .vc-settings-tab {
     --switch-background-selected-default: var(--hc-accent);
     --switch-background-selected-hover: var(--hc-accent);
     --switch-border-selected-default: var(--hc-accent);
@@ -386,28 +406,28 @@ a.hc-ui-hash:hover {
     --border-subtle: var(--hc-row-border);
 }
 
-.vc-settings-tab .vc-switch-checked .vc-switch-indicator {
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-switch-checked .vc-switch-indicator {
     background: var(--hc-accent) !important;
     border-color: var(--hc-accent) !important;
 }
 
-.vc-settings-tab .vc-switch-checked .vc-switch-thumb rect {
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-switch-checked .vc-switch-thumb rect {
     fill: var(--hc-accent-ink) !important;
 }
 
-.vc-settings-tab .vc-plugin-health-toggle input:checked + .vc-plugin-health-toggle-slider {
+html.hc-theming .vc-settings-tab .vc-plugin-health-toggle input:checked + .vc-plugin-health-toggle-slider {
     background: var(--hc-accent);
 }
 
-.vc-settings-tab .vc-plugin-health-toggle input:checked + .vc-plugin-health-toggle-slider::before {
+html.hc-theming .vc-settings-tab .vc-plugin-health-toggle input:checked + .vc-plugin-health-toggle-slider::before {
     background: var(--hc-accent-ink);
 }
 
 /* Section titles: green caps with the lit dot. */
-.vc-settings-tab .vc-h4,
-.vc-settings-tab .vc-h5,
-.vc-settings-tab .vc-optimizer-category > .vc-h3,
-.vc-settings-tab .vc-stats-card:not(.vc-stats-hero) > .vc-h3 {
+html.hc-theming .vc-settings-tab .vc-h4,
+html.hc-theming .vc-settings-tab .vc-h5,
+html.hc-theming .vc-settings-tab .vc-optimizer-category > .vc-h3,
+html.hc-theming .vc-settings-tab .vc-stats-card:not(.vc-stats-hero) > .vc-h3 {
     font-size: 11px;
     font-weight: 800;
     line-height: 1.4;
@@ -416,10 +436,10 @@ a.hc-ui-hash:hover {
     color: var(--hc-accent) !important;
 }
 
-.vc-settings-tab .vc-h4::before,
-.vc-settings-tab .vc-h5::before,
-.vc-settings-tab .vc-optimizer-category > .vc-h3::before,
-.vc-settings-tab .vc-stats-card:not(.vc-stats-hero) > .vc-h3::before {
+html.hc-theming .vc-settings-tab .vc-h4::before,
+html.hc-theming .vc-settings-tab .vc-h5::before,
+html.hc-theming .vc-settings-tab .vc-optimizer-category > .vc-h3::before,
+html.hc-theming .vc-settings-tab .vc-stats-card:not(.vc-stats-hero) > .vc-h3::before {
     content: "";
     display: inline-block;
     width: 9px;
@@ -427,52 +447,52 @@ a.hc-ui-hash:hover {
     margin-right: 9px;
     border-radius: 3px;
     background: linear-gradient(135deg, var(--hc-accent), var(--hc-accent-2));
-    box-shadow: 0 0 12px rgb(175 227 127 / 45%);
+    box-shadow: 0 0 12px rgb(var(--hc-accent-rgb) / 45%);
     vertical-align: 0;
 }
 
 /* Donate and Contribute cards: dark panel with a green wash instead of the pastel art (set inline, hence !important). */
-.vc-settings-tab .vc-special-card-special {
-    border: 1px solid rgb(175 227 127 / 18%);
+html.hc-theming .vc-settings-tab .vc-special-card-special {
+    border: 1px solid rgb(var(--hc-accent-rgb) / 18%);
     border-radius: 14px;
     background:
-        linear-gradient(135deg, rgb(175 227 127 / 8%), transparent 60%),
+        linear-gradient(135deg, rgb(var(--hc-accent-rgb) / 8%), transparent 60%),
         var(--hc-panel-bg) !important;
 }
 
-.vc-settings-tab .vc-special-subtitle {
-    color: var(--header-primary);
+html.hc-theming .vc-settings-tab .vc-special-subtitle {
+    color: var(--hc-text);
 }
 
-.vc-settings-tab .vc-special-card-special .vc-btn-base {
-    border: 1px solid rgb(175 227 127 / 30%) !important;
-    background-color: rgb(0 0 0 / 25%) !important;
+html.hc-theming .vc-settings-tab .vc-special-card-special .vc-btn-base {
+    border: 1px solid rgb(var(--hc-accent-rgb) / 30%) !important;
+    background-color: var(--hc-row-bg) !important;
     color: var(--hc-accent) !important;
     font-weight: 700;
 }
 
-.vc-settings-tab .vc-special-card-special .vc-btn-base:hover {
-    border-color: rgb(175 227 127 / 55%) !important;
-    background-color: rgb(175 227 127 / 10%) !important;
+html.hc-theming .vc-settings-tab .vc-special-card-special .vc-btn-base:hover {
+    border-color: rgb(var(--hc-accent-rgb) / 55%) !important;
+    background-color: rgb(var(--hc-accent-rgb) / 10%) !important;
 }
 
-.vc-settings-tab .vc-special-card-special .vc-donate-support-button {
+html.hc-theming .vc-settings-tab .vc-special-card-special .vc-donate-support-button {
     border-color: transparent !important;
     background-color: var(--hc-accent) !important;
     color: var(--hc-accent-ink) !important;
 }
 
-.vc-settings-tab .vc-special-card-special .vc-donate-support-button:hover {
+html.hc-theming .vc-settings-tab .vc-special-card-special .vc-donate-support-button:hover {
     background-color: color-mix(in srgb, var(--hc-accent) 85%, #fff) !important;
 }
 
-.vc-settings-tab .vc-special-card-special :is(.vc-contrib-github, .vc-heart-icon) path {
+html.hc-theming .vc-settings-tab .vc-special-card-special :is(.vc-contrib-github, .vc-heart-icon) path {
     fill: currentcolor;
 }
 
 /* Setting rows: dark rounded cards like the voice panel. */
-.vc-settings-tab .vc-form-switch-container,
-.vc-settings-tab .vc-plugins-setting-section {
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-form-switch-container,
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-plugins-setting-section {
     margin-bottom: 8px;
     padding: 12px 14px;
     border: 1px solid var(--hc-row-border);
@@ -481,16 +501,16 @@ a.hc-ui-hash:hover {
     transition: border-color 0.15s ease;
 }
 
-.vc-settings-tab .vc-form-switch-container:hover,
-.vc-settings-tab .vc-plugins-setting-section:hover {
-    border-color: rgb(175 227 127 / 22%);
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-form-switch-container:hover,
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-plugins-setting-section:hover {
+    border-color: rgb(var(--hc-accent-rgb) / 22%);
 }
 
 /* Outer panels: the voice panel's dark cards that hold a group of rows. */
 .hc-panel,
-.vc-settings-tab .vc-optimizer-category-settings,
-.vc-settings-tab .vc-presets-list,
-.vc-settings-tab .vc-presets-anim-section {
+html.hc-theming .vc-settings-tab .vc-optimizer-category-settings,
+html.hc-theming .vc-settings-tab .vc-presets-list,
+html.hc-theming .vc-settings-tab .vc-presets-anim-section {
     padding: 12px;
     border: 1px solid var(--hc-panel-border);
     border-radius: 14px;
@@ -502,206 +522,305 @@ a.hc-ui-hash:hover {
     margin-top: 16px;
 }
 
+/* stylelint-disable-next-line no-descending-specificity */
 .hc-panel > .vc-h5:first-child {
     margin-top: 2px;
 }
 
 .hc-panel > :last-child,
-.vc-settings-tab .vc-optimizer-category-settings .vc-plugins-setting-section,
-.vc-settings-tab .vc-presets-anim-section .vc-form-switch-container {
+html.hc-theming .vc-settings-tab .vc-optimizer-category-settings .vc-plugins-setting-section,
+html.hc-theming .vc-settings-tab .vc-presets-anim-section .vc-form-switch-container {
     margin-bottom: 0;
 }
 
-.vc-settings-tab .vc-card-primary,
-.vc-settings-tab .vc-card-normal,
-.vc-settings-tab .vc-stats-card:not(.vc-stats-hero),
-.vc-settings-tab .vc-addon-card {
+html.hc-theming .vc-settings-tab .vc-card-primary,
+html.hc-theming .vc-settings-tab .vc-card-normal,
+html.hc-theming .vc-settings-tab .vc-stats-card:not(.vc-stats-hero),
+html.hc-theming .vc-settings-tab .vc-addon-card {
     border-color: var(--hc-panel-border);
     border-radius: 14px;
     background-color: var(--hc-panel-bg);
 }
 
-.vc-settings-tab .vc-addon-card:hover {
-    border-color: rgb(175 227 127 / 22%);
+html.hc-theming .vc-settings-tab .vc-addon-card:hover {
+    border-color: rgb(var(--hc-accent-rgb) / 22%);
 }
 
-.vc-settings-tab .vc-stats-hero {
-    border-color: rgb(175 227 127 / 18%);
+html.hc-theming .vc-settings-tab .vc-stats-hero {
+    border-color: rgb(var(--hc-accent-rgb) / 18%);
     border-radius: 14px;
     background:
-        linear-gradient(135deg, rgb(175 227 127 / 7%), transparent 60%),
+        linear-gradient(135deg, rgb(var(--hc-accent-rgb) / 7%), transparent 60%),
         var(--hc-panel-bg);
 }
 
-.vc-settings-tab .vc-stats-hero-enabled,
-.vc-settings-tab .vc-stats-hero-categories {
+html.hc-theming .vc-settings-tab .vc-stats-hero-enabled,
+html.hc-theming .vc-settings-tab .vc-stats-hero-categories {
     --vc-stats-accent: var(--hc-accent);
 }
 
-.vc-settings-tab .vc-stats-hero-available,
-.vc-settings-tab .vc-stats-hero-patches {
+html.hc-theming .vc-settings-tab .vc-stats-hero-available,
+html.hc-theming .vc-settings-tab .vc-stats-hero-patches {
     --vc-stats-accent: var(--hc-accent-2);
 }
 
-.vc-settings-tab .vc-plugins-info-card,
-.vc-settings-tab .vc-plugin-stats,
-.vc-settings-tab .vc-plugins-bulk-actions {
+html.hc-theming .vc-settings-tab .vc-plugins-info-card,
+html.hc-theming .vc-settings-tab .vc-plugin-stats,
+html.hc-theming .vc-settings-tab .vc-plugins-bulk-actions {
     border-radius: 12px;
 }
 
-.vc-settings-tab .vc-settings-quickActions-pill {
+html.hc-theming .vc-settings-tab .vc-settings-quickActions-pill {
     border: 1px solid var(--hc-row-border);
     border-radius: 10px;
-    background: rgb(0 0 0 / 25%);
+    background: var(--hc-row-bg);
 }
 
-.vc-settings-tab .vc-settings-quickActions-pill:hover {
-    border-color: rgb(175 227 127 / 40%);
-    background: rgb(175 227 127 / 8%);
+html.hc-theming .vc-settings-tab .vc-settings-quickActions-pill:hover {
+    border-color: rgb(var(--hc-accent-rgb) / 40%);
+    background: rgb(var(--hc-accent-rgb) / 8%);
 }
 
-.vc-settings-tab .vc-settings-quickActions-img {
+html.hc-theming .vc-settings-tab .vc-settings-quickActions-img {
     color: var(--hc-accent);
 }
 
-.vc-settings-tab .vc-notice-info {
-    border-color: rgb(99 201 143 / 40%);
-    background: rgb(99 201 143 / 10%);
+html.hc-theming .vc-settings-tab .vc-notice-info {
+    border-color: color-mix(in srgb, var(--hc-accent-2) 40%, transparent);
+    background: color-mix(in srgb, var(--hc-accent-2) 10%, transparent);
 }
 
 /* Buttons: green for the main action, dark with a green edge for the rest. Themes force button colors, hence !important. */
-.vc-settings-tab .vc-btn-base.vc-btn-primary,
-.vc-settings-tab .vc-btn-base.vc-btn-positive {
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-btn-base.vc-btn-primary,
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-btn-base.vc-btn-positive {
     border-color: transparent !important;
     background-color: var(--hc-accent) !important;
     color: var(--hc-accent-ink) !important;
     font-weight: 700;
 }
 
-.vc-settings-tab .vc-btn-base.vc-btn-primary:hover:not(:disabled),
-.vc-settings-tab .vc-btn-base.vc-btn-positive:hover:not(:disabled) {
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-btn-base.vc-btn-primary:hover:not(:disabled),
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-btn-base.vc-btn-positive:hover:not(:disabled) {
     background-color: color-mix(in srgb, var(--hc-accent) 85%, #fff) !important;
 }
 
-.vc-settings-tab .vc-btn-base.vc-btn-secondary {
-    border: 1px solid rgb(175 227 127 / 30%) !important;
-    background-color: rgb(0 0 0 / 25%) !important;
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-btn-base.vc-btn-secondary {
+    border: 1px solid rgb(var(--hc-accent-rgb) / 30%) !important;
+    background-color: var(--hc-row-bg) !important;
     color: var(--hc-accent) !important;
     font-weight: 700;
 }
 
-.vc-settings-tab .vc-btn-base.vc-btn-secondary:hover:not(:disabled) {
-    border-color: rgb(175 227 127 / 55%) !important;
-    background-color: rgb(175 227 127 / 10%) !important;
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-btn-base.vc-btn-secondary:hover:not(:disabled) {
+    border-color: rgb(var(--hc-accent-rgb) / 55%) !important;
+    background-color: rgb(var(--hc-accent-rgb) / 10%) !important;
 }
 
-.vc-settings-tab .vc-btn-base.vc-btn-dangerPrimary,
-.vc-settings-tab .vc-btn-base.vc-btn-dangerSecondary {
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-btn-base.vc-btn-dangerPrimary,
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-btn-base.vc-btn-dangerSecondary {
     border: 1px solid rgb(242 63 66 / 45%) !important;
     background-color: rgb(242 63 66 / 12%) !important;
     color: #ff8f91 !important;
     font-weight: 700;
 }
 
-.vc-settings-tab .vc-btn-base.vc-btn-dangerPrimary:hover:not(:disabled),
-.vc-settings-tab .vc-btn-base.vc-btn-dangerSecondary:hover:not(:disabled) {
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-btn-base.vc-btn-dangerPrimary:hover:not(:disabled),
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-btn-base.vc-btn-dangerSecondary:hover:not(:disabled) {
     border-color: rgb(242 63 66 / 70%) !important;
     background-color: rgb(242 63 66 / 22%) !important;
 }
 
-.vc-settings-tab .vc-link {
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) .vc-link {
     color: var(--hc-accent);
 }
 
 /* Discord sliders, text boxes and dropdowns inside these pages. */
-.vc-settings-tab [class*="wrapper__"]:has(> input),
-.vc-settings-tab [class*="selectField__"] {
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="wrapper__"]:has(> input),
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="selectField__"] {
     border: 1px solid var(--hc-row-border);
     border-radius: 10px;
-    background: rgb(0 0 0 / 25%);
+    background: var(--hc-row-bg);
 }
 
-.vc-settings-tab [class*="wrapper__"]:has(> input):focus-within,
-.vc-settings-tab [class*="selectField__"]:focus-within {
-    border-color: rgb(175 227 127 / 55%);
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="wrapper__"]:has(> input):focus-within,
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="selectField__"]:focus-within {
+    border-color: rgb(var(--hc-accent-rgb) / 55%);
 }
 
-.vc-settings-tab [class*="barFill_"] {
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="barFill_"] {
     background: var(--hc-accent) !important;
 }
 
-.vc-settings-tab [class*="grabber_"] {
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="grabber_"] {
     border-color: var(--hc-accent) !important;
     background: var(--hc-accent-ink) !important;
 }
 
-.vc-settings-tab .vc-health-nav-item-active {
+html.hc-theming .vc-settings-tab .vc-health-nav-item-active {
     color: var(--hc-accent);
     border-bottom-color: var(--hc-accent);
-    background: rgb(175 227 127 / 8%);
+    background: rgb(var(--hc-accent-rgb) / 8%);
 }
 
-
 /* Settings sidebar sub-pages (Voice, Camera...) under the open page. */
-[class*="subnav_"] [role="listitem"] > [role="link"] {
+html.hc-theming [class*="subnav_"] [role="listitem"] > [role="link"] {
     border-radius: 8px;
     transition: background-color 0.18s ease, color 0.18s ease;
 }
 
-[class*="subnav_"] [role="listitem"] > [role="link"]:hover {
-    background: rgb(0 0 0 / 18%);
+html.hc-theming [class*="subnav_"] [role="listitem"] > [role="link"]:hover {
+    background: var(--hc-panel-bg);
 }
 
-[class*="subnav_"] [role="listitem"] > [role="link"][aria-current="page"] {
+html.hc-theming [class*="subnav_"] [role="listitem"] > [role="link"][aria-current="page"] {
     color: var(--hc-accent);
 }
 
 /* Settings sidebar: every page is a pill, lit green when open. The masked gradient edge follows Sudocord's settings navigation. */
-[class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"] {
+html.hc-theming [class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"] {
     position: relative;
-    border: 1px solid rgb(255 255 255 / 4%);
+    border: 1px solid var(--hc-row-border);
     border-radius: 10px;
-    background: rgb(0 0 0 / 10%);
+    background: var(--hc-panel-bg);
     transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
-[class*="sectionList_"] [class*="itemContainer_"] + [class*="itemContainer_"] {
+html.hc-theming [class*="sectionList_"] [class*="itemContainer_"] + [class*="itemContainer_"] {
     margin-top: 4px;
 }
 
-[class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"]:hover {
-    border-color: rgb(175 227 127 / 22%);
-    background: rgb(0 0 0 / 24%);
-    color: var(--header-primary, #f2f3f5);
+html.hc-theming [class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"]:hover {
+    border-color: rgb(var(--hc-accent-rgb) / 22%);
+    background: var(--hc-row-bg);
+    color: var(--hc-text);
     transform: translateX(2px);
 }
 
-[class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"]:hover svg {
+html.hc-theming [class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"]:hover svg {
     color: var(--hc-accent);
 }
 
-[class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"][aria-current="page"] {
+html.hc-theming [class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"][aria-current="page"] {
     border-color: transparent;
-    background: linear-gradient(90deg, rgb(175 227 127 / 16%), rgb(99 201 143 / 5%)), rgb(0 0 0 / 24%);
+    background: linear-gradient(90deg, rgb(var(--hc-accent-rgb) / 16%), color-mix(in srgb, var(--hc-accent-2) 5%, transparent)), var(--hc-row-bg);
     color: var(--hc-accent);
-    box-shadow: 0 0 16px rgb(175 227 127 / 10%);
+    box-shadow: 0 0 16px rgb(var(--hc-accent-rgb) / 10%);
     transform: none;
 }
 
-[class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"][aria-current="page"]::after {
+html.hc-theming [class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"][aria-current="page"]::after {
     content: "";
     position: absolute;
     inset: -1px;
     padding: 1px;
     border-radius: inherit;
-    background: linear-gradient(105deg, var(--hc-accent), rgb(99 201 143 / 30%)) border-box;
+    background: linear-gradient(105deg, var(--hc-accent), color-mix(in srgb, var(--hc-accent-2) 30%, transparent)) border-box;
     mask: linear-gradient(#fff, #fff) content-box, linear-gradient(#fff, #fff);
     mask-composite: exclude;
     pointer-events: none;
 }
 
-[class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"][aria-current="page"] svg {
+html.hc-theming [class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"][aria-current="page"] svg {
     color: var(--hc-accent);
+}
+
+/* Discord's own settings and HaloCord plugin windows: Discord's brand tokens turned green.
+   Theme wrappers inside re-declare the tokens, so they get the same values. */
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)),
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) [class*="theme-"]:not(.custom-user-profile-theme) {
+    --control-primary-background-default: var(--hc-accent);
+    --control-primary-background-hover: color-mix(in srgb, var(--hc-accent) 85%, #fff);
+    --control-primary-background-active: color-mix(in srgb, var(--hc-accent) 80%, #000);
+    --control-primary-text-default: var(--hc-accent-ink);
+    --control-primary-text-hover: var(--hc-accent-ink);
+    --control-primary-text-active: var(--hc-accent-ink);
+    --control-primary-icon-default: var(--hc-accent-ink);
+    --control-primary-icon-hover: var(--hc-accent-ink);
+    --control-primary-icon-active: var(--hc-accent-ink);
+    --control-brand-foreground: var(--hc-accent);
+    --control-brand-foreground-new: var(--hc-accent);
+    --background-brand: var(--hc-accent);
+    --text-brand: var(--hc-accent);
+    --icon-brand: var(--hc-accent);
+    --text-link: var(--hc-accent);
+    --border-focus: var(--hc-accent);
+    --focus-primary: var(--hc-accent);
+    --input-border-active: var(--hc-accent);
+    --radio-background-selected-default: var(--hc-accent);
+    --radio-background-selected-hover: color-mix(in srgb, var(--hc-accent) 85%, #fff);
+    --radio-background-active: color-mix(in srgb, var(--hc-accent) 80%, #000);
+    --radio-foreground-active: var(--hc-accent);
+    --radio-thumb-background-active: var(--hc-accent-ink);
+    --checkbox-background-selected-default: var(--hc-accent);
+    --checkbox-background-selected-hover: color-mix(in srgb, var(--hc-accent) 85%, #fff);
+    --checkbox-background-active: var(--hc-accent);
+    --checkbox-icon-active: var(--hc-accent-ink);
+    --switch-background-selected-default: var(--hc-accent);
+    --switch-background-selected-hover: color-mix(in srgb, var(--hc-accent) 85%, #fff);
+    --switch-background-active: var(--hc-accent);
+    --switch-border-selected-default: var(--hc-accent);
+    --switch-border-selected-hover: var(--hc-accent);
+    --switch-thumb-background-selected-default: var(--hc-accent-ink);
+    --switch-thumb-icon-active: var(--hc-accent);
+    --togglebutton-background-selected: rgb(var(--hc-accent-rgb) / 18%);
+    --togglebutton-background-selected-hover: rgb(var(--hc-accent-rgb) / 26%);
+    --togglebutton-border-selected: var(--hc-accent);
+    --togglebutton-border-active: var(--hc-accent);
+    --interactive-accent-background-selected: rgb(var(--hc-accent-rgb) / 18%);
+    --interactive-accent-background-hover: rgb(var(--hc-accent-rgb) / 12%);
+    --card-background-default: var(--hc-panel-bg);
+    --card-border-default: var(--hc-panel-border);
+    --border-subtle: var(--hc-row-border);
+    --scrollbar-thin-thumb: var(--hc-scroll-thumb);
+    --scrollbar-thin-track: transparent;
+    --scrollbar-auto-thumb: var(--hc-scroll-thumb);
+    --scrollbar-auto-track: transparent;
+    --scrollbar-auto-scrollbar-color-thumb: var(--hc-scroll-thumb);
+    --scrollbar-auto-scrollbar-color-track: transparent;
+}
+
+/* Discord's switch paints its colors inline, so only !important reaches it. */
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) label:has(input:checked) > [data-mana-component="switch"] {
+    border-color: var(--hc-accent) !important;
+    background-color: var(--hc-accent) !important;
+}
+
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) label:has(input:checked) > [data-mana-component="switch"] rect {
+    fill: var(--hc-accent-ink) !important;
+}
+
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) label:has(input:checked) > [data-mana-component="switch"] path {
+    fill: var(--hc-accent) !important;
+}
+
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) [class*="grabber_"] {
+    border-color: var(--hc-accent);
+}
+
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) :is([class*="thin_"], [class*="auto_"], [class*="scroller_"], [class*="Scroller_"]):not([class*="none_"]) {
+    scrollbar-color: var(--hc-scroll-thumb) transparent;
+    scrollbar-width: thin;
+}
+
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Accessibility: the sticky "Preview" label sits on a box so the page under it stays readable. */
+html.hc-theming [data-settings-panel-sticky-decoration] section[aria-label] > :first-child {
+    width: fit-content;
+    padding: 4px 12px;
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 999px;
+    background: var(--hc-window-bg);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
+    color: var(--hc-accent) !important;
+}
+
+/* Plugin windows: the HaloCord window surface. Themes that paint modals with !important keep their surface. */
+html.hc-theming [data-mana-component="modal"]:has(.hc-window) {
+    border: 1px solid var(--hc-panel-border);
+    background-color: var(--hc-window-bg);
 }
 
 @media (prefers-reduced-motion: reduce) {

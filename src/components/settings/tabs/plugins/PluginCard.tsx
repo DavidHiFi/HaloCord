@@ -43,7 +43,7 @@ function showEnableWarningModal(plugin: Plugin, onConfirm: () => void) {
             onConfirm={onConfirm}
             onCancel={props.onClose}
         >
-            <div>
+            <div className="hc-window">
                 <Paragraph>
                     <strong>{plugin.name}</strong> is an experimental plugin that is in active experimentation or development.
                 </Paragraph>

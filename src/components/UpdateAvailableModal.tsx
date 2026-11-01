@@ -36,7 +36,7 @@ function UpdateAvailableModal({ commits, modalProps, onConfirm, onUpdate, title,
             <Modal {...modalProps} title={<>
                 <Flex gap={8}>
                     <img className="vc-update-modal-icon" src={UPDATE_ICON} alt="" />
-                    <div className="vc-update-modal-heading">
+                    <div className="vc-update-modal-heading hc-window">
                         <h2 className="vc-update-modal-title">{title}</h2>
                     </div>
                 </Flex>

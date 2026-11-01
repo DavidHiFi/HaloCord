@@ -165,12 +165,6 @@
     border: 1px solid color-mix(in srgb, #e67e22 50%, transparent);
 }
 
-.vc-plugin-modal-warning-badge.vc-plugin-modal-warning-legacy {
-    background-color: color-mix(in srgb, #d35400 20%, transparent);
-    color: #e67e22;
-    border: 1px solid color-mix(in srgb, #d35400 50%, transparent);
-}
-
 .vc-plugin-modal-warning-icon {
     width: 20px;
     height: 20px;
@@ -192,11 +186,6 @@
 .vc-plugin-modal-warning-banner.vc-plugin-modal-warning-banner-experimental {
     background-color: color-mix(in srgb, #e67e22 12%, transparent);
     border: 1px solid color-mix(in srgb, #e67e22 40%, transparent);
-}
-
-.vc-plugin-modal-warning-banner.vc-plugin-modal-warning-banner-legacy {
-    background-color: color-mix(in srgb, #d35400 12%, transparent);
-    border: 1px solid color-mix(in srgb, #d35400 40%, transparent);
 }
 
 .vc-plugin-modal-warning-banner-icon {
