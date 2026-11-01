@@ -330,8 +330,8 @@ importers:
         specifier: 19.1.0
         version: 19.1.0
       moment:
-        specifier: 2.30.1
-        version: 2.30.1
+        specifier: 2.31.0
+        version: 2.31.0
       type-fest:
         specifier: ^5.7.0
         version: 5.7.0
@@ -346,13 +346,13 @@ importers:
         version: 26.0.1
       '@types/react':
         specifier: ^19.0.10
-        version: 19.0.12
+        version: 19.1.0
       '@types/react-dom':
         specifier: 19.0.4
-        version: 19.0.4(@types/react@19.0.12)
+        version: 19.0.4(@types/react@19.1.0)
       '@vencord/discord-types':
         specifier: ^1.0.2
-        version: 1.0.2(@types/react@19.0.12)
+        version: 1.0.2(@types/react@19.1.0)
       highlight.js:
         specifier: 11.11.1
         version: 11.11.1
@@ -784,9 +784,6 @@ packages:
     resolution: {integrity: sha512-21E2zejNNRtjG4hKIyJz4aWswGEcNFTgttA0bZIRGjj1HA/tbSUxIJnIcYbn98pwJck0cS1bsQhn6eaKqbcFWw==}
     peerDependencies:
       '@types/react': ^19.0.0
-
-  '@types/react@19.0.12':
-    resolution: {integrity: sha512-V6Ar115dBDrjbtXSrS+/Oruobc+qVbbUxDFC1RSbRqLt5SYvxxyIDrSC85RWml54g+jfNeEMZhEj7wW07ONQhA==}
 
   '@types/react@19.1.0':
     resolution: {integrity: sha512-UaicktuQI+9UKyA4njtDOGBD/67t8YEBt2xdfqu8+gP9hqPUPsiXlNPcpS2gVdjmis5GKPG3fCxbQLVgxsQZ8w==}
@@ -1871,6 +1868,9 @@ packages:
   moment@2.30.1:
     resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
 
+  moment@2.31.0:
+    resolution: {integrity: sha512-0acOTfMiWOheYS4eoWb80yYMb/JLvVv9SHbs2PehaDzfUG0Bw855SKyk0IKTnPGa5+U2bmi3W68l1+sGLX/pvw==}
+
   monaco-editor@0.55.1:
     resolution: {integrity: sha512-jz4x+TJNFHwHtwuV9vA9rMujcZRb0CEilTEwG2rRSpe/A7Jdkuj8xPKttCgOh+v/lkHy7HsZ64oj+q3xoAFl9A==}
 
@@ -2790,17 +2790,13 @@ snapshots:
     dependencies:
       undici-types: 8.3.0
 
-  '@types/react-dom@19.0.4(@types/react@19.0.12)':
+  '@types/react-dom@19.0.4(@types/react@19.1.0)':
     dependencies:
-      '@types/react': 19.0.12
+      '@types/react': 19.1.0
 
   '@types/react-dom@19.1.0(@types/react@19.1.0)':
     dependencies:
       '@types/react': 19.1.0
-
-  '@types/react@19.0.12':
-    dependencies:
-      csstype: 3.2.3
 
   '@types/react@19.1.0':
     dependencies:
@@ -2914,9 +2910,9 @@ snapshots:
       vscode-oniguruma: 1.7.0
       vscode-textmate: 5.2.0
 
-  '@vencord/discord-types@1.0.2(@types/react@19.0.12)':
+  '@vencord/discord-types@1.0.2(@types/react@19.1.0)':
     dependencies:
-      '@types/react': 19.0.12
+      '@types/react': 19.1.0
       moment: 2.22.2
       type-fest: 5.7.0
 
@@ -4083,6 +4079,8 @@ snapshots:
   moment@2.22.2: {}
 
   moment@2.30.1: {}
+
+  moment@2.31.0: {}
 
   monaco-editor@0.55.1:
     dependencies:
