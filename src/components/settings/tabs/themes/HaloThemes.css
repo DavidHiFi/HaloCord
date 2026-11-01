@@ -1,0 +1,202 @@
+.hc-mc-root.hc-mc-root {
+    display: flex;
+    flex-direction: column;
+    width: min(760px, 94vw);
+    height: min(680px, 90vh);
+    max-height: none;
+    padding: 0;
+    overflow: visible;
+}
+
+.hc-mc-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 24px 24px 12px;
+    border-bottom: 1px solid var(--hc-panel-border, var(--border-subtle));
+}
+
+.hc-mc-title {
+    flex: 1;
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--hc-text, var(--text-strong));
+}
+
+.hc-mc-close {
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    color: var(--hc-text-muted, var(--interactive-normal));
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.hc-mc-close:hover {
+    background: var(--hc-row-bg, var(--background-modifier-hover));
+    color: var(--hc-text, var(--interactive-hover));
+}
+
+.hc-mc-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    padding: 20px 24px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--hc-scroll-thumb, var(--scrollbar-thin-thumb)) transparent;
+}
+
+.hc-mc-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.hc-mc-foot {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--hc-panel-border, var(--border-subtle));
+    border-radius: 0 0 var(--radius-md, 8px) var(--radius-md, 8px);
+    background: var(--hc-panel-bg, var(--background-secondary));
+}
+
+.hc-mc-spacer {
+    flex: 1;
+}
+
+.hc-mc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 4px 2px 2px;
+}
+
+.hc-mc-button,
+.hc-mc-segment {
+    padding: 7px 14px;
+    border: 1px solid var(--hc-row-border, var(--border-subtle));
+    border-radius: 8px;
+    background: var(--hc-row-bg, var(--background-secondary));
+    color: var(--hc-text, var(--text-normal));
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.hc-mc-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.hc-mc-button-danger {
+    color: var(--text-feedback-critical, var(--status-danger));
+}
+
+.hc-mc-go {
+    padding: 9px 22px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--hc-accent, var(--brand-500));
+    color: var(--hc-accent-ink, var(--white));
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.hc-mc-go:hover {
+    background: var(--hc-accent-2, var(--brand-560));
+}
+
+.hc-mc-segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.hc-mc-segment-on,
+.hc-mc-segment-on:hover {
+    border-color: transparent;
+    background: var(--hc-accent, var(--brand-500));
+    color: var(--hc-accent-ink, var(--white));
+}
+
+.hc-mc-input {
+    box-sizing: border-box;
+    width: 110px;
+    padding: 7px 10px;
+    border: 1px solid var(--hc-row-border, var(--border-subtle));
+    border-radius: 8px;
+    outline: none;
+    background: var(--hc-window-bg, var(--input-background));
+    color: var(--hc-text, var(--text-normal));
+    font-size: 13px;
+}
+
+.hc-mc-input:focus {
+    border-color: var(--hc-accent, var(--brand-500));
+}
+
+.hc-mc-input-bad,
+.hc-mc-input-bad:focus {
+    border-color: var(--text-feedback-critical, var(--status-danger));
+}
+
+.hc-mc-font {
+    width: 220px;
+}
+
+.hc-mc-hex {
+    font-family: var(--font-code);
+}
+
+.hc-mc-swatch {
+    width: 34px;
+    height: 32px;
+    padding: 2px;
+    border: 1px solid var(--hc-row-border, var(--border-subtle));
+    border-radius: 8px;
+    background: none;
+    cursor: pointer;
+}
+
+.hc-mc-button:focus-visible,
+.hc-mc-segment:focus-visible,
+.hc-mc-go:focus-visible,
+.hc-mc-close:focus-visible,
+.hc-mc-swatch:focus-visible {
+    outline: 2px solid var(--hc-accent, var(--brand-500));
+    outline-offset: 2px;
+}
+
+.hc-mc-filter-row {
+    display: flex;
+    gap: 8px;
+}
+
+.hc-mc-filter-row > :first-child {
+    flex: 1;
+}
+
+.hc-mc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 12px;
+}
+
+.hc-mc-empty {
+    margin: 4px 2px;
+    color: var(--hc-text-muted, var(--text-muted));
+    font-size: 13px;
+}
+
+.hc-mc-button:hover:not(:disabled),
+.hc-mc-segment:not(.hc-mc-segment-on):hover {
+    border-color: color-mix(in srgb, var(--hc-accent, var(--brand-500)) 55%, transparent);
+}

@@ -114,9 +114,10 @@ export interface ThemeCardProps {
     isLocal?: boolean;
     activationMode?: ThemeActivationMode;
     onActivationModeChange?: (mode: ThemeActivationMode) => void;
+    onOpenMenu?: () => void;
 }
 
-export function ThemeCard({ theme, enabled, onChange, onDelete, showDeleteButton, onEditName, disabled, onPin, isPinned, onRefresh, onOpenFolder, onCopyUrl, onDownload, onViewCode, themeLink, isLocal, activationMode = "always", onActivationModeChange }: ThemeCardProps) {
+export function ThemeCard({ theme, enabled, onChange, onDelete, showDeleteButton, onEditName, disabled, onPin, isPinned, onRefresh, onOpenFolder, onCopyUrl, onDownload, onViewCode, themeLink, isLocal, activationMode = "always", onActivationModeChange, onOpenMenu }: ThemeCardProps) {
     const openThemeMenu = (e: React.MouseEvent) => {
         ContextMenuApi.openContextMenu(e, () => (
             <ThemeActivationMenu
@@ -218,10 +219,10 @@ export function ThemeCard({ theme, enabled, onChange, onDelete, showDeleteButton
             setEnabled={onChange}
             disabled={disabled}
             infoButton={
-                (IS_WEB || showDeleteButton || onPin) && (
+                (IS_WEB || showDeleteButton || onPin || onOpenMenu) && (
                     <div
                         className={cl("menu-button")}
-                        onClick={openThemeMenu}
+                        onClick={onOpenMenu ?? openThemeMenu}
                     >
                         <CogWheel />
                     </div>
