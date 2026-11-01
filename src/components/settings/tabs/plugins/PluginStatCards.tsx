@@ -9,16 +9,9 @@ import "./styles.css";
 import { BaseText } from "@components/BaseText";
 import { Tooltip } from "@webpack/common";
 
-export function StockPluginsCard({ totalStockPlugins, enabledStockPlugins, legacyCount, experimentalCount }) {
-    const hasBreakdown = typeof legacyCount === "number" && typeof experimentalCount === "number";
+export function StockPluginsCard({ totalStockPlugins, enabledStockPlugins, experimentalCount }) {
     const total = (
-        <Tooltip
-            text={
-                hasBreakdown
-                    ? `${legacyCount} legacy · ${experimentalCount} experimental`
-                    : ""
-            }
-        >
+        <Tooltip text={typeof experimentalCount === "number" ? `${experimentalCount} experimental` : ""}>
             {tooltipProps => (
                 <span style={{ display: "inline", position: "relative" }}>
                     <BaseText size="xl" weight="bold" {...tooltipProps}><span data-tc-total-plugins>{totalStockPlugins}</span></BaseText>

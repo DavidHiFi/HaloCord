@@ -76,11 +76,8 @@ export const PluginTags = [
     "Utility",
     "Voice",
     "Nightcord",
-    "betterdiscord",
-    "bd",
     "loader",
     "experimental",
-    "legacy",
     "TestCord Modified"
 ] as const;
 
@@ -161,8 +158,6 @@ export interface PluginDef {
     tags?: PluginTag[];
     /** Whether this plugin is experimental */
     experimental?: boolean;
-    /** Whether this plugin is legacy/deprecated */
-    legacy?: boolean;
     authors: PluginAuthor[];
     start?(): void;
     stop?(): void;

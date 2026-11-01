@@ -38,7 +38,7 @@ import { Logger } from "@utils/Logger";
 import { Margins } from "@utils/margins";
 import { classes } from "@utils/misc";
 import { PluginTarget } from "@utils/pluginTargets";
-import { isExperimentalPlugin, isLegacyPlugin } from "@utils/pluginWarnings";
+import { isExperimentalPlugin } from "@utils/pluginWarnings";
 import { promptToRestart } from "@utils/promptToRestart";
 import { useAwaiter, useCleanupEffect, useIntersection } from "@utils/react";
 import { isHaloCordPlugin, isTestcordModified } from "@utils/testcordIcons";
@@ -167,9 +167,7 @@ const SearchStatus = {
     NEW: 7,
     USER_PLUGINS: 8,
     API_PLUGINS: 9,
-    BETTERDISCORD: 10,
     EXPERIMENTAL: 11,
-    LEGACY: 12,
     TESTCORD_MODIFIED: 13,
     HALOCORD: 14,
 } as const;
@@ -371,17 +369,8 @@ function PluginSettings() {
             case SearchStatus.API_PLUGINS:
                 if (!plugin.name.endsWith("API")) return false;
                 break;
-            case SearchStatus.BETTERDISCORD:
-                // Check if plugin is a BD plugin by looking at folderName or tags
-                const pluginMetaInfo = PluginMeta[plugin.name];
-                if (!pluginMetaInfo) return false;
-                return pluginMetaInfo.folderName?.startsWith("src/Betterdiscordplugins/") ||
-                    plugin.tags?.includes("betterdiscord");
             case SearchStatus.EXPERIMENTAL:
                 if (!isExperimentalPlugin(plugin.name) && !plugin.experimental && !plugin.tags?.includes("experimental")) return false;
-                break;
-            case SearchStatus.LEGACY:
-                if (!isLegacyPlugin(plugin.name) && !plugin.legacy && !plugin.tags?.includes("legacy")) return false;
                 break;
             case SearchStatus.TESTCORD_MODIFIED:
                 if (!isTestcordModified(plugin, PluginMeta[plugin.name]?.folderName)) return false;
@@ -543,7 +532,7 @@ function PluginSettings() {
     }
 
     // Code directly taken from supportHelper.tsx
-    const { totalStockPlugins, totalUserPlugins, enabledStockPlugins, enabledUserPlugins, enabledPlugins, legacyPluginCount, experimentalPluginCount } = useMemo(() => {
+    const { totalStockPlugins, totalUserPlugins, enabledStockPlugins, enabledUserPlugins, enabledPlugins, experimentalPluginCount } = useMemo(() => {
         const isApiPlugin = (plugin: string) => plugin.endsWith("API") || Plugins[plugin].required;
 
         const totalPlugins = Object.keys(Plugins).filter(p => !isApiPlugin(p));
@@ -555,7 +544,6 @@ function PluginSettings() {
         const enabledStockPlugins = enabledPlugins.filter(p => !PluginMeta[p].userPlugin).length;
         const enabledUserPlugins = enabledPlugins.filter(p => PluginMeta[p].userPlugin).length;
 
-        const isLegacy = (name: string) => isLegacyPlugin(name) || Plugins[name].legacy || Plugins[name].tags?.includes("legacy");
         const isExperimental = (name: string) => isExperimentalPlugin(name) || Plugins[name].experimental || Plugins[name].tags?.includes("experimental");
 
         return {
@@ -564,7 +552,6 @@ function PluginSettings() {
             enabledStockPlugins,
             enabledUserPlugins,
             enabledPlugins,
-            legacyPluginCount: stockPluginNames.filter(isLegacy).length,
             experimentalPluginCount: stockPluginNames.filter(isExperimental).length
         };
     }, [settings.plugins]);
@@ -626,7 +613,6 @@ function PluginSettings() {
                 <StockPluginsCard
                     totalStockPlugins={totalStockPlugins}
                     enabledStockPlugins={enabledStockPlugins}
-                    legacyCount={legacyPluginCount}
                     experimentalCount={experimentalPluginCount}
                 />
                 <UserPluginsCard
@@ -669,9 +655,7 @@ function PluginSettings() {
                             { label: "Show New", value: SearchStatus.NEW },
                             hasUserPlugins && { label: "Show UserPlugins", value: SearchStatus.USER_PLUGINS },
                             { label: "Show API Plugins", value: SearchStatus.API_PLUGINS },
-                            { label: "Show BetterDiscord", value: SearchStatus.BETTERDISCORD },
                             { label: "Show Experimental", value: SearchStatus.EXPERIMENTAL },
-                            { label: "Show Legacy", value: SearchStatus.LEGACY },
                         ].filter(isTruthy)}
                         serialize={String}
                         select={status => setSearchValue(prev => ({ ...prev, status }))}

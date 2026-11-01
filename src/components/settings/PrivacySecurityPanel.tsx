@@ -278,7 +278,7 @@ function parseUrlParts(rawUrl: string): ParsedUrlParts {
 
 function formatAbsoluteTime(ts: number): string {
     try {
-        return new Date(ts).toLocaleString();
+        return new Date(ts).toLocaleString(undefined, { hour12: true });
     } catch {
         return String(ts);
     }

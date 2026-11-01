@@ -550,13 +550,6 @@
     border: 1px solid color-mix(in srgb, #e67e22 45%, transparent);
 }
 
-.vc-plugins-card-warning.vc-plugins-plugin-warning-legacy,
-.vc-plugins-card-warning[class*="legacy"] {
-    background-color: color-mix(in srgb, #d35400 20%, transparent);
-    color: #e67e22;
-    border: 1px solid color-mix(in srgb, #d35400 45%, transparent);
-}
-
 .vc-plugins-warning-icon-small {
     width: 20px;
     height: 20px;

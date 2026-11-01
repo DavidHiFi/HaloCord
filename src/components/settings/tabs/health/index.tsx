@@ -40,7 +40,7 @@ function formatRelative(ts: number): string {
     if (diff < 60_000) return `${Math.round(diff / 1000)}s ago`;
     if (diff < 3600_000) return `${Math.round(diff / 60_000)}m ago`;
     if (diff < 86_400_000) return `${Math.round(diff / 3600_000)}h ago`;
-    return new Date(ts).toLocaleString();
+    return new Date(ts).toLocaleString(undefined, { hour12: true });
 }
 
 function formatUptime(ms: number): string {
@@ -65,7 +65,7 @@ function UptimeClock() {
     return (
         <div
             className="vc-plugin-health-uptime"
-            title={`Client launched ${new Date(startedAt).toLocaleString()}`}
+            title={`Client launched ${new Date(startedAt).toLocaleString(undefined, { hour12: true })}`}
         >
             <span className="vc-plugin-health-uptime-label">Uptime</span>
             <span className="vc-plugin-health-uptime-value">
@@ -817,7 +817,7 @@ function SessionRow({ session, isCurrent, ignoreSourceHistory }: { session: Sess
                     {hasBroken && (
                         <span className={`vc-plugin-health-chevron vc-plugin-health-chevron-sm${expanded ? " vc-plugin-health-chevron-open" : ""}`}>▸</span>
                     )}
-                    <strong>{new Date(session.startedAt).toLocaleString()}</strong>
+                    <strong>{new Date(session.startedAt).toLocaleString(undefined, { hour12: true })}</strong>
                     {isCurrent && <span className="vc-plugin-health-session-current"> (current)</span>}
                 </div>
                 <div className="vc-plugin-health-session-counts">
@@ -2034,7 +2034,7 @@ function HealthTab() {
                             <Card className="vc-plugin-health-since-healthy">
                                 <HeadingSecondary>Changes since your last healthy session</HeadingSecondary>
                                 <Paragraph color="text-subtle" className={Margins.bottom8}>
-                                    Comparing against {new Date(sinceHealthy.at).toLocaleString()} — the most recent
+                                    Comparing against {new Date(sinceHealthy.at).toLocaleString(undefined, { hour12: true })} — the most recent
                                     session with no recorded failures.
                                 </Paragraph>
                                 <div className="vc-plugin-health-changes-row">
