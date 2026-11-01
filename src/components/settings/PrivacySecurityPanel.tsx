@@ -6,10 +6,16 @@
 
 import "./PrivacySecurityPanel.css";
 
+import { hasAnyVisibleSettings, isPluginEnabled, setPluginEnabled } from "@api/PluginManager";
 import { useSettings } from "@api/Settings";
+import { Button } from "@components/Button";
 import { Card } from "@components/Card";
 import { SettingsTab } from "@components/settings/tabs/BaseTab";
-import { Modal, openModal, React, useEffect, useRef, useState } from "@webpack/common";
+import { openPluginModal } from "@components/settings/tabs/plugins/PluginModal";
+import { relaunch } from "@utils/native";
+import { Alerts, Modal, openModal, React, useEffect, useRef, useState } from "@webpack/common";
+
+import Plugins from "~plugins";
 
 export interface CoveredSurfacesState {
     scienceAnalytics: boolean;
@@ -23,6 +29,23 @@ export interface CoveredSurfacesState {
     remoteCodeGuard: boolean;
     fetchXhrBeacon: boolean;
     linkTrackerGuard: boolean;
+}
+
+const FOLDED_PLUGINS = [
+    { name: "NoTelemetry", title: "Block Extra Telemetry", description: "Also blocks experiment reports, call diagnostics, remote debug logs and Sentry crash reports." },
+    { name: "ClearURLs", title: "Clean Links You Send", description: "Removes tracking parts such as utm and fbclid from links in your messages." },
+    { name: "AlwaysTrust", title: "Skip Link Warnings", description: "Opens links and downloads without Discord's untrusted site and dangerous file popups." }
+] as const;
+
+function togglePlugin(name: string, enabled: boolean) {
+    if (!setPluginEnabled(name, enabled)) return;
+    Alerts.show({
+        title: "Restart HaloCord?",
+        body: "This change applies after a restart.",
+        confirmText: "Restart now",
+        cancelText: "Later",
+        onConfirm: relaunch
+    });
 }
 
 export type BlockOutcome = "blocked" | "stripped" | "monitored" | "alert";
@@ -269,7 +292,7 @@ export function PrivacySecurityPanel() {
     const [copiedField, setCopiedField] = useState<string | null>(null);
     const LOGS_PER_PAGE = 4;
 
-    const settings = useSettings(["plugins.NoTrack.disableAnalytics", "plugins.CustomDNS.rewriteFetch"]);
+    const settings = useSettings(["plugins.NoTrack.disableAnalytics", "plugins.CustomDNS.rewriteFetch", ...FOLDED_PLUGINS.map(p => `plugins.${p.name}.enabled` as const)]);
     const noTrackOn = settings.plugins?.NoTrack?.disableAnalytics !== false;
     const dnsRewrite = settings.plugins?.CustomDNS?.rewriteFetch === true;
 
@@ -1249,6 +1272,28 @@ export function PrivacySecurityPanel() {
                                 <span className="ps-toggle-knob" />
                             </button>
                         </div>
+                        {FOLDED_PLUGINS.map(({ name, title, description }) => {
+                            const on = isPluginEnabled(name);
+                            return (
+                                <div className="ps-toggle-row" key={name}>
+                                    <div className="ps-toggle-info">
+                                        <span className="ps-toggle-title">{title}</span>
+                                        <span className="ps-toggle-desc">{description}</span>
+                                    </div>
+                                    {hasAnyVisibleSettings(Plugins[name]) && (
+                                        <Button variant="secondary" size="small" onClick={() => openPluginModal(Plugins[name])}>Options</Button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        className={`ps-toggle-switch${on ? " ps-toggle-switch-on" : ""}`}
+                                        onClick={() => togglePlugin(name, !on)}
+                                        aria-label={`Toggle ${title}`}
+                                    >
+                                        <span className="ps-toggle-knob" />
+                                    </button>
+                                </div>
+                            );
+                        })}
                         {EXPERIMENTS.map(experiment => (
                             <div className="ps-toggle-row" key={experiment.key}>
                                 <div className="ps-toggle-info">

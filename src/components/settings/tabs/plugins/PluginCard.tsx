@@ -17,7 +17,7 @@ import { Logger } from "@utils/Logger";
 import { Margins } from "@utils/margins";
 import { classes } from "@utils/misc";
 import { getPluginWarning, PluginWarningInfo } from "@utils/pluginWarnings";
-import { getTestcordModifiedDetails, isTestcordModified, TestcordPluginIconUrl } from "@utils/testcordIcons";
+import { getTestcordModifiedDetails, HaloCordPluginIconUrl, isHaloCordPlugin, isTestcordModified, TestcordPluginIconUrl } from "@utils/testcordIcons";
 import { Plugin } from "@utils/types";
 import { ConfirmModal, openModal, React, showToast, Toasts, Tooltip } from "@webpack/common";
 
@@ -229,10 +229,16 @@ showToast(msg, Toasts.Type.FAILURE, {
             title: "Vencord Plugin"
         },
         {
-            condition: isTestcordPlugin,
-            src: TestcordPluginIconUrl,
+            condition: isHaloCordPlugin(plugin),
+            src: HaloCordPluginIconUrl,
             alt: "HaloCord",
             title: "HaloCord Plugin"
+        },
+        {
+            condition: isTestcordPlugin,
+            src: TestcordPluginIconUrl,
+            alt: "TestCord",
+            title: "TestCord Plugin"
         },
         {
             condition: isBDPlugin,
@@ -259,8 +265,8 @@ showToast(msg, Toasts.Type.FAILURE, {
     const maxVisibleTags = warning ? 1 : 2;
     const tags = React.useMemo(() => {
         const list = [...(plugin.tags ?? [])];
-        if (isTestcordMod && !list.includes("HaloCord Modified")) {
-            list.unshift("HaloCord Modified");
+        if (isTestcordMod && !list.includes("TestCord Modified")) {
+            list.unshift("TestCord Modified");
         }
         return list;
     }, [plugin.tags, isTestcordMod]);

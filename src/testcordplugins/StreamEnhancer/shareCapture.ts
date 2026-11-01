@@ -9,7 +9,8 @@
 // everything except HaloCord (so the call and your mic never go out twice). The capture runs in
 // the shell (halocord-loopback.exe); a chosen input device or a camera comes from getUserMedia.
 
-export type ShareChoice = { kind: "desktop" | "device"; id: string; audio: string; };
+// `muted` starts the stream with its sound track switched off, so the stream menu can switch it on later.
+export type ShareChoice = { kind: "desktop" | "device"; id: string; audio: string; muted?: boolean; };
 
 interface NativeShare {
     selectShareSource?: (id: string) => Promise<void>;
@@ -102,6 +103,14 @@ const videoConstraints = (c: MediaStreamConstraints | undefined) =>
     c?.video && typeof c.video === "object" ? c.video : {};
 
 let restore: (() => void) | null = null;
+let liveSound: MediaStreamTrack | null = null;
+
+// Switches the running stream's sound on or off. False when no share with sound is running.
+export const setLiveShareAudio = (on: boolean) => {
+    if (!liveSound) return false;
+    liveSound.enabled = on;
+    return true;
+};
 
 export const installShareCapture = () => {
     if (restore || !navigator.mediaDevices?.getDisplayMedia) return;
@@ -118,12 +127,17 @@ export const installShareCapture = () => {
         if (!constraints?.audio || choice?.audio === "none") return stream;
         const sound = await pickAudio(choice).catch(e => { console.error("[HaloCord] stream sound failed", e); return null; });
         if (!sound?.track) return stream;
+        // The mic-processing hook in the userscript must never swap this track for the mic.
+        (sound.track as MediaStreamTrack & { __haloStreamAudio?: boolean; }).__haloStreamAudio = true;
+        sound.track.enabled = !choice?.muted;
+        liveSound = sound.track;
         stream.addTrack(sound.track);
+        const release = () => { if (liveSound === sound.track) liveSound = null; sound.stop(); sound.track.stop(); };
         // Discord ends a share with track.stop(), which fires no 'ended' event, so watch both.
         for (const t of stream.getVideoTracks()) {
             const { stop } = t;
-            t.stop = function () { sound.stop(); sound.track.stop(); return stop.call(t); };
-            t.addEventListener("ended", () => { sound.stop(); sound.track.stop(); });
+            t.stop = function () { release(); return stop.call(t); };
+            t.addEventListener("ended", release);
         }
         return stream;
     };

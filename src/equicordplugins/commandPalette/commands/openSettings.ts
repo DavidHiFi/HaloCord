@@ -30,7 +30,7 @@ export const DISCORD_SETTINGS_ROUTES: SettingsRoute[] = [
     { route: "family_center", label: "Family Center", keywords: ["family", "safety"] },
     { route: "advanced", label: "Advanced", keywords: ["developer"] },
     { route: "testcord_main", label: "HaloCord", keywords: ["vencord", "equicord"] },
-    { route: "testcord_plugins", label: "HaloCord Plugins", keywords: ["plugins"] },
+    { route: "testcord_plugins", label: "TestCord Plugins", keywords: ["plugins"] },
     { route: "testcord_themes", label: "HaloCord Themes", keywords: ["themes", "css"] },
     { route: "testcord_updater", label: "HaloCord Updater", keywords: ["update"] },
     { route: "testcord_changelog", label: "HaloCord Changelog", keywords: ["changelog", "news"] }

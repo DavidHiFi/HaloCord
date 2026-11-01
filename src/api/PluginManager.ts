@@ -338,6 +338,25 @@ export function startDependenciesRecursive(p: Plugin) {
     return { restartNeeded, failures };
 }
 
+/**
+ * Turns a plugin on or off from a settings page outside the plugin list (HaloCord folds some
+ * plugins into Privacy & Security and Voice & Video). Returns true when the change needs a restart.
+ */
+export function setPluginEnabled(name: string, enabled: boolean): boolean {
+    const p: Plugin | undefined = Plugins[name];
+    if (!p || isPluginEnabled(name) === enabled) return false;
+    const setState = (on: boolean) => {
+        Settings.plugins[name] ??= { enabled: on };
+        Settings.plugins[name].enabled = on;
+    };
+    setState(enabled);
+    void PluginHealth.recordPluginChange(name, enabled);
+    if ((enabled && startDependenciesRecursive(p).restartNeeded) || pluginRequiresRestart(p)) return true;
+    if (!enabled && !p.started) return false;
+    if (!(enabled ? startPlugin(p) : stopPlugin(p))) setState(!enabled);
+    return false;
+}
+
 // Original (user-authored) flux handlers, kept separate from the profiling
 // wrappers installed on p.flux. Without this, every subscribe/unsubscribe
 // cycle would wrap the previous wrapper again — stacking nested wrappers and

@@ -15,7 +15,7 @@ import ErrorBoundary from "@components/ErrorBoundary";
 import { TestcordDevs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import definePlugin, { makeRange, OptionType } from "@utils/types";
-import { MediaEngineStore, React, SelectedChannelStore, UserStore, VoiceStateStore } from "@webpack/common";
+import { createRoot, MediaEngineStore, React, SelectedChannelStore, UserStore, useStateFromStores, VoiceStateStore } from "@webpack/common";
 
 import meterStyle from "./style.css?managed";
 
@@ -340,6 +340,16 @@ const settings = definePluginSettings({
         markers: makeRange(25, 100, 5),
         default: 50,
         stickToMarkers: true
+    },
+    showWhileDeafened: {
+        type: OptionType.BOOLEAN,
+        description: "Show VU meters and the speaking glow while you are deafened.",
+        default: false
+    },
+    showMutedStreamAudio: {
+        type: OptionType.BOOLEAN,
+        description: "Show screen share audio on VU meters while you have the stream muted.",
+        default: false
     }
 }).withPrivateSettings<{ peakHoldEnabled?: boolean; }>();
 
@@ -507,10 +517,37 @@ function webSelf(conn: VoiceConnection): AudioOutput | undefined {
     return webSelfOutput;
 }
 
+// Web clients: a screen share's sound arrives on its own stream connection. Viewers get it as
+// that connection's output; the streamer's own sound is the connection's input.
+function webStreamOutputs() {
+    const found: Record<string, AudioOutput> = {};
+    const engine = MediaEngineStore.getMediaEngine();
+    if (!engine?.connections) return found;
+    const me = UserStore.getCurrentUser()?.id;
+    for (const conn of engine.connections as Iterable<VoiceConnection>) {
+        const owner = conn?.context === "stream" ? conn.streamUserId : undefined;
+        if (!owner) continue;
+        const key = STREAM_KEY(owner);
+        const output = Object.values(conn.outputs ?? {}).find(o => o?.stream?.getAudioTracks().length);
+        if (output) {
+            found[key] = output;
+            continue;
+        }
+        const track = owner === me ? conn.input?.stream?.getAudioTracks()[0] : undefined;
+        if (!track) continue;
+        if (webStreamInputs.get(key)?.stream.getAudioTracks()[0] !== track) webStreamInputs.set(key, { id: key, stream: new MediaStream([track]) });
+        found[key] = webStreamInputs.get(key)!;
+    }
+    return found;
+}
+
+const webStreamInputs = new Map<string, AudioOutput>();
+
 function syncWebMeters(conn: VoiceConnection) {
     const outputs = { ...conn.outputs };
     const self = webSelf(conn);
     if (self) outputs[self.id] = self;
+    Object.assign(outputs, webStreamOutputs());
     const source = { ...conn, outputs };
 
     for (const userId of Object.keys(outputs)) {
@@ -860,13 +897,25 @@ function noteActive(meter: Meter, rawLevel: number, now: number) {
     if (rawLevel >= ACTIVE_LEVEL) meter.activeUntil = now + ACTIVE_HOLD_MS;
 }
 
+// Deafened, you hear nobody, so meters and the speaking glow hide unless the owner opts in.
+function deafHidden() {
+    return MediaEngineStore.isDeaf() && !settings.store.showWhileDeafened;
+}
+
+// A watched stream you muted (or set to 0%) plays nothing, so its meter stays flat.
+function streamMuted(ownerId: string) {
+    if (settings.store.showMutedStreamAudio || ownerId === UserStore.getCurrentUser()?.id) return false;
+    return MediaEngineStore.isLocalMute(ownerId, "stream") || MediaEngineStore.getLocalVolume(ownerId, "stream") === 0;
+}
+
 function updateAudioActive() {
     const seen = new Set<string>();
     const now = Date.now();
+    const hidden = deafHidden();
     for (const [userId, meter] of meters) {
         if (userId.startsWith("stream:")) continue;
         seen.add(userId);
-        const active = (meter.activeUntil ?? 0) > now;
+        const active = !hidden && (meter.activeUntil ?? 0) > now;
         if (active && debugState.firstActiveAt == null) debugState.firstActiveAt = now;
         if (active !== audioActiveUsers.has(userId)) {
             if (active) audioActiveUsers.add(userId);
@@ -903,6 +952,11 @@ function advanceEnvelopes(now: number) {
     const { floorDb } = settings.store;
     const me = UserStore.getCurrentUser()?.id;
     for (const [userId, meter] of meters) {
+        if (userId.startsWith("stream:") && streamMuted(userId.slice(7))) {
+            smooth(meter, 0, 0, 0, now);
+            smooth(meter, 1, 0, 0, now);
+            continue;
+        }
         if (meter.tap) {
             // The input meter shows only while Discord is sending, so it matches what people hear
             const muted = meter.webSelf ? MediaEngineStore.isSelfMute() || MediaEngineStore.isSelfDeaf()
@@ -1050,7 +1104,8 @@ function tick() {
         updateAudioActive();
 
         for (const userId of [...meters.keys()]) {
-            if (userId.startsWith("stream:") && now - (meters.get(userId)?.lastStreamAt ?? 0) > STREAM_RELEASE_MS) dropMeter(userId);
+            const meter = meters.get(userId);
+            if (userId.startsWith("stream:") && !meter?.tap && now - (meter?.lastStreamAt ?? 0) > STREAM_RELEASE_MS) dropMeter(userId);
         }
 
         // only structural changes notify components, levels ride the rAF loop
@@ -1105,7 +1160,8 @@ function MeterBar({ width, value, peak, showPeak, fillRef, peakRef }: {
 }
 
 const VoiceMeter = ErrorBoundary.wrap(({ userId, height = BAR_HEIGHT, width = BAR_WIDTH, style }: { userId: string; height?: number | string; width?: number; style?: React.CSSProperties; }) => {
-    settings.use(["showPeak"]);
+    const { showWhileDeafened } = settings.use(["showPeak", "showWhileDeafened"]);
+    const deaf = useStateFromStores([MediaEngineStore], () => MediaEngineStore.isDeaf());
     const [, forceUpdate] = React.useReducer(x => x + 1, 0);
     const lastKey = React.useRef("");
 
@@ -1182,7 +1238,7 @@ const VoiceMeter = ErrorBoundary.wrap(({ userId, height = BAR_HEIGHT, width = BA
     }, [showPeak]);
 
     const meter = meters.get(userId);
-    if (!meter) return null;
+    if (!meter || (deaf && !showWhileDeafened)) return null;
 
     const gap = Math.max(2, Math.round(width / 2));
     const measured = (meter.tap != null || meter.nativeAvailable === true) && !meter.mono;
@@ -1340,6 +1396,69 @@ function TileMeter({ userId }: { userId?: string; }) {
     );
 }
 
+// --- Options on the Voice & Video page, under HaloCord's voice panel ---
+
+const OPTIONS_ID = "hc-guard-options";
+let optionsRoot: ReturnType<typeof createRoot> | undefined;
+let optionsNode: HTMLDivElement | undefined;
+let optionsTimer: ReturnType<typeof setInterval> | undefined;
+
+function OptionRow({ label, sub, value, onToggle }: { label: string; sub: string; value: boolean; onToggle(): void; }) {
+    return (
+        <div className="dvx-row">
+            <div>
+                <div className="dvx-lbl">{label}</div>
+                <div className="dvx-sub">{sub}</div>
+            </div>
+            <button type="button" role="switch" aria-checked={value} aria-label={label} className={value ? "dvx-sw on" : "dvx-sw"} onClick={onToggle}>
+                <span className="knob" />
+            </button>
+        </div>
+    );
+}
+
+function GuardOptions() {
+    const { showWhileDeafened, showMutedStreamAudio } = settings.use(["showWhileDeafened", "showMutedStreamAudio"]);
+    return (
+        <>
+            <div className="dvx-sec-title">VU Meters</div>
+            <OptionRow
+                label="Show VU meters and speaking glow while deafened"
+                sub="Off hides every meter and the speaking glow while you are deafened."
+                value={showWhileDeafened}
+                onToggle={() => settings.store.showWhileDeafened = !showWhileDeafened}
+            />
+            <OptionRow
+                label="Show screen share audio on VU meters while the stream is muted"
+                sub="Off keeps a muted stream's meter flat."
+                value={showMutedStreamAudio}
+                onToggle={() => settings.store.showMutedStreamAudio = !showMutedStreamAudio}
+            />
+        </>
+    );
+}
+
+// The panel is rebuilt whenever the page re-renders, so re-seat the section right after it.
+function mountOptions() {
+    const panel = document.getElementById("dvx-native-settings");
+    if (!panel?.parentNode) return;
+    if (!optionsNode) {
+        optionsNode = document.createElement("div");
+        optionsNode.id = OPTIONS_ID;
+        optionsNode.className = "dvx-ns";
+        optionsRoot = createRoot(optionsNode);
+        optionsRoot.render(<ErrorBoundary noop><GuardOptions /></ErrorBoundary>);
+    }
+    if (panel.nextSibling !== optionsNode) panel.after(optionsNode);
+}
+
+function unmountOptions() {
+    optionsRoot?.unmount();
+    optionsNode?.remove();
+    optionsRoot = undefined;
+    optionsNode = undefined;
+}
+
 export default definePlugin({
     id: "VoiceVUMeters",
     name: "VoiceVUMeters",
@@ -1382,10 +1501,14 @@ export default definePlugin({
         }
         document.addEventListener("visibilitychange", onVisibilityChange);
         intervalId = setInterval(tick, POLL_MS);
+        optionsTimer = setInterval(mountOptions, 500);
     },
 
     stop() {
         document.removeEventListener("visibilitychange", onVisibilityChange);
+        clearInterval(optionsTimer);
+        optionsTimer = undefined;
+        unmountOptions();
 
         if (intervalId !== undefined) {
             clearInterval(intervalId);

@@ -31,6 +31,11 @@ export function defineModuleSettings<Def extends SettingsDefinition>(
                 }
             }
         }
+        // Formats saved under TestCord spell the client name out; show HaloCord instead.
+        const saved = (Settings.plugins as any)[moduleName];
+        if (typeof saved?.format === "string" && /\bTest[Cc]ord\b/.test(saved.format)) {
+            saved.format = saved.format.replace(/\bTest[Cc]ord\b/g, "{testcordName}");
+        }
     }
 
     function getDefault(key: string) {

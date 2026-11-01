@@ -33,14 +33,15 @@ import { promisify } from "util";
 
 import { getPluginTarget } from "../utils.mjs";
 
+// HaloCord's version, read the same way as Build-HaloCord.ps1.
 const PackageJSON = JSON.parse(
     readFileSync(
-        join(dirname(fileURLToPath(import.meta.url)), "../../package.json"),
+        join(dirname(fileURLToPath(import.meta.url)), "../../desktop/installer-package.json"),
         "utf-8",
     ),
 );
 
-export const VERSION = PackageJSON.version;
+export const VERSION = process.env.HALOCORD_VERSION || PackageJSON.version;
 // https://reproducible-builds.org/docs/source-date-epoch/
 export const BUILD_TIMESTAMP =
     Number(process.env.SOURCE_DATE_EPOCH) * 1000 || Date.now();

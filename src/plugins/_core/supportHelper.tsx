@@ -401,7 +401,7 @@ export default definePlugin({
         },
         {
             name: "testcord-plugins",
-            description: "Send HaloCord plugin list",
+            description: "Send TestCord plugin list",
             execute: async () => {
                 const channelId = SelectedChannelStore.getChannelId();
 

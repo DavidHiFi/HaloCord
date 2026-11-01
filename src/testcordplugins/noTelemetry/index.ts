@@ -49,6 +49,8 @@ export default definePlugin({
     description: "Blocks additional Discord telemetry beyond the built-in NoTrack plugin: experiment exposure reporting, call diagnostics, remote debug logging, and Sentry crash reporting.",
     tags: ["Privacy"],
     authors: [{ name: "Sharp", id: 0n }],
+    // Switched in HaloCord Settings > Privacy & Security, not the plugin list.
+    hidden: true,
     enabledByDefault: true,
     settings,
 

@@ -488,7 +488,7 @@ function forceRefreshStreamPreview() {
     if (!ownStream || ownStream.channelId == null) {
         Toasts.show({
             id: Toasts.genId(),
-            message: "StreamEnhancer: No active stream found to refresh preview.",
+            message: "Stream settings: No active stream found to refresh preview.",
             type: Toasts.Type.FAILURE
         });
         return;
@@ -506,7 +506,7 @@ function forceRefreshStreamPreview() {
     if (streamId == null) {
         Toasts.show({
             id: Toasts.genId(),
-            message: "StreamEnhancer: Preview refresh needs an active stream ID. Try again after the stream stabilizes.",
+            message: "Stream settings: Preview refresh needs an active stream ID. Try again after the stream stabilizes.",
             type: Toasts.Type.FAILURE
         });
         return;
@@ -523,7 +523,7 @@ function forceRefreshStreamPreview() {
 
     Toasts.show({
         id: Toasts.genId(),
-        message: "StreamEnhancer: Requested immediate stream preview refresh.",
+        message: "Stream settings: Requested immediate stream preview refresh.",
         type: Toasts.Type.SUCCESS
     });
 }
@@ -568,6 +568,13 @@ function SettingsSection({ title, children }: SettingsSectionProps) {
     );
 }
 
+export type PickerTab = "apps" | "screens" | "devices";
+export const pickerTabs: Array<{ label: string; value: PickerTab; }> = [
+    { label: "Applications", value: "apps" },
+    { label: "Entire Screen", value: "screens" },
+    { label: "Devices", value: "devices" }
+];
+
 export function StreamEnhancerControlPanel() {
     const { config } = streamEnhancerSettings.use(["config"]);
     const normalized = normalizeConfig(config);
@@ -585,7 +592,7 @@ export function StreamEnhancerControlPanel() {
     return (
         <div className={cl("card")}>
             <ErrorCard>
-                StreamEnhancer overrides Discord's normal stream pipeline. Keep only one stream tuning plugin enabled and restart Discord after changing overlapping plugins.
+                HaloCord's stream settings replace Discord's normal stream pipeline. Keep other stream tuning plugins off and restart Discord after changing them.
                 {conflicts.length > 0 ? ` Active conflicts: ${conflicts.join(", ")}.` : ""}
             </ErrorCard>
 
@@ -652,18 +659,22 @@ export function StreamEnhancerControlPanel() {
 export const streamEnhancerSettings = definePluginSettings({
     showPanelButton: {
         type: OptionType.BOOLEAN,
-        description: "Show a StreamEnhancer settings button in the user panel.",
+        description: "Show a stream settings button in the user panel.",
         default: true
     },
     config: {
         type: OptionType.CUSTOM,
-        description: "Persistent StreamEnhancer tuning values.",
+        description: "Saved stream tuning values.",
         default: defaultStreamEnhancerConfig,
     },
     // Screen share picker choices (components/SharePicker.tsx); 0 height means the screen's own size.
     shareHeight: { type: OptionType.NUMBER, description: "Screen share resolution", default: 1080, hidden: true },
     shareMute: { type: OptionType.BOOLEAN, description: "Mute stream audio", default: false, hidden: true },
     shareAudio: { type: OptionType.STRING, description: "Screen share audio source", default: "default", hidden: true },
+    // On: clicking a window or screen in the picker starts the stream, like Discord desktop. Off: pick, then Go Live.
+    shareInstant: { type: OptionType.BOOLEAN, description: "Start sharing on the first click", default: true, hidden: true },
+    // Tab the share picker opens on: one of pickerTabs' values.
+    pickerTab: { type: OptionType.STRING, description: "Share picker opens on", default: "apps", hidden: true },
     controlPanel: {
         type: OptionType.COMPONENT,
         component: StreamEnhancerControlPanel

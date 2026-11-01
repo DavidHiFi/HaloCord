@@ -6,9 +6,11 @@
 
 import "./OptimizerTab.css";
 
+import { PluginHealth } from "@api/PluginHealth";
 import { isSettingHidden } from "@api/PluginManager";
 import { Button } from "@components/Button";
 import ErrorBoundary from "@components/ErrorBoundary";
+import { FormSwitch } from "@components/FormSwitch";
 import { HeadingPrimary, HeadingSecondary } from "@components/Heading";
 import { Notice } from "@components/Notice";
 import { Paragraph } from "@components/Paragraph";
@@ -273,6 +275,13 @@ export default function OptimizerTab() {
         }
     }
 
+    // The suite has webpack patches, so turning it on or off applies on restart (same as the plugin card).
+    function setSuiteEnabled(enabled: boolean) {
+        pluginSettings.enabled = enabled;
+        void PluginHealth.recordPluginChange(settings.pluginName, enabled);
+        if (!restartKeys.includes("enabled")) setRestartKeys(prev => [...prev, "enabled"]);
+    }
+
     function resetAll() {
         let needsRestart = false;
         for (const [key, def] of Object.entries(settings.def) as [string, RestartableDef][]) {
@@ -285,7 +294,7 @@ export default function OptimizerTab() {
         setRestartKeys(needsRestart ? Object.keys(settings.def) : []);
         Toasts.show({
             id: Toasts.genId(),
-            message: "TestcordOptimizer settings have been reset.",
+            message: "Performance settings have been reset.",
             type: Toasts.Type.SUCCESS,
             options: { position: Toasts.Position.TOP }
         });
@@ -295,7 +304,7 @@ export default function OptimizerTab() {
         openModal(modalProps => (
             <ConfirmModal
                 {...modalProps}
-                header="Reset Optimizer Settings"
+                header="Reset Performance Settings"
                 confirmText="Reset"
                 cancelText="Cancel"
                 onConfirm={() => {
@@ -305,7 +314,7 @@ export default function OptimizerTab() {
                 onCancel={modalProps.onClose}
             >
                 <Paragraph>
-                    Are you sure you want to reset all TestcordOptimizer settings to their default values?
+                    Are you sure you want to reset all performance settings to their default values?
                 </Paragraph>
             </ConfirmModal>
         ));
@@ -314,7 +323,7 @@ export default function OptimizerTab() {
     return (
         <SettingsTab>
             <div className={cl("header")}>
-                <HeadingPrimary>Optimizer</HeadingPrimary>
+                <HeadingPrimary>Performance</HeadingPrimary>
                 <div className={cl("header-actions")}>
                     <Button variant="secondary" size="small" onClick={openResetConfirm}>
                         Reset All
@@ -323,6 +332,13 @@ export default function OptimizerTab() {
             </div>
 
             <Paragraph>All-in-one performance suite, grouped by area. Use the search box to filter.</Paragraph>
+
+            <FormSwitch
+                title="Enable performance suite"
+                description="Master switch for every option below. Options keep their saved values while the suite is off."
+                value={Boolean(pluginSettings.enabled)}
+                onChange={setSuiteEnabled}
+            />
 
             {restartKeys.length > 0 && (
                 <Notice
@@ -341,7 +357,7 @@ export default function OptimizerTab() {
             <div className={cl("search")}>
                 <TextInput
                     inputClassName={cl("search-input")}
-                    placeholder="Search optimizer settings..."
+                    placeholder="Search performance settings..."
                     value={query}
                     onChange={setQuery}
                 />

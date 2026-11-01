@@ -7,6 +7,9 @@ BUNDLE = D.parent / "dist" / "equibop"
 SRC_APP = Path(os.environ["HALOCORD_BASE_APP"])  # unpacked 2.8.3 app folder (Electron + app.asar)
 KOFFI = Path(os.environ["HALOCORD_KOFFI"])  # unpacked koffi 2.16.3 npm package
 OUT = Path(os.environ.get("HALOCORD_OUT", D / "out"))
+# The version lives in installer-package.json; HALOCORD_VERSION overrides it for a test build.
+INSTALLER = json.loads((D / "installer-package.json").read_text(encoding="utf-8"))
+VERSION = INSTALLER["version"] = os.environ.get("HALOCORD_VERSION") or INSTALLER["version"]
 app, asrc = OUT / "app", OUT / "asar-src"
 NW = dict(creationflags=subprocess.CREATE_NO_WINDOW, shell=True, check=True)
 for p in (app, asrc):
@@ -28,11 +31,34 @@ for f in ("index.js", "package.json", "LICENSE.txt"):
 shutil.copy2(KOFFI / "build" / "koffi" / "win32_x64" / "koffi.node", kd / "build" / "koffi" / "win32_x64" / "koffi.node")
 shutil.copy2(D / "shell" / "mcblur.js", asrc / "mcblur.js")
 shutil.copy2(D / "shell" / "shareaudio.js", asrc / "shareaudio.js")
+shutil.copy2(D / "shell" / "hc-desktop.js", asrc / "hc-desktop.js")  # hc-desktop: startup, tray, build choice
+shutil.copy2(D / "shell" / "hc-update.js", asrc / "hc-update.js")  # hc-update: the in-app updater
+# build.json tells hc-update.js which commit this build is, for the list of changes in the next update.
+git = lambda *a: subprocess.run(["git", *a], cwd=D.parent, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW).stdout.strip()
+base = lambda f: (D.parent / ".github" / f).read_text().strip() if (D.parent / ".github" / f).exists() else ""
+(asrc / "build.json").write_text(json.dumps({"version": VERSION, "commit": git("rev-parse", "HEAD"),
+                                            "upstream": {"Equicord": base("equicord-base"), "TestCord": base("testcord-base")}}))
+# hc-overlay: in-game overlay window (main side, its preload and page), next to main.js.
+for f in ("hc-overlay-main.js", "hc-overlay-preload.js", "hc-overlay.html", "hc-overlay.js"):
+    shutil.copy2(D / "shell" / f, asrc / f)
 # halocord-loopback.exe sits next to app.asar (process.resourcesPath); build it if it is missing.
 lb = D / "loopback" / "halocord-loopback.exe"
 if not lb.exists():
     subprocess.run(f'"{D / "loopback" / "build.cmd"}"', **NW)
 shutil.copy2(lb, app / "resources" / lb.name)
+# Discord.exe stand-in for the Elgato Stream Deck plugin (desktop/streamdeck), in resources\streamdeck.
+sd = D / "streamdeck" / "Discord.exe"
+if not sd.exists():
+    subprocess.run(f'"{D / "streamdeck" / "build.cmd"}"', **NW)
+(app / "resources" / "streamdeck").mkdir(exist_ok=True)
+shutil.copy2(sd, app / "resources" / "streamdeck" / sd.name)
+# hc-keys: global keybinds. shell/hc-keys.js runs keys/hckeys.exe (resources\keys) and feeds the haloKeybinds plugin.
+shutil.copy2(D / "shell" / "hc-keys.js", asrc / "hc-keys.js")
+hk = D / "keys" / "hckeys.exe"
+if not hk.exists():
+    subprocess.run(f'"{D / "keys" / "build.cmd"}"', **NW)
+(app / "resources" / "keys").mkdir(exist_ok=True)
+shutil.copy2(hk, app / "resources" / "keys" / hk.name)
 m = (asrc / "main.js").read_text(encoding="utf-8")
 assert m.count('UPD_REPO="kurtzonaudio/kurtcord"') == 1
 m = m.replace('UPD_REPO="kurtzonaudio/kurtcord"', 'UPD_REPO="DavidHiFi/HaloCord"')
@@ -44,7 +70,7 @@ m = m.replace('app.setAppUserModelId("com.kurtcord.desktop")', 'app.setAppUserMo
 # Load the bundle's main side first, with its settings in %APPDATA%\HaloCord\TestCord (Stable keeps %APPDATA%\Testcord).
 a = 'Menu:Menu}=require("electron");'
 assert m.count(a) == 1
-m = m.replace(a, a + 'process.env.TESTCORD_USER_DATA_DIR=require("path").join(app.getPath("appData"),"HaloCord","TestCord");require("./equicord/main.js");')
+m = m.replace(a, a + 'process.env.DVX_NO_UPDATE_CHECK="1";process.env.TESTCORD_USER_DATA_DIR=require("path").join(app.getPath("appData"),"HaloCord","TestCord");require("./equicord/main.js");')
 # Screen share: the page's share picker (StreamEnhancer SharePicker) preselects the source, so the
 # old "Choose what to share" window only opens when nothing was picked. Chromium gets video only;
 # the sound comes from shell/shareaudio.js, which leaves HaloCord's own playback out.
@@ -79,14 +105,29 @@ m += ('\nfunction mcWinFile(){return require("path").join(app.getPath("userData"
       '"win32"===process.platform&&"acrylic"===p.windowsMaterial&&(o.backgroundColor="#00000000");return o}'
       'function mcAcrylic(w){if("win32"===process.platform&&"acrylic"===mcWinPrefs().windowsMaterial)try{require("./mcblur.js").apply(w,!0)}catch(e){console.error("[HaloCord] acrylic failed",e)}}'
       'ipcMain.handle("halocord:show-item",(e,t)=>shell.showItemInFolder(String(t)));'
-      'ipcMain.handle("halocord:relaunch",()=>{app.relaunch(),app.exit(0)});'
+      'ipcMain.handle("halocord:relaunch",()=>{hcUpdate.install()||(app.relaunch(),app.exit(0))});'
       'ipcMain.handle("halocord:open-settings-folder",()=>shell.openPath(app.getPath("userData")));'
       'ipcMain.handle("halocord:set-window-prefs",(e,t)=>{const p={};for(const k of["disableMinSize","transparent","winCtrlQ"])p[k]=!!(t&&t[k]);'
       'p.windowsMaterial=t&&"string"==typeof t.windowsMaterial?t.windowsMaterial:"none";require("fs").writeFileSync(mcWinFile(),JSON.stringify(p))});\n')
+# hc-desktop: shell/hc-desktop.js owns Windows startup, start minimised, minimise to tray and the
+# Stable / PTB / Canary choice. The window stays hidden when launched with --start-minimized, and
+# the app page skips the HTTP cache so every launch gets Discord's newest web build.
+for a, b in [('win=new BrowserWindow({width:1400,height:900,', 'win=new BrowserWindow({show:!hcDesk.hidden,width:1400,height:900,'),
+             ('win.loadURL("https://discord.com/app")', 'win.loadURL(hcDesk.appUrl(),{extraHeaders:"Cache-Control: no-cache\\n"})')]:
+    assert m.count(a) == 1, a
+    m = m.replace(a, b)
+m += '\nconst hcDesk=require("./hc-desktop.js").init({win:()=>win,tray:()=>tray,show:showWindow});\n'
+# hc-overlay: IPC halocord:overlay-* and the overlay window live in shell/hc-overlay-main.js.
+m += '\nrequire("./hc-overlay-main.js");\n'
+# hc-keys: start the keybind bridge in main.
+m += '\nrequire("./hc-keys.js").init();\n'
+# hc-update: takes over the bundle's updater IPC (registered when equicord/main.js loaded above).
+m += '\nconst hcUpdate=require("./hc-update.js").init();\n'
 (asrc / "main.js").write_text(m, encoding="utf-8")
 # Display text only; lowercase ids (kurtcordDirect, KurtcordMLKEM, wire tags) stay so P2P and E2EE still talk to Kurtcord users.
 for f in ("preload.js", "userscript.js"):
-    s = (asrc / f).read_text(encoding="utf-8")
+    # userscript.js comes from desktop/base (the 2.8.3 original plus HaloCord's direct edits); the fixes below still apply on top.
+    s = ((D / "base" / f) if f == "userscript.js" else (asrc / f)).read_text(encoding="utf-8")
     s, k = re.subn(r"Kurtcord(?![A-Za-z])", "HaloCord", s)
     s = s.replace(r"Made\x20with\x20❤\x20by\x20<a\x20href=\x22https://www.youtube.com/@unpbeatsuk\x22\x20target=\x22_blank\x22>UNP\x20Beats\x20UK</a>\x20·\x20<a\x20href=\x22https://www.youtube.com/@Kurtzonaudio\x22\x20target=\x22_blank\x22>Kurtzon</a>",
                   r"HaloCord\x20by\x20<a\x20href=\x22https://github.com/DavidHiFi\x22\x20target=\x22_blank\x22>DavidHiFi</a>")
@@ -95,6 +136,7 @@ for f in ("preload.js", "userscript.js"):
         assert s.count(a) == 1
         s = s.replace(a, a + 'contextBridge.exposeInMainWorld("HaloCordNative",{relaunch:()=>ipcRenderer.invoke("halocord:relaunch"),'
                              'openSettingsFolder:()=>ipcRenderer.invoke("halocord:open-settings-folder"),'
+                             'updateInfo:()=>ipcRenderer.invoke("halocord:update-info"),'
                              'setWindowPrefs:A=>ipcRenderer.invoke("halocord:set-window-prefs",A),'
                              'getShareSources:()=>ipcRenderer.invoke("halocord:share-sources"),'
                              'selectShareSource:A=>ipcRenderer.invoke("halocord:share-select",String(A)),'
@@ -102,6 +144,22 @@ for f in ("preload.js", "userscript.js"):
                              'stopShareAudio:()=>ipcRenderer.invoke("halocord:share-audio-stop"),'
                              'takeShareAudio:A=>{ipcRenderer.removeAllListeners("halocord:share-audio");'
                              'ipcRenderer.on("halocord:share-audio",(B,C)=>A(new Uint8Array(C)));return!0}}),')
+        # hc-desktop: settings bridge for the HaloDesktop plugin.
+        a = 'contextBridge.exposeInMainWorld("__kurtcord",__kcBridge),'
+        assert s.count(a) == 1
+        s = s.replace(a, a + 'contextBridge.exposeInMainWorld("HaloCordDesktop",{get:()=>ipcRenderer.invoke("halocord-desktop:get"),'
+                             'set:(A,B)=>ipcRenderer.invoke("halocord-desktop:set",String(A),B)}),')
+        # hc-overlay: page side of the overlay (HaloOverlay plugin), its own bridge object.
+        a = 'contextBridge.exposeInMainWorld("__audiocord",__kcBridge)'
+        assert s.count(a) == 1
+        s = s.replace(a, a + ',contextBridge.exposeInMainWorld("HaloCordOverlay",{setConfig:A=>ipcRenderer.invoke("halocord:overlay-config",A),'
+                             'voice:A=>ipcRenderer.send("halocord:overlay-voice",A),notify:A=>ipcRenderer.send("halocord:overlay-notify",A)})')
+        # hc-keys: HaloCordKeys, the page side of shell/hc-keys.js.
+        a = 'contextBridge.exposeInMainWorld("__kurtcord",__kcBridge),'
+        assert s.count(a) == 1
+        s = s.replace(a, a + 'contextBridge.exposeInMainWorld("HaloCordKeys",{setFilter:(A,B)=>ipcRenderer.send("halocord:keys-filter",Array.isArray(A)?A.map(String):[],!!B),'
+                             'onEvent:A=>{ipcRenderer.removeAllListeners("halocord:keys-event");'
+                             'ipcRenderer.on("halocord:keys-event",(B,C,D,E)=>A(C,D,E));return!0}}),')
         a = s[s.index("function injectEquicord(){"):s.index("try{var __kcBridge=")]
         s = s.replace(a, 'function injectEquicord(){try{contextBridge.exposeInMainWorld("VesktopNative",{app:{'
                          'getVersion:()=>require("./package.json").version,getGitHash:()=>"",isDevBuild:()=>!1,'
@@ -146,11 +204,11 @@ for f in ("preload.js", "userscript.js"):
             s = s.replace(a, b)
         # Voice & Video wording: Kurt's "kurtopus" codec name becomes plain Opus 1.6 HD.
         for a, b in [
-            (r"'Experimental\x20QEXT\x20Layer','kurtopus\x201.6\x20HD\x20experimental\x20QEXT\x20layer'",
-             r"'Opus\x201.6\x20HD','Experimental\x20QEXT\x20quality\x20layer,\x20up\x20to\x20530\x20kbps.\x20Both\x20ends\x20need\x20it\x20on.'"),
+            # No QEXT row any more: stock Discord peers can't decode it, so HaloCord stays at 510 kbps.
             (r"'Enable\x20Experimental\x20QEXT\x20Layer'", r"'Enable\x20Opus\x201.6\x20HD'"),
-            (r"\x20kurtopus\x201.6\x20HD\x20Kurtzon", r"\x20·\x20Opus\x201.6\x20HD"),
-            ("/kurtopus/i", r"/Opus\x201\.6\x20HD/i"),
+            # QEXT is off, so the settings footer no longer gets the codec label: its guard always matches.
+            (r"\x20kurtopus\x201.6\x20HD\x20Kurtzon", ""),
+            ("/kurtopus/i", "/(?:)/"),
             (r"kurtopus\x201.6\x20HD", r"Opus\x201.6\x20HD"),
             (r"Ping\x20(Kurtzon)", r"Ping\x20(HaloCord)"),
         ]:
@@ -195,14 +253,14 @@ for f in ("preload.js", "userscript.js"):
     print(f, "display strings:", k)
 shutil.copy2(D / "brand" / "icon.png", asrc / "icon.png")
 pkg = json.loads((asrc / "package.json").read_text())
-pkg.update(name="halocord", productName="HaloCord", version="2.8.4", description="HaloCord", author="DavidHiFi")
+pkg.update(name="halocord", productName="HaloCord", version=VERSION, description="HaloCord", author="DavidHiFi")
 (asrc / "package.json").write_text(json.dumps(pkg, indent=2))
 (app / "resources" / "app.asar").unlink()
 subprocess.run(f'npx -y @electron/asar pack "{asrc}" "{app/"resources"/"app.asar"}" --unpack "*.node"', **NW)
 exe = app / "HaloCord.exe"
 (app / "Kurtcord.exe").rename(exe)
 rc = [str(OUT / "tools" / "rcedit" / "rcedit-x64.exe"), str(exe), "--set-icon", str(D / "brand" / "halocord.ico"),
-      "--set-file-version", "2.8.4", "--set-product-version", "2.8.4"]
+      "--set-file-version", VERSION, "--set-product-version", VERSION]
 for k, v in dict(CompanyName="DavidHiFi", ProductName="HaloCord", FileDescription="HaloCord", InternalName="HaloCord",
                  OriginalFilename="HaloCord.exe", LegalCopyright="Copyright (c) 2026 DavidHiFi").items():
     rc += ["--set-version-string", k, v]
@@ -210,7 +268,7 @@ subprocess.run(rc, creationflags=subprocess.CREATE_NO_WINDOW, check=True)
 print("rebranded strings in main.js:", n)
 shutil.rmtree(OUT / "installer" / "dist", ignore_errors=True)
 (OUT / "installer").mkdir(exist_ok=True)
-(OUT / "installer" / "package.json").write_text((D / "installer-package.json").read_text(encoding="utf-8")
+(OUT / "installer" / "package.json").write_text(json.dumps(INSTALLER, indent=2)
                                                 .replace("../brand/", (D / "brand").as_posix() + "/"), encoding="utf-8")
 subprocess.run("npx -y electron-builder@26.18.0 --win nsis --prepackaged ../app", cwd=OUT / "installer", **NW)
 print("installer:", next((OUT / "installer" / "dist").glob("*.exe")))

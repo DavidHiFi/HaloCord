@@ -689,7 +689,7 @@ export const settings = definePluginSettings({
     },
     CarefulNetwork: {
         type: OptionType.BOOLEAN,
-        description: "Dedupe and briefly cache repeated HaloCord plugin network requests.",
+        description: "Dedupe and briefly cache repeated TestCord plugin network requests.",
         default: false,
     },
     iconColorSettings: {
@@ -756,7 +756,7 @@ export const settings = definePluginSettings({
     },
     performanceDisablePluginCards: {
         type: OptionType.BOOLEAN,
-        description: "Do not render HaloCord plugin cards under chat messages.",
+        description: "Do not render TestCord plugin cards under chat messages.",
         default: false,
     },
     disableProfilePopoutEmbeds: {
@@ -776,7 +776,7 @@ export const settings = definePluginSettings({
     },
     performanceNetworkOptimizations: {
         type: OptionType.BOOLEAN,
-        description: "Reduce network requests across HaloCord plugins: share and dedupe repeated message fetches, cache immutable resources, warm up the connection, and parallelize independent requests. No change to what Discord receives.",
+        description: "Reduce network requests across TestCord plugins: share and dedupe repeated message fetches, cache immutable resources, warm up the connection, and parallelize independent requests. No change to what Discord receives.",
         default: false,
     },
     performanceAggressiveNetwork: {
