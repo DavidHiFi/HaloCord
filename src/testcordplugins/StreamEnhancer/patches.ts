@@ -202,6 +202,14 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         }
     },
     {
+        // Chromium skips NVIDIA hardware H.264 for constrained baseline, so cameras and streams encoded in software.
+        find: "profile-level-id=42e01f",
+        replacement: {
+            match: "profile-level-id=42e01f",
+            replace: "profile-level-id=42001f"
+        }
+    },
+    {
         find: "this.conn.setTransportOptions(this.getCodecOptions(",
         replacement: {
             match: /setCodecs\((\i),(\i),(\i)\)\{/,

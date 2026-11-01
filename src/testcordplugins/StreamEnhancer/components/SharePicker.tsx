@@ -5,6 +5,7 @@
  */
 
 import { classNameFactory } from "@utils/css";
+import { classes } from "@utils/misc";
 import { ModalRoot, ModalSize, openModal, type RenderModalProps } from "@utils/modal";
 import { useEffect, useRef, useState } from "@webpack/common";
 import type { KeyboardEvent } from "react";
@@ -86,7 +87,7 @@ function SharePicker({ modalProps, onStart }: { modalProps: RenderModalProps; on
     };
 
     return (
-        <ModalRoot {...modalProps} size={ModalSize.LARGE} className={cl("root")}>
+        <ModalRoot {...modalProps} size={ModalSize.LARGE} className={classes(cl("root"), "vc-stream-enhancer-halo")}>
             <div className={cl("head")}>
                 <h2 className={cl("title")}>Screen Share</h2>
                 <button className={cl("close")} aria-label="Close" onClick={modalProps.onClose}>✕</button>

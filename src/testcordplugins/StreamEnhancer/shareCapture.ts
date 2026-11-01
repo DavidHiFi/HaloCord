@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { getConfiguredStreamFps } from "./settings";
+
 // Carries the share picker's choice into Discord's getDisplayMedia call and gives the stream its
 // sound the way the desktop app does: a window share hears only that app, a screen share hears
 // everything except HaloCord (so the call and your mic never go out twice). The capture runs in
@@ -161,6 +163,8 @@ export const installShareCapture = () => {
             : await original.call(this, constraints);
         // Chromium's own loopback hears HaloCord too; the shell or the chosen device replaces it.
         for (const t of stream.getAudioTracks()) { stream.removeTrack(t); t.stop(); }
+        // Without a hint Chromium encodes a screen as a slideshow: it keeps resolution and drops frames under load.
+        if (getConfiguredStreamFps() > 15) for (const t of stream.getVideoTracks()) t.contentHint = "motion";
         if (!constraints?.audio || choice?.audio === "none") return stream;
         const sound = await pickAudio(choice).catch(e => { console.error("[HaloCord] stream sound failed", e); return null; });
         if (!sound?.track) return stream;
