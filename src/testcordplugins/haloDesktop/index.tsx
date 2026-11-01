@@ -76,6 +76,14 @@ function WindowsSettings() {
     );
 }
 
+interface PassiveVoiceUpdate {
+    guildId: string;
+    voiceStates: { userId: string; }[];
+    removedVoiceStateUsers: string[];
+}
+
+type VoiceStatesHandler = (action: { voiceStates: object[]; }) => boolean;
+
 const BUILDS = [
     { label: "Stable", value: "stable" },
     { label: "PTB", value: "ptb" },
@@ -210,8 +218,28 @@ export default definePlugin({
                 match: /if\(\i\.body\.required\|\|/,
                 replace: "if(!0||"
             }
+        },
+        // The stream store only listens to VOICE_STATE_UPDATES, so passive guilds never clear a
+        // stream when its owner leaves voice: ghost avatars in the guild tooltip and Active Now.
+        {
+            find: 'displayName="ApplicationStreamingStore"',
+            replacement: {
+                match: /VOICE_STATE_UPDATES:function\(/,
+                replace: "PASSIVE_UPDATE_V2:e=>$self.passiveStreams(e),VOICE_STATE_UPDATES:$self.streamVoiceStateUpdates=function("
+            }
         }
     ],
+
+    streamVoiceStateUpdates: null as VoiceStatesHandler | null,
+
+    passiveStreams({ guildId, voiceStates, removedVoiceStateUsers }: PassiveVoiceUpdate) {
+        return this.streamVoiceStateUpdates?.({
+            voiceStates: [
+                ...voiceStates.map(s => ({ ...s, guildId })),
+                ...removedVoiceStateUsers.map(userId => ({ userId, guildId, channelId: null }))
+            ]
+        }) ?? false;
+    },
 
     start() {
         const general = () => discordString("cg6ltt", "General");
