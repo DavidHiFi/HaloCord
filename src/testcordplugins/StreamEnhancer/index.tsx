@@ -5,6 +5,7 @@
  */
 
 import { addGlobalContextMenuPatch, removeGlobalContextMenuPatch } from "@api/ContextMenu";
+import { SettingsStore } from "@api/Settings";
 import { UserAreaButton, type UserAreaRenderProps } from "@api/UserArea";
 import { ScreenshareIcon } from "@components/Icons";
 import { EquicordDevs, TestcordDevs } from "@utils/constants";
@@ -61,6 +62,13 @@ const streamEnhancer = definePlugin({
     },
     patches: streamEnhancerPatches,
     start() {
+        // No mirrored camera moved here from EquiTweaks; carry the old choice over once.
+        const equiTweaks = SettingsStore.plain.plugins.EquiTweaks;
+        if (equiTweaks && Object.hasOwn(equiTweaks, "noMirroredCamera")) {
+            if (equiTweaks.noMirroredCamera) streamEnhancerSettings.store.noMirroredCamera = true;
+            delete equiTweaks.noMirroredCamera;
+            SettingsStore.markAsChanged();
+        }
         installOutgoingVideoFilterInterceptor();
         installShareCapture();
         addGlobalContextMenuPatch(mediaButtonMenuPatch);
@@ -80,6 +88,12 @@ const streamEnhancer = definePlugin({
         stopCustomPreviewLoader();
         stopPreviewSender();
         streamState.stopStreamEnhancerState();
+    },
+    cameraMirror<T>(mirror: T) {
+        return streamEnhancerSettings.store.noMirroredCamera ? false : mirror;
+    },
+    cameraPreviewStyle() {
+        return streamEnhancerSettings.store.noMirroredCamera ? { transform: "scaleX(1)" } : undefined;
     },
     isMediaParticipant: streamState.isMediaParticipant,
     isStreamParticipant: streamState.isStreamParticipant,

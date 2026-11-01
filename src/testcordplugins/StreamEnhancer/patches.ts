@@ -504,4 +504,30 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
             replace: "e.showPreview!==!1&&($1||$2)&&(0,$3.jsx)($4.$5,"
         }
     },
+    // No mirrored camera (from EquiTweaks), checked at render time so the switch in Video Settings applies without a restart.
+    // Your own camera while the call is focused.
+    {
+        find: ".STATUS_WARNING_BACKGROUND})})",
+        replacement: {
+            match: /mirror:(\i)/,
+            replace: "mirror:$self.cameraMirror($1)"
+        }
+    },
+    // The camera popout while the call is not focused.
+    {
+        find: "this.handleReady})",
+        all: true,
+        replacement: {
+            match: /(\[\i\.\i\]:)(\i)/,
+            replace: "$1$self.cameraMirror($2)"
+        }
+    },
+    // The Preview Camera and Change Video Background popup.
+    {
+        find: ".PREVIEW_CAMERA_MODAL,",
+        replacement: {
+            match: /className:\i.\i,(?=children:\()/,
+            replace: "$&style:$self.cameraPreviewStyle(),"
+        }
+    },
 ];
