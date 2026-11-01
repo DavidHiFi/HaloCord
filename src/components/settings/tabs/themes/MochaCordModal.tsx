@@ -130,7 +130,7 @@ const MochaCordWindow = ErrorBoundary.wrap(function MochaCordWindow({ modalProps
 
     const resetAll = () => {
         for (const [key] of mochaColors) set(key, "");
-        set("typing", "center");
+        set("typing", "left");
         set("typingDots", false);
         set("hoverColors", true);
         for (const [key] of [...features, ...locations]) set(key, key !== "animations");
@@ -179,7 +179,7 @@ const MochaCordWindow = ErrorBoundary.wrap(function MochaCordWindow({ modalProps
 
                 <HaloSection title="Typing indicator">
                     <HaloRow title="Placement" description="Where the line that says who is typing sits above the message box.">
-                        <Segmented label="Typing indicator placement" value={mc.typing} options={[["center", "Center"], ["left", "Left"]]} onChange={v => set("typing", v)} />
+                        <Segmented label="Typing indicator placement" value={mc.typing} options={[["left", "Left"], ["center", "Center"]]} onChange={v => set("typing", v)} />
                     </HaloRow>
                     <HaloSwitchRow title="Typing dots" description="Show the bouncing dots next to the typing text." value={mc.typingDots} onChange={v => set("typingDots", v)} />
                 </HaloSection>

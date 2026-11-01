@@ -149,7 +149,7 @@ const DefaultSettings: Settings = {
     uiFont: "",
     codeFont: "",
     mochacord: {
-        typing: "center",
+        typing: "left",
         typingDots: false,
         hoverColors: true,
         accent: "",
