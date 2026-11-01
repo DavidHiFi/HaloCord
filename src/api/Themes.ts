@@ -17,6 +17,7 @@
 */
 
 import * as DataStore from "@api/DataStore";
+import { applyHaloAppearance } from "@api/HaloAppearance";
 import { Settings, SettingsStore, type ThemeActivationMode } from "@api/Settings";
 import { createAndAppendStyle } from "@utils/css";
 import { isNonNullish } from "@utils/guards";
@@ -237,6 +238,7 @@ function applyToPopout(popoutWindow: Window | undefined, key: string) {
 
     doc.documentElement.appendChild(clonedRoot);
     doc.documentElement.classList.toggle("hc-theming", Settings.haloTheming);
+    applyHaloAppearance(doc.documentElement);
 }
 
 function updatePopoutWindows() {

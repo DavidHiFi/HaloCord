@@ -40,12 +40,40 @@ export type SettingsPluginUiElements = {
     [id: string]: SettingsPluginUiElement;
 };
 
+export type MochaCordSettings = {
+    typing: "center" | "left";
+    typingDots: boolean;
+    hoverColors: boolean;
+    accent: string;
+    text: string;
+    textMuted: string;
+    surface: string;
+    background: string;
+    hoverColor: string;
+    animations: boolean;
+    windowControls: boolean;
+    transparency: boolean;
+    panelBlur: boolean;
+    separatedChatBar: boolean;
+    smallUserPanel: boolean;
+    hideVoiceMenus: boolean;
+    reorderPicker: boolean;
+    whiteNames: boolean;
+    voiceButtonColors: boolean;
+    hideBarTitle: boolean;
+    topBarButtons: "off" | "hide" | "serverlist" | "titlebar";
+    topBarTitle: "off" | "hide" | "left";
+};
+
 export interface Settings {
     autoUpdate: boolean;
     autoUpdateNotification: boolean;
     updaterBranch: "main" | "dev" | "dev2";
     useQuickCss: boolean;
     haloTheming: boolean;
+    uiFont: string;
+    codeFont: string;
+    mochacord: MochaCordSettings;
     eagerPatches: boolean;
     enabledThemes: string[];
     enabledThemeLinks: string[];
@@ -118,6 +146,32 @@ const DefaultSettings: Settings = {
     updaterBranch: "main",
     useQuickCss: true,
     haloTheming: true,
+    uiFont: "",
+    codeFont: "",
+    mochacord: {
+        typing: "center",
+        typingDots: false,
+        hoverColors: true,
+        accent: "",
+        text: "",
+        textMuted: "",
+        surface: "",
+        background: "",
+        hoverColor: "",
+        animations: false,
+        windowControls: true,
+        transparency: true,
+        panelBlur: true,
+        separatedChatBar: true,
+        smallUserPanel: true,
+        hideVoiceMenus: true,
+        reorderPicker: true,
+        whiteNames: true,
+        voiceButtonColors: true,
+        hideBarTitle: true,
+        topBarButtons: "off",
+        topBarTitle: "off"
+    },
     useTestcordIcon: false,
     hideThemeMarketplace: false,
     hideSnippetMarketplace: false,
