@@ -218,6 +218,19 @@ async function initThemes() {
     themeChangeListeners.forEach(listener => listener());
 }
 
+const haloThemingRoots = new WeakSet<HTMLElement>();
+
+// Discord rewrites <html> className on theme, font and density changes, which drops hc-theming.
+export function keepHaloThemingClass(root: HTMLElement) {
+    const sync = () => {
+        if (root.classList.contains("hc-theming") !== Settings.haloTheming) root.classList.toggle("hc-theming", Settings.haloTheming);
+    };
+    sync();
+    if (haloThemingRoots.has(root)) return;
+    haloThemingRoots.add(root);
+    new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ["class"] });
+}
+
 function applyToPopout(popoutWindow: Window | undefined, key: string) {
     if (!popoutWindow?.document) return;
 
@@ -237,7 +250,7 @@ function applyToPopout(popoutWindow: Window | undefined, key: string) {
     }
 
     doc.documentElement.appendChild(clonedRoot);
-    doc.documentElement.classList.toggle("hc-theming", Settings.haloTheming);
+    keepHaloThemingClass(doc.documentElement);
     applyHaloAppearance(doc.documentElement);
 }
 
@@ -260,6 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
     SettingsStore.addChangeListener("enabledThemeLinks", initThemes);
     SettingsStore.addChangeListener("enabledThemes", initThemes);
     SettingsStore.addChangeListener("themeActivationModes", initThemes);
+    SettingsStore.addChangeListener("haloTheming", updatePopoutWindows);
 
     window.addEventListener("message", event => {
         const { discordPopoutEvent } = event.data || {};

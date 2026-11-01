@@ -46,6 +46,7 @@ import { PatchVersioning } from "./api/PatchVersioning";
 import { initPluginManager, PMLogger, startAllPlugins } from "./api/PluginManager";
 import { PlainSettings, Settings, SettingsStore } from "./api/Settings";
 import { areLocalSettingsDirty, getCloudSettings, getCloudSyncDirection, markLocalSettingsDirty, putCloudSettings, shouldCloudSync } from "./api/SettingsSync/cloudSync";
+import { keepHaloThemingClass } from "./api/Themes";
 import { relaunch } from "./utils/native";
 import { changes, checkForUpdates, isOutdated as getIsOutdated, update, UpdateLogger } from "./utils/updater";
 import { onceReady } from "./webpack";
@@ -323,7 +324,7 @@ function initNotificationSafeguard() {
 }
 
 function applyHaloTheming() {
-    document.documentElement?.classList.toggle("hc-theming", Settings.haloTheming);
+    if (document.documentElement) keepHaloThemingClass(document.documentElement);
 }
 
 initNotificationSafeguard();
