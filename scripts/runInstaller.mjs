@@ -19,13 +19,15 @@
 import "./checkNodeVersion.js";
 
 import { execFileSync } from "child_process";
-import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { createHash } from "crypto";
+import { createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import { Readable } from "stream";
 import { finished } from "stream/promises";
 import { fileURLToPath } from "url";
 
 const BASE_URL = "https://github.com/Equicord/Equilotl/releases/latest/download/";
+const RELEASE_API = "https://api.github.com/repos/Equicord/Equilotl/releases/latest";
 const USER_AGENT = "HaloCord (https://github.com/DavidHiFi/HaloCord)";
 
 const BASE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -59,6 +61,18 @@ function getFilename() {
     }
 }
 
+async function fetchAssetDigest(filename) {
+    const res = await fetch(RELEASE_API, { headers: { "User-Agent": USER_AGENT } });
+    if (!res.ok) throw new Error(`Failed to fetch release metadata: ${res.status} ${res.statusText}`);
+
+    const assets = (await res.json()).assets ?? [];
+    const digest = assets.find(asset => asset.name === filename)?.digest;
+    if (typeof digest !== "string" || !digest.startsWith("sha256:"))
+        throw new Error(`Release has no sha256 digest for ${filename}, refusing to run an unverifiable binary`);
+
+    return digest.slice("sha256:".length);
+}
+
 async function ensureBinary() {
     mkdirSync(FILE_DIR, { recursive: true });
 
@@ -88,11 +102,21 @@ async function ensureBinary() {
         }
 
         if (res.ok) {
+            // The etag file marks a verified binary, so drop it before overwriting.
+            rmSync(ETAG_FILE, { force: true });
             const body = Readable.fromWeb(res.body);
             await finished(body.pipe(createWriteStream(outputFile, {
                 mode: 0o755,
                 autoClose: true
             })));
+
+            console.log("Verifying checksum...");
+            const expected = await fetchAssetDigest(filename);
+            const actual = createHash("sha256").update(readFileSync(outputFile)).digest("hex");
+            if (actual !== expected) {
+                rmSync(outputFile);
+                throw new Error(`Checksum mismatch for ${filename} (expected ${expected}, got ${actual})`);
+            }
 
             const resEtag = res.headers.get("etag");
             if (resEtag) {
@@ -105,7 +129,7 @@ async function ensureBinary() {
 
         throw new Error(`Failed to download installer: ${res.status} ${res.statusText}`);
     } catch (err) {
-        if (existsSync(outputFile)) {
+        if (existsSync(outputFile) && existsSync(ETAG_FILE)) {
             console.warn(`Download failed (${err.message}). Using existing installer binary.`);
             return outputFile;
         }
