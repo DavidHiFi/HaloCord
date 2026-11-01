@@ -24,6 +24,7 @@ import { TextButton } from "@components/Button";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Devs, EquicordDevs, TestcordDevs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
+import { findComponentByCodeLazy } from "@webpack";
 import { ActiveJoinedThreadsStore, FluxDispatcher, GuildChannelStore, GuildStore, React, ReadStateStore } from "@webpack/common";
 
 const settings = definePluginSettings({
@@ -62,8 +63,20 @@ function onClick() {
     });
 }
 
+// Discord's own server list button (Add a Server, Discover): rounded tile, hover pill and tooltip.
+const GuildlessServerListItem = findComponentByCodeLazy("tooltip:", "lowerBadgeSize:");
+
+function BellIcon({ className }: { className?: string; }) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" width={24} height={24} aria-hidden="true">
+            <path fill="currentColor" d="M9.7 2.89c.18-.07.32-.24.37-.43a2 2 0 0 1 3.86 0c.05.2.19.36.37.43A7 7 0 0 1 19 9.5v2.09c0 .12.05.24.13.33l1.1 1.22a3 3 0 0 1 .77 2.01v.28c0 .67-.34 1.29-.95 1.56-1.31.6-4 1.51-8.05 1.51s-6.74-.91-8.05-1.5c-.61-.28-.95-.9-.95-1.57v-.28a3 3 0 0 1 .77-2l1.1-1.23a.5.5 0 0 0 .13-.33V9.5a7 7 0 0 1 4.7-6.61ZM9.18 19.84c-.2-.05-.4.1-.33.29a3.34 3.34 0 0 0 6.3 0c.07-.2-.12-.34-.33-.3-.9.18-1.8.27-2.82.27s-1.92-.1-2.82-.26Z" />
+        </svg>
+    );
+}
+
 function ReadAllButton() {
     const { showBellIcon } = settings.use(["showBellIcon"]);
+    if (showBellIcon) return <GuildlessServerListItem icon={BellIcon} tooltip="Read All" selected={false} onClick={onClick} />;
     return (
         <TextButton
             variant="secondary"
@@ -71,11 +84,7 @@ function ReadAllButton() {
             className="vc-ranb-button"
             aria-label="Read All"
         >
-            {showBellIcon ? (
-                <svg className="vc-ranb-bell" viewBox="0 0 24 24" width={20} height={20} aria-hidden="true">
-                    <path fill="currentColor" d="M9.7 2.89c.18-.07.32-.24.37-.43a2 2 0 0 1 3.86 0c.05.2.19.36.37.43A7 7 0 0 1 19 9.5v2.09c0 .12.05.24.13.33l1.1 1.22a3 3 0 0 1 .77 2.01v.28c0 .67-.34 1.29-.95 1.56-1.31.6-4 1.51-8.05 1.51s-6.74-.91-8.05-1.5c-.61-.28-.95-.9-.95-1.57v-.28a3 3 0 0 1 .77-2l1.1-1.23a.5.5 0 0 0 .13-.33V9.5a7 7 0 0 1 4.7-6.61ZM9.18 19.84c-.2-.05-.4.1-.33.29a3.34 3.34 0 0 0 6.3 0c.07-.2-.12-.34-.33-.3-.9.18-1.8.27-2.82.27s-1.92-.1-2.82-.26Z" />
-                </svg>
-            ) : "Read All"}
+            Read All
         </TextButton>
     );
 }
