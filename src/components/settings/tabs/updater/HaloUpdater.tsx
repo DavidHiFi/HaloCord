@@ -46,7 +46,7 @@ const SOURCES = {
 const SHOWN_CHANGES = 30;
 
 const isSha = (s: string) => /^[a-f0-9]{7,40}$/i.test(s);
-const time = () => new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+const time = () => new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
 const message = (e: unknown) => String((e as Error)?.message ?? updateError?.message ?? e ?? "Unknown error");
 
 function Commit({ repo, hash }: { repo: string; hash?: string; }) {

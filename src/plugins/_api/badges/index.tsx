@@ -28,10 +28,11 @@ import { copyWithToast, fetchUserProfile } from "@utils/discord";
 import { Logger } from "@utils/Logger";
 import { isHaloCordOwner, shouldShowContributorBadge, shouldShowEquicordContributorBadge, shouldShowHaloCordContributorBadge, shouldShowTestcordAdminBadge, shouldShowTestcordContributorBadge } from "@utils/misc";
 import { isTestcordArtist, isTestcordDeveloper, isTestcordOwner } from "@utils/testcordAdmins";
-import { HaloCordPluginIconUrl } from "@utils/testcordIcons";
 import { ZWSP } from "@utils/text";
 import definePlugin from "@utils/types";
 import { Constants, ContextMenuApi, Menu, RestAPI, showToast, UserProfileStore, UserStore } from "@webpack/common";
+import haloCordContributorBadgeBase64 from "file://../../../../browser/HaloCordContributorBadge.png?base64";
+import haloCordOwnerBadgeBase64 from "file://../../../../browser/HaloCordOwnerBadge.png?base64";
 import testcordArtistIconBase64 from "file://../../../../browser/TestcordArtist.png?base64";
 
 import Plugins, { PluginMeta } from "~plugins";
@@ -95,32 +96,19 @@ const TestcordContributorBadge: ProfileBadge = {
 const HaloCordContributorBadge: ProfileBadge = {
     id: "halocord_contributor",
     description: "HaloCord Contributor",
-    iconSrc: HaloCordPluginIconUrl,
+    iconSrc: `data:image/png;base64,${haloCordContributorBadgeBase64}`,
     position: BadgePosition.START,
     shouldShow: ({ userId }) => shouldShowHaloCordContributorBadge(userId),
     onClick: (_, { userId }) => openContributorModal(UserStore.getUser(userId)),
-    props: {
-        style: {
-            borderRadius: "50%",
-            transform: "scale(0.9)"
-        }
-    },
 };
 
-// Same icon as the contributor badge; a gold ring (the owner-crown color) marks the owner.
+// The app icon with its green glow marks the owner; contributors get the same icon with a blue glow.
 const HaloCordOwnerBadge: ProfileBadge = {
     id: "halocord_owner",
     description: "HaloCord Owner",
-    iconSrc: HaloCordPluginIconUrl,
+    iconSrc: `data:image/png;base64,${haloCordOwnerBadgeBase64}`,
     position: BadgePosition.START,
     shouldShow: ({ userId }) => isHaloCordOwner(userId),
-    props: {
-        style: {
-            borderRadius: "50%",
-            transform: "scale(0.9)",
-            boxShadow: "0 0 0 1.5px var(--status-warning)"
-        }
-    },
 };
 
 const HEART_BADGE_ICON = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(

@@ -30,7 +30,7 @@ const AutocompleteClasses = findCssClassesLazy(
     "base"
 );
 
-export type ProviderType = "TestCord" | "Equicord" | "Vencord" | "BetterDiscord" | "User";
+export type ProviderType = "TestCord" | "Equicord" | "Vencord" | "User";
 
 export interface ProviderInfo {
     provider: ProviderType;
@@ -41,7 +41,6 @@ export function getPluginProvider(pluginName: string): ProviderInfo {
     const meta = PluginMeta[pluginName] || { folderName: "", userPlugin: false };
     const folder = meta.folderName || "";
     const plugin = plugins[pluginName];
-    const isBD = folder.startsWith("src/Betterdiscordplugins/") || plugin?.tags?.includes("betterdiscord");
 
     if (isTestcordModified(plugin, folder)) {
         const details = getTestcordModifiedDetails(plugin, folder);
@@ -79,12 +78,6 @@ export function getPluginProvider(pluginName: string): ProviderInfo {
         return {
             provider: "Vencord",
             iconUrl: "https://equicord.org/assets/icons/vencord/icon-light.png"
-        };
-    }
-    if (isBD) {
-        return {
-            provider: "BetterDiscord",
-            iconUrl: "https://camo.githubusercontent.com/fba98dccf4323b86a2e7599a71e6826f62db4e0bb7d5b637fac9d959111ebfcd/68747470733a2f2f626574746572646973636f72642e6170702f7265736f75726365732f6272616e64696e672f6c6f676f5f736f6c69642e706e67"
         };
     }
     if (meta.userPlugin) {

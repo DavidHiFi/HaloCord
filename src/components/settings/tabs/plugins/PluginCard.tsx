@@ -16,7 +16,7 @@ import { classNameFactory } from "@utils/css";
 import { Logger } from "@utils/Logger";
 import { Margins } from "@utils/margins";
 import { classes } from "@utils/misc";
-import { getPluginWarning, PluginWarningInfo } from "@utils/pluginWarnings";
+import { getPluginWarning } from "@utils/pluginWarnings";
 import { getTestcordModifiedDetails, HaloCordPluginIconUrl, isHaloCordPlugin, isTestcordModified, TestcordPluginIconUrl } from "@utils/testcordIcons";
 import { Plugin } from "@utils/types";
 import { ConfirmModal, openModal, React, showToast, Toasts, Tooltip } from "@webpack/common";
@@ -32,51 +32,27 @@ const cl = classNameFactory("vc-plugins-");
 // Hoisted so each card passes the same array instance across renders.
 const PLUGIN_ENABLED_PATHS: Record<string, readonly `plugins.${string}.enabled`[]> = {};
 
-function showEnableWarningModal(
-    plugin: Plugin,
-    warningInfo: PluginWarningInfo,
-    onConfirm: () => void
-) {
-    const isExp = warningInfo.type === "experimental";
+function showEnableWarningModal(plugin: Plugin, onConfirm: () => void) {
     openModal(props => (
         <ConfirmModal
             {...props}
-            title={isExp ? "Experimental Plugin Warning" : "Legacy Plugin Warning"}
+            title="Experimental Plugin Warning"
             confirmText="Enable Anyway"
             cancelText="Cancel"
-            variant={isExp ? "critical-primary" : "primary"}
+            variant="critical-primary"
             onConfirm={onConfirm}
             onCancel={props.onClose}
         >
             <div>
-                {isExp ? (
-                    <>
-                        <Paragraph>
-                            <strong>{plugin.name}</strong> is an experimental plugin that is in active experimentation or development.
-                        </Paragraph>
-                        <Paragraph className={Margins.top8}>
-                            This plugin may not behave correctly and might brick or break some stuff and settings. We are not responsible for any issues, client instability, crashes, or data loss caused by using this plugin.
-                        </Paragraph>
-                        <Paragraph className={Margins.top8}>
-                            Are you sure you want to enable this plugin?
-                        </Paragraph>
-                    </>
-                ) : (
-                    <>
-                        <Paragraph>
-                            <strong>{plugin.name}</strong> is a legacy plugin and is no longer actively maintained or updated.
-                        </Paragraph>
-                        <Paragraph className={Margins.top8}>
-                            Because Discord updates frequently, this plugin may not behave correctly and could cause errors or visual glitches.
-                            {warningInfo.replacementPlugin && (
-                                <> It has been replaced by <strong>{warningInfo.replacementPlugin}</strong>, which we recommend using instead.</>
-                            )}
-                        </Paragraph>
-                        <Paragraph className={Margins.top8}>
-                            Are you sure you want to enable this plugin?
-                        </Paragraph>
-                    </>
-                )}
+                <Paragraph>
+                    <strong>{plugin.name}</strong> is an experimental plugin that is in active experimentation or development.
+                </Paragraph>
+                <Paragraph className={Margins.top8}>
+                    This plugin may not behave correctly and might brick or break some stuff and settings. We are not responsible for any issues, client instability, crashes, or data loss caused by using this plugin.
+                </Paragraph>
+                <Paragraph className={Margins.top8}>
+                    Are you sure you want to enable this plugin?
+                </Paragraph>
             </div>
         </ConfirmModal>
     ));
@@ -105,7 +81,6 @@ export function PluginCard({ plugin, disabled, onRestartNeeded, onMouseEnter, on
     const isTestcordPlugin = pluginMeta.folderName?.startsWith("src/testcordplugins/") ?? false;
     const isUserPlugin = pluginMeta?.userPlugin ?? false;
     const isModifiedPlugin = plugin.isModified ?? false;
-    const isBDPlugin = pluginMeta.folderName?.startsWith("src/Betterdiscordplugins/") || plugin.tags?.includes("betterdiscord");
 
     // Re-render when the stability score for *this* plugin changes (e.g. when
     // history finishes loading from IndexedDB after the Plugins tab opens).
@@ -186,8 +161,8 @@ showToast(msg, Toasts.Type.FAILURE, {
     function toggleEnabled() {
         const wasEnabled = isEnabled();
 
-        if (!wasEnabled && warning && (warning.type === "experimental" || warning.type === "legacy")) {
-            showEnableWarningModal(plugin, warning, () => doToggle(false));
+        if (!wasEnabled && warning?.type === "experimental") {
+            showEnableWarningModal(plugin, () => doToggle(false));
             return;
         }
 
@@ -211,7 +186,7 @@ showToast(msg, Toasts.Type.FAILURE, {
             title: "Modified Vencord Plugin"
         },
         {
-            condition: isUserPlugin && !isBDPlugin,
+            condition: isUserPlugin,
             src: "https://equicord.org/assets/icons/misc/userplugin.png",
             alt: "User",
             title: "User Plugin"
@@ -239,12 +214,6 @@ showToast(msg, Toasts.Type.FAILURE, {
             src: TestcordPluginIconUrl,
             alt: "TestCord",
             title: "TestCord Plugin"
-        },
-        {
-            condition: isBDPlugin,
-            src: "https://camo.githubusercontent.com/fba98dccf4323b86a2e7599a71e6826f62db4e0bb7d5b637fac9d959111ebfcd/68747470733a2f2f626574746572646973636f72642e6170702f7265736f75726365732f6272616e64696e672f6c6f676f5f736f6c69642e706e67",
-            alt: "BetterDiscord",
-            title: "BetterDiscord Plugin"
         }
     ];
 
