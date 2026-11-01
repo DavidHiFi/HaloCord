@@ -1,3 +1,64 @@
 /* Tile meters are centered vertically (set inline by the component), which
    keeps them clear of the hover controls strip and the nameplate row, so no
    hover repositioning is needed. */
+
+#hc-guard-options .hc-vu-select {
+    flex: none;
+    min-width: 170px;
+    padding: 6px 8px;
+    border: 1px solid var(--hc-row-border, rgb(255 255 255 / 8%));
+    border-radius: 6px;
+    background: var(--hc-panel-bg, #1e1f22);
+    color: var(--hc-text, #f2f3f5);
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+}
+
+#hc-guard-options .hc-vu-range {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 10px;
+    width: 220px;
+}
+
+#hc-guard-options .hc-vu-range input {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--hc-panel-bg, #1e1f22);
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+}
+
+#hc-guard-options .hc-vu-range input::-webkit-slider-thumb {
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 50%;
+    background: var(--hc-accent, #afe37f);
+    box-shadow: 0 0 0 4px rgb(var(--hc-accent-rgb, 175 227 127) / 18%);
+    cursor: pointer;
+    appearance: none;
+}
+
+#hc-guard-options .hc-vu-val {
+    min-width: 48px;
+    color: var(--hc-accent, #afe37f);
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+#hc-guard-options :disabled {
+    cursor: not-allowed;
+}
+
+#hc-guard-options .hc-vu-select:focus-visible,
+#hc-guard-options .hc-vu-range input:focus-visible {
+    outline: 2px solid var(--hc-accent, #afe37f);
+    outline-offset: 2px;
+}

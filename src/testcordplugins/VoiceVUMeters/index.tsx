@@ -10,7 +10,7 @@
  * and re-targets the voice list patch at the current client.
  */
 
-import { definePluginSettings } from "@api/Settings";
+import { definePluginSettings, Settings } from "@api/Settings";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { TestcordDevs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
@@ -265,6 +265,15 @@ function writeMeterDom(meter: Meter, dom: MeterDom) {
 }
 
 const settings = definePluginSettings({
+    showMeters: {
+        type: OptionType.BOOLEAN,
+        description: "Draws left and right level meters next to everyone in your voice channel and on call tiles.",
+        default: true,
+        onChange(value: boolean) {
+            if (value) startMeters();
+            else stopMeters();
+        }
+    },
     floorDb: {
         type: OptionType.SLIDER,
         description: "Bottom of the meter scale in dB. -60 matches SonoBus; raise it to make quiet talkers move the meter more.",
@@ -351,7 +360,7 @@ const settings = definePluginSettings({
         description: "Show screen share audio on VU meters while you have the stream muted.",
         default: false
     }
-}).withPrivateSettings<{ peakHoldEnabled?: boolean; }>();
+}).withPrivateSettings<{ peakHoldEnabled?: boolean; metersMigrated?: boolean; }>();
 
 function getConnection(): VoiceConnection | null {
     const engine = MediaEngineStore.getMediaEngine();
@@ -1403,36 +1412,89 @@ let optionsRoot: ReturnType<typeof createRoot> | undefined;
 let optionsNode: HTMLDivElement | undefined;
 let optionsTimer: ReturnType<typeof setInterval> | undefined;
 
-function OptionRow({ label, sub, value, onToggle }: { label: string; sub: string; value: boolean; onToggle(): void; }) {
+type BoolKey = "showMeters" | "showPeak" | "showSelf" | "showWhileDeafened" | "showMutedStreamAudio";
+type SelectKey = "tileSurfaces" | "tilePlacement" | "tileMeterSide";
+type RangeKey = "floorDb" | "tileMeterHeight";
+
+function Row({ label, sub, off, children }: { label: string; sub: string; off?: boolean; children: React.ReactNode; }) {
     return (
-        <div className="dvx-row">
+        <div className={off ? "dvx-row dis" : "dvx-row"}>
             <div>
                 <div className="dvx-lbl">{label}</div>
                 <div className="dvx-sub">{sub}</div>
             </div>
-            <button type="button" role="switch" aria-checked={value} aria-label={label} className={value ? "dvx-sw on" : "dvx-sw"} onClick={onToggle}>
-                <span className="knob" />
-            </button>
+            {children}
         </div>
     );
 }
 
+function SwitchRow({ name, label, sub = settings.def[name].description, off }: { name: BoolKey; label: string; sub?: string; off?: boolean; }) {
+    const value = settings.use([name])[name];
+    return (
+        <Row label={label} sub={sub} off={off}>
+            <button type="button" role="switch" aria-checked={value} aria-label={label} disabled={off} className={value ? "dvx-sw on" : "dvx-sw"} onClick={() => settings.store[name] = !value}>
+                <span className="knob" />
+            </button>
+        </Row>
+    );
+}
+
+function SelectRow({ name, label, off }: { name: SelectKey; label: string; off: boolean; }) {
+    const value = settings.use([name])[name];
+    return (
+        <Row label={label} sub={settings.def[name].description} off={off}>
+            <select className="hc-vu-select" aria-label={label} disabled={off} value={value} onChange={e => Object.assign(settings.store, { [name]: e.currentTarget.value })}>
+                {settings.def[name].options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+        </Row>
+    );
+}
+
+function RangeRow({ name, label, unit, off }: { name: RangeKey; label: string; unit: string; off: boolean; }) {
+    const value = settings.use([name])[name];
+    const { markers } = settings.def[name];
+    return (
+        <Row label={label} sub={settings.def[name].description} off={off}>
+            <div className="hc-vu-range">
+                <input
+                    type="range"
+                    aria-label={label}
+                    disabled={off}
+                    min={markers[0]}
+                    max={markers[markers.length - 1]}
+                    step={markers[1] - markers[0]}
+                    value={value}
+                    onChange={e => settings.store[name] = Number(e.currentTarget.value)}
+                />
+                <span className="hc-vu-val">{value}{unit}</span>
+            </div>
+        </Row>
+    );
+}
+
 function GuardOptions() {
-    const { showWhileDeafened, showMutedStreamAudio } = settings.use(["showWhileDeafened", "showMutedStreamAudio"]);
+    const off = !settings.use(["showMeters"]).showMeters;
     return (
         <>
             <div className="dvx-sec-title">VU Meters</div>
-            <OptionRow
+            <SwitchRow name="showMeters" label="Show VU meters" />
+            <RangeRow name="floorDb" label="Meter floor" unit=" dB" off={off} />
+            <SwitchRow name="showPeak" label="Peak hold line" off={off} />
+            <SwitchRow name="showSelf" label="Meter for your own microphone" off={off} />
+            <SelectRow name="tileSurfaces" label="Call tiles with meters" off={off} />
+            <SelectRow name="tilePlacement" label="Meter position on call tiles" off={off} />
+            <SelectRow name="tileMeterSide" label="Meter side on call tiles" off={off} />
+            <RangeRow name="tileMeterHeight" label="Tile meter height" unit="%" off={off} />
+            <SwitchRow
+                name="showWhileDeafened"
                 label="Show VU meters and speaking glow while deafened"
                 sub="Off hides every meter and the speaking glow while you are deafened."
-                value={showWhileDeafened}
-                onToggle={() => settings.store.showWhileDeafened = !showWhileDeafened}
             />
-            <OptionRow
+            <SwitchRow
+                name="showMutedStreamAudio"
                 label="Show screen share audio on VU meters while the stream is muted"
                 sub="Off keeps a muted stream's meter flat."
-                value={showMutedStreamAudio}
-                onToggle={() => settings.store.showMutedStreamAudio = !showMutedStreamAudio}
+                off={off}
             />
         </>
     );
@@ -1462,8 +1524,10 @@ function unmountOptions() {
 export default definePlugin({
     id: "VoiceVUMeters",
     name: "VoiceVUMeters",
-    description: "Draws left and right voice meters with a divider next to everyone in your voice channel and on call tiles.",
+    description: "Draws left and right voice meters with a divider next to everyone in your voice channel and on call tiles. Its options live in Voice & Video under VU Meters.",
     authors: [TestcordDevs.Kurtzon, TestcordDevs.DavidHiFi],
+    required: true,
+    hidden: true,
     tags: ["Voice", "Utility"],
     settings,
     managedStyle: meterStyle,
@@ -1499,36 +1563,51 @@ export default definePlugin({
             settings.store.showPeak = true;
             settings.store.peakHoldEnabled = true;
         }
-        document.addEventListener("visibilitychange", onVisibilityChange);
-        intervalId = setInterval(tick, POLL_MS);
+        // The plugin is always on now; its old on/off switch becomes the Show VU meters option.
+        if (!settings.store.metersMigrated) {
+            settings.store.showMeters = Settings.plugins.VoiceVUMeters.enabled !== false;
+            settings.store.metersMigrated = true;
+        }
+        if (settings.store.showMeters) startMeters();
         optionsTimer = setInterval(mountOptions, 500);
     },
 
     stop() {
-        document.removeEventListener("visibilitychange", onVisibilityChange);
         clearInterval(optionsTimer);
         optionsTimer = undefined;
         unmountOptions();
-
-        if (intervalId !== undefined) {
-            clearInterval(intervalId);
-            intervalId = undefined;
-        }
-
-        parkFrameLoop();
-        syncVoiceActivity(false);
-        domResize?.disconnect();
-        domResize = undefined;
-        meterDoms.clear();
-
-        dropAll();
-        connection = null;
-        lastMeterCount = 0;
-        statsInFlight = false;
-        participantBridge = undefined;
-        bridgeChecked = false;
-        selfOutboundLinear = 0;
-        selfSentAt = 0;
-        // inputMismatchDrops and inputSuspendKey stay: a tap proven dead on this device is dead in the next call too
+        stopMeters();
     }
 });
+
+function startMeters() {
+    if (intervalId !== undefined) return;
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    intervalId = setInterval(tick, POLL_MS);
+}
+
+function stopMeters() {
+    document.removeEventListener("visibilitychange", onVisibilityChange);
+    if (intervalId !== undefined) {
+        clearInterval(intervalId);
+        intervalId = undefined;
+    }
+
+    parkFrameLoop();
+    syncVoiceActivity(false);
+    domResize?.disconnect();
+    domResize = undefined;
+    meterDoms.clear();
+
+    dropAll();
+    notifySubscribers();
+    updateAudioActive();
+    connection = null;
+    lastMeterCount = 0;
+    statsInFlight = false;
+    participantBridge = undefined;
+    bridgeChecked = false;
+    selfOutboundLinear = 0;
+    selfSentAt = 0;
+    // inputMismatchDrops and inputSuspendKey stay: a tap proven dead on this device is dead in the next call too
+}
