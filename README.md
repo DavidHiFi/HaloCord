@@ -26,6 +26,7 @@ Stereo voice up to 96 kHz, call guards, voice effects, Go Live controls and hund
 1. Download the `HaloCord-Setup` installer from the [latest release](https://github.com/DavidHiFi/HaloCord/releases/latest).
 2. Run it. The installer is not code signed, so Windows may show a SmartScreen warning: choose **More info**, then **Run anyway**.
 3. Pick an install folder, finish the setup and log in with your Discord account.
+4. While the repo is private, in-app updates need the [GitHub CLI](https://cli.github.com) signed in to an account that can see the repo: run `winget install GitHub.cli`, then `gh auth login`, then restart HaloCord.
 
 To build it yourself, follow [docs/building.md](docs/building.md).
 
@@ -37,8 +38,10 @@ To build it yourself, follow [docs/building.md](docs/building.md).
 - **Go Live controls:** pick resolution, frame rate, bitrate or a quality preset before each stream.
 - **Camera:** up to 4K60 or 1080p120, without Discord's 720p cap or its automatic quality drops.
 - **Microphone:** input volume up to 1000%, a 16-band EQ, up to two extra mics and a raw mode that turns off Discord's voice processing.
+- **Speakers and pan:** play calls on up to two extra output devices, switch each mic and speaker on or off, and pan each one left or right.
 - **Plugins:** hundreds built in, from Vencord, Equicord and TestCord, plus HaloCord's own voice plugins.
 - **Acrylic window:** a blurred, see-through background on Windows 11.
+- **MochaCord theme:** ships built in and stays up to date; turn it on under Themes.
 - **Privacy:** settings stay on your PC. No analytics, no telemetry and no HaloCord server.
 
 <div align="center">

@@ -1,6 +1,6 @@
 # Builds HaloCord: the 2.8.3 base shell + this repo's equibop bundle (dist/equibop), then the installer.
 # Inputs that are not in the repo come from environment variables; see docs/building.md.
-import json, os, re, shutil, subprocess, sys
+import json, os, re, shutil, subprocess, sys, urllib.request
 from pathlib import Path
 D = Path(__file__).resolve().parent
 BUNDLE = D.parent / "dist" / "equibop"
@@ -22,6 +22,12 @@ shutil.rmtree(asrc / "equicord")
 (asrc / "equicord").mkdir()
 for f in ("main.js", "preload.js", "renderer.js", "renderer.css", "main.js.LEGAL.txt", "renderer.js.LEGAL.txt"):
     shutil.copy2(BUNDLE / f, asrc / "equicord" / f)
+# The MochaCord theme ships with every build; src/main/mochacordTheme.ts installs it and keeps it current.
+with urllib.request.urlopen("https://raw.githubusercontent.com/DavidHiFi/MochaCord-Theme/main/MochaCord.css", timeout=30) as r:
+    css = r.read().decode("utf-8")
+if "@name MochaCord" not in css:
+    sys.exit("MochaCord theme download did not look like the theme")
+(asrc / "equicord" / "MochaCord.css").write_text(css, encoding="utf-8", newline="")
 # koffi (MIT) for the acrylic blur calls; Windows x64 binary only.
 kd = asrc / "node_modules" / "koffi"
 for f in ("index.js", "package.json", "LICENSE.txt"):
