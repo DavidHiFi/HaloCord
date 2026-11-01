@@ -26,11 +26,13 @@ export function DevBannerWidget() {
         <div
             className="vc-devbanner-module-widget"
             style={{
-                padding: "4px 8px",
+                padding: "4px 10px",
                 fontSize: s.fontSize ? `${s.fontSize}px` : "11px",
+                fontWeight: 600,
                 textAlign: (s.textAlign as React.CSSProperties["textAlign"]) || "center",
                 color: s.color || "var(--text-muted)",
-                backgroundColor: s.backgroundColor || "transparent",
+                backgroundColor: s.backgroundColor || "var(--bg-overlay-app-frame, rgb(0 0 0 / 20%))",
+                borderTop: "1px solid var(--hc-row-border, var(--border-faint))",
                 lineHeight: "1.4",
                 userSelect: "text",
             }}
@@ -71,7 +73,7 @@ export function DevBannerSettingsModal({ modalProps, onClose }: { modalProps?: R
                         cursor: "pointer",
                         fontWeight: activeTab === "format" ? 600 : 400,
                         color: activeTab === "format" ? "var(--interactive-active)" : "var(--interactive-normal)",
-                        borderBottom: activeTab === "format" ? "2px solid var(--brand-experiment)" : "2px solid transparent",
+                        borderBottom: activeTab === "format" ? "2px solid var(--hc-accent, var(--brand-experiment))" : "2px solid transparent",
                     }}
                 >
                     Format & Placeholders
@@ -84,7 +86,7 @@ export function DevBannerSettingsModal({ modalProps, onClose }: { modalProps?: R
                         cursor: "pointer",
                         fontWeight: activeTab === "style" ? 600 : 400,
                         color: activeTab === "style" ? "var(--interactive-active)" : "var(--interactive-normal)",
-                        borderBottom: activeTab === "style" ? "2px solid var(--brand-experiment)" : "2px solid transparent",
+                        borderBottom: activeTab === "style" ? "2px solid var(--hc-accent, var(--brand-experiment))" : "2px solid transparent",
                     }}
                 >
                     Colors & Appearance
@@ -164,7 +166,7 @@ export function DevBannerSettingsModal({ modalProps, onClose }: { modalProps?: R
                                             settings.store.fontSize = parseInt(e.target.value, 10);
                                             forceUpdate();
                                         }}
-                                        style={{ width: "100%", accentColor: "var(--brand-experiment)" }}
+                                        style={{ width: "100%", accentColor: "var(--hc-accent, var(--brand-experiment))" }}
                                     />
                                 </div>
 
@@ -186,8 +188,8 @@ export function DevBannerSettingsModal({ modalProps, onClose }: { modalProps?: R
                                                     padding: "6px 12px",
                                                     borderRadius: "6px",
                                                     border: "1px solid var(--background-modifier-accent, var(--border-muted))",
-                                                    background: (s.textAlign || "center") === align ? "var(--brand-experiment)" : "var(--background-secondary, rgba(255,255,255,0.05))",
-                                                    color: (s.textAlign || "center") === align ? "#fff" : "var(--text-default)",
+                                                    background: (s.textAlign || "center") === align ? "var(--hc-accent, var(--brand-experiment))" : "var(--background-secondary, rgba(255,255,255,0.05))",
+                                                    color: (s.textAlign || "center") === align ? "var(--hc-accent-ink, #fff)" : "var(--text-default)",
                                                     fontWeight: (s.textAlign || "center") === align ? 600 : 400,
                                                     cursor: "pointer",
                                                     textTransform: "capitalize",

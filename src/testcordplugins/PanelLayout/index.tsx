@@ -996,8 +996,11 @@ function buildCustomCSS(): string {
             } else if (item.type === "native-activity-banner" || item.id === "activity-banner" || item.moduleId === "activity-banner") {
                 lines.push(`
                     section[class*="panels_"] > [class*="activityPanel_"],
-                    section[class*="panels_"] > div:has([class*="activityPanel_"]),
                     .vc-panel-module-item[data-module-id="activity-banner"] {
+                        order: ${orderVal} !important;
+                        ${hiddenStyle}
+                    }
+                    section[class*="panels_"] > div:has([class*="activityPanel_"]) {
                         order: ${orderVal} !important;
                         ${hiddenStyle}
                     }
