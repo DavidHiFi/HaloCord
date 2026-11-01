@@ -12,7 +12,6 @@ const files = [
     "src/testcordplugins/TestcordHelper/index.tsx",
     "src/testcordplugins/fastDiscord/index.tsx",
     "src/testcordplugins/PerformanceBoost/index.tsx",
-    "src/testcordplugins/audioCenter/index.tsx",
     "src/testcordplugins/TestcordOptimizer/index.tsx"
 ];
 const assignment = /(?:window|globalThis)\.(?:requestAnimationFrame|cancelAnimationFrame|fetch|ResizeObserver|requestIdleCallback|cancelIdleCallback)\s*=|EventTarget\.prototype\.(?:addEventListener|removeEventListener)\s*=|FluxDispatcher\.(?:dispatch|subscribe|unsubscribe)\s*=/;

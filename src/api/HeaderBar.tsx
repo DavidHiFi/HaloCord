@@ -374,8 +374,49 @@ function ChannelToolbarButtons() {
     ));
 }
 
+// Title bar buttons sit at the window's top edge. When the cursor leaves through that edge the page can miss the
+// mouseout, so the tooltip stays up. Send it ourselves on window blur, when the mouse leaves the page, or after
+// 4 s without movement over the button (like native Windows tooltips).
+let tooltipGuardInstalled = false;
+function installTitleBarTooltipGuard() {
+    if (tooltipGuardInstalled) return;
+    tooltipGuardInstalled = true;
+    const BUTTON = '[class*="bar_"] > [class*="trailing_"] > *';
+    let hovered: Element | null = null;
+    let inner: Element | null = null;
+    let popTimer: ReturnType<typeof setTimeout> | undefined;
+    const release = () => {
+        clearTimeout(popTimer);
+        const btn = hovered, el = inner?.isConnected ? inner : btn;
+        hovered = inner = null;
+        // From the innermost hovered node, so React sends onMouseLeave to every handler inside the button.
+        if (btn && el?.isConnected) el.dispatchEvent(new MouseEvent("mouseout", { bubbles: true, relatedTarget: btn.parentElement }));
+    };
+    const arm = () => { clearTimeout(popTimer); popTimer = setTimeout(release, 4000); };
+    const asNode = (t: EventTarget | null) => t instanceof Node ? t : null;
+    document.addEventListener("mouseover", e => {
+        const t = e.target instanceof Element ? e.target : null;
+        const btn = t?.closest(BUTTON);
+        if (!t || !btn) return;
+        inner = t;
+        if (btn !== hovered) { hovered = btn; arm(); }
+    }, true);
+    document.addEventListener("mousemove", e => {
+        if (hovered && e.target instanceof Element && hovered.contains(e.target)) { inner = e.target; arm(); }
+    }, true);
+    document.addEventListener("mouseout", e => {
+        if (hovered && hovered.contains(asNode(e.target)) && !hovered.contains(asNode(e.relatedTarget))) {
+            clearTimeout(popTimer);
+            hovered = inner = null;
+        }
+    }, true);
+    document.documentElement.addEventListener("mouseleave", release);
+    window.addEventListener("blur", release);
+}
+
 /** @internal Injected by HeaderBarAPI patch (do NOT call directly) */
 export function _addHeaderBarButtons() {
+    installTitleBarTooltipGuard();
     return [<HeaderBarButtons key="vc-header-bar-buttons" />];
 }
 

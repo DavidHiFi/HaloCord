@@ -80,18 +80,13 @@ async function handleSilentEditSubmit(channelId: string, messageId: string, cont
             url: Constants.Endpoints.MESSAGE(channelId, messageId)
         }).catch(() => {});
 
-        // 3. Purge the original message from local MessageLogger & MessageLoggerEnhanced so it doesn't show in red
+        // 3. Purge the original message from local MessageLogger so it doesn't show in red
         FluxDispatcher.dispatch({
             type: "MESSAGE_DELETE",
             channelId,
             id: messageId,
             mlDeleted: true
         });
-
-        const mleDb = await import("../../equicordplugins/messageLoggerEnhanced/db").catch(() => null);
-        if (mleDb?.deleteMessageIDB) {
-            await mleDb.deleteMessageIDB(messageId).catch(() => {});
-        }
     }
 }
 

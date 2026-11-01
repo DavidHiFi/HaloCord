@@ -41,7 +41,7 @@ const settings = definePluginSettings({
     },
     purgeLocalLoggers: {
         type: OptionType.BOOLEAN,
-        description: "Completely purge the message from your own local MessageLogger & MLE so it never shows in red.",
+        description: "Completely purge the message from your own local MessageLogger so it never shows in red.",
         default: true
     },
     purgeInterval: {
@@ -78,12 +78,6 @@ async function purgeLocalMessage(channelId: string, messageId: string) {
             id: messageId,
             mlDeleted: true
         });
-
-        // 2. Also attempt to remove from MessageLoggerEnhanced IndexedDB if active
-        const mleDb = await import("../../equicordplugins/messageLoggerEnhanced/db").catch(() => null);
-        if (mleDb?.deleteMessageIDB) {
-            await mleDb.deleteMessageIDB(messageId).catch(() => {});
-        }
     } catch {
         // Ignore local purge failures
     }
@@ -140,7 +134,7 @@ async function antiLogDelete(channelId: string, messageId: string): Promise<bool
             });
         }
 
-        // 3. Cleanly purge the message from your local MessageLogger / MLE so your client doesn't display it in red
+        // 3. Cleanly purge the message from your local MessageLogger so your client doesn't display it in red
         await purgeLocalMessage(channelId, messageId);
 
         return true;

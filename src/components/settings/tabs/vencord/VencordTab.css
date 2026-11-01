@@ -54,7 +54,8 @@
 }
 
 .vc-testcord-managed-settings-tab {
-    max-height: 48px;
+    /* Room for a two-line label such as "Privacy & Security" (58px). */
+    max-height: 80px;
     opacity: 1;
     transform: translateX(0);
     transition: max-height 180ms ease, min-height 180ms ease, margin 180ms ease, padding 180ms ease, opacity 160ms ease, transform 180ms ease;
