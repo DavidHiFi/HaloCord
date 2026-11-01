@@ -14,7 +14,8 @@ Stereo voice up to 96 kHz, call guards, voice effects, Go Live controls and hund
 
 <br><br>
 
-<img src="https://img.shields.io/badge/license-GPL--3.0-8957E5?style=flat-square&labelColor=161B22" alt="License: GPL-3.0">
+<img src="https://img.shields.io/github/v/release/DavidHiFi/HaloCord?style=flat-square&label=version&color=8957E5&labelColor=161B22" alt="Latest version">
+<img src="https://img.shields.io/github/downloads/DavidHiFi/HaloCord/total?style=flat-square&label=downloads&color=1F6FEB&labelColor=161B22" alt="Total downloads">
 <img src="https://img.shields.io/badge/platform-Windows-DB6D28?style=flat-square&labelColor=161B22" alt="Platform: Windows">
 
 </div>
@@ -26,7 +27,6 @@ Stereo voice up to 96 kHz, call guards, voice effects, Go Live controls and hund
 1. Download the `HaloCord-Setup` installer from the [latest release](https://github.com/DavidHiFi/HaloCord/releases/latest).
 2. Run it. The installer is not code signed, so Windows may show a SmartScreen warning: choose **More info**, then **Run anyway**.
 3. Pick an install folder, finish the setup and log in with your Discord account.
-4. While the repo is private, in-app updates need the [GitHub CLI](https://cli.github.com) signed in to an account that can see the repo: run `winget install GitHub.cli`, then `gh auth login`, then restart HaloCord.
 
 To build it yourself, follow [docs/building.md](docs/building.md).
 
