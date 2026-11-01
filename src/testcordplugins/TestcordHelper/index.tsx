@@ -1947,6 +1947,23 @@ export default definePlugin({
                 replace: "$self.onAudioReset()"
             }
         },
+        {
+            find: 'displayName="NowPlayingStore"',
+            replacement: [
+                {
+                    match: /(\i)=\{\.\.\.\1\},delete \1\[(\i)\]\[(\i)\]/,
+                    replace: "$1[$2]={...$1[$2]},delete $1[$2][$3]"
+                },
+                {
+                    match: /(\i)=\{\.\.\.\1\},delete \1\[(\i)\],!0/,
+                    replace: "delete $1[$2],!0"
+                },
+                {
+                    match: /(\i)=\{\.\.\.\1,\[(\i)\]:\{\.\.\.\1\[\2\],\[(\i)\.userId\]:\3\}\},(\i)=\{\.\.\.\4,\[\3\.userId\]:(\{.{0,60}?\})\}/,
+                    replace: "$1[$2]={...$1[$2],[$3.userId]:$3},$4[$3.userId]=$5"
+                }
+            ]
+        },
     ],
     dependencies: ["MessageAccessoriesAPI", "MessageEventsAPI"],
 
