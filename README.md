@@ -32,7 +32,7 @@ To build it yourself, follow [docs/building.md](docs/building.md).
 
 ### Voice
 
-- **Stereo voice:** up to 96 kHz, with control over Opus bitrate, sample rate, frame time, complexity, FEC, DTX and CBR.
+- **Stereo voice:** 510 kbps stereo Opus, with control over bitrate, sample rate, frame time, complexity, FEC, DTX and CBR.
 - **Voice card:** Microphone and Speaker side by side, each with volume, pan and an on/off switch.
 - **Extra mics:** send a Secondary and Third Microphone into the call along with your main one.
 - **Extra speakers:** play calls on a Secondary and Third Speaker at the same time.
@@ -40,8 +40,11 @@ To build it yourself, follow [docs/building.md](docs/building.md).
 - **Mic boost and EQ:** input volume up to 1000% and a 16-band EQ.
 - **Raw mic:** switch off Windows and Discord echo cancellation, noise suppression and auto gain.
 - **Voice effects:** pitch, echo, robot, bitcrush, muffle, static and ten presets, applied live.
-- **Mic Test:** hear yourself through HaloCord's own volume, EQ, effects and pan.
+- **Mic Test:** hear yourself through HaloCord's own volume, EQ, effects and pan, with a stereo left and right meter.
+- **Deafen while testing:** choose whether the Mic Test deafens you.
 - **Pick the test mic:** right-click the Mic Test Loopback button next to your name to choose which mic to test.
+- **User volume:** turn anyone up to 1000%, and reset them with the button by the slider or by right-clicking.
+- **Voice messages:** record and send voice messages from the chat bar, with a mic picker.
 - **Call guards:** locally mute people who send stereo noise or blast their mic, and skip friends or anyone you list.
 
 ### Streaming and camera
@@ -49,7 +52,8 @@ To build it yourself, follow [docs/building.md](docs/building.md).
 - **Go Live controls:** pick Gaming or Screenshare mode, or set resolution up to 4K and 15 to 360 FPS yourself.
 - **Stream sound:** a window share sends only that app's sound, and a screen share sends everything except HaloCord.
 - **Stream pan:** a Pan slider in Advanced Stream Settings moves your stream's sound left or right.
-- **Camera:** up to 4K at 60 FPS or 1080p at 120 FPS.
+- **Camera:** up to 4K at 60 FPS or 1080p at 120 FPS, with an unmirrored self-view option in Video Settings.
+- **Hardware encoding:** NVIDIA cards encode the camera and stream in hardware, and game shares hold their frame rate.
 
 ### Desktop app
 
@@ -62,7 +66,9 @@ To build it yourself, follow [docs/building.md](docs/building.md).
 ### Plugins and themes
 
 - **Plugins:** hundreds built in, from [Vencord](https://github.com/Vendicated/Vencord), [Equicord](https://github.com/Equicord/Equicord) and [TestCord](https://codeberg.org/Testcord/TestCord), plus HaloCord's own.
-- **MochaCord theme:** [MochaCord Theme](https://github.com/DavidHiFi/MochaCord-Theme), a [Catppuccin](https://github.com/catppuccin/catppuccin) Mocha theme, ships built in and updates hourly; turn it on under Themes.
+- **MochaCord theme:** [MochaCord Theme](https://github.com/DavidHiFi/MochaCord-Theme), a [Catppuccin](https://github.com/catppuccin/catppuccin) Mocha theme, ships built in and updates hourly; turn it on under Themes and set its options from the cog.
+- **HaloCord theming:** one switch in Themes turns the HaloCord look on or off.
+- **Fonts:** pick the UI font and the code font in Themes.
 - **HaloCord badges:** HaloCord Owner and Contributor badges on the profiles of the people who build it.
 - **Privacy:** settings stay on your PC, Discord's telemetry is blocked by default, and HaloCord runs no server.
 
