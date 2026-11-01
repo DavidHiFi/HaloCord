@@ -66,8 +66,8 @@ function SharePicker({ modalProps, onStart }: { modalProps: RenderModalProps; on
         save(opts);
         modalProps.onClose();
         const choice: ShareChoice = id.startsWith("device:")
-            ? { kind: "device", id: id.slice(7), audio: opts.audio, muted: opts.mute }
-            : { kind: "desktop", id, audio: opts.audio, muted: opts.mute };
+            ? { kind: "device", id: id.slice(7), audio: opts.audio, muted: opts.mute, pan: opts.pan }
+            : { kind: "desktop", id, audio: opts.audio, muted: opts.mute, pan: opts.pan };
         onStart(choice, sizeFor(opts.height), opts.fps, true);
     };
 

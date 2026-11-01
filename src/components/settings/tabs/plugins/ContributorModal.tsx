@@ -10,7 +10,7 @@ import { useSettings } from "@api/Settings";
 import { Heading } from "@components/Heading";
 import { Link } from "@components/Link";
 import { Paragraph } from "@components/Paragraph";
-import { EquicordDevsById, TestcordDevsById, VencordDevsById } from "@utils/constants";
+import { EquicordDevsById, HaloCordDevsById, TestcordDevsById, VencordDevsById } from "@utils/constants";
 import { classNameFactory } from "@utils/css";
 import { fetchUserProfile } from "@utils/discord";
 import { pluralize } from "@utils/misc";
@@ -38,7 +38,7 @@ function ContributorModal({ user, modalProps }: { user: User; modalProps: Render
             void fetchUserProfile(user.id).catch(() => { });
     }, [user.id, user.bot, profile]);
 
-    const dev = VencordDevsById[user.id] || EquicordDevsById[user.id] || TestcordDevsById[user.id];
+    const dev = VencordDevsById[user.id] || EquicordDevsById[user.id] || TestcordDevsById[user.id] || HaloCordDevsById[user.id];
     const githubName = profile?.connectedAccounts?.find(a => a.type === "github")?.name || dev?.github;
     const website = profile?.connectedAccounts?.find(a => a.type === "domain")?.name;
 

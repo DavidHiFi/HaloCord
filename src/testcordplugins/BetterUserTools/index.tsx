@@ -12,12 +12,24 @@ import { EquicordDevs, TestcordDevs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import definePlugin, { OptionType } from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { MediaEngineStore, React, showToast, Toasts, UserStore, VoiceStateStore } from "@webpack/common";
+import { ContextMenuApi, MediaEngineStore, Menu, React, showToast, Toasts, UserStore, VoiceStateStore } from "@webpack/common";
 
 type LoopbackActions = {
     setLoopback(tag: string, enabled: boolean): unknown;
     toggleSelfDeaf(): unknown;
 };
+
+// HaloCord's own mic test, exposed by the desktop userscript: plays the picked mic through HaloCord's chain.
+interface HcMicSource { id: string; label: string; on: boolean; dev: string; }
+interface HcMicTest {
+    sources(): HcMicSource[];
+    selected(): string;
+    active(): string | null;
+    start(id: string): Promise<boolean>;
+    stop(): void;
+}
+
+const getHcMicTest = () => (window as Window & { __hcMicTest?: HcMicTest; }).__hcMicTest;
 
 const VoiceActions = findByPropsLazy("setLoopback", "toggleSelfDeaf") as unknown as LoopbackActions | null;
 
@@ -131,6 +143,51 @@ async function disableLoopback(silent = false) {
     }
 }
 
+async function startHcTest(hc: HcMicTest, id: string) {
+    const source = hc.sources().find(s => s.id === id);
+    if (!source) return;
+    if (id !== "main" && !source.dev) {
+        notifyMic(`Choose a device for ${source.label} in Voice & Video first`, Toasts.Type.FAILURE);
+        return;
+    }
+    if (await hc.start(id)) notifyMic(`Mic test: ${source.label}`, Toasts.Type.SUCCESS);
+    else if (hc.active() === null) notifyMic(`Mic test failed for ${source.label} (see console)`, Toasts.Type.FAILURE);
+}
+
+function MicTestMenu({ hc, onChange }: { hc: HcMicTest; onChange(): void; }) {
+    const [, rerender] = React.useReducer(x => x + 1, 0);
+    const update = () => { rerender(); onChange(); };
+    const active = hc.active();
+    const current = active ?? hc.selected();
+
+    return (
+        <Menu.Menu navId="better-user-tools-mic-test" onClose={ContextMenuApi.closeContextMenu} aria-label="Mic Test Loopback">
+            {hc.sources().map(s => (
+                <Menu.MenuRadioItem
+                    key={s.id}
+                    id={`better-user-tools-mic-test-${s.id}`}
+                    group="better-user-tools-mic-test"
+                    label={s.id !== "main" && !s.dev ? `${s.label} (no device chosen)` : s.label}
+                    checked={current === s.id}
+                    disabled={s.id !== "main" && !s.dev}
+                    action={() => startHcTest(hc, s.id).then(update)}
+                />
+            ))}
+            <Menu.MenuSeparator />
+            <Menu.MenuItem
+                id="better-user-tools-mic-test-stop"
+                label="Stop Mic Test"
+                disabled={active === null}
+                action={() => {
+                    hc.stop();
+                    notifyMic("Mic test stopped", Toasts.Type.SUCCESS);
+                    update();
+                }}
+            />
+        </Menu.Menu>
+    );
+}
+
 function MicLoopbackIcon({ active, className }: { active: boolean; className?: string; }) {
     const lineLength = 30;
     const lineStyle: React.CSSProperties = {
@@ -204,8 +261,19 @@ function MicLoopbackIcon({ active, className }: { active: boolean; className?: s
 function MicLoopbackButton({ iconForeground, hideTooltips, nameplate }: UserAreaRenderProps) {
     const [, forceUpdate] = React.useReducer(x => x + 1, 0);
 
+    const hc = getHcMicTest();
+    const active = hc ? hc.active() !== null : loopbackActive;
+
     const handleToggle = React.useCallback(async () => {
-        if (loopbackActive) {
+        const hc = getHcMicTest();
+        if (hc) {
+            if (hc.active() !== null) {
+                hc.stop();
+                notifyMic("Mic test stopped", Toasts.Type.SUCCESS);
+            } else {
+                await startHcTest(hc, hc.selected());
+            }
+        } else if (loopbackActive) {
             await disableLoopback();
         } else {
             await enableLoopback();
@@ -216,13 +284,14 @@ function MicLoopbackButton({ iconForeground, hideTooltips, nameplate }: UserArea
     return (
         <UserAreaButton
             tooltipText={hideTooltips ? void 0 : "Mic Test Loopback"}
-            icon={<MicLoopbackIcon active={loopbackActive} className={iconForeground} />}
+            icon={<MicLoopbackIcon active={active} className={iconForeground} />}
             role="switch"
-            redGlow={!loopbackActive}
-            aria-checked={loopbackActive}
+            redGlow={!active}
+            aria-checked={active}
             onClick={handleToggle}
+            onContextMenu={hc ? e => ContextMenuApi.openContextMenu(e, () => <MicTestMenu hc={hc} onChange={forceUpdate} />) : void 0}
             plated={nameplate != null}
-            className={`button__201d5 wrapper__201d5 vc-betterusertools-btn${loopbackActive ? " danger" : ""}`}
+            className={`button__201d5 wrapper__201d5 vc-betterusertools-btn${active ? " danger" : ""}`}
         />
     );
 }
@@ -366,9 +435,9 @@ const styles = `
 export default definePlugin({
     id: "BetterUserTools",
     name: "BetterUserTools",
-    description: "Adds mic test shortcut button and off-the-radar button to the user panel, both are toggles. MicTest Simply lets you test your mic without entering the settings page. OffTheRadar Enables idle status and hides activity while enabled. just added before equicord, if the original gets added to equicord I will delete this one.",
+    description: "Adds mic test shortcut button and off-the-radar button to the user panel, both are toggles. MicTest Simply lets you test your mic without entering the settings page; right-click it to pick which HaloCord microphone to test.OffTheRadar Enables idle status and hides activity while enabled. just added before equicord, if the original gets added to equicord I will delete this one.",
     tags: ["Utility", "Customisation", "Shortcuts"],
-    authors: [EquicordDevs.Benjii, TestcordDevs.x2b, TestcordDevs.nnenaza],
+    authors: [EquicordDevs.Benjii, TestcordDevs.x2b, TestcordDevs.nnenaza, TestcordDevs.DavidHiFi],
     dependencies: ["UserSettingsAPI"],
     settings,
     styles,
@@ -383,6 +452,7 @@ export default definePlugin({
 
     stop() {
         void disableLoopback(true);
+        getHcMicTest()?.stop();
         loopbackActive = false;
         selfDeafenedByPlugin = false;
         missingModuleNotified = false;

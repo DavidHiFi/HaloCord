@@ -99,6 +99,7 @@ Thank you for starring the repo.
 ## Credits
 
 - **Author:** Myself, [DavidHiFi](https://github.com/DavidHiFi)
+- **Contributors:** [SickoHours](https://github.com/SickoHours), [Dx](https://github.com/DxRx99) (TestCord's owner), and the AI coding agents Claude Code and OpenHands
 
 | Who | What |
 |---|---|
@@ -114,7 +115,7 @@ Built on [Electron](https://www.electronjs.org/), running [Discord](https://disc
 
 ## Disclaimers
 
-HaloCord's own changes are written with an AI coding agent (Claude Code) working for the repo owner, who directs and tests every build.
+HaloCord's own changes are written with AI coding agents (Claude Code and OpenHands) working for the repo owner, who directs and tests every build.
 
 The [MochaCord Theme](https://github.com/DavidHiFi/MochaCord-Theme) is a separate project: a Catppuccin Mocha theme for Vencord-based clients. Old links to `MochaCord.css` in this repo forward to it.
 

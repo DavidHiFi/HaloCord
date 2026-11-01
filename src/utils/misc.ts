@@ -20,7 +20,7 @@ import { loadLazyChunks } from "@debug/loadLazyChunks";
 import { User } from "@vencord/discord-types";
 import { ChannelStore, GuildMemberStore, IconUtils } from "@webpack/common";
 
-import { EQUICORD_GUILD_ID, EQUICORD_HELPERS, EquicordDevsById, KNOWN_ISSUES_CHANNEL_ID, KNOWN_ISSUES_CHANNEL_IDS, SUPPORT_CHANNEL_ID, SUPPORT_CHANNEL_IDS, TESTCORD_GUILD_ID, TestcordDevsById, VencordDevsById } from "./constants";
+import { EQUICORD_GUILD_ID, EQUICORD_HELPERS, EquicordDevsById, HaloCordDevs, HaloCordDevsById, KNOWN_ISSUES_CHANNEL_ID, KNOWN_ISSUES_CHANNEL_IDS, SUPPORT_CHANNEL_ID, SUPPORT_CHANNEL_IDS, TESTCORD_GUILD_ID, TestcordDevsById, VencordDevsById } from "./constants";
 import { TestcordAdminsById, TestcordArtistsById } from "./testcordAdmins";
 
 /**
@@ -88,6 +88,10 @@ export const shouldShowEquicordContributorBadge = (id: string) => isEquicordPlug
 
 export const isTestcordPluginDev = (id: string) => Object.hasOwn(TestcordDevsById, id);
 export const shouldShowTestcordContributorBadge = (id: string) => isTestcordPluginDev(id) && TestcordDevsById[id].badge !== false;
+
+export const isHaloCordContributor = (id: string) => Object.hasOwn(HaloCordDevsById, id);
+export const shouldShowHaloCordContributorBadge = (id: string) => isHaloCordContributor(id) && HaloCordDevsById[id].badge !== false;
+export const isHaloCordOwner = (id: string) => id === String(HaloCordDevs.DavidHiFi.id) || id === String(HaloCordDevs.SickoHours.id);
 
 export const isTestcordAdmin = (id: string) => Object.hasOwn(TestcordAdminsById, id);
 export const shouldShowTestcordAdminBadge = (id: string) => isTestcordAdmin(id);

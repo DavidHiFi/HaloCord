@@ -5,11 +5,11 @@
  */
 
 import { normalizeConfig, streamEnhancerSettings, syncCurrentGoLiveSource } from "./settings";
-import { setLiveShareAudio } from "./shareCapture";
+import { setLiveShareAudio, setLiveSharePan } from "./shareCapture";
 
 export type Mode = "gaming" | "screenshare" | "custom";
 export type Size = { width: number; height: number; };
-export interface Saved { height: number; fps: number; mute: boolean; audio: string; }
+export interface Saved { height: number; fps: number; mute: boolean; audio: string; pan: number; }
 
 export const resolutions = [
     { label: "720p", height: 720 },
@@ -40,7 +40,8 @@ export const loadSaved = (): Saved => {
     const s = streamEnhancerSettings.store;
     const height = resolutions.some(r => r.height === s.shareHeight) ? s.shareHeight : 1080;
     const fps = (frameRates as readonly number[]).includes(c.streamMaxFps) ? c.streamMaxFps : 60;
-    return { height, fps, mute: !!s.shareMute, audio: s.shareAudio || "default" };
+    const pan = Math.max(-1, Math.min(1, Number(s.sharePan) || 0));
+    return { height, fps, mute: !!s.shareMute, audio: s.shareAudio || "default", pan };
 };
 
 export const save = (v: Saved) => {
@@ -48,6 +49,7 @@ export const save = (v: Saved) => {
     store.shareHeight = v.height;
     store.shareMute = v.mute;
     store.shareAudio = v.audio;
+    store.sharePan = v.pan;
     const size = sizeFor(v.height);
     store.config = normalizeConfig({ ...normalizeConfig(store.config), streamTweaksEnabled: true, streamWidth: size.width, streamHeight: size.height, streamMaxFps: v.fps });
 };
@@ -56,6 +58,8 @@ export const save = (v: Saved) => {
 export const applyLive = (next: Partial<Saved>) => {
     const v = { ...loadSaved(), ...next };
     save(v);
-    syncCurrentGoLiveSource(normalizeConfig(streamEnhancerSettings.store.config));
+    // A pan drag changes only the sound, so it skips re-sending the video source on every step.
+    if (next.pan === undefined) syncCurrentGoLiveSource(normalizeConfig(streamEnhancerSettings.store.config));
     setLiveShareAudio(!v.mute);
+    setLiveSharePan(v.pan);
 };

@@ -8,10 +8,12 @@ import ErrorBoundary from "@components/ErrorBoundary";
 import { Switch } from "@components/Switch";
 import { classNameFactory } from "@utils/css";
 import { ModalRoot, ModalSize, openModal, type RenderModalProps } from "@utils/modal";
-import { Select, useEffect, useState } from "@webpack/common";
+import { Select, Slider, useEffect, useState } from "@webpack/common";
 
 import { applyLive, frameRates, heavyNote, isHeavy, loadSaved, modeFor, modes, resolutions, type Saved } from "../quality";
 import { pickerTabs, StreamEnhancerControlPanel, streamEnhancerSettings } from "../settings";
+import { sharePanBlocker } from "../shareCapture";
+import { choiceAt, nearestChoice, showChoiceLabel } from "../slider";
 
 const cl = classNameFactory("vc-stream-enhancer-share-");
 const ccl = classNameFactory("vc-stream-enhancer-camera-");
@@ -35,6 +37,37 @@ export function ToggleRow({ label, checked, onChange, disabled, title }: { label
             <span>{label}</span>
             <Switch checked={checked} onChange={onChange} disabled={disabled} />
         </label>
+    );
+}
+
+// Pan positions in percent, 5% apart like the voice card's pan; the slider snaps to them, so the middle is exact centre.
+const panChoices = Array.from({ length: 41 }, (_, i) => i * 5 - 100);
+// Same wording as the voice card's pan (dvxPanText in the userscript).
+const panText = (pct: number) => !pct ? "Center" : pct < 0 ? `L ${-pct}` : `R ${pct}`;
+
+// Left/right balance of the stream's sound. Double-click puts it back in the centre.
+function PanRow({ pan, set, muted }: { pan: number; set: (pan: number) => void; muted: boolean; }) {
+    const [resets, setResets] = useState(0);
+    const blocked = sharePanBlocker();
+    const pct = Math.round(pan * 100);
+    return (
+        <div onDoubleClick={() => { if (blocked || muted) return; set(0); setResets(n => n + 1); }}>
+            <div className={cl("label")}>Pan: {panText(pct)}</div>
+            <Slider
+                key={resets}
+                disabled={!!blocked || muted}
+                minValue={0}
+                maxValue={panChoices.length - 1}
+                markers={panChoices.map((_, i) => i)}
+                initialValue={nearestChoice(pct, panChoices)}
+                keyboardStep={1}
+                stickToMarkers={true}
+                onValueChange={i => set(choiceAt(i, panChoices) / 100)}
+                onMarkerRender={i => <span className="vc-stream-enhancer-slider-marker">{showChoiceLabel(i, panChoices.length) ? panText(choiceAt(i, panChoices)) : ""}</span>}
+                onValueRender={i => panText(choiceAt(i, panChoices))}
+            />
+            {blocked && <p className={cl("warn")}>{blocked}</p>}
+        </div>
     );
 }
 
@@ -72,6 +105,7 @@ export function QualityPanel({ opts, set, inputs }: { opts: Saved; set: (next: P
                     {inputs.map(i => <option key={i.deviceId} value={i.deviceId}>{i.label || "Input device"}</option>)}
                 </select>
             )}
+            <PanRow pan={opts.pan} set={pan => set({ pan })} muted={opts.mute} />
         </>
     );
 }

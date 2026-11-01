@@ -671,6 +671,7 @@ export const streamEnhancerSettings = definePluginSettings({
     shareHeight: { type: OptionType.NUMBER, description: "Screen share resolution", default: 1080, hidden: true },
     shareMute: { type: OptionType.BOOLEAN, description: "Mute stream audio", default: false, hidden: true },
     shareAudio: { type: OptionType.STRING, description: "Screen share audio source", default: "default", hidden: true },
+    sharePan: { type: OptionType.NUMBER, description: "Screen share audio pan, -1 left to 1 right", default: 0, hidden: true },
     // On: clicking a window or screen in the picker starts the stream, like Discord desktop. Off: pick, then Go Live.
     shareInstant: { type: OptionType.BOOLEAN, description: "Start sharing on the first click", default: true, hidden: true },
     // Tab the share picker opens on: one of pickerTabs' values.

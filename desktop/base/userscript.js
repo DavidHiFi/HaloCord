@@ -766,10 +766,10 @@ var dvxMt=null,dvxMtNative=false,dvxMtSources=[['main','Microphone'],['sec','Sec
 function dvxMtStop(){var m=dvxMt;dvxMt=null;if(!m)return;try{cancelAnimationFrame(m['raf']);}catch(e){}try{m['st']&&m['st']['getTracks']()['forEach'](function(t){t['stop']();});}catch(e){}try{m['main']&&dvxGainPrune();}catch(e){}try{m['ctx']&&m['ctx']['close']();}catch(e){}try{m['btn']['removeAttribute']('data-dvx-testing');}catch(e){}try{if(m['bar'])m['bar']['style']['transform']='translateX(0px)',m['bar']['parentElement']['style']['background']='none';}catch(e){}}
 function dvxMtStart(S,btn){
   dvxMtStop();
-  var mt=btn['closest']('[class*="micTest__"]'),m=dvxMt={'btn':btn,'bar':mt&&mt['querySelector']('[class*="progress__"]'),'st':null,'ctx':null,'raf':0,'main':!S};
-  btn['setAttribute']('data-dvx-testing','1');
-  (typeof eI!=='function'?Promise['reject'](new Error('getUserMedia unavailable')):S?eI(dvxAuxConstraints(S)):dvxMtMainStream())['then'](function(st){
-    if(dvxMt!==m){st['getTracks']()['forEach'](function(t){t['stop']();});return;}
+  var mt=btn&&btn['closest']('[class*="micTest__"]'),m=dvxMt={'btn':btn,'bar':mt&&mt['querySelector']('[class*="progress__"]'),'st':null,'ctx':null,'raf':0,'main':!S,'src':S?S['p']:'main'};
+  if(btn)btn['setAttribute']('data-dvx-testing','1');
+  return(typeof eI!=='function'?Promise['reject'](new Error('getUserMedia unavailable')):S?eI(dvxAuxConstraints(S)):dvxMtMainStream())['then'](function(st){
+    if(dvxMt!==m){st['getTracks']()['forEach'](function(t){t['stop']();});return false;}
     var AC=window['AudioContext']||window['webkitAudioContext'],c=new AC(),play=st,g=c['createGain'](),an=c['createAnalyser'](),buf=new Float32Array(1024),out='';
     m['st']=st,m['ctx']=c,an['fftSize']=1024;
     if(!S){dvxGainNoAux=true;try{play=new MediaStream([dvxGainTrack(st['getAudioTracks']()[0])]);}finally{dvxGainNoAux=false;}}
@@ -779,13 +779,14 @@ function dvxMtStart(S,btn){
     if(out&&out!=='default'&&typeof c['setSinkId']==='function')c['setSinkId'](out)['catch'](function(){});
     (function draw(){
       if(dvxMt!==m)return;
-      if(!m['btn']['isConnected']){dvxMtStop();return;}
+      if(m['btn']&&!m['btn']['isConnected']){dvxMtStop();return;}
       an['getFloatTimeDomainData'](buf);var sq=0;for(var i=0;i<buf['length'];i++)sq+=buf[i]*buf[i];
       var lvl=Math['max'](0,Math['min'](1,(20*Math['log10'](Math['sqrt'](sq/buf['length'])||1e-8)+60)/60));
       if(m['bar']){var box=m['bar']['parentElement'];box['style']['background']='#AFE37F',m['bar']['style']['transform']='translateX('+Math['round'](lvl*box['clientWidth'])+'px)';}
       m['raf']=requestAnimationFrame(draw);
     })();
-  })['catch'](function(err){if(dvxMt===m)dvxMtStop();e7('mic test '+(S?S['p']:'main')+' error: '+((err&&err['name'])||'failed'));if(!S&&btn['isConnected']){dvxMtNative=true;btn['click']();}});
+    return true;
+  })['catch'](function(err){if(dvxMt===m)dvxMtStop();e7('mic test '+(S?S['p']:'main')+' error: '+((err&&err['name'])||'failed'));if(!S&&btn&&btn['isConnected']){dvxMtNative=true;btn['click']();}return false;});
 }
 function dvxMtMainStream(){
   var c=dvxAuxConstraints({'dev':''}),id='';
@@ -794,6 +795,14 @@ function dvxMtMainStream(){
   c['audio']['deviceId']={'exact':id};
   return eI(c)['catch'](function(){delete c['audio']['deviceId'];return eI(c);});
 }
+// The voice panel's Mic Test Loopback button (BetterUserTools) runs the same test without the settings page.
+try{window['__hcMicTest']={
+  'sources':function(){return dvxMtSources['map'](function(x){var S=dvxAuxSpecs['filter'](function(a){return a['p']===x[0];})[0];return{'id':x[0],'label':x[1],'on':S?dvxAuxOn(S):true,'dev':S?dvxAuxDevice(S):''};});},
+  'selected':function(){return Q['micTestSource']==='sec'||Q['micTestSource']==='thr'?Q['micTestSource']:'main';},
+  'active':function(){return dvxMt?dvxMt['src']:null;},
+  'start':function(id){var S=dvxAuxSpecs['filter'](function(a){return a['p']===id;})[0]||null;if(id!=='main'&&!S)return Promise['resolve'](false);if(Q['micTestSource']!==id)Q['micTestSource']=id,e4();return dvxMtStart(S,null);},
+  'stop':function(){dvxMtStop();}
+};}catch(dvxMT1){}
 function dvxMtNativeBtn(){var mt=document['querySelector']('[role="dialog"] [class*="micTest__"]');if(!mt)return null;var b=mt['children'][1]&&mt['children'][1]['querySelector']('button');if(b)return b;var bs=mt['querySelectorAll']('button');return bs['length']?bs[bs['length']-1]:null;}
 try{document['addEventListener']('click',function(ev){
   var btn=ev['target']&&ev['target']['closest']&&ev['target']['closest']('button');
@@ -804,7 +813,7 @@ try{document['addEventListener']('click',function(ev){
   ev['preventDefault'](),ev['stopImmediatePropagation'](),dvxMtStart(S,btn);
 },!![]);}catch(dvxMT0){}
 function dvxMtMount(){
-  if(dvxMt&&!dvxMt['btn']['isConnected'])dvxMtStop();
+  if(dvxMt&&dvxMt['btn']&&!dvxMt['btn']['isConnected'])dvxMtStop();
   var mt=document['querySelector']('[role="dialog"] [class*="micTest__"]');if(!mt||!mt['parentElement'])return;
   var row=document['getElementById']('dvx-mt-row');
   if(row&&mt['parentElement']['contains'](row))return;

@@ -26,8 +26,9 @@ import { openContributorModal } from "@components/settings/tabs";
 import { Devs } from "@utils/constants";
 import { copyWithToast, fetchUserProfile } from "@utils/discord";
 import { Logger } from "@utils/Logger";
-import { shouldShowContributorBadge, shouldShowEquicordContributorBadge, shouldShowTestcordAdminBadge, shouldShowTestcordContributorBadge } from "@utils/misc";
+import { isHaloCordOwner, shouldShowContributorBadge, shouldShowEquicordContributorBadge, shouldShowHaloCordContributorBadge, shouldShowTestcordAdminBadge, shouldShowTestcordContributorBadge } from "@utils/misc";
 import { isTestcordArtist, isTestcordDeveloper, isTestcordOwner } from "@utils/testcordAdmins";
+import { HaloCordPluginIconUrl } from "@utils/testcordIcons";
 import { ZWSP } from "@utils/text";
 import definePlugin from "@utils/types";
 import { Constants, ContextMenuApi, Menu, RestAPI, showToast, UserProfileStore, UserStore } from "@webpack/common";
@@ -87,6 +88,37 @@ const TestcordContributorBadge: ProfileBadge = {
         style: {
             borderRadius: "50%",
             transform: "scale(0.9)"
+        }
+    },
+};
+
+const HaloCordContributorBadge: ProfileBadge = {
+    id: "halocord_contributor",
+    description: "HaloCord Contributor",
+    iconSrc: HaloCordPluginIconUrl,
+    position: BadgePosition.START,
+    shouldShow: ({ userId }) => shouldShowHaloCordContributorBadge(userId),
+    onClick: (_, { userId }) => openContributorModal(UserStore.getUser(userId)),
+    props: {
+        style: {
+            borderRadius: "50%",
+            transform: "scale(0.9)"
+        }
+    },
+};
+
+// Same icon as the contributor badge; a gold ring (the owner-crown color) marks the owner.
+const HaloCordOwnerBadge: ProfileBadge = {
+    id: "halocord_owner",
+    description: "HaloCord Owner",
+    iconSrc: HaloCordPluginIconUrl,
+    position: BadgePosition.START,
+    shouldShow: ({ userId }) => isHaloCordOwner(userId),
+    props: {
+        style: {
+            borderRadius: "50%",
+            transform: "scale(0.9)",
+            boxShadow: "0 0 0 1.5px var(--status-warning)"
         }
     },
 };
@@ -391,7 +423,7 @@ export default definePlugin({
         }
     },
 
-    userProfileBadges: [ContributorBadge, EquicordContributorBadge, TestcordContributorBadge, TestcordUserBadge, TestcordAdminBadge, TestcordOwnerBadge, TestcordDevBadge, TestcordArtistBadge, UserPluginContributorBadge],
+    userProfileBadges: [ContributorBadge, EquicordContributorBadge, TestcordContributorBadge, TestcordUserBadge, TestcordAdminBadge, TestcordOwnerBadge, TestcordDevBadge, TestcordArtistBadge, HaloCordContributorBadge, HaloCordOwnerBadge, UserPluginContributorBadge],
 
     start() {
         setTimeout(() => {
