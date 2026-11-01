@@ -548,6 +548,21 @@ html.hc-theming .vc-stream-enhancer-halo [class*="barFill_"] { background: var(-
 html.hc-theming .vc-stream-enhancer-halo [class*="grabber_"] { border-color: var(--hc-accent); }
 html.hc-theming .vc-stream-enhancer-halo [class*="selectField__"] { border-color: var(--hc-row-border); background: var(--hc-row-bg); }
 html.hc-theming .vc-stream-enhancer-halo .vc-form-switch-container { border-color: var(--hc-row-border); }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-tabs { border-bottom-color: var(--hc-panel-border, var(--border-subtle)); }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-tablist { gap: 8px; padding: 0; }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-tab-selected,
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-tab-bubble { display: none; }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-tab { padding: 10px 20px; border: 1px solid var(--hc-row-border, var(--border-subtle)); background: var(--hc-row-bg, var(--background-base-lower)); color: var(--hc-text-muted, var(--text-muted)); transition: border-color .15s ease, background-color .15s ease, color .15s ease; }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-tab:hover { border-color: var(--hc-accent, var(--brand-500)); color: var(--hc-text, var(--text-default)); }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-tab-on,
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-tab-on:hover { border-color: var(--hc-accent, var(--brand-500)); background: color-mix(in srgb, var(--hc-accent, var(--brand-500)) 14%, transparent); color: var(--hc-accent, var(--brand-500)); }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-tile { color: var(--hc-text, var(--text-default)); }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-thumb { border: 1px solid var(--hc-row-border, var(--border-subtle)); border-radius: 11px; background: var(--hc-row-bg, var(--background-base-lower)); outline: none; transition: border-color .15s ease, box-shadow .15s ease; }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-tile:hover .vc-stream-enhancer-share-thumb { border-color: var(--hc-accent, var(--brand-500)); }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-tile-on .vc-stream-enhancer-share-thumb { border-color: var(--hc-accent, var(--brand-500)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--hc-accent, var(--brand-500)) 22%, transparent); }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-tile:focus-visible { border-radius: 12px; }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-empty { color: var(--hc-text-muted, var(--text-muted)); }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-grid { scrollbar-width: thin; scrollbar-color: var(--hc-scroll-thumb, var(--hc-row-border)) transparent; }
 
 /* Labelled pill switches (ToggleRow in components/StreamSettings.tsx); the Switch is the plugin list's. */
 .vc-stream-enhancer-share-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; padding: 8px; color: var(--interactive-text-default, var(--interactive-normal)); font-size: 14px; cursor: pointer; }
