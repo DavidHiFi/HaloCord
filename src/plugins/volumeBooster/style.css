@@ -1,0 +1,35 @@
+.vc-volume-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.vc-volume-row > :first-child {
+    flex: 1;
+    min-width: 0;
+}
+
+.vc-volume-reset {
+    display: flex;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--interactive-normal);
+}
+
+.vc-volume-reset:hover {
+    color: var(--interactive-hover);
+}
+
+.vc-volume-reset svg {
+    width: 16px;
+    height: 16px;
+}
+
+html.hc-theming .vc-volume-reset {
+    color: var(--hc-text-muted, var(--interactive-normal));
+}
+
+html.hc-theming .vc-volume-reset:hover {
+    color: var(--hc-accent, var(--interactive-hover));
+}

@@ -16,31 +16,55 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { definePluginSettings } from "@api/Settings";
-import { Devs } from "@utils/constants";
-import definePlugin, { makeRange, OptionType } from "@utils/types";
+import "./style.css";
 
-const settings = definePluginSettings({
-    multiplier: {
-        description: "Volume Multiplier",
-        type: OptionType.SLIDER,
-        markers: makeRange(1, 5, 0.5),
-        default: 2,
-        stickToMarkers: true,
-    }
-});
+import { findGroupChildrenByChildId, NavContextMenuPatchCallback } from "@api/ContextMenu";
+import { ResetIcon } from "@components/Icons";
+import { Devs, TestcordDevs } from "@utils/constants";
+import definePlugin from "@utils/types";
+import { Stream, User } from "@vencord/discord-types";
+import { findByPropsLazy } from "@webpack";
+import { Clickable, Menu, React } from "@webpack/common";
+import type { ComponentProps, ReactElement } from "react";
+
+const DEFAULT_VOLUME = { default: 100, stream: 18 } as const;
+
+const { setLocalVolume } = findByPropsLazy("setLocalVolume", "toggleLocalMute");
+
+function addVolumeReset(children: Parameters<NavContextMenuPatchCallback>[0], userId: string, context: keyof typeof DEFAULT_VOLUME) {
+    const group = findGroupChildrenByChildId("user-volume", children);
+    if (!group) return;
+
+    const index = group.findIndex(child => child?.props?.id === "user-volume");
+    const item = group[index] as ReactElement<ComponentProps<typeof Menu.MenuControlItem>>;
+    const reset = () => setLocalVolume(userId, DEFAULT_VOLUME[context], context);
+
+    group.splice(index, 1,
+        React.cloneElement(item, {
+            control: (props, ref) => (
+                <div className="vc-volume-row">
+                    {item.props.control(props, ref)}
+                    <Clickable className="vc-volume-reset" aria-label="Reset volume" onClick={reset}>
+                        <ResetIcon />
+                    </Clickable>
+                </div>
+            )
+        }),
+        <Menu.MenuItem id="vc-volume-reset" label="Reset volume" action={reset} />
+    );
+}
 
 interface StreamData {
     audioContext: AudioContext,
     audioElement: HTMLAudioElement,
     emitter: any,
     // added by this plugin
+    boostSource?: MediaStreamAudioSourceNode,
     gainNode?: GainNode,
     id: string,
     levelNode: AudioWorkletNode,
     sinkId: string | "default",
     stream: MediaStream,
-    streamSourceNode?: MediaStreamAudioSourceNode,
     videoStreamId: string,
     _mute: boolean,
     _speakingFlags: number,
@@ -50,26 +74,32 @@ interface StreamData {
 export default definePlugin({
     id: "VolumeBooster",
     name: "VolumeBooster",
-    authors: [Devs.Nuckyz, Devs.sadan],
-    description: "Allows you to set the user and stream volume above the default maximum",
+    authors: [Devs.Nuckyz, Devs.sadan, TestcordDevs.DavidHiFi],
+    description: "Lets you set user and stream volume up to 1000% and reset it from the context menu.",
     tags: ["Voice", "Utility"],
-    settings,
+    required: true,
+    hidden: true,
+
+    contextMenus: {
+        "user-context": (children, { user }: { user: User; }) => addVolumeReset(children, user.id, "default"),
+        "stream-context": (children, { stream }: { stream: Stream; }) => addVolumeReset(children, stream.ownerId, "stream")
+    },
 
     patches: [
         // Change the max volume for sliders to allow for values above 200
         {
             find: "#{intl::USER_VOLUME}",
             replacement: {
-                match: /(?<=maxValue:)\i\.isPlatformEmbedded\?(\i\.\i):\i\.\i(?=,)/,
-                replace: (_, higherMaxVolume) => `${higherMaxVolume}*$self.settings.store.multiplier`
+                match: /(?<=maxValue:)\i\.isPlatformEmbedded\?\i\.\i:\i\.\i(?=,)/,
+                replace: "1000"
             }
         },
         // Change the max volume for sliders to allow for values above 200
         {
             find: "currentVolume:",
             replacement: {
-                match: /(?<=maxValue:)\i\.\i\?(\d+?):\d+?(?=,)/,
-                replace: (_, higherMaxVolume) => `${higherMaxVolume}*$self.settings.store.multiplier`
+                match: /(?<=maxValue:)\i\.\i\?\d+?:\d+?(?=,)/,
+                replace: "1000"
             }
         },
         // Patches needed for web/vesktop
@@ -92,6 +122,10 @@ export default definePlugin({
                 {
                     match: /\.volume=this\._volume\/100;/,
                     replace: ".volume=0.00;$self.patchVolume(this);"
+                },
+                {
+                    match: /destroy\(\)\{(?=this\.audioElement\?\.pause\(\))/,
+                    replace: "$&this.boostSource?.disconnect();this.gainNode?.disconnect();"
                 }
             ]
         },
@@ -131,12 +165,10 @@ export default definePlugin({
     patchVolume(data: StreamData) {
         if (data.stream.getAudioTracks().length === 0) return;
 
-        data.streamSourceNode ??= data.audioContext.createMediaStreamSource(data.stream);
-
         if (!data.gainNode) {
-            const gain = data.gainNode = data.audioContext.createGain();
-            data.streamSourceNode.connect(gain);
-            gain.connect(data.audioContext.destination);
+            data.boostSource = data.audioContext.createMediaStreamSource(data.stream);
+            data.gainNode = data.audioContext.createGain();
+            data.boostSource.connect(data.gainNode).connect(data.audioContext.destination);
         }
 
         // @ts-expect-error
