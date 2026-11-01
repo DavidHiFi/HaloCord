@@ -72,7 +72,12 @@ export interface Settings {
     useQuickCss: boolean;
     haloTheming: boolean;
     uiFont: string;
+    /** CSS weight of the installed style picked for uiFont; 400 keeps Discord's weights. */
+    uiFontWeight: number;
+    uiFontItalic: boolean;
     codeFont: string;
+    codeFontWeight: number;
+    codeFontItalic: boolean;
     mochacord: MochaCordSettings;
     eagerPatches: boolean;
     enabledThemes: string[];
@@ -147,7 +152,11 @@ const DefaultSettings: Settings = {
     useQuickCss: true,
     haloTheming: true,
     uiFont: "",
+    uiFontWeight: 400,
+    uiFontItalic: false,
     codeFont: "",
+    codeFontWeight: 400,
+    codeFontItalic: false,
     mochacord: {
         typing: "left",
         typingDots: false,

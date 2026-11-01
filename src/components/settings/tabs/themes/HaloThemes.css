@@ -152,6 +152,15 @@
     width: 220px;
 }
 
+.hc-mc-font-styles {
+    justify-content: flex-end;
+    max-width: 400px;
+}
+
+.hc-mc-font-styles .hc-mc-segment {
+    padding: 6px 11px;
+}
+
 .hc-mc-hex {
     font-family: var(--font-code);
 }
