@@ -12,7 +12,7 @@ export interface TestCordLogoProps extends React.SVGProps<SVGSVGElement> {
 }
 
 // HaloCord app icon (desktop/brand/make_icon.py), shown wherever the TestCord logo was.
-const HALOCORD_ICON = `data:image/png;base64,${halocordIconBase64}`;
+export const HALOCORD_ICON = `data:image/png;base64,${halocordIconBase64}`;
 
 export function TestCordIcon({ size = 24, width, height, className }: TestCordLogoProps) {
     return <img src={HALOCORD_ICON} width={width ?? size} height={height ?? size} className={className} alt="HaloCord" draggable={false} />;

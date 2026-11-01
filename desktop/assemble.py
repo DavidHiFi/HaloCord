@@ -73,6 +73,9 @@ m = m.replace("<p class='r'>Kurtzon</p>", "<p class='r'>HaloCord</p>")
 # Match the installer shortcut's id, or the taskbar groups HaloCord under a stale "Kurtcord" name.
 assert m.count('app.setAppUserModelId("com.kurtcord.desktop")') == 1
 m = m.replace('app.setAppUserModelId("com.kurtcord.desktop")', 'app.setAppUserModelId("com.davidhifi.halocord")')
+# Main window, popout windows and tray load icon.ico (copied next to main.js below).
+assert m.count('path.join(__dirname,"icon.png")') == 3
+m = m.replace('path.join(__dirname,"icon.png")', 'path.join(__dirname,"icon.ico")')
 # Load the bundle's main side first, with its settings in %APPDATA%\HaloCord\TestCord (Stable keeps %APPDATA%\Testcord).
 a = 'Menu:Menu}=require("electron");'
 assert m.count(a) == 1
@@ -258,6 +261,9 @@ for f in ("preload.js", "userscript.js"):
     (asrc / f).write_text(s, encoding="utf-8")
     print(f, "display strings:", k)
 shutil.copy2(D / "brand" / "icon.png", asrc / "icon.png")
+# Windows picks the .ico's prerendered 16/20/24 px frames for the title bar and tray instead of
+# shrinking the 256 px PNG into a blocky blur.
+shutil.copy2(D / "brand" / "halocord.ico", asrc / "icon.ico")
 pkg = json.loads((asrc / "package.json").read_text())
 pkg.update(name="halocord", productName="HaloCord", version=VERSION, description="HaloCord", author="DavidHiFi")
 (asrc / "package.json").write_text(json.dumps(pkg, indent=2))
