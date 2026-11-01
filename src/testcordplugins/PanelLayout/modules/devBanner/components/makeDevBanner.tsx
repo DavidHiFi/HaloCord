@@ -26,7 +26,7 @@ export function makeDevBanner(state?: string): string | JSX.Element | null {
 
     const clientInfo = detectClient();
 
-    const branchLabel = gitBranch === "main" || gitBranch === "master" ? "release" : gitBranch;
+    const branchLabel = /(^|\/)(main|master)$/.test(gitBranch) ? "release" : gitBranch;
 
     const replaced = baseFormat
         .replace(/{buildChannel}/g, buildChannel)

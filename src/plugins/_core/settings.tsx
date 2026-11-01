@@ -809,7 +809,7 @@ export default definePlugin({
             {
                 key: "testcord_cloud",
                 title: "Cloud",
-                panelTitle: "testcord Cloud",
+                panelTitle: "HaloCord Cloud",
                 Component: CloudTab,
                 Icon: CloudIcon
             },

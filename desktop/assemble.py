@@ -206,8 +206,9 @@ for f in ("preload.js", "userscript.js"):
         for a, b in [
             # No QEXT row any more: stock Discord peers can't decode it, so HaloCord stays at 510 kbps.
             (r"'Enable\x20Experimental\x20QEXT\x20Layer'", r"'Enable\x20Opus\x201.6\x20HD'"),
-            (r"\x20kurtopus\x201.6\x20HD\x20Kurtzon", r"\x20·\x20Opus\x201.6\x20HD"),
-            ("/kurtopus/i", r"/Opus\x201\.6\x20HD/i"),
+            # QEXT is off, so the settings footer no longer gets the codec label: its guard always matches.
+            (r"\x20kurtopus\x201.6\x20HD\x20Kurtzon", ""),
+            ("/kurtopus/i", "/(?:)/"),
             (r"kurtopus\x201.6\x20HD", r"Opus\x201.6\x20HD"),
             (r"Ping\x20(Kurtzon)", r"Ping\x20(HaloCord)"),
         ]:
