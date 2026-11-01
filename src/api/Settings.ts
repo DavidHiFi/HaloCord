@@ -45,6 +45,7 @@ export interface Settings {
     autoUpdateNotification: boolean;
     updaterBranch: "main" | "dev" | "dev2";
     useQuickCss: boolean;
+    haloTheming: boolean;
     eagerPatches: boolean;
     enabledThemes: string[];
     enabledThemeLinks: string[];
@@ -115,6 +116,7 @@ const DefaultSettings: Settings = {
     autoUpdateNotification: true,
     updaterBranch: "main",
     useQuickCss: true,
+    haloTheming: true,
     useTestcordIcon: false,
     hideThemeMarketplace: false,
     hideSnippetMarketplace: false,
