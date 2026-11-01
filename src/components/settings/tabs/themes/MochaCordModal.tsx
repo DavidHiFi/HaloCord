@@ -78,7 +78,7 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
 function ColorRow({ setting, value, onChange }: { setting: typeof mochaColors[number][0]; value: string; onChange(value: string): void; }) {
     const [title, description, fallback] = colorLabels[setting];
     const [draft, setDraft] = useState(value);
-    const timer = useRef<number>();
+    const timer = useRef<number | undefined>(undefined);
     const valid = isHexColor(draft);
 
     useEffect(() => setDraft(value), [value]);
