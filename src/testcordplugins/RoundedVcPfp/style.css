@@ -10,8 +10,19 @@ div[class*="videoWrapper"] {
     overflow: hidden !important;
 }
 
+/* Override Glow: Discord paints voice speaking rings with --status-speaking,
+   which each theme container sets again, so set it on all of them. */
+html.vc-rvcpfp-override-glow,
+html.vc-rvcpfp-override-glow :is(.theme-dark, .theme-light, .theme-darker, .theme-midnight) {
+    --status-speaking: var(--vc-rvcpfp-glow-color) !important;
+}
+
+html.vc-rvcpfp-override-glow [class*="avatarSpeakingOutline"] {
+    outline-color: var(--status-speaking) !important;
+}
+
 /* The picture is painted and masked on ::before so this element can carry the
-   glow filter unmasked. A filter on the backdrop wrapper would also trace
+   speaking ring filter unmasked. A filter on the backdrop wrapper would also trace
    whatever that wrapper paints, like a profile gradient. Avoid :has() here, the
    managed sheet can drop those rules at boot. */
 div[data-selenium-video-tile] div[role="img"] {
@@ -59,7 +70,7 @@ div[data-selenium-video-tile][style*="--vc-pfp-hide-bg"] [class*="background"] {
    tiles never carry the speaking marker; the stream exclusion is a backstop. No transition: fading a blurred shadow repaints it every
    frame. */
 div[data-selenium-video-tile][style*="--vc-pfp-speaking"]:not([style*="--vc-pfp-ring-pic"], [style*="--vc-pfp-stream"]) {
-    box-shadow: 0 0 0 2px var(--green-360, #23a55a), 0 0 16px 3px rgb(35 165 90 / 50%) !important;
+    box-shadow: 0 0 0 2px var(--status-speaking, #23a55a), 0 0 16px 3px color-mix(in srgb, var(--status-speaking, #23a55a) 50%, transparent) !important;
 }
 
 /* Camera tiles have no picture, so they keep Discord's own tile border */

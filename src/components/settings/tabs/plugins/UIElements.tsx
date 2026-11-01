@@ -7,20 +7,19 @@
 import "./UIElements.css";
 
 import { ChatBarButtonMap } from "@api/ChatButtons";
+import { getHeaderButtonIds } from "@api/HeaderBar";
 import { MessagePopoverButtonMap } from "@api/MessagePopover";
 import { PluginHealth } from "@api/PluginHealth";
+import { plugins } from "@api/PluginManager";
 import { SettingsPluginUiElements, useSettings } from "@api/Settings";
-import { BaseText } from "@components/BaseText";
 import { Card } from "@components/Card";
+import { HaloRow, HaloSection, HaloSwitch } from "@components/HaloUI";
 import { PlaceholderIcon } from "@components/Icons";
 import { Paragraph } from "@components/Paragraph";
-import { Switch } from "@components/Switch";
 import { classNameFactory } from "@utils/css";
-import { Margins } from "@utils/margins";
-import { classes } from "@utils/misc";
-import { IconComponent } from "@utils/types";
 import { RenderModalProps } from "@vencord/discord-types";
 import { Clickable, Modal, openModal } from "@webpack/common";
+import type { ComponentType } from "react";
 
 const cl = classNameFactory("vc-plugin-ui-elements-");
 
@@ -52,60 +51,57 @@ function Section(props: {
     title: string;
     description: string;
     settings: SettingsPluginUiElements;
-    buttonMap: Map<string, { icon: IconComponent; }>;
+    buttonMap: Map<string, { icon?: ComponentType<{ height?: number; width?: number; }>; }>;
 }) {
     const { buttonMap, description, title, settings } = props;
 
     const switches = Array.from(buttonMap, ([name, { icon }]) => {
         const Icon = icon ?? PlaceholderIcon;
         return (
-            <Paragraph size="md" weight="semibold" key={name} className={cl("switches-row")}>
-                <Icon height={20} width={20} />
-                {name}
-                <Switch
+            <HaloRow key={name} title={<span className={cl("row-title")}><Icon height={20} width={20} />{name}</span>}>
+                <HaloSwitch
+                    label={name}
                     checked={settings[name]?.enabled ?? true}
                     onChange={v => {
-                        settings[name] ??= {} as any;
+                        settings[name] ??= { enabled: v };
                         settings[name].enabled = v;
                         void PluginHealth.recordPluginChange(name, v);
                     }}
                 />
-            </Paragraph>
+            </HaloRow>
         );
     });
 
     return (
-        <section>
-            <BaseText tag="h3" size="lg" weight="semibold">{title}</BaseText>
-            <Paragraph size="sm" className={classes(Margins.top8, Margins.bottom20, cl("description"))}>{description}</Paragraph>
-
-            <div className={cl("switches")}>
-                {switches.length === 0 && (
-                    <Paragraph weight="medium" className={cl("switches-row")} style={{ color: "var(--text-muted)" }}>
-                        Buttons of enabled plugins will appear here.
-                    </Paragraph>
-                )}
-                {switches}
-            </div>
-        </section>
+        <HaloSection title={title}>
+            <p className={cl("description")}>{description}</p>
+            {switches.length ? switches : <HaloRow title="Buttons of enabled plugins will appear here." disabled />}
+        </HaloSection>
     );
 }
 
 function UIElementsModal(props: RenderModalProps) {
     const { uiElements } = useSettings(["uiElements.*"]);
+    const headerButtons = new Map(getHeaderButtonIds().map(id => [id, { icon: plugins[id]?.headerBarButton?.icon }]));
 
     return (
-        <Modal {...props} size="md" title="Manage plugin UI elements">
+        <Modal {...props} size="md" title="Manage plugin UI elements" className={cl("modal")}>
             <div className={cl("modal-content")}>
                 <Section
-                    title="Chatbar Buttons"
-                    description="These are the buttons on the right side of the chat input bar"
+                    title="Header buttons"
+                    description="The buttons at the top right next to the inbox, and in the channel header"
+                    buttonMap={headerButtons}
+                    settings={uiElements.headerBarButtons}
+                />
+                <Section
+                    title="Chatbar buttons"
+                    description="The buttons on the right side of the chat input bar"
                     buttonMap={ChatBarButtonMap}
                     settings={uiElements.chatBarButtons}
                 />
                 <Section
-                    title="Message Popover Buttons"
-                    description="These are the floating buttons on the right when you hover over a message"
+                    title="Message popover buttons"
+                    description="The floating buttons on the right when you hover over a message"
                     buttonMap={MessagePopoverButtonMap}
                     settings={uiElements.messagePopoverButtons}
                 />

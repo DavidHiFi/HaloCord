@@ -20,26 +20,42 @@
 .vc-plugin-ui-elements-modal-content {
     display: flex;
     flex-direction: column;
-    gap: 2em;
-}
-
-.vc-plugin-ui-elements-switches {
-    display: flex;
-    flex-direction: column;
-    gap: 1em;
-}
-
-.vc-plugin-ui-elements-switches-row {
-    display: flex;
-    gap: 1em;
-    width: 100%;
-    align-items: center;
-
-    :last-child {
-        margin-left: auto;
-    }
+    gap: 16px;
+    padding-bottom: 16px;
 }
 
 .vc-plugin-ui-elements-description {
-    color: var(--text-subtle);
+    margin: 0 0 4px;
+    font-size: 13px;
+    color: var(--hc-text-muted);
+}
+
+.vc-plugin-ui-elements-row-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--hc-text);
+}
+
+html.hc-theming .vc-plugin-ui-elements-modal {
+    border: 1px solid var(--hc-panel-border);
+    background: var(--hc-window-bg);
+}
+
+html.hc-theming .vc-plugin-ui-elements-modal [class*="scroller"] {
+    scrollbar-width: thin;
+    scrollbar-color: var(--hc-scroll-thumb) transparent;
+}
+
+html.hc-theming .vc-plugin-ui-elements-modal [class*="scroller"]::-webkit-scrollbar {
+    width: 6px;
+}
+
+html.hc-theming .vc-plugin-ui-elements-modal [class*="scroller"]::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+html.hc-theming .vc-plugin-ui-elements-modal [class*="scroller"]::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: var(--hc-scroll-thumb);
 }

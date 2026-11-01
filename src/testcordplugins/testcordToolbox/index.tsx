@@ -20,7 +20,7 @@ import "./styles.css";
 
 import { HeaderBarButton } from "@api/HeaderBar";
 import { definePluginSettings, migratePluginSettings } from "@api/Settings";
-import { Devs } from "@utils/constants";
+import { Devs, TestcordDevs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
 import { Popout, useRef, useState } from "@webpack/common";
 
@@ -76,13 +76,13 @@ function VencordPopoutButton() {
     );
 }
 
-migratePluginSettings("TestcordToolbox", "EquicordToolbox");
+migratePluginSettings("HaloCordToolbox", "TestcordToolbox", "EquicordToolbox");
 export default definePlugin({
-    id: "TestcordToolbox",
-    name: "TestcordToolbox",
-    description: "Adds a button next to the inbox button in the channel header that houses HaloCord quick actions",
+    id: "HaloCordToolbox",
+    name: "HaloCordToolbox",
+    description: "Adds a HaloCord Toolbox button next to the inbox button at the top right, with HaloCord quick actions.",
     tags: ["Voice", "Accessibility"],
-    authors: [Devs.Ven, Devs.AutumnVN],
+    authors: [Devs.Ven, Devs.AutumnVN, TestcordDevs.DavidHiFi],
     dependencies: ["HeaderBarAPI"],
     settings,
     headerBarButton: {

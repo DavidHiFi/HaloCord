@@ -87,6 +87,7 @@ export interface Settings {
     uiElements: {
         messagePopoverButtons: SettingsPluginUiElements;
         chatBarButtons: SettingsPluginUiElements;
+        headerBarButtons: SettingsPluginUiElements;
     },
 
     notifications: {
@@ -141,7 +142,8 @@ const DefaultSettings: Settings = {
 
     uiElements: {
         chatBarButtons: {},
-        messagePopoverButtons: {}
+        messagePopoverButtons: {},
+        headerBarButtons: {}
     },
 
     notifications: {

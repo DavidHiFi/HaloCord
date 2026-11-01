@@ -20,7 +20,7 @@ import { isPluginEnabled } from "@api/PluginManager";
 import { definePluginSettings } from "@api/Settings";
 import { UserAreaButton, UserAreaRenderProps } from "@api/UserArea";
 import { getUserSettingLazy } from "@api/UserSettings";
-import testcordToolbox from "@testcordplugins/testcordToolbox";
+import haloCordToolbox from "@testcordplugins/testcordToolbox";
 import { Devs, TestcordDevs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
 import { Menu, useMemo } from "@webpack/common";
@@ -46,7 +46,7 @@ const settings = definePluginSettings({
             { label: "HaloCord Toolbox", value: "TOOLBOX" }
         ],
         get hidden() {
-            return !isPluginEnabled(testcordToolbox.name);
+            return !isPluginEnabled(haloCordToolbox.name);
         }
     }
 });
@@ -109,7 +109,7 @@ function GameActivityToggleButton({ iconForeground, hideTooltips, nameplate }: U
     const { location, oldIcon } = settings.use(["location", "oldIcon"]);
     const showCurrentGame = ShowCurrentGame.useSetting();
 
-    if (location !== "PANEL" && isPluginEnabled(testcordToolbox.name)) return null;
+    if (location !== "PANEL" && isPluginEnabled(haloCordToolbox.name)) return null;
 
     return (
         <UserAreaButton
