@@ -18,33 +18,46 @@
 
 import "./checkNodeVersion.js";
 
-import { execFileSync, execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { createHash } from "crypto";
-import { createWriteStream, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, cpSync, rmSync } from "fs";
+import { createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import { Readable } from "stream";
 import { finished } from "stream/promises";
 import { fileURLToPath } from "url";
 
-const BASE_URL = "https://github.com/TestcordDev/TestCord/releases/latest/download/";
-const RELEASE_API = "https://api.github.com/repos/TestcordDev/TestCord/releases/tags/latest";
-const USER_AGENT = "TestCord (https://github.com/TestcordDev/TestCord)";
+const BASE_URL = "https://github.com/Equicord/Equilotl/releases/latest/download/";
+const RELEASE_API = "https://api.github.com/repos/Equicord/Equilotl/releases/latest";
+const USER_AGENT = "HaloCord (https://github.com/DavidHiFi/HaloCord)";
 
 const BASE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const FILE_DIR = join(BASE_DIR, "dist", "Installer");
 const ETAG_FILE = join(FILE_DIR, "etag.txt");
 
+function byArch(files) {
+    return files[process.arch] ?? files.default;
+}
+
 function getFilename() {
     switch (process.platform) {
         case "win32":
-            return "Windows_Testcord_installer-rel_cli.exe";
+            return byArch({
+                arm64: "EquilotlCli-arm64.exe",
+                default: "EquilotlCli.exe"
+            });
+        case "darwin":
+            return byArch({
+                x64: "EquilotlCli-x64",
+                arm64: "EquilotlCli-arm64",
+                default: "EquilotlCli-universal"
+            });
         case "linux":
-            return "Linux_Testcord_installer-rel_cli";
+            return byArch({
+                arm64: "EquilotlCli-linux-arm64",
+                default: "EquilotlCli-linux"
+            });
         default:
-            throw new Error(
-                `No TestCord installer exists for ${process.platform}. ` +
-                "Use the GoofCord method (see GoofCordGuide.md) or build the installer from https://github.com/TestcordDev/Testcordinstaller"
-            );
+            throw new Error("Unsupported platform: " + process.platform);
     }
 }
 
@@ -61,91 +74,79 @@ async function fetchAssetDigest(filename) {
 }
 
 async function ensureBinary() {
-    const filename = getFilename();
-    console.log("Downloading " + filename);
-
     mkdirSync(FILE_DIR, { recursive: true });
+
+    const filename = getFilename();
     const outputFile = join(FILE_DIR, filename);
+
+    const legacyBinary = process.platform === "win32"
+        ? join(FILE_DIR, "Windows_Testcord_installer-rel_cli.exe")
+        : join(FILE_DIR, "Linux_Testcord_installer-rel_cli");
+
     const etag = existsSync(outputFile) && existsSync(ETAG_FILE)
         ? readFileSync(ETAG_FILE, "utf-8")
         : null;
 
-    const res = await fetch(BASE_URL + filename, {
-        headers: {
-            "User-Agent": USER_AGENT,
-            "If-None-Match": etag
+    try {
+        console.log("Downloading " + filename + "...");
+        const res = await fetch(BASE_URL + filename, {
+            headers: {
+                "User-Agent": USER_AGENT,
+                ...(etag ? { "If-None-Match": etag } : {})
+            }
+        });
+
+        if (res.status === 304) {
+            console.log("Up to date, not redownloading!");
+            return outputFile;
         }
-    });
 
-    if (res.status === 304) {
-        console.log("Up to date, not redownloading!");
-        return outputFile;
-    }
-    if (!res.ok)
+        if (res.ok) {
+            // The etag file marks a verified binary, so drop it before overwriting.
+            rmSync(ETAG_FILE, { force: true });
+            const body = Readable.fromWeb(res.body);
+            await finished(body.pipe(createWriteStream(outputFile, {
+                mode: 0o755,
+                autoClose: true
+            })));
+
+            console.log("Verifying checksum...");
+            const expected = await fetchAssetDigest(filename);
+            const actual = createHash("sha256").update(readFileSync(outputFile)).digest("hex");
+            if (actual !== expected) {
+                rmSync(outputFile);
+                throw new Error(`Checksum mismatch for ${filename} (expected ${expected}, got ${actual})`);
+            }
+
+            const resEtag = res.headers.get("etag");
+            if (resEtag) {
+                writeFileSync(ETAG_FILE, resEtag);
+            }
+
+            console.log("Finished downloading!");
+            return outputFile;
+        }
+
         throw new Error(`Failed to download installer: ${res.status} ${res.statusText}`);
-
-    // WHY DOES NODE FETCH RETURN A WEB STREAM OH MY GOD
-    const body = Readable.fromWeb(res.body);
-    await finished(body.pipe(createWriteStream(outputFile, {
-        mode: 0o755,
-        autoClose: true
-    })));
-
-    console.log("Verifying checksum...");
-    const expected = await fetchAssetDigest(filename);
-    const actual = createHash("sha256").update(readFileSync(outputFile)).digest("hex");
-    if (actual !== expected) {
-        rmSync(outputFile);
-        throw new Error(`Checksum mismatch for ${filename} (expected ${expected}, got ${actual}). Not running it - try again.`);
+    } catch (err) {
+        if (existsSync(outputFile) && existsSync(ETAG_FILE)) {
+            console.warn(`Download failed (${err.message}). Using existing installer binary.`);
+            return outputFile;
+        }
+        if (existsSync(legacyBinary)) {
+            console.warn(`Download failed (${err.message}). Using existing legacy installer binary.`);
+            return legacyBinary;
+        }
+        throw err;
     }
-
-    // Only cache the etag once the file has actually been verified
-    writeFileSync(ETAG_FILE, res.headers.get("etag"));
-
-    console.log("Finished downloading!");
-
-    return outputFile;
 }
 
-// Local fallback: TestcordDev/TestCord went 404 on 2026-10-27, so the installer and its release data are gone.
-// dist is junctioned to the payload Stable and PTB load, so a build is already live; only the loader needs checking.
-const LOCAL_LOADER_SCRIPT = "H:/Discord Configuration/scripts/Install-TestCordClientLoader.ps1";
-const LOCAL_LOADER_INDEX = 'require("C:\\\\Users\\\\localuser\\\\AppData\\\\Local\\\\DiscordWorkspace\\\\TestCord\\\\dist\\\\desktop\\\\patcher.js");\r\n';
-
-function localInject() {
-    const clients = { Stable: "Discord", PTB: "DiscordPTB" };
-    const stale = Object.entries(clients).filter(([, dir]) => {
-        const root = join(process.env.LOCALAPPDATA, dir);
-        if (!existsSync(root)) return false;
-        const app = readdirSync(root).filter(name => name.startsWith("app-")).sort().reverse()[0];
-        if (!app) return false;
-        const index = join(root, app, "resources", "app.asar", "index.js");
-        return !existsSync(index) || readFileSync(index, "utf-8").trim() !== LOCAL_LOADER_INDEX.trim();
-    }).map(([name]) => name);
-
-    if (!stale.length) {
-        console.log("Stable and PTB already load this build. Restart Discord to pick up changes.");
-        return;
-    }
-    console.log("Installing the TestCord loader into: " + stale.join(", "));
-    for (const client of stale)
-        execFileSync("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", LOCAL_LOADER_SCRIPT, "-Clients", client], { stdio: "inherit" });
-}
-
-let installerBin;
-try {
-    installerBin = await ensureBinary();
-} catch (err) {
-    if (process.platform !== "win32" || !existsSync(LOCAL_LOADER_SCRIPT)) throw err;
-    console.log(err.message + ". Using the local loader instead.");
-    localInject();
-    process.exit(0);
-}
+const installerBin = await ensureBinary();
 
 console.log("Now running Installer...");
 
 const argStart = process.argv.indexOf("--");
-const args = argStart === -1 ? [] : process.argv.slice(argStart + 1);
+const args = argStart === -1 ? [] : process.argv.slice(argStart + 1).filter(a => a !== "--");
 
 try {
     execFileSync(installerBin, args, {
@@ -157,7 +158,10 @@ try {
             TESTCORD_DEV_INSTALL: "1",
             EQUICORD_USER_DATA_DIR: BASE_DIR,
             EQUICORD_DIRECTORY: join(BASE_DIR, "dist/desktop"),
-            EQUICORD_DEV_INSTALL: "1"
+            EQUICORD_DEV_INSTALL: "1",
+            HALOCORD_USER_DATA_DIR: BASE_DIR,
+            HALOCORD_DIRECTORY: join(BASE_DIR, "dist/desktop"),
+            HALOCORD_DEV_INSTALL: "1"
         }
     });
 } catch {
