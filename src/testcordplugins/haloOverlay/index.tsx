@@ -16,7 +16,7 @@ import { Margins } from "@utils/margins";
 import { removeFromArray } from "@utils/misc";
 import definePlugin, { OptionType } from "@utils/types";
 import { findByCodeLazy, findStoreLazy } from "@webpack";
-import { ChannelStore, FluxDispatcher, GuildMemberStore, GuildStore, MediaEngineStore, React, RelationshipStore, SelectedChannelStore, Select, Slider, UserStore, useState, VoiceStateStore } from "@webpack/common";
+import { ChannelStore, FluxDispatcher, GuildMemberStore, GuildStore, MediaEngineStore, React, RelationshipStore, Select, SelectedChannelStore, Slider, UserStore, useState, VoiceStateStore } from "@webpack/common";
 
 // Main-process bridge from desktop/shell/hc-overlay-main.js (missing outside the HaloCord shell).
 interface OverlayBridge {
