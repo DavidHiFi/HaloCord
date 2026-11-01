@@ -662,8 +662,12 @@ class TrafficGuardEngine {
             }
 
             const authKey = Object.keys(details.requestHeaders || {}).find(k => k.toLowerCase() === "authorization");
-            const hasAuth = Boolean(authKey && details.requestHeaders[authKey]);
-            const isExempt = TOKEN_GUARD_EXEMPT_HOSTS.some(h => host === h || host.endsWith("." + h));
+            const authValue = authKey ? details.requestHeaders[authKey] : "";
+            const hasAuth = Boolean(authValue);
+            // Activities send their own OAuth Bearer token to their discordsays.com proxy; a raw
+            // Discord token sent there is still stripped.
+            const isActivityAuth = host.endsWith(".discordsays.com") && /^Bearer /i.test(authValue);
+            const isExempt = isActivityAuth || TOKEN_GUARD_EXEMPT_HOSTS.some(h => host === h || host.endsWith("." + h));
 
             const shouldStrip = hasAuth
                 && (!isDiscordDomain || rule === "block")
