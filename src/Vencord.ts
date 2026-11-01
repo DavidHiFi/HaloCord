@@ -19,6 +19,7 @@
 // DO NOT REMOVE UNLESS YOU WISH TO FACE THE WRATH OF THE CIRCULAR DEPENDENCY DEMON!!!!!!!
 import "~plugins";
 import "./fixWeirdAppRegionBug.css";
+import "./components/HaloUI.css";
 
 import nativeTitleBarStyles from "./nativeTitleBar.css?managed";
 
@@ -321,8 +322,15 @@ function initNotificationSafeguard() {
     setTimeout(patchDiscordNative, 500);
 }
 
+function applyHaloTheming() {
+    document.documentElement?.classList.toggle("hc-theming", Settings.haloTheming);
+}
+
 initNotificationSafeguard();
 initStyles();
+applyHaloTheming();
+document.addEventListener("DOMContentLoaded", applyHaloTheming, { once: true });
+SettingsStore.addChangeListener("haloTheming", applyHaloTheming);
 startAllPlugins(StartAt.Init);
 init();
 

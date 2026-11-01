@@ -222,7 +222,7 @@ export default function PluginModal({ plugin, onRestartNeeded, onClose, transiti
             onClose={onClose}
             size="lg"
             title={
-                <div className={cl("header")}>
+                <div className={classes(cl("header"), "hc-window")}>
                     <BaseText tag="h1" weight="semibold" size="lg">{plugin.name.replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2").replace(/([a-z])([A-Z])/g, "$1 $2")}</BaseText>
                     {warning && (
                         <Tooltip text={warningTooltipText}>
@@ -464,7 +464,7 @@ export function openWarningModal(plugin?: Plugin | null, onRestartNeeded?: (plug
                     : `Are you sure you want to disable ${enabledPlugins} plugins?`
                 }
             </Paragraph>
-            <div className={classes(Margins.top16, cl("warning"))}>
+            <div className={classes(Margins.top16, cl("warning"), "hc-window")}>
                 <WarningIcon color="var(--text-feedback-critical)" />
                 <span>This action cannot be undone.</span>
             </div>

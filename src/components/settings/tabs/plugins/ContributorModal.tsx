@@ -64,7 +64,7 @@ function ContributorModal({ user, modalProps }: { user: User; modalProps: Render
         <Modal
             {...modalProps}
             title={
-                <div className={cl("header")}>
+                <div className={`${cl("header")} hc-window`}>
                     <img
                         className={cl("avatar")}
                         src={user.getAvatarURL(void 0, 512, true)}

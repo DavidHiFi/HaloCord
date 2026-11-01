@@ -48,7 +48,7 @@ function showEnableWarningModal(
             onConfirm={onConfirm}
             onCancel={props.onClose}
         >
-            <div>
+            <div className="hc-window">
                 {isExp ? (
                     <>
                         <Paragraph>
