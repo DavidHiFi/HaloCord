@@ -5,13 +5,16 @@
  */
 
 import ErrorBoundary from "@components/ErrorBoundary";
+import { HaloPill, HaloSection, HaloSwitchRow } from "@components/HaloUI";
 import { Switch } from "@components/Switch";
 import { classNameFactory } from "@utils/css";
+import { classes } from "@utils/misc";
 import { ModalRoot, ModalSize, openModal, type RenderModalProps } from "@utils/modal";
-import { Select, Slider, useEffect, useState } from "@webpack/common";
+import { Slider, useEffect, useState } from "@webpack/common";
+import type { ReactNode } from "react";
 
-import { applyLive, frameRates, heavyNote, isHeavy, loadSaved, modeFor, modes, resolutions, type Saved } from "../quality";
-import { pickerTabs, StreamEnhancerControlPanel, streamEnhancerSettings } from "../settings";
+import { applyLive, frameRates, heavyNote, isHeavy, loadSaved, type Mode, modeFor, modes, resolutions, type Saved } from "../quality";
+import { type PickerTab, pickerTabs, StreamEnhancerControlPanel, streamEnhancerSettings } from "../settings";
 import { sharePanBlocker } from "../shareCapture";
 import { choiceAt, nearestChoice, showChoiceLabel } from "../slider";
 
@@ -40,6 +43,51 @@ export function ToggleRow({ label, checked, onChange, disabled, title }: { label
     );
 }
 
+// The yellow warning box. It stays visible whatever the settings are.
+export function Warn({ title, children }: { title: string; children: ReactNode; }) {
+    return (
+        <div className={cl("warn")} role="note">
+            <span aria-hidden="true">⚠️ </span><b>{title}</b> {children}
+        </div>
+    );
+}
+
+// A HaloCord row with its control below the title instead of beside it.
+export function Field({ title, side, children }: { title: string; side?: ReactNode; children: ReactNode; }) {
+    return (
+        <div className={classes("hc-ui-row", cl("field"))}>
+            <div className={cl("field-head")}>
+                <span className="hc-ui-row-title">{title}</span>
+                {side}
+            </div>
+            {children}
+        </div>
+    );
+}
+
+export interface Choice<T> { value: T; label: string; note?: string; }
+
+// Every choice in view at once; the picked one is lit green.
+export function Segmented<T extends string | number>({ label, choices, value, onChange, disabled }: {
+    label: string;
+    choices: ReadonlyArray<Choice<T>>;
+    value: T | undefined;
+    onChange: (value: T) => void;
+    disabled?: boolean;
+}) {
+    return (
+        <div className={cl("seg")} role="radiogroup" aria-label={label}>
+            {choices.map(c => (
+                <button key={String(c.value)} type="button" role="radio" aria-checked={c.value === value} disabled={disabled}
+                    className={cl("seg-item", c.value === value && "seg-on")} onClick={() => onChange(c.value)}>
+                    <span>{c.label}</span>
+                    {c.note && <span className={cl("seg-note")}>{c.note}</span>}
+                </button>
+            ))}
+        </div>
+    );
+}
+
 // Pan positions in percent, 5% apart like the voice card's pan; the slider snaps to them, so the middle is exact centre.
 const panChoices = Array.from({ length: 41 }, (_, i) => i * 5 - 100);
 // Same wording as the voice card's pan (dvxPanText in the userscript).
@@ -51,61 +99,83 @@ function PanRow({ pan, set, muted }: { pan: number; set: (pan: number) => void; 
     const blocked = sharePanBlocker();
     const pct = Math.round(pan * 100);
     return (
-        <div onDoubleClick={() => { if (blocked || muted) return; set(0); setResets(n => n + 1); }}>
-            <div className={cl("label")}>Pan: {panText(pct)}</div>
-            <Slider
-                key={resets}
-                disabled={!!blocked || muted}
-                minValue={0}
-                maxValue={panChoices.length - 1}
-                markers={panChoices.map((_, i) => i)}
-                initialValue={nearestChoice(pct, panChoices)}
-                keyboardStep={1}
-                stickToMarkers={true}
-                onValueChange={i => set(choiceAt(i, panChoices) / 100)}
-                onMarkerRender={i => <span className="vc-stream-enhancer-slider-marker">{showChoiceLabel(i, panChoices.length) ? panText(choiceAt(i, panChoices)) : ""}</span>}
-                onValueRender={i => panText(choiceAt(i, panChoices))}
-            />
-            {blocked && <p className={cl("warn")}>{blocked}</p>}
+        <Field title={`Pan: ${panText(pct)}`} side={blocked ? <HaloPill tone="warn">Off</HaloPill> : <HaloPill tone="good">Stereo on</HaloPill>}>
+            <div onDoubleClick={() => { if (blocked || muted) return; set(0); setResets(n => n + 1); }}>
+                <Slider
+                    key={resets}
+                    disabled={!!blocked || muted}
+                    minValue={0}
+                    maxValue={panChoices.length - 1}
+                    markers={panChoices.map((_, i) => i)}
+                    initialValue={nearestChoice(pct, panChoices)}
+                    keyboardStep={1}
+                    stickToMarkers={true}
+                    onValueChange={i => set(choiceAt(i, panChoices) / 100)}
+                    onMarkerRender={i => <span className="vc-stream-enhancer-slider-marker">{showChoiceLabel(i, panChoices.length) ? panText(choiceAt(i, panChoices)) : ""}</span>}
+                    onValueRender={i => panText(choiceAt(i, panChoices))}
+                />
+            </div>
+            {blocked && <div className="hc-ui-row-desc">{blocked}</div>}
+            <Warn title="Pan needs Stereo.">It only works while Stereo is on in HaloCord's audio settings. Without it, stream sound is sent in mono.</Warn>
+        </Field>
+    );
+}
+
+// Where the stream's sound comes from, every choice shown as a radio row.
+function AudioSource({ value, inputs, disabled, onChange }: { value: string; inputs: MediaDeviceInfo[]; disabled: boolean; onChange: (id: string) => void; }) {
+    const rows: Array<{ id: string; label: string; note?: string; }> = [
+        { id: "default", label: "Default", note: "App or screen sound, without HaloCord" },
+        ...inputs.map(i => ({ id: i.deviceId, label: i.label || "Input device" }))
+    ];
+    if (inputs.length && !rows.some(r => r.id === value)) rows.push({ id: value, label: "Saved input", note: "Not connected" });
+    return (
+        <div className={cl("radios")} role="radiogroup" aria-label="Audio source">
+            {rows.map(r => (
+                <button key={r.id} type="button" role="radio" aria-checked={value === r.id} disabled={disabled}
+                    className={cl("row", value === r.id && "row-on")} onClick={() => onChange(r.id)}>
+                    <span className={cl("radio")} /><span>{r.label}</span>{r.note && <span className={cl("note")}>{r.note}</span>}
+                </button>
+            ))}
         </div>
     );
 }
 
+const modeChoices: Array<Choice<Mode>> = [
+    ...(Object.keys(modes) as Array<keyof typeof modes>).map(k => ({ value: k, label: modes[k].label, note: modes[k].note })),
+    { value: "custom", label: "Custom" }
+];
+const resolutionChoices = resolutions.map(r => ({ value: r.height, label: r.label }));
+const fpsChoices = frameRates.map(f => ({ value: f, label: `${f} FPS` }));
+
 // Stream mode, resolution, frame rate and sound, shown in the stream settings modal (the share picker's gear opens it).
 export function QualityPanel({ opts, set, inputs }: { opts: Saved; set: (next: Partial<Saved>) => void; inputs: MediaDeviceInfo[]; }) {
-    const [advanced, setAdvanced] = useState(opts.audio !== "default");
     const mode = modeFor(opts.height, opts.fps);
-    const pill = (on: boolean, label: string, onClick: () => void) => (
-        <button key={label} className={cl("pill", on && "pill-on")} onClick={onClick}>{label}</button>
-    );
+    const pickMode = (m: Mode) => {
+        if (m !== "custom") set({ height: modes[m].height, fps: modes[m].fps });
+        else if (mode !== "custom") set({ height: 1080, fps: 30 });
+    };
 
     return (
         <>
-            <div className={cl("label")}>Stream Mode</div>
-            {(Object.keys(modes) as Array<keyof typeof modes>).map(k => (
-                <button key={k} className={cl("row", mode === k && "row-on")} onClick={() => set({ height: modes[k].height, fps: modes[k].fps })}>
-                    <span className={cl("radio")} /><span>{modes[k].label}</span><span className={cl("note")}>{modes[k].note}</span>
-                </button>
-            ))}
-            <button className={cl("row", mode === "custom" && "row-on")} onClick={() => mode !== "custom" && set({ height: 1080, fps: 30 })}>
-                <span className={cl("radio")} /><span>Custom</span>
-            </button>
-            <div className={cl("label")}>Screen Resolution</div>
-            <div className={cl("pills")}>{resolutions.map(r => pill(opts.height === r.height, r.label, () => set({ height: r.height })))}</div>
-            <div className={cl("label")}>Frame Rate</div>
-            <div className={cl("pills")}>{frameRates.map(f => pill(opts.fps === f, `${f} FPS`, () => set({ fps: f })))}</div>
-            {isHeavy(opts.height, opts.fps) && <p className={cl("warn")}>{heavyNote}</p>}
-            <ToggleRow label="Mute stream audio" checked={opts.mute} onChange={mute => set({ mute })} />
-            <button className={cl("row", "check")} onClick={() => setAdvanced(!advanced)}>
-                <span>Audio source</span><span className={cl("note")}>{advanced ? "▾" : "▸"}</span>
-            </button>
-            {advanced && (
-                <select className={cl("select")} value={opts.audio} disabled={opts.mute} onChange={e => set({ audio: e.currentTarget.value })}>
-                    <option value="default">Default: app or screen sound, without HaloCord</option>
-                    {inputs.map(i => <option key={i.deviceId} value={i.deviceId}>{i.label || "Input device"}</option>)}
-                </select>
-            )}
-            <PanRow pan={opts.pan} set={pan => set({ pan })} muted={opts.mute} />
+            <HaloSection title="Quality">
+                <Field title="Stream mode">
+                    <Segmented label="Stream mode" choices={modeChoices} value={mode} onChange={pickMode} />
+                </Field>
+                <Field title="Screen resolution">
+                    <Segmented label="Screen resolution" choices={resolutionChoices} value={opts.height} onChange={height => set({ height })} />
+                </Field>
+                <Field title="Frame rate" side={isHeavy(opts.height, opts.fps) && <HaloPill tone="warn">Heavy</HaloPill>}>
+                    <Segmented label="Frame rate" choices={fpsChoices} value={opts.fps} onChange={fps => set({ fps })} />
+                </Field>
+                <Warn title="Heavy settings.">{heavyNote}</Warn>
+            </HaloSection>
+            <HaloSection title="Sound">
+                <HaloSwitchRow title="Mute stream audio" value={opts.mute} onChange={mute => set({ mute })} />
+                <Field title="Audio source">
+                    <AudioSource value={opts.audio} inputs={inputs} disabled={opts.mute} onChange={audio => set({ audio })} />
+                </Field>
+                <PanRow pan={opts.pan} set={pan => set({ pan })} muted={opts.mute} />
+            </HaloSection>
         </>
     );
 }
@@ -121,23 +191,23 @@ const StreamSettings = ErrorBoundary.wrap(function StreamSettings({ modalProps }
     };
 
     return (
-        <ModalRoot {...modalProps} size={ModalSize.LARGE} className={ccl("root")}>
+        <ModalRoot {...modalProps} size={ModalSize.LARGE} className={classes(ccl("root"), "vc-stream-enhancer-halo")}>
             <div className={cl("head")}>
                 <h2 className={cl("title")}>Advanced Stream Settings</h2>
                 <button className={cl("close")} aria-label="Close" onClick={modalProps.onClose}>✕</button>
             </div>
             <div className={ccl("body")}>
                 <QualityPanel opts={opts} set={set} inputs={inputs} />
-                <div className={cl("label")}>Picker opens on</div>
-                <Select
-                    options={pickerTabs}
-                    isSelected={v => v === pickerTab}
-                    select={v => { streamEnhancerSettings.store.pickerTab = v; }}
-                    serialize={v => v}
-                />
-                <StreamEnhancerControlPanel />
-                <ToggleRow label="Show a stream settings button in the user panel" checked={showPanelButton}
-                    onChange={v => { streamEnhancerSettings.store.showPanelButton = v; }} />
+                <HaloSection title="Share picker">
+                    <Field title="Picker opens on">
+                        <Segmented label="Picker opens on" choices={pickerTabs} value={pickerTab as PickerTab} onChange={v => { streamEnhancerSettings.store.pickerTab = v; }} />
+                    </Field>
+                    <HaloSwitchRow title="Show a stream settings button in the user panel" value={showPanelButton}
+                        onChange={v => { streamEnhancerSettings.store.showPanelButton = v; }} />
+                </HaloSection>
+                <HaloSection title="Badge, preview and viewer">
+                    <StreamEnhancerControlPanel />
+                </HaloSection>
             </div>
             <div className={cl("foot")}>
                 <div className={cl("spacer")} />

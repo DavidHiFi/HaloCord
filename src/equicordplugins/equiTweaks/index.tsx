@@ -12,7 +12,7 @@ import { isPluginEnabled } from "@api/PluginManager";
 import { definePluginSettings, migratePluginSettings, migratePluginToSettings } from "@api/Settings";
 import { ShieldIcon, WarningIcon } from "@components/Icons";
 import customRPC from "@plugins/customRPC";
-import { Devs, EquicordDevs } from "@utils/constants";
+import { Devs, EquicordDevs, TestcordDevs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
 import { StandingState } from "@vencord/discord-types/enums";
 import { filters, find } from "@webpack";
@@ -139,12 +139,6 @@ const listener = async (channelId, msg) => {
 };
 
 const settings = definePluginSettings({
-    noMirroredCamera: {
-        type: OptionType.BOOLEAN,
-        description: "Prevents the camera from being mirrored on your screen",
-        restartNeeded: true,
-        default: false,
-    },
     removeActivitySection: {
         type: OptionType.BOOLEAN,
         description: "Removes the activity section above member list",
@@ -261,7 +255,8 @@ export default definePlugin({
         EquicordDevs.auggeeo,
         EquicordDevs.secp192k1,
         EquicordDevs.tie,
-        EquicordDevs.itzmeshadow999
+        EquicordDevs.itzmeshadow999,
+        TestcordDevs.DavidHiFi
     ],
     settings,
     contextMenus: {
@@ -272,34 +267,6 @@ export default definePlugin({
         render: () => (settings.store.accountStandingButton ? <StandingButton /> : null),
     },
     patches: [
-        // When focused on voice channel or group chat voice call
-        {
-            find: ".STATUS_WARNING_BACKGROUND})})",
-            predicate: () => settings.store.noMirroredCamera,
-            replacement: {
-                match: /mirror:\i/,
-                replace: "mirror:!1"
-            },
-        },
-        // Popout camera when not focused on voice channel
-        {
-            find: "this.handleReady})",
-            all: true,
-            predicate: () => settings.store.noMirroredCamera,
-            replacement: {
-                match: /(\[\i\.\i\]:)\i/,
-                replace: "$1!1"
-            },
-        },
-        // Overriding css on Preview Camera/Change Video Background popup
-        {
-            find: ".PREVIEW_CAMERA_MODAL,",
-            replacement: {
-                match: /className:\i.\i,(?=children:\()/,
-                replace: "$&style:{transform: \"scalex(1)\"},"
-            },
-            predicate: () => settings.store.noMirroredCamera
-        },
         // Remove Activity Section above Member List
         {
             find: ".GLOBAL_FEED});",

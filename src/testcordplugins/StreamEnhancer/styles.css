@@ -480,7 +480,7 @@ img[src*="/streams/"] {
 @media (prefers-reduced-motion: reduce) {
     .vc-stream-enhancer-share-tab-selected, .vc-stream-enhancer-share-tab-bubble, .vc-stream-enhancer-share-tab-bubble-slide { transition: none; }
 }
-.vc-stream-enhancer-share-tab:focus-visible, .vc-stream-enhancer-share-tile:focus-visible, .vc-stream-enhancer-share-row:focus-visible, .vc-stream-enhancer-share-pill:focus-visible, .vc-stream-enhancer-share-summary:focus-visible { outline: 2px solid var(--border-focus, var(--brand-500)); outline-offset: 2px; }
+.vc-stream-enhancer-share-tab:focus-visible, .vc-stream-enhancer-share-tile:focus-visible, .vc-stream-enhancer-share-row:focus-visible, .vc-stream-enhancer-share-summary:focus-visible { outline: 2px solid var(--border-focus, var(--brand-500)); outline-offset: 2px; }
 .vc-stream-enhancer-share-grid { flex: 1 1 auto; min-height: 0; display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; gap: 20px 16px; padding: 20px 24px; overflow-y: auto; }
 .vc-stream-enhancer-share-empty { flex: 1 0 100%; padding: 80px 0; text-align: center; color: var(--text-subtle, var(--text-muted)); }
 .vc-stream-enhancer-share-tile { flex: 1 1 230px; max-width: 320px; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; color: var(--text-default, var(--text-normal)); }
@@ -501,34 +501,56 @@ img[src*="/streams/"] {
 .vc-stream-enhancer-share-go { background: var(--button-filled-brand-background, var(--brand-500)); color: var(--button-filled-brand-text, var(--white, #fff)); border: 0; border-radius: 8px; padding: 9px 22px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .vc-stream-enhancer-share-go:hover { background: var(--button-filled-brand-background-hover, var(--brand-560, var(--brand-500))); }
 .vc-stream-enhancer-share-go:disabled { opacity: .5; cursor: not-allowed; }
-.vc-stream-enhancer-share-label { padding: 10px 8px 4px; font-size: 12px; font-weight: 600; color: var(--text-subtle, var(--text-muted)); }
 .vc-stream-enhancer-share-row { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: 0; padding: 8px; border-radius: 4px; color: var(--interactive-text-default, var(--interactive-normal)); font-size: 14px; text-align: left; cursor: pointer; }
 .vc-stream-enhancer-share-row:hover { background: var(--interactive-background-hover, var(--background-modifier-hover)); color: var(--interactive-text-hover, var(--interactive-hover)); }
 .vc-stream-enhancer-share-row-on { color: var(--interactive-text-active, var(--interactive-active)); }
-.vc-stream-enhancer-share-check { justify-content: space-between; margin-top: 4px; }
+.vc-stream-enhancer-share-row:disabled { opacity: .5; cursor: not-allowed; }
 .vc-stream-enhancer-share-note { margin-left: auto; color: var(--text-subtle, var(--text-muted)); font-size: 12px; }
 .vc-stream-enhancer-share-summary .vc-stream-enhancer-share-note { margin-left: 0; }
 .vc-stream-enhancer-share-radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentcolor; box-sizing: border-box; flex: none; }
 .vc-stream-enhancer-share-row-on .vc-stream-enhancer-share-radio { border: 5px solid var(--brand-500, var(--brand-experiment)); }
-.vc-stream-enhancer-share-pills { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 8px 6px; }
-.vc-stream-enhancer-share-pill { flex: 1 1 0; padding: 6px 0; border-radius: 6px; border: 1px solid var(--border-subtle, var(--background-modifier-accent)); background: none; color: var(--interactive-text-default, var(--interactive-normal)); font-size: 13px; cursor: pointer; }
-.vc-stream-enhancer-share-pill:hover { background: var(--interactive-background-hover, var(--background-modifier-hover)); color: var(--interactive-text-hover, var(--interactive-hover)); }
-.vc-stream-enhancer-share-pill-on, .vc-stream-enhancer-share-pill-on:hover { background: var(--brand-500, var(--brand-experiment)); border-color: var(--brand-500, var(--brand-experiment)); color: var(--white, #fff); }
-.vc-stream-enhancer-share-select { width: calc(100% - 16px); margin: 2px 8px 6px; padding: 8px; border-radius: 6px; background: var(--input-background-default, var(--background-base-lowest, var(--background-tertiary))); color: var(--text-default, var(--text-normal)); border: 1px solid var(--border-subtle, var(--background-modifier-accent)); }
-.vc-stream-enhancer-camera-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
+.vc-stream-enhancer-camera-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 16px 24px 20px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--scrollbar-thin-thumb, var(--background-modifier-accent)) transparent; }
 .vc-stream-enhancer-camera-preview { aspect-ratio: 16 / 9; max-height: 260px; align-self: center; width: 100%; border-radius: 8px; overflow: hidden; background: var(--background-base-lower, var(--background-tertiary)); display: flex; align-items: center; justify-content: center; color: var(--text-subtle, var(--text-muted)); }
 .vc-stream-enhancer-camera-preview video { width: 100%; height: 100%; object-fit: contain; }
-.vc-stream-enhancer-camera-hint { margin: 0; color: var(--text-subtle, var(--text-muted)); font-size: 13px; line-height: 1.4; }
-.vc-stream-enhancer-camera-presets { display: flex; flex-wrap: wrap; gap: 8px; }
-.vc-stream-enhancer-camera-presets .vc-stream-enhancer-share-pill { flex: 1 1 120px; padding: 8px 0; }
-.vc-stream-enhancer-camera-body .vc-stream-enhancer-share-label { padding: 6px 0 0; }
-.vc-stream-enhancer-camera-body .vc-stream-enhancer-share-select { width: 100%; margin: 0; }
-.vc-stream-enhancer-camera-body .vc-stream-enhancer-share-row { padding: 8px 0; }
-.vc-stream-enhancer-share-pill:disabled, .vc-stream-enhancer-share-row:disabled { opacity: .5; cursor: not-allowed; }
-.vc-stream-enhancer-share-warn { margin: 2px 8px 6px; padding: 8px 10px; border-radius: 6px; background: color-mix(in srgb, var(--status-warning, #f0b232) 14%, transparent); color: var(--text-default, var(--text-normal)); font-size: 12px; line-height: 1.4; }
+.vc-stream-enhancer-camera-preview-mirror video { transform: scaleX(-1); }
+
+/* Advanced Stream Settings and Video Settings in the HaloCord look (HaloUI kit rows and sections). */
+.vc-stream-enhancer-halo .hc-ui + .hc-ui { margin-top: 0; }
+.vc-stream-enhancer-share-field { flex-direction: column; align-items: stretch; gap: 10px; }
+.vc-stream-enhancer-share-field-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.vc-stream-enhancer-share-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.vc-stream-enhancer-share-seg-item { flex: 1 1 0; min-width: 96px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 10px; border: 1px solid var(--hc-row-border); border-radius: 9px; background: var(--hc-row-bg); color: var(--hc-text, var(--text-default, var(--text-normal))); font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color .15s ease, background-color .15s ease; }
+.vc-stream-enhancer-share-seg-item:hover { border-color: color-mix(in srgb, var(--hc-accent) 35%, transparent); }
+.vc-stream-enhancer-share-seg-on, .vc-stream-enhancer-share-seg-on:hover { border-color: var(--hc-accent); background: color-mix(in srgb, var(--hc-accent) 14%, transparent); color: var(--hc-accent); }
+.vc-stream-enhancer-share-seg-item:disabled { opacity: .45; cursor: not-allowed; }
+.vc-stream-enhancer-share-seg-item:focus-visible { outline: 2px solid var(--hc-accent); outline-offset: 2px; }
+.vc-stream-enhancer-share-seg-note { font-size: 11px; font-weight: 500; color: var(--hc-text-muted, var(--text-muted)); }
+.vc-stream-enhancer-share-radios { display: flex; flex-direction: column; gap: 4px; }
+.vc-stream-enhancer-halo .vc-stream-enhancer-share-row { padding: 8px 10px; border: 1px solid transparent; border-radius: 9px; color: var(--hc-text, var(--text-default, var(--text-normal))); }
+.vc-stream-enhancer-halo .vc-stream-enhancer-share-row:hover { background: var(--hc-row-bg); border-color: var(--hc-row-border); }
+.vc-stream-enhancer-halo .vc-stream-enhancer-share-row-on { border-color: color-mix(in srgb, var(--hc-accent) 35%, transparent); background: color-mix(in srgb, var(--hc-accent) 8%, transparent); }
+.vc-stream-enhancer-halo .vc-stream-enhancer-share-row-on .vc-stream-enhancer-share-radio { border-color: var(--hc-accent); }
+.vc-stream-enhancer-halo .vc-stream-enhancer-share-note { color: var(--hc-text-muted, var(--text-muted)); }
+.vc-stream-enhancer-share-warn { margin: 0; padding: 9px 11px; border: 1px solid color-mix(in srgb, var(--status-warning, #f0b232) 35%, transparent); border-radius: 6px; background: color-mix(in srgb, var(--status-warning, #f0b232) 10%, transparent); color: var(--status-warning, #f0b232); font-size: 12px; line-height: 1.5; }
+.vc-stream-enhancer-halo .vc-stream-enhancer-camera-preview { border: 1px solid var(--hc-row-border); border-radius: 11px; background: var(--hc-row-bg); }
+.vc-stream-enhancer-halo .vc-stream-enhancer-share-go { background: var(--hc-accent); color: var(--hc-accent-ink); }
+.vc-stream-enhancer-halo .vc-stream-enhancer-share-go:hover { background: var(--hc-accent-2); }
+
+/* Discord-native parts of these two windows, restyled only while HaloCord theming is on. */
+html.hc-theming .vc-stream-enhancer-halo { background: var(--hc-window-bg, var(--modal-background, var(--background-base-low))); border: 1px solid var(--hc-panel-border); --switch-background-selected-default: var(--hc-accent); --switch-background-selected-hover: var(--hc-accent); --switch-border-selected-default: var(--hc-accent); --switch-border-selected-hover: var(--hc-accent); --switch-thumb-background-selected-default: var(--hc-accent-ink); --border-focus: var(--hc-accent); }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-foot { background: var(--hc-panel-bg); border-top: 1px solid var(--hc-panel-border); }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-share-title { color: var(--hc-text, var(--text-strong, var(--header-primary))); }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-camera-body { scrollbar-color: var(--hc-scroll-thumb, var(--hc-row-border)) transparent; }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-camera-body::-webkit-scrollbar { width: 8px; background: transparent; }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-camera-body::-webkit-scrollbar-track { background: transparent; }
+html.hc-theming .vc-stream-enhancer-halo .vc-stream-enhancer-camera-body::-webkit-scrollbar-thumb { border-radius: 4px; background: var(--hc-scroll-thumb, var(--hc-row-border)); }
+html.hc-theming .vc-stream-enhancer-halo [class*="barFill_"] { background: var(--hc-accent); }
+html.hc-theming .vc-stream-enhancer-halo [class*="grabber_"] { border-color: var(--hc-accent); }
+html.hc-theming .vc-stream-enhancer-halo [class*="selectField__"] { border-color: var(--hc-row-border); background: var(--hc-row-bg); }
+html.hc-theming .vc-stream-enhancer-halo .vc-form-switch-container { border-color: var(--hc-row-border); }
+
 /* Labelled pill switches (ToggleRow in components/StreamSettings.tsx); the Switch is the plugin list's. */
 .vc-stream-enhancer-share-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; padding: 8px; color: var(--interactive-text-default, var(--interactive-normal)); font-size: 14px; cursor: pointer; }
 .vc-stream-enhancer-share-toggle:hover { color: var(--interactive-text-hover, var(--interactive-hover)); }
 .vc-stream-enhancer-share-toggle-off, .vc-stream-enhancer-share-toggle-off:hover { color: var(--text-muted); cursor: not-allowed; }
 .vc-stream-enhancer-share-foot .vc-stream-enhancer-share-toggle { margin: 0 0 0 4px; padding: 8px 10px; color: var(--text-default, var(--text-normal)); font-size: 13px; font-weight: 500; white-space: nowrap; }
-.vc-stream-enhancer-camera-body .vc-stream-enhancer-share-toggle { padding: 8px 0; }

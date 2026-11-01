@@ -5,12 +5,15 @@
  */
 
 import ErrorBoundary from "@components/ErrorBoundary";
+import { HaloSection, HaloSwitchRow } from "@components/HaloUI";
 import { classNameFactory } from "@utils/css";
+import { classes } from "@utils/misc";
 import { ModalRoot, ModalSize, openModal, type RenderModalProps } from "@utils/modal";
 import type { VideoDevice } from "@vencord/discord-types";
-import { FluxDispatcher, MediaEngineStore, useEffect, useRef, useState, useStateFromStores } from "@webpack/common";
+import { FluxDispatcher, MediaEngineStore, Select, useEffect, useRef, useState, useStateFromStores } from "@webpack/common";
 
-import { ToggleRow } from "./StreamSettings";
+import { streamEnhancerSettings } from "../settings";
+import { Field, Segmented, Warn } from "./StreamSettings";
 
 const cl = classNameFactory("vc-stream-enhancer-share-");
 const ccl = classNameFactory("vc-stream-enhancer-camera-");
@@ -31,10 +34,12 @@ const presets = [
     { id: "1080p120", label: "1080p · 120fps", vW: 1920, vH: 1080, vFps: 120, vbMin: 10000000, vbTarget: 20000000, vbMax: 40000000 },
     { id: "2160p60", label: "4K · 60fps", vW: 3840, vH: 2160, vFps: 60, vbMin: 20000000, vbTarget: 40000000, vbMax: 80000000 }
 ] as const;
+const presetChoices = presets.map(p => ({ value: p.id, label: p.label }));
 
+// The preview's on/off is a plugin setting, so it stays as left across openings and restarts.
 function Preview({ deviceId }: { deviceId: string; }) {
     const video = useRef<HTMLVideoElement>(null);
-    const [on, setOn] = useState(false);
+    const { cameraPreview: on, noMirroredCamera } = streamEnhancerSettings.use(["cameraPreview", "noMirroredCamera"]);
     const [failed, setFailed] = useState(false);
 
     useEffect(() => {
@@ -48,22 +53,23 @@ function Preview({ deviceId }: { deviceId: string; }) {
                 stream = s;
                 if (video.current) video.current.srcObject = s;
             })
-            .catch(() => { if (live) { setFailed(true); setOn(false); } });
+            .catch(() => { if (live) setFailed(true); });
         return () => { live = false; stream?.getTracks().forEach(t => t.stop()); };
     }, [on, deviceId]);
 
     return (
         <>
-            <div className={ccl("preview")}>
-                {on ? <video ref={video} autoPlay muted playsInline /> : <span>{failed ? "The camera could not be opened." : "Preview is off."}</span>}
+            <div className={ccl("preview", !noMirroredCamera && "preview-mirror")}>
+                {on && !failed ? <video ref={video} autoPlay muted playsInline /> : <span>{failed ? "The camera could not be opened." : "Preview is off."}</span>}
             </div>
-            <ToggleRow label="Camera preview" checked={on} onChange={setOn} />
+            <HaloSwitchRow title="Camera preview" value={on} onChange={v => { streamEnhancerSettings.store.cameraPreview = v; }} />
         </>
     );
 }
 
 const CameraSettings = ErrorBoundary.wrap(function CameraSettings({ modalProps }: { modalProps: RenderModalProps; }) {
     const [, redraw] = useState(0);
+    const { noMirroredCamera } = streamEnhancerSettings.use(["noMirroredCamera"]);
     const deviceMap = useStateFromStores([MediaEngineStore], () => MediaEngineStore.getVideoDevices());
     const devices = Object.values(deviceMap ?? {}) as VideoDevice[];
     const current = useStateFromStores([MediaEngineStore], () => MediaEngineStore.getVideoDeviceId() as string);
@@ -80,36 +86,42 @@ const CameraSettings = ErrorBoundary.wrap(function CameraSettings({ modalProps }
         api?.set("videoHD", !unlocked);
         api?.set("videoHDUserSet", true);
     });
-    const pick = (p: typeof presets[number]) => change(() => {
-        for (const key of ["vW", "vH", "vFps", "vbMin", "vbTarget", "vbMax"] as const) api?.set(key, p[key]);
+    const pick = (id: typeof presets[number]["id"]) => change(() => {
+        const p = presets.find(x => x.id === id);
+        if (p) for (const key of ["vW", "vH", "vFps", "vbMin", "vbTarget", "vbMax"] as const) api?.set(key, p[key]);
     });
 
     return (
-        <ModalRoot {...modalProps} size={ModalSize.LARGE} className={ccl("root")}>
+        <ModalRoot {...modalProps} size={ModalSize.LARGE} className={classes(ccl("root"), "vc-stream-enhancer-halo")}>
             <div className={cl("head")}>
                 <h2 className={cl("title")}>Video Settings</h2>
                 <button className={cl("close")} aria-label="Close" onClick={modalProps.onClose}>✕</button>
             </div>
             <div className={ccl("body")}>
-                <div className={cl("label")}>Camera</div>
-                <select className={cl("select")} value={current} disabled={!devices.length}
-                    onChange={e => FluxDispatcher.dispatch({ type: "MEDIA_ENGINE_SET_VIDEO_DEVICE", id: e.currentTarget.value })}>
-                    {!devices.length && <option value="">No cameras found</option>}
-                    {devices.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-                <Preview deviceId={current} />
-                <div className={cl("label")}>Advanced Camera Controls</div>
-                <ToggleRow label="Unlocked camera, removes Discord's 720p limit" checked={unlocked} disabled={!api} onChange={toggle} />
-                <p className={ccl("hint")}>{api
-                    ? "Resolution is negotiated up to the preset below. Your camera and connection decide the real result, and more cameras on a call cost more CPU and GPU."
-                    : "Advanced camera controls need the HaloCord desktop shell. They are not available in this window."}</p>
-                <div className={cl("label")}>Quality Preset</div>
-                <div className={ccl("presets")}>
-                    {presets.map(p => (
-                        <button key={p.id} disabled={!api || !unlocked} className={cl("pill", active === p.id && "pill-on")} onClick={() => pick(p)}>{p.label}</button>
-                    ))}
-                </div>
-                {api && !unlocked && <p className={ccl("hint")}>Turn on Advanced Camera Controls to choose a preset.</p>}
+                <HaloSection title="Camera">
+                    <Field title="Camera">
+                        <Select
+                            options={devices.map(d => ({ label: d.name, value: d.id }))}
+                            placeholder="No cameras found"
+                            isDisabled={!devices.length}
+                            isSelected={v => v === current}
+                            select={id => FluxDispatcher.dispatch({ type: "MEDIA_ENGINE_SET_VIDEO_DEVICE", id })}
+                            serialize={v => v}
+                        />
+                    </Field>
+                    <Preview deviceId={current} />
+                    <HaloSwitchRow title="No mirrored camera" description="Shows your own camera the way others see it instead of as a mirror image."
+                        value={noMirroredCamera} onChange={v => { streamEnhancerSettings.store.noMirroredCamera = v; }} />
+                </HaloSection>
+                <HaloSection title="Advanced camera controls">
+                    <HaloSwitchRow title="Unlocked camera" description={api ? "Removes Discord's 720p limit." : "Needs the HaloCord desktop shell. Not available in this window."}
+                        value={unlocked} disabled={!api} onChange={toggle} />
+                    <Warn title="Unlocked camera.">Resolution is negotiated up to the preset below. Your camera and connection decide the real result, and more cameras on a call cost more CPU and GPU.</Warn>
+                    <Field title="Quality preset">
+                        <Segmented label="Quality preset" choices={presetChoices} value={active} disabled={!api || !unlocked} onChange={pick} />
+                        {api && !unlocked && <div className="hc-ui-row-desc">Turn on Unlocked camera to choose a preset.</div>}
+                    </Field>
+                </HaloSection>
             </div>
             <div className={cl("foot")}>
                 <div className={cl("spacer")} />

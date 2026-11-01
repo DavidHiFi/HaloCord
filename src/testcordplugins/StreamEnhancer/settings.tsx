@@ -676,6 +676,9 @@ export const streamEnhancerSettings = definePluginSettings({
     shareInstant: { type: OptionType.BOOLEAN, description: "Start sharing on the first click", default: true, hidden: true },
     // Tab the share picker opens on: one of pickerTabs' values.
     pickerTab: { type: OptionType.STRING, description: "Share picker opens on", default: "apps", hidden: true },
+    // Video Settings (components/CameraSettings.tsx).
+    cameraPreview: { type: OptionType.BOOLEAN, description: "Camera preview in Video Settings", default: false, hidden: true },
+    noMirroredCamera: { type: OptionType.BOOLEAN, description: "Show your own camera unmirrored", default: false, hidden: true },
     controlPanel: {
         type: OptionType.COMPONENT,
         component: StreamEnhancerControlPanel
