@@ -109,7 +109,8 @@ export function createBridge(opts: BridgeOptions) {
         pending.delete(id);
         socket.closed = true;
         socket.abortController.abort();
-        if (socket.connected) emit("disconnect", socket, reason);
+        // Discord reads reason.code; anything but 1000 opens its activity "Error {code}" dialog.
+        if (socket.connected) emit("disconnect", socket, { code: 1000, message: reason });
     }
 
     return {

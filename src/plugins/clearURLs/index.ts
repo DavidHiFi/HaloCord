@@ -57,6 +57,8 @@ export default definePlugin({
     dependencies: ["MessageEventsAPI"],
     tags: ["Privacy", "Utility"],
     authors: [Devs.adryd, Devs.thororen],
+    // Switched in HaloCord Settings > Privacy & Security, not the plugin list.
+    hidden: true,
 
     rules: [] as RuleSet[],
 

@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https://cdn.discordapp.com; style-src 'unsafe-inline'; script-src 'self'">
+<title>HaloCord Overlay</title>
+<style>
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; user-select: none;
+    font: 500 14px/1.25 "gg sans", "Segoe UI", system-ui, sans-serif; color: #f2f3f5; }
+#dim { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); opacity: 0; transition: opacity .2s; pointer-events: none; }
+.unlocked #dim { opacity: 1; }
+
+#voice { position: fixed; left: 16px; top: 16px; min-width: 40px; padding: 4px; border-radius: 8px; border: 1px dashed transparent; }
+.unlocked #voice { cursor: move; border-color: rgba(255, 255, 255, .6); background: rgba(17, 18, 20, .6); }
+#voice ul { list-style: none; margin: 0; padding: 0; }
+#voice li { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+#voice li[hidden], #voice .name[hidden] { display: none; }
+.av { position: relative; flex: none; width: 40px; height: 40px; }
+.small .av { width: 24px; height: 24px; }
+.av img { width: 100%; height: 100%; border-radius: 50%; display: block; background: #2b2d31; box-shadow: 0 0 0 2px transparent; transition: box-shadow .1s; }
+.speaking .av img { box-shadow: 0 0 0 2px #23a55a; }
+.name { padding: 3px 8px; border-radius: 4px; background: rgba(17, 18, 20, .82); text-shadow: 0 1px 1px rgba(0, 0, 0, .4);
+    max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.small .name { font-size: 12px; padding: 2px 6px; }
+.icons { display: flex; gap: 2px; }
+.icons svg { width: 16px; height: 16px; padding: 2px; border-radius: 50%; background: rgba(17, 18, 20, .82); fill: #f23f43; }
+.small .icons svg { width: 12px; height: 12px; }
+#empty { display: none; padding: 6px 8px; color: #b5bac1; font-size: 13px; }
+.unlocked #voice.none #empty { display: block; }
+
+#toasts { position: fixed; display: flex; flex-direction: column; gap: 8px; width: 340px; }
+#toasts.topLeft { left: 16px; top: 16px; }
+#toasts.topRight { right: 16px; top: 16px; }
+#toasts.bottomLeft { left: 16px; bottom: 16px; flex-direction: column-reverse; }
+#toasts.bottomRight { right: 16px; bottom: 16px; flex-direction: column-reverse; }
+#toasts.disabled { display: none; }
+.toast { display: flex; gap: 10px; padding: 10px 12px; border-radius: 8px; background: rgba(30, 31, 34, .94);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .35); opacity: 0; transform: translateY(6px); transition: opacity .3s, transform .3s; }
+.toast.in { opacity: 1; transform: none; }
+.toast img { flex: none; width: 36px; height: 36px; border-radius: 50%; background: #2b2d31; }
+.toast b { display: block; font-size: 13px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toast span { margin-top: 2px; font-weight: 400; color: #dbdee1; font-size: 13px; overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; word-break: break-word; }
+.toast div { min-width: 0; }
+
+#hint { position: fixed; left: 50%; top: 24px; transform: translateX(-50%); padding: 8px 14px; border-radius: 8px;
+    background: rgba(30, 31, 34, .94); display: none; }
+.unlocked #hint { display: block; }
+kbd { font: inherit; padding: 1px 6px; border-radius: 4px; background: #4e5058; }
+</style>
+</head>
+<body>
+<div id="dim"></div>
+<div id="voice" class="none"><ul id="members"></ul><div id="empty">Voice channel members show here</div></div>
+<div id="toasts" class="bottomRight"></div>
+<div id="hint">Overlay unlocked: drag the voice widget. Press <kbd id="key"></kbd> to lock it.</div>
+<svg width="0" height="0" style="position:absolute">
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 0-4 4v5a4 4 0 0 0 6.6 3.03L8.3 7.73A4 4 0 0 1 12 2Zm4 9V6a4 4 0 0 0-7.46-2L16 11.46V11ZM5 10a1 1 0 1 1 2 0 5 5 0 0 0 7.9 4.07l1.43 1.43A7 7 0 0 1 13 16.93V20h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-3.07A7 7 0 0 1 5 10Zm12.83 3.93A6.97 6.97 0 0 0 19 10a1 1 0 1 0-2 0c0 .7-.14 1.36-.4 1.97l1.23 1.96ZM3.3 2.3a1 1 0 0 1 1.4 0l16 16a1 1 0 0 1-1.4 1.4l-16-16a1 1 0 0 1 0-1.4Z"/></symbol>
+    <symbol id="i-deaf" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-9 9v6a3 3 0 0 0 3 3h1a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a7 7 0 0 1 11.6-5.27l1.42-1.42A8.97 8.97 0 0 0 12 3Zm7 7.24-2 2V19a2 2 0 0 0 2 2h-.24A3 3 0 0 0 21 18v-6c0-.62-.06-1.22-.18-1.8L19 12v-1.76ZM3.3 2.3a1 1 0 0 1 1.4 0l16 16a1 1 0 0 1-1.4 1.4l-16-16a1 1 0 0 1 0-1.4Z"/></symbol>
+</svg>
+<script src="hc-overlay.js"></script>
+</body>
+</html>

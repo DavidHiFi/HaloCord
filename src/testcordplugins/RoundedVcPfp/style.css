@@ -75,3 +75,8 @@ div[data-selenium-video-tile][style*="--vc-pfp-hide-bg"] {
 div[data-selenium-video-tile][style*="--vc-pfp-hide-bg"] [class*="content"] {
     overflow: visible !important;
 }
+
+/* Deafened: no speaking ring on any tile, Discord's own border included */
+div[data-selenium-video-tile][style*="--vc-pfp-deaf"] [class*="border__"] {
+    display: none !important;
+}

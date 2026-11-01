@@ -16,14 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { proxyLazy } from "@utils/lazy";
 import { ConstEnumToRuntimeEnum } from "@utils/types";
 import * as t from "@vencord/discord-types";
 import * as enums from "@vencord/discord-types/enums";
-import { findByCodeLazy, findByPropsLazy } from "@webpack";
+import { findByCodeLazy, findByProps, findByPropsLazy } from "@webpack";
 
 import { waitForStore } from "./internal";
 
-export const Flux: t.Flux = findByPropsLazy("connectStores");
+// No attempt limit: findStore() called before Discord loads its Flux module used to burn the
+// default 5 tries and leave Flux undefined for the whole session (2026-11-01).
+export const Flux: t.Flux = proxyLazy(() => findByProps("connectStores"), Infinity);
 
 export type GenericStore = t.FluxStore & Record<string, any>;
 

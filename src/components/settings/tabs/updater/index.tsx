@@ -34,6 +34,7 @@ import { React, Select } from "@webpack/common";
 import gitHash from "~git-hash";
 
 import { HashLink, Updatable } from "./Components";
+import { HaloUpdater } from "./HaloUpdater";
 
 interface CommonProps {
     repo: string;
@@ -156,6 +157,9 @@ function Updater() {
     );
 }
 
+// HaloCord's shell updates by release installer, so it gets its own page without the git branch options.
+const UpdaterTab = () => window.HaloCordNative ? <HaloUpdater /> : <Updater />;
+
 export default IS_UPDATER_DISABLED
     ? null
-    : wrapTab(Updater, "Updater");
+    : wrapTab(UpdaterTab, "Updater");

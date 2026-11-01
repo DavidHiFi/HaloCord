@@ -373,7 +373,7 @@ function GoLiveQuickPanel({ selectedAudioSourceId }: { selectedAudioSourceId?: s
                 Toasts.show({
                     id: Toasts.genId(),
                     type: Toasts.Type.FAILURE,
-                    message: "StreamEnhancer: Could not load audio input devices."
+                    message: "Stream settings: Could not load audio input devices."
                 });
             });
     }, []);

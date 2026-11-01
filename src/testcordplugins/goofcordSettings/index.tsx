@@ -39,7 +39,7 @@ export default definePlugin({
     settings,
     settingsAboutComponent: () => (
         <Forms.FormText>
-            GoofCord ships rendering optimizations and keybinds enabled by default, so this plugin mirrors those defaults. GoofCord's other fixes live outside the renderer: Chromium performance flags, GPU/VA-API switches, firewall, encryption and UA spoofing. Those cannot run from an injected plugin and are already ported separately by TestcordOptimizer and GoofcordSecurity.
+            GoofCord ships rendering optimizations and keybinds enabled by default, so this plugin mirrors those defaults. GoofCord's other fixes live outside the renderer: Chromium performance flags, GPU/VA-API switches, firewall, encryption and UA spoofing. Those cannot run from an injected plugin and are already ported separately by the Performance tab in HaloCord Settings and GoofcordSecurity.
         </Forms.FormText>
     ),
 

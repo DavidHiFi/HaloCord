@@ -79,6 +79,7 @@ export default definePlugin({
     name: "StreamDeckRpc",
     description: "Runs Discord's RPC pipe (discord-ipc-0) so the Elgato Stream Deck Discord plugin works: mute, deafen, push to talk, volume, channels, soundboard, camera and screen share.",
     authors: [TestcordDevs.DavidHiFi],
+    required: true,
     enabledByDefault: true,
 
     async start() {

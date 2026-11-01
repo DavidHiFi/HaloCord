@@ -6,7 +6,7 @@
 
 import { definePluginSettings, useSettings } from "@api/Settings";
 import { Heading } from "@components/Heading";
-import { BackupRestoreIcon, BookmarkIcon, CloudIcon, InfoIcon, LogIcon, PaintbrushIcon, PatchHelperIcon, PluginsIcon, SafetyIcon, TestCordIcon, UpdaterIcon } from "@components/Icons";
+import { BackupRestoreIcon, BookmarkIcon, CloudIcon, CogWheel, InfoIcon, LogIcon, PaintbrushIcon, PatchHelperIcon, PluginsIcon, SafetyIcon, TestCordIcon, UpdaterIcon } from "@components/Icons";
 import { Paragraph } from "@components/Paragraph";
 import {
     BackupAndRestoreTab,
@@ -110,6 +110,12 @@ interface SettingsLayoutBuilder {
 }
 
 const TESTCORD_MAIN_ENTRY_KEY = "testcord_main";
+
+// Lazy so importing the Settings plugin does not pull the TestcordOptimizer module in early.
+function PerformanceTab() {
+    const { default: OptimizerTab } = require("@testcordplugins/TestcordOptimizer/OptimizerTab") as typeof import("@testcordplugins/TestcordOptimizer/OptimizerTab");
+    return <OptimizerTab />;
+}
 
 // PURE: no writes. Must return the same result no matter which caller (editor
 // or sidebar sync) runs first, otherwise the editor row and the live sidebar
@@ -728,6 +734,7 @@ export default definePlugin({
 
     buildLayout(originalLayoutBuilder: SettingsLayoutBuilder) {
         const layout = originalLayoutBuilder.buildLayout();
+        if (Array.isArray(layout)) this.layoutHooks[originalLayoutBuilder.key!]?.(layout, LayoutTypes);
         if (originalLayoutBuilder.key !== "$Root") return layout;
         if (!Array.isArray(layout)) return layout;
         if (layout.some(s => s?.key === "testcord_section")) return layout;
@@ -786,6 +793,13 @@ export default definePlugin({
                 Icon: SafetyIcon,
             },
             {
+                key: "testcord_performance",
+                title: "Performance",
+                panelTitle: "Performance",
+                Component: PerformanceTab,
+                Icon: CogWheel,
+            },
+            {
                 key: "testcord_presets",
                 title: "Presets",
                 panelTitle: "HaloCord Presets",
@@ -795,7 +809,7 @@ export default definePlugin({
             {
                 key: "testcord_cloud",
                 title: "Cloud",
-                panelTitle: "testcord Cloud",
+                panelTitle: "HaloCord Cloud",
                 Component: CloudTab,
                 Icon: CloudIcon
             },
@@ -900,11 +914,34 @@ export default definePlugin({
 
         layout.splice(idx, 0, testcordSection);
 
+        // Entries that belong inside one of Discord's own sections (HaloCord's Game Overlay sits in
+        // Games & Apps after Discord's hidden native one). Copies the section node, never mutates it.
+        for (const section of new Set(this.sectionEntries.map(e => e.section))) {
+            const i = layout.findIndex(s => s?.key === section);
+            const node = layout[i];
+            if (!node?.buildLayout) continue;
+            const extra = this.sectionEntries.filter(e => e.section === section);
+            layout[i] = {
+                ...node,
+                buildLayout: () => {
+                    const items = node.buildLayout!();
+                    for (const { after, entry } of extra) {
+                        const j = items.findIndex(c => c?.key === after);
+                        items.splice(j === -1 ? items.length : j + 1, 0, buildEntry(entry));
+                    }
+                    return items;
+                }
+            };
+        }
+
         return layout;
     },
 
     customSections: [] as ((SectionTypes: Record<string, string>) => { section: string; element: ComponentType; label: string; id?: string; })[],
     customEntries: [] as EntryOptions[],
+    // Other plugins add nodes to one of Discord's own settings panels, keyed by layout key (haloDesktop).
+    layoutHooks: {} as Record<string, (layout: SettingsLayoutNode[], types: typeof LayoutTypes) => void>,
+    sectionEntries: [] as { section: string; after?: string; entry: EntryOptions; }[],
 
     get electronVersion() {
         return VencordNative.native.getVersions().electron ?? window.legcord?.electron ?? null;

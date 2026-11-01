@@ -557,7 +557,19 @@ function updateDynamics(now: number) {
     }
 }
 
+// Discord awaits its stats emit inside the engine's 1 s poller, so a throw here would
+// stop stats for every listener for the rest of the session. Never let one escape.
 function onStats(payload: VoiceStats) {
+    try {
+        handleStats(payload);
+    } catch (e) {
+        logger.error("stats handler failed", e);
+    }
+}
+
+function handleStats(payload: VoiceStats) {
+    // Deafened: you hear nobody, so the guard takes no action until you undeafen.
+    if (MediaEngineStore.isDeaf()) return;
     const now = Date.now();
     const { enabled, sensitivity, dynamicUserVolume, autoMute } = settings.store;
     const threshold = Math.max(90, settings.store.threshold);
@@ -648,6 +660,7 @@ function poll() {
         const conn = getConnection();
         connection = conn;
         bindConnection(conn);
+        if (MediaEngineStore.isDeaf()) return;
 
         const now = Date.now();
         const members = new Set(currentVoiceMembers());
@@ -678,17 +691,25 @@ function poll() {
     }
 }
 
+// The web build's DataStore can return promises that never settle; cap every wait.
+function storeWithTimeout<T>(p: Promise<T>, ms = 1200): Promise<T | null> {
+    return Promise.race([
+        p.catch(() => null),
+        new Promise<null>(resolve => setTimeout(() => resolve(null), ms)),
+    ]);
+}
+
 function persistHeld() {
     heldWrite ??= lodash.debounce(() => {
         const held = Object.fromEntries(savedVolume);
-        persistQueue = persistQueue.then(() => DataStore.set(HELD_KEY, held)).catch(e => logger.error("failed to save held volumes", e));
+        persistQueue = persistQueue.then(() => storeWithTimeout(DataStore.set(HELD_KEY, held))).then(() => { }, e => logger.error("failed to save held volumes", e));
     }, PERSIST_DEBOUNCE_MS);
     heldWrite();
 }
 
 async function saveIgnored() {
     try {
-        await DataStore.set(IGNORED_KEY, [...ignored]);
+        await storeWithTimeout(DataStore.set(IGNORED_KEY, [...ignored]));
     } catch (e) {
         logger.error("failed to save the ignore list", e);
     }
@@ -853,21 +874,21 @@ export default definePlugin({
 
     async start() {
         try {
-            if (!await DataStore.get(BALANCE_VERSION_KEY)) {
+            if (!await storeWithTimeout(DataStore.get(BALANCE_VERSION_KEY))) {
                 if (settings.store.dynamicMaxReduction > 18) {
                     settings.store.dynamicTarget = 65;
                     settings.store.dynamicMaxReduction = 12;
                     settings.store.dynamicMaxBoost = 6;
                 }
                 if (settings.store.threshold < 90) settings.store.threshold = 98;
-                await DataStore.set(BALANCE_VERSION_KEY, true);
+                await storeWithTimeout(DataStore.set(BALANCE_VERSION_KEY, true));
             }
         } catch (e) {
             logger.error("failed to migrate voice balance settings", e);
         }
 
         try {
-            const saved = await DataStore.get(IGNORED_KEY);
+            const saved = await storeWithTimeout(DataStore.get(IGNORED_KEY));
             if (Array.isArray(saved)) {
                 for (const userId of saved) if (typeof userId === "string") ignored.add(userId);
             }
@@ -876,12 +897,12 @@ export default definePlugin({
         }
 
         try {
-            const held = await DataStore.get(HELD_KEY);
+            const held = await storeWithTimeout(DataStore.get(HELD_KEY));
             if (held && typeof held === "object") {
                 for (const [userId, volume] of Object.entries(held as Record<string, number>)) {
                     if (typeof volume === "number" && Number.isFinite(volume) && volume >= 0) setLocalVolume(userId, volume);
                 }
-                await DataStore.del(HELD_KEY);
+                await storeWithTimeout(DataStore.del(HELD_KEY));
             }
         } catch (e) {
             logger.error("failed to restore held volumes", e);

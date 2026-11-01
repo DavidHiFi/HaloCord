@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { TestcordDevs } from "@utils/constants";
 import { isEquicordPluginDev, isTestcordPluginDev } from "@utils/misc";
 import type { Plugin } from "@utils/types";
 import equicordTestcordModifiedIconBase64 from "file://../../browser/Equicord_Testcord_Modified_PluginIcon.png?base64";
@@ -15,12 +16,13 @@ import vencordTestcordModifiedIconBase64 from "file://../../browser/Vencord_Test
 export const TestcordPluginIconUrl = `data:image/png;base64,${testcordPluginIconBase64}`;
 export const HaloCordPluginIconUrl = `data:image/png;base64,${haloCordPluginIconBase64}`;
 
-// Plugins that exist only in HaloCord. Everything else under src/testcordplugins comes from TestCord.
-const HALOCORD_PLUGIN_FOLDERS = new Set(["fakeVoice", "stereoMode", "streamDeckRpc"]);
+// A HaloCord plugin is written by DavidHiFi alone, or by DavidHiFi together with Kurtzon Audio (firstgenstereo).
+const HALOCORD_AUTHOR_IDS = new Set<BigInt>([TestcordDevs.DavidHiFi.id, TestcordDevs.Kurtzon.id]);
 
-export function isHaloCordPlugin(folderName?: string) {
-    const m = /^src\/testcordplugins\/([^/]+)/.exec(folderName ?? "");
-    return !!m && HALOCORD_PLUGIN_FOLDERS.has(m[1]);
+export function isHaloCordPlugin(plugin?: Pick<Plugin, "authors"> | null) {
+    const authors = plugin?.authors?.filter(Boolean) ?? [];
+    return authors.some(a => a.id === TestcordDevs.DavidHiFi.id)
+        && authors.every(a => HALOCORD_AUTHOR_IDS.has(a.id) || a.name?.toLowerCase() === "firstgenstereo");
 }
 export const EquicordTestcordModifiedIconUrl = `data:image/png;base64,${equicordTestcordModifiedIconBase64}`;
 export const VencordTestcordModifiedIconUrl = `data:image/png;base64,${vencordTestcordModifiedIconBase64}`;

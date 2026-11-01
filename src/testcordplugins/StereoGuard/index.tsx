@@ -7,7 +7,7 @@
 import { DataStore } from "@api/index";
 import { plugins } from "@api/PluginManager";
 import { definePluginSettings } from "@api/Settings";
-import { UserAreaButton, UserAreaRenderProps } from "@api/UserArea";
+import { addUserAreaButton, removeUserAreaButton, UserAreaButton, UserAreaRenderProps } from "@api/UserArea";
 import { openPluginModal } from "@components/settings";
 import { TestcordDevs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
@@ -46,6 +46,8 @@ const STEREO_GUARD_KEYS = ["enabled"] as const;
 interface AudioOutput {
     id: string;
     stream: MediaStream;
+    // Set by HaloCord's audio guard, which plays each person through this node.
+    gainNode?: GainNode;
 }
 
 interface VoiceConnection {
@@ -163,8 +165,88 @@ const settings = definePluginSettings({
         type: OptionType.BOOLEAN,
         description: "Show a toast when the guard mutes, unmutes, or auto-unmutes someone.",
         default: true
+    },
+    forceMono: {
+        type: OptionType.BOOLEAN,
+        description: "Force Mono: play everyone's incoming voice in mono.",
+        default: false,
+        onChange() {
+            applyForceMono();
+        }
+    },
+    forceMonoButton: {
+        type: OptionType.BOOLEAN,
+        description: "Show a Force Mono toggle button next to your mute and deafen buttons.",
+        default: false
     }
 });
+
+// --- Force Mono, ported from deracul's Force Mono plugin (Discord id 1454268753629024529) ---
+
+let monoConnection: any;
+let monoEmitter: any;
+const monoPatchedConns = new Set<any>();
+const monoOutputs = new Set<GainNode>();
+
+const getAudioDecoder = (mono: boolean) => ({
+    channels: 2,
+    freq: 48000,
+    // stereo: "0" forces mono downmixing
+    params: { stereo: mono ? "0" : "1" },
+    type: 120,
+    name: "opus",
+});
+
+function updateDecoder(mono = settings.store.forceMono) {
+    monoConnection?.conn?.setTransportOptions({ audioDecoders: [getAudioDecoder(mono)] });
+}
+
+// Native voice (Discord Desktop): ask the Opus decoder for mono, and keep that
+// choice when Discord sets the decoders again on a channel swap.
+function onMonoConnection(connection: any) {
+    // The web build's WebRTC connections have no native conn to patch.
+    if (connection?.context !== "default" || !connection.conn) return;
+    monoConnection = connection;
+
+    if (!connection.conn._forceMonoOrig) {
+        const originalSetOptions = connection.conn.setTransportOptions;
+        connection.conn._forceMonoOrig = originalSetOptions;
+        monoPatchedConns.add(connection.conn);
+        connection.conn.setTransportOptions = function (options: Record<string, any>) {
+            if (options.audioDecoders) options.audioDecoders[0] = getAudioDecoder(settings.store.forceMono);
+            return originalSetOptions.apply(this, [options]);
+        };
+    }
+    updateDecoder();
+}
+
+// Web voice (HaloCord): the audio guard plays each person through a gain node.
+// A one-channel input on that node downmixes stereo to mono. Guard rebuilds
+// make new nodes, so the poll scan calls this again.
+function syncWebMono(conn: VoiceConnection & { outputs: Record<string, AudioOutput>; }, mono: boolean) {
+    for (const output of Object.values(conn.outputs)) {
+        const node = output?.gainNode;
+        if (!node || (mono && node.channelCount === 1)) continue;
+        try {
+            if (mono) {
+                node.channelCount = 1;
+                node.channelCountMode = "explicit";
+                node.channelInterpretation = "speakers";
+                monoOutputs.add(node);
+            } else if (monoOutputs.delete(node)) {
+                node.channelCount = 2;
+                node.channelCountMode = "max";
+            }
+        } catch (e) {
+            logger.error("force mono failed", e);
+        }
+    }
+}
+
+function applyForceMono(mono = settings.store.forceMono) {
+    updateDecoder(mono);
+    if (isWeb(connection)) syncWebMono(connection, mono);
+}
 
 function toDb(score: number) {
     return score > 0 ? Math.max(-60, 20 * Math.log10(score)) : -60;
@@ -571,9 +653,15 @@ function poll() {
 
         if (now - lastScanAt >= SCAN_MS) {
             lastScanAt = now;
-            if (web) syncWebMeters(connection as VoiceConnection & { outputs: Record<string, AudioOutput>; }, now);
-            else syncNativeMeters();
+            if (web) {
+                syncWebMeters(connection as VoiceConnection & { outputs: Record<string, AudioOutput>; }, now);
+                if (settings.store.forceMono) syncWebMono(connection as VoiceConnection & { outputs: Record<string, AudioOutput>; }, true);
+            } else syncNativeMeters();
         }
+
+        // Deafened: you hear nobody, so the guard pauses. No mutes, no
+        // auto-unmutes, no volume changes and no toasts until you undeafen.
+        if (MediaEngineStore.isDeaf()) return;
 
         for (const userId of [...volumeHolds.keys()]) {
             if (!inCall(userId) || isIgnored(userId) || isLocalMuted(userId)) unmute(userId, "silent");
@@ -764,10 +852,87 @@ function StereoGuardButton({ iconForeground, hideTooltips, nameplate }: UserArea
     );
 }
 
+// deracul's Force Mono icon and toggle, unchanged apart from the setting it reads.
+function MonoIcon({ className, active }: { className?: string; active?: boolean; }) {
+    const lineLength = 30;
+    const lineStyle: React.CSSProperties = {
+        strokeDasharray: lineLength,
+        strokeDashoffset: active ? lineLength : 0,
+        transition: "stroke-dashoffset 0.1s ease-in-out",
+    };
+
+    return (
+        <svg className={className} width="20" height="20" viewBox="0 0 256 256">
+            <mask id="foremonoLine">
+                <rect width="100%" height="100%" fill="#ffffff" />
+                <line
+                    className="blackLine"
+                    x1="235"
+                    y1="21"
+                    x2="21"
+                    y2="235"
+                    stroke="#000000"
+                    strokeWidth="64"
+                    strokeLinecap="round"
+                    style={lineStyle}
+                />
+            </mask>
+
+            <path
+                fill={!active ? "var(--status-danger)" : "currentColor"}
+                fillRule="evenodd"
+                mask="url(#foremonoLine)"
+                d="M128.802 95.03c-9.229-9.369-22.39-15.228-37-15.228-27.92 0-50.555 21.402-50.555 47.803 0 26.4 22.634 47.802 50.555 47.802 14.711 0 27.954-5.94 37.193-15.423-12.232-16.88-14.177-19.888-14.177-32.38 0-12.016 5.924-18.458 14.19-31.142 6.753 13.293 13.629 19.445 13.629 31.538 0 12.802-6.03 20.525-13.402 32.614 9.206 9.115 22.185 14.793 36.567 14.793 27.922 0 50.556-21.401 50.556-47.802 0-26.4-22.634-47.803-50.556-47.803-14.608 0-27.77 5.86-37 15.228zM128 75.374C138.501 68.202 151.252 64 165 64c35.899 0 65 28.654 65 64 0 35.346-29.101 64-65 64-13.748 0-26.499-4.202-37-11.374C117.499 187.798 104.748 192 91 192c-35.899 0-65-28.654-65-64 0-35.346 29.101-64 65-64 13.748 0 26.499 4.202 37 11.374z"
+            />
+
+            <line
+                x1="235"
+                y1="21"
+                x2="21"
+                y2="235"
+                stroke="var(--status-danger, currentColor)"
+                strokeWidth="21"
+                strokeLinecap="round"
+                style={lineStyle}
+            />
+        </svg>
+    );
+}
+
+const FORCE_MONO_KEYS = ["forceMono", "forceMonoButton"] as const;
+
+function ForceMonoButton({ iconForeground, hideTooltips, nameplate }: UserAreaRenderProps) {
+    const { forceMono, forceMonoButton } = settings.use(FORCE_MONO_KEYS);
+    if (!forceMonoButton) return null;
+
+    return (
+        <UserAreaButton
+            tooltipText={hideTooltips ? void 0 : forceMono ? "Disable Force Mono" : "Enable Force Mono"}
+            icon={<MonoIcon className={iconForeground} active={forceMono} />}
+            role="switch"
+            aria-checked={forceMono}
+            redGlow={!forceMono}
+            plated={nameplate != null}
+            onClick={() => {
+                const newValue = !forceMono;
+                settings.store.forceMono = newValue;
+
+                Toasts.show({
+                    message: newValue ? "Force Mono Enabled" : "Force Mono Disabled",
+                    id: "MonoToast",
+                    type: Toasts.Type.MESSAGE
+                });
+            }}
+        />
+    );
+}
+
 export default definePlugin({
     id: "StereoGuard",
     name: "StereoGuard",
     description: "Locally silences anyone whose audio is not fully mono: slight panning, stereo width, panning around, or reverb tails. Centered mono voice is never touched.",
+    // Force Mono is deracul's code (credited in its section above). deracul stays out of authors so
+    // StereoGuard keeps the HaloCord badge, which needs DavidHiFi plus only HaloCord co-authors.
     authors: [TestcordDevs.Kurtzon, TestcordDevs.DavidHiFi],
     tags: ["Voice", "Utility"],
     enabledByDefault: false,
@@ -809,6 +974,12 @@ export default definePlugin({
         if (settings.store.threshold > 0) settings.store.threshold = -22;
 
         intervalId = setInterval(poll, POLL_MS);
+
+        addUserAreaButton("StereoGuardForceMono", ForceMonoButton);
+        const engine = MediaEngineStore.getMediaEngine() as any;
+        monoEmitter = engine?.emitter;
+        monoEmitter?.on?.("connection", onMonoConnection);
+        for (const conn of engine?.connections ?? []) onMonoConnection(conn);
     },
 
     stop() {
@@ -816,6 +987,23 @@ export default definePlugin({
             clearInterval(intervalId);
             intervalId = undefined;
         }
+
+        // Back to stereo while the plugin is off; the setting itself is kept.
+        removeUserAreaButton("StereoGuardForceMono");
+        applyForceMono(false);
+        monoEmitter?.removeListener?.("connection", onMonoConnection);
+        monoEmitter = undefined;
+        for (const conn of monoPatchedConns) {
+            try {
+                if (conn._forceMonoOrig) {
+                    conn.setTransportOptions = conn._forceMonoOrig;
+                    delete conn._forceMonoOrig;
+                }
+            } catch { }
+        }
+        monoPatchedConns.clear();
+        monoOutputs.clear();
+        monoConnection = undefined;
 
         resetCall();
         connection = null;

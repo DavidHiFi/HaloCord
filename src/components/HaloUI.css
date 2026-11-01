@@ -1,0 +1,715 @@
+/* HaloCord settings look: the voice panel's dark rounded rows and green accent (desktop/base/userscript.js),
+   used for options HaloCord adds to Discord. */
+:root {
+    --hc-accent: #afe37f;
+    --hc-accent-2: #63c98f;
+    --hc-accent-ink: #10151a;
+    --hc-row-bg: rgb(0 0 0 / 20%);
+    --hc-row-border: rgb(255 255 255 / 6%);
+    --hc-panel-bg: rgb(0 0 0 / 13%);
+    --hc-panel-border: rgb(255 255 255 / 8%);
+}
+
+.hc-ui {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 14px;
+    background: var(--hc-panel-bg);
+    box-shadow: inset 0 1px rgb(255 255 255 / 3%);
+}
+
+.hc-ui + .hc-ui,
+.hc-ui-hero + .hc-ui {
+    margin-top: 16px;
+}
+
+.hc-ui-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 2px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--hc-accent);
+}
+
+.hc-ui-title::before {
+    content: "";
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, var(--hc-accent), var(--hc-accent-2));
+    box-shadow: 0 0 12px rgb(175 227 127 / 45%);
+}
+
+.hc-ui-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 40px;
+    padding: 12px 14px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 11px;
+    background: var(--hc-row-bg);
+    transition: border-color 0.15s ease;
+}
+
+.hc-ui-row:hover {
+    border-color: rgb(175 227 127 / 22%);
+}
+
+.hc-ui-row-accent {
+    border-color: rgb(175 227 127 / 30%);
+    background: linear-gradient(90deg, rgb(175 227 127 / 10%), rgb(175 227 127 / 2%)), var(--hc-row-bg);
+}
+
+.hc-ui-row-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.hc-ui-row-disabled .hc-ui-row-text {
+    opacity: 0.4;
+}
+
+.hc-ui-row-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--header-primary, #f2f3f5);
+}
+
+.hc-ui-row-desc {
+    margin-top: 3px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--text-muted, #949ba4);
+}
+
+.hc-ui-row-side {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+}
+
+.hc-ui-switch {
+    position: relative;
+    flex: none;
+    width: 42px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 13px;
+    background: var(--background-modifier-active, #4e5058);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.hc-ui-switch-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.hc-ui-switch-on {
+    background: var(--hc-accent);
+}
+
+.hc-ui-switch-on .hc-ui-switch-knob {
+    transform: translateX(18px);
+    background: var(--hc-accent-ink);
+}
+
+.hc-ui-switch:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.hc-ui-switch:focus-visible {
+    outline: 2px solid var(--hc-accent);
+    outline-offset: 2px;
+}
+
+/* Status pill with a lit dot (after Sudocord's settings status pills). */
+.hc-ui-pill {
+    --hc-tone: var(--text-muted, #949ba4);
+
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
+    padding: 0 9px;
+    border: 1px solid color-mix(in srgb, var(--hc-tone) 40%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--hc-tone) 10%, transparent);
+    color: var(--hc-tone);
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.hc-ui-pill-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentcolor;
+    box-shadow: 0 0 6px currentcolor;
+}
+
+.hc-ui-pill-good { --hc-tone: var(--hc-accent); }
+.hc-ui-pill-info { --hc-tone: var(--hc-accent-2); }
+.hc-ui-pill-warn { --hc-tone: var(--status-warning, #f0b232); }
+.hc-ui-pill-bad { --hc-tone: var(--status-danger, #f23f42); }
+
+/* Header card at the top of a HaloCord page (after Sudocord's settings hero). */
+.hc-ui-hero {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    border: 1px solid rgb(175 227 127 / 24%);
+    border-radius: 16px;
+    background:
+        radial-gradient(circle at 100% 0%, rgb(99 201 143 / 14%), transparent 45%),
+        linear-gradient(135deg, rgb(175 227 127 / 9%), transparent 55%),
+        var(--hc-row-bg);
+    box-shadow: inset 0 1px rgb(255 255 255 / 3%);
+}
+
+.hc-ui-hero-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px 16px;
+}
+
+.hc-ui-hero-title {
+    margin: 6px 0 0;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--header-primary, #f2f3f5);
+}
+
+.hc-ui-hero-text {
+    max-width: 600px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-muted, #949ba4);
+}
+
+.hc-ui-hero-error {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--status-danger, #f23f42);
+    overflow-wrap: anywhere;
+}
+
+.hc-ui-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* TestCord's themes tab and some themes color every button with !important; these win inside HaloCord panels only. */
+.hc-ui .vc-btn-base.hc-ui-btn-accent,
+.hc-ui-hero .vc-btn-base.hc-ui-btn-accent {
+    border-color: transparent;
+    background-color: var(--hc-accent) !important;
+    color: var(--hc-accent-ink) !important;
+    font-weight: 700;
+}
+
+.hc-ui .vc-btn-base.hc-ui-btn-accent:hover:not(:disabled),
+.hc-ui-hero .vc-btn-base.hc-ui-btn-accent:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--hc-accent) 85%, #fff) !important;
+}
+
+.hc-ui .vc-btn-base.hc-ui-btn-quiet,
+.hc-ui-hero .vc-btn-base.hc-ui-btn-quiet {
+    border: 1px solid rgb(175 227 127 / 30%);
+    background-color: rgb(0 0 0 / 25%) !important;
+    color: var(--hc-accent) !important;
+    font-weight: 700;
+}
+
+.hc-ui .vc-btn-base.hc-ui-btn-quiet:hover:not(:disabled),
+.hc-ui-hero .vc-btn-base.hc-ui-btn-quiet:hover:not(:disabled) {
+    border-color: rgb(175 227 127 / 55%);
+    background-color: rgb(175 227 127 / 10%) !important;
+}
+
+.hc-ui-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+}
+
+.hc-ui-stat {
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 11px;
+    background: var(--background-tertiary, #1e1f22);
+}
+
+.hc-ui-stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted, #949ba4);
+}
+
+.hc-ui-stat-value {
+    margin-top: 4px;
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--header-primary, #f2f3f5);
+    overflow-wrap: anywhere;
+}
+
+.hc-ui-hash {
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgb(175 227 127 / 10%);
+    color: var(--hc-accent);
+    font-family: var(--font-code, monospace);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+a.hc-ui-hash:hover {
+    background: rgb(175 227 127 / 18%);
+}
+
+/* Privacy & Security: the same rows and switches. */
+.ps-command-center .ps-toggle-row {
+    padding: 12px 14px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 11px;
+    background: var(--hc-row-bg);
+    transition: border-color 0.15s ease;
+}
+
+.ps-command-center .ps-toggle-row:hover {
+    border-color: rgb(175 227 127 / 22%);
+}
+
+.ps-command-center .ps-toggle-title {
+    font-size: 15px;
+    color: var(--header-primary, #f2f3f5);
+}
+
+.ps-command-center .ps-toggle-desc {
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+
+.ps-command-center .ps-toggle-switch {
+    width: 42px;
+    height: 24px;
+    border-radius: 13px;
+    background: var(--background-modifier-active, #4e5058);
+}
+
+.ps-command-center .ps-toggle-knob {
+    top: 3px;
+    left: 3px;
+}
+
+.ps-command-center .ps-toggle-switch-on {
+    background: var(--hc-accent);
+}
+
+.ps-command-center .ps-toggle-switch-on .ps-toggle-knob {
+    background: var(--hc-accent-ink);
+}
+
+.ps-command-center .ps-toggle-switch:focus-visible {
+    outline: 2px solid var(--hc-accent);
+    outline-offset: 2px;
+}
+
+.ps-command-center .ps-card {
+    border-radius: 14px;
+}
+
+.ps-command-center .ps-badge-green {
+    background: rgb(175 227 127 / 12%);
+    color: var(--hc-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hc-ui-row,
+    .hc-ui-switch,
+    .hc-ui-switch-knob,
+    .ps-command-center .ps-toggle-row {
+        transition: none;
+    }
+}
+
+/* Every HaloCord settings page (Plugins, Themes, Performance, Stats, Health, Presets, Cloud, Backup...) in the voice panel's look. */
+.vc-settings-tab {
+    --switch-background-selected-default: var(--hc-accent);
+    --switch-background-selected-hover: var(--hc-accent);
+    --switch-border-selected-default: var(--hc-accent);
+    --switch-border-selected-hover: var(--hc-accent);
+    --switch-thumb-background-selected-default: var(--hc-accent-ink);
+    --border-focus: var(--hc-accent);
+    --text-link: var(--hc-accent);
+    --card-background-default: var(--hc-row-bg);
+    --background-surface-high: var(--hc-row-bg);
+    --background-secondary: var(--hc-panel-bg);
+    --background-secondary-alt: var(--hc-row-bg);
+    --background-base-low: var(--hc-row-bg);
+    --background-base-lower-alt: var(--hc-row-bg);
+    --border-subtle: var(--hc-row-border);
+}
+
+.vc-settings-tab .vc-switch-checked .vc-switch-indicator {
+    background: var(--hc-accent) !important;
+    border-color: var(--hc-accent) !important;
+}
+
+.vc-settings-tab .vc-switch-checked .vc-switch-thumb rect {
+    fill: var(--hc-accent-ink) !important;
+}
+
+.vc-settings-tab .vc-plugin-health-toggle input:checked + .vc-plugin-health-toggle-slider {
+    background: var(--hc-accent);
+}
+
+.vc-settings-tab .vc-plugin-health-toggle input:checked + .vc-plugin-health-toggle-slider::before {
+    background: var(--hc-accent-ink);
+}
+
+/* Section titles: green caps with the lit dot. */
+.vc-settings-tab .vc-h4,
+.vc-settings-tab .vc-h5,
+.vc-settings-tab .vc-optimizer-category > .vc-h3,
+.vc-settings-tab .vc-stats-card:not(.vc-stats-hero) > .vc-h3 {
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.4;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--hc-accent) !important;
+}
+
+.vc-settings-tab .vc-h4::before,
+.vc-settings-tab .vc-h5::before,
+.vc-settings-tab .vc-optimizer-category > .vc-h3::before,
+.vc-settings-tab .vc-stats-card:not(.vc-stats-hero) > .vc-h3::before {
+    content: "";
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    margin-right: 9px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, var(--hc-accent), var(--hc-accent-2));
+    box-shadow: 0 0 12px rgb(175 227 127 / 45%);
+    vertical-align: 0;
+}
+
+/* Donate and Contribute cards: dark panel with a green wash instead of the pastel art (set inline, hence !important). */
+.vc-settings-tab .vc-special-card-special {
+    border: 1px solid rgb(175 227 127 / 18%);
+    border-radius: 14px;
+    background:
+        linear-gradient(135deg, rgb(175 227 127 / 8%), transparent 60%),
+        var(--hc-panel-bg) !important;
+}
+
+.vc-settings-tab .vc-special-subtitle {
+    color: var(--header-primary);
+}
+
+.vc-settings-tab .vc-special-card-special .vc-btn-base {
+    border: 1px solid rgb(175 227 127 / 30%) !important;
+    background-color: rgb(0 0 0 / 25%) !important;
+    color: var(--hc-accent) !important;
+    font-weight: 700;
+}
+
+.vc-settings-tab .vc-special-card-special .vc-btn-base:hover {
+    border-color: rgb(175 227 127 / 55%) !important;
+    background-color: rgb(175 227 127 / 10%) !important;
+}
+
+.vc-settings-tab .vc-special-card-special .vc-donate-support-button {
+    border-color: transparent !important;
+    background-color: var(--hc-accent) !important;
+    color: var(--hc-accent-ink) !important;
+}
+
+.vc-settings-tab .vc-special-card-special .vc-donate-support-button:hover {
+    background-color: color-mix(in srgb, var(--hc-accent) 85%, #fff) !important;
+}
+
+.vc-settings-tab .vc-special-card-special :is(.vc-contrib-github, .vc-heart-icon) path {
+    fill: currentcolor;
+}
+
+/* Setting rows: dark rounded cards like the voice panel. */
+.vc-settings-tab .vc-form-switch-container,
+.vc-settings-tab .vc-plugins-setting-section {
+    margin-bottom: 8px;
+    padding: 12px 14px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 11px;
+    background: var(--hc-row-bg);
+    transition: border-color 0.15s ease;
+}
+
+.vc-settings-tab .vc-form-switch-container:hover,
+.vc-settings-tab .vc-plugins-setting-section:hover {
+    border-color: rgb(175 227 127 / 22%);
+}
+
+/* Outer panels: the voice panel's dark cards that hold a group of rows. */
+.hc-panel,
+.vc-settings-tab .vc-optimizer-category-settings,
+.vc-settings-tab .vc-presets-list,
+.vc-settings-tab .vc-presets-anim-section {
+    padding: 12px;
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 14px;
+    background: var(--hc-panel-bg);
+    box-shadow: inset 0 1px rgb(255 255 255 / 3%);
+}
+
+.hc-panel + .hc-panel {
+    margin-top: 16px;
+}
+
+.hc-panel > .vc-h5:first-child {
+    margin-top: 2px;
+}
+
+.hc-panel > :last-child,
+.vc-settings-tab .vc-optimizer-category-settings .vc-plugins-setting-section,
+.vc-settings-tab .vc-presets-anim-section .vc-form-switch-container {
+    margin-bottom: 0;
+}
+
+.vc-settings-tab .vc-card-primary,
+.vc-settings-tab .vc-card-normal,
+.vc-settings-tab .vc-stats-card:not(.vc-stats-hero),
+.vc-settings-tab .vc-addon-card {
+    border-color: var(--hc-panel-border);
+    border-radius: 14px;
+    background-color: var(--hc-panel-bg);
+}
+
+.vc-settings-tab .vc-addon-card:hover {
+    border-color: rgb(175 227 127 / 22%);
+}
+
+.vc-settings-tab .vc-stats-hero {
+    border-color: rgb(175 227 127 / 18%);
+    border-radius: 14px;
+    background:
+        linear-gradient(135deg, rgb(175 227 127 / 7%), transparent 60%),
+        var(--hc-panel-bg);
+}
+
+.vc-settings-tab .vc-stats-hero-enabled,
+.vc-settings-tab .vc-stats-hero-categories {
+    --vc-stats-accent: var(--hc-accent);
+}
+
+.vc-settings-tab .vc-stats-hero-available,
+.vc-settings-tab .vc-stats-hero-patches {
+    --vc-stats-accent: var(--hc-accent-2);
+}
+
+.vc-settings-tab .vc-plugins-info-card,
+.vc-settings-tab .vc-plugin-stats,
+.vc-settings-tab .vc-plugins-bulk-actions {
+    border-radius: 12px;
+}
+
+.vc-settings-tab .vc-settings-quickActions-pill {
+    border: 1px solid var(--hc-row-border);
+    border-radius: 10px;
+    background: rgb(0 0 0 / 25%);
+}
+
+.vc-settings-tab .vc-settings-quickActions-pill:hover {
+    border-color: rgb(175 227 127 / 40%);
+    background: rgb(175 227 127 / 8%);
+}
+
+.vc-settings-tab .vc-settings-quickActions-img {
+    color: var(--hc-accent);
+}
+
+.vc-settings-tab .vc-notice-info {
+    border-color: rgb(99 201 143 / 40%);
+    background: rgb(99 201 143 / 10%);
+}
+
+/* Buttons: green for the main action, dark with a green edge for the rest. Themes force button colors, hence !important. */
+.vc-settings-tab .vc-btn-base.vc-btn-primary,
+.vc-settings-tab .vc-btn-base.vc-btn-positive {
+    border-color: transparent !important;
+    background-color: var(--hc-accent) !important;
+    color: var(--hc-accent-ink) !important;
+    font-weight: 700;
+}
+
+.vc-settings-tab .vc-btn-base.vc-btn-primary:hover:not(:disabled),
+.vc-settings-tab .vc-btn-base.vc-btn-positive:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--hc-accent) 85%, #fff) !important;
+}
+
+.vc-settings-tab .vc-btn-base.vc-btn-secondary {
+    border: 1px solid rgb(175 227 127 / 30%) !important;
+    background-color: rgb(0 0 0 / 25%) !important;
+    color: var(--hc-accent) !important;
+    font-weight: 700;
+}
+
+.vc-settings-tab .vc-btn-base.vc-btn-secondary:hover:not(:disabled) {
+    border-color: rgb(175 227 127 / 55%) !important;
+    background-color: rgb(175 227 127 / 10%) !important;
+}
+
+.vc-settings-tab .vc-btn-base.vc-btn-dangerPrimary,
+.vc-settings-tab .vc-btn-base.vc-btn-dangerSecondary {
+    border: 1px solid rgb(242 63 66 / 45%) !important;
+    background-color: rgb(242 63 66 / 12%) !important;
+    color: #ff8f91 !important;
+    font-weight: 700;
+}
+
+.vc-settings-tab .vc-btn-base.vc-btn-dangerPrimary:hover:not(:disabled),
+.vc-settings-tab .vc-btn-base.vc-btn-dangerSecondary:hover:not(:disabled) {
+    border-color: rgb(242 63 66 / 70%) !important;
+    background-color: rgb(242 63 66 / 22%) !important;
+}
+
+.vc-settings-tab .vc-link {
+    color: var(--hc-accent);
+}
+
+/* Discord sliders, text boxes and dropdowns inside these pages. */
+.vc-settings-tab [class*="wrapper__"]:has(> input),
+.vc-settings-tab [class*="selectField__"] {
+    border: 1px solid var(--hc-row-border);
+    border-radius: 10px;
+    background: rgb(0 0 0 / 25%);
+}
+
+.vc-settings-tab [class*="wrapper__"]:has(> input):focus-within,
+.vc-settings-tab [class*="selectField__"]:focus-within {
+    border-color: rgb(175 227 127 / 55%);
+}
+
+.vc-settings-tab [class*="barFill_"] {
+    background: var(--hc-accent) !important;
+}
+
+.vc-settings-tab [class*="grabber_"] {
+    border-color: var(--hc-accent) !important;
+    background: var(--hc-accent-ink) !important;
+}
+
+.vc-settings-tab .vc-health-nav-item-active {
+    color: var(--hc-accent);
+    border-bottom-color: var(--hc-accent);
+    background: rgb(175 227 127 / 8%);
+}
+
+
+/* Settings sidebar sub-pages (Voice, Camera...) under the open page. */
+[class*="subnav_"] [role="listitem"] > [role="link"] {
+    border-radius: 8px;
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+[class*="subnav_"] [role="listitem"] > [role="link"]:hover {
+    background: rgb(0 0 0 / 18%);
+}
+
+[class*="subnav_"] [role="listitem"] > [role="link"][aria-current="page"] {
+    color: var(--hc-accent);
+}
+
+/* Settings sidebar: every page is a pill, lit green when open. The masked gradient edge follows Sudocord's settings navigation. */
+[class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"] {
+    position: relative;
+    border: 1px solid rgb(255 255 255 / 4%);
+    border-radius: 10px;
+    background: rgb(0 0 0 / 10%);
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+[class*="sectionList_"] [class*="itemContainer_"] + [class*="itemContainer_"] {
+    margin-top: 4px;
+}
+
+[class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"]:hover {
+    border-color: rgb(175 227 127 / 22%);
+    background: rgb(0 0 0 / 24%);
+    color: var(--header-primary, #f2f3f5);
+    transform: translateX(2px);
+}
+
+[class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"]:hover svg {
+    color: var(--hc-accent);
+}
+
+[class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"][aria-current="page"] {
+    border-color: transparent;
+    background: linear-gradient(90deg, rgb(175 227 127 / 16%), rgb(99 201 143 / 5%)), rgb(0 0 0 / 24%);
+    color: var(--hc-accent);
+    box-shadow: 0 0 16px rgb(175 227 127 / 10%);
+    transform: none;
+}
+
+[class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"][aria-current="page"]::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(105deg, var(--hc-accent), rgb(99 201 143 / 30%)) border-box;
+    mask: linear-gradient(#fff, #fff) content-box, linear-gradient(#fff, #fff);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+[class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"][aria-current="page"] svg {
+    color: var(--hc-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vc-settings-tab .vc-form-switch-container,
+    .vc-settings-tab .vc-plugins-setting-section,
+    [class*="sectionList_"] [class*="item_"][role="link"],
+    [class*="subnav_"] [role="listitem"] > [role="link"] {
+        transition: none;
+        transform: none !important;
+    }
+}
