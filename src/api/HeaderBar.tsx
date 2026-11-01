@@ -258,6 +258,11 @@ export function ChannelToolbarButton(props: ChannelToolbarButtonProps) {
 const headerBarButtons = new Map<string, ButtonEntry>();
 const channelToolbarButtons = new Map<string, ButtonEntry>();
 
+/** Ids of every registered header bar and channel toolbar button, for the UI elements settings. */
+export function getHeaderButtonIds() {
+    return [...headerBarButtons.keys(), ...channelToolbarButtons.keys()];
+}
+
 const headerBarListeners = new Set<() => void>();
 const channelToolbarListeners = new Set<() => void>();
 
@@ -344,6 +349,7 @@ function getSortedChannelToolbarButtons() {
 
 function HeaderBarButtons() {
     const [, forceUpdate] = useState(0);
+    const { headerBarButtons: hidden } = useSettings(["uiElements.headerBarButtons.*"]).uiElements;
 
     useEffect(() => {
         const listener = () => { cachedHeaderBarButtons = null; forceUpdate(n => n + 1); };
@@ -351,7 +357,7 @@ function HeaderBarButtons() {
         return () => { headerBarListeners.delete(listener); };
     }, []);
 
-    return getSortedHeaderBarButtons().map(({ id, render: Button }) => (
+    return getSortedHeaderBarButtons().filter(({ id }) => hidden[id]?.enabled !== false).map(({ id, render: Button }) => (
         <ErrorBoundary noop key={id} onError={e => logger.error(`Failed to render header bar button: ${id}`, e.error)}>
             <Button />
         </ErrorBoundary>
@@ -360,6 +366,7 @@ function HeaderBarButtons() {
 
 function ChannelToolbarButtons() {
     const [, forceUpdate] = useState(0);
+    const { headerBarButtons: hidden } = useSettings(["uiElements.headerBarButtons.*"]).uiElements;
 
     useEffect(() => {
         const listener = () => { cachedChannelToolbarButtons = null; forceUpdate(n => n + 1); };
@@ -367,7 +374,7 @@ function ChannelToolbarButtons() {
         return () => { channelToolbarListeners.delete(listener); };
     }, []);
 
-    return getSortedChannelToolbarButtons().map(({ id, render: Button }) => (
+    return getSortedChannelToolbarButtons().filter(({ id }) => hidden[id]?.enabled !== false).map(({ id, render: Button }) => (
         <ErrorBoundary noop key={id} onError={e => logger.error(`Failed to render channel toolbar button: ${id}`, e.error)}>
             <Button />
         </ErrorBoundary>

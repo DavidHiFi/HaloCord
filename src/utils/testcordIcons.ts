@@ -17,9 +17,12 @@ export const TestcordPluginIconUrl = `data:image/png;base64,${testcordPluginIcon
 export const HaloCordPluginIconUrl = `data:image/png;base64,${haloCordPluginIconBase64}`;
 
 // A HaloCord plugin is written by DavidHiFi alone, or by DavidHiFi together with Kurtzon Audio (firstgenstereo).
+// A few plugins with upstream authors are maintained as HaloCord plugins too.
 const HALOCORD_AUTHOR_IDS = new Set<BigInt>([TestcordDevs.DavidHiFi.id, TestcordDevs.Kurtzon.id]);
+const HALOCORD_PLUGIN_NAMES = new Set(["HaloCordToolbox"]);
 
-export function isHaloCordPlugin(plugin?: Pick<Plugin, "authors"> | null) {
+export function isHaloCordPlugin(plugin?: Pick<Plugin, "authors" | "name"> | null) {
+    if (plugin && HALOCORD_PLUGIN_NAMES.has(plugin.name)) return true;
     const authors = plugin?.authors?.filter(Boolean) ?? [];
     return authors.some(a => a.id === TestcordDevs.DavidHiFi.id)
         && authors.every(a => HALOCORD_AUTHOR_IDS.has(a.id) || a.name?.toLowerCase() === "firstgenstereo");

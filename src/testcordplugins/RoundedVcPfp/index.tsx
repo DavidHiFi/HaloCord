@@ -5,7 +5,7 @@
  */
 
 import { isPluginEnabled } from "@api/PluginManager";
-import { definePluginSettings, Settings, useSettings } from "@api/Settings";
+import { definePluginSettings, migratePluginSetting, Settings, useSettings } from "@api/Settings";
 import usrbg from "@plugins/usrbg";
 import { EquicordDevs, TestcordDevs } from "@utils/constants";
 import { fetchUserProfile } from "@utils/discord";
@@ -52,23 +52,15 @@ function avatarMask(rx: number): string {
 
 const HEX_COLOR = /^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 
-function parseHexColor(color: string): [number, number, number] | undefined {
-    const match = HEX_COLOR.exec(color.trim());
-    if (!match) return undefined;
-    let hex = match[1];
-    if (hex.length < 6) hex = [...hex.slice(0, 3)].map(c => c + c).join("");
-    const value = parseInt(hex, 16);
-    return [value >> 16 & 0xff, value >> 8 & 0xff, value & 0xff];
-}
-
-// The glow keeps the two-layer look from the theme's first version: one wide
-// soft halo plus one tight edge shell, both from the user's color. The glow
-// mix controls its own transparency, so an alpha channel in the hex is ignored.
-function glowFilter(color: string): string | undefined {
-    const rgb = parseHexColor(color);
-    if (!rgb) return undefined;
-    const [r, g, b] = rgb;
-    return `drop-shadow(0 0 14px rgba(${r}, ${g}, ${b}, 0.4)) drop-shadow(0 0 3px rgba(${r}, ${g}, ${b}, 0.6))`;
+// Discord paints every voice speaking ring with --status-speaking, so the
+// override recolors it on the root and on each nested theme container.
+function applyGlowOverride() {
+    const root = document.documentElement;
+    const color = settings.store.glowColor.trim();
+    const on = settings.store.overrideGlow && HEX_COLOR.test(color);
+    root.classList.toggle("vc-rvcpfp-override-glow", on);
+    if (on) root.style.setProperty("--vc-rvcpfp-glow-color", color);
+    else root.style.removeProperty("--vc-rvcpfp-glow-color");
 }
 
 // Profile fetches run one at a time. A full channel used to fire every
@@ -191,7 +183,7 @@ const settings = definePluginSettings({
     },
     speakingIndicator: {
         type: OptionType.SELECT,
-        description: "Where the green speaking glow shows on call tiles. Profile picture moves it from the tile border onto the picture edge; camera tiles keep the tile border.",
+        description: "Where the speaking glow shows on call tiles. Profile picture moves it from the tile border onto the picture edge; camera tiles keep the tile border.",
         options: [
             {
                 label: "Box border",
@@ -204,21 +196,25 @@ const settings = definePluginSettings({
             }
         ]
     },
-    enableGlow: {
+    overrideGlow: {
         type: OptionType.BOOLEAN,
-        description: "Turn the glow behind floating profile pictures on or off. Applies when the background switch is on.",
-        default: true
+        description: "Replace Discord's green speaking ring around voice avatars with the glow color below.",
+        default: false,
+        onChange: applyGlowOverride
     },
     glowColor: {
         type: OptionType.STRING,
-        description: "Hex color code for the glow, for example #45475a. The glow mixes its own transparency levels.",
+        description: "Hex color for the speaking ring when Override Glow is on, for example #3b82f6 for blue.",
         placeholder: "#45475a",
         default: "#45475a",
+        onChange: applyGlowOverride,
         isValid(value: string) {
             return HEX_COLOR.test(value.trim()) ? true : "Enter a hex color like #45475a.";
         }
     }
 });
+
+migratePluginSetting("RoundedVCPFP", "overrideGlow", "enableGlow");
 
 export default definePlugin({
     id: "RoundedVCPFP",
@@ -231,10 +227,13 @@ export default definePlugin({
 
     start() {
         window.addEventListener("testcord-vu-audio-change", onAudioActivityChange);
+        applyGlowOverride();
     },
 
     stop() {
         window.removeEventListener("testcord-vu-audio-change", onAudioActivityChange);
+        document.documentElement.classList.remove("vc-rvcpfp-override-glow");
+        document.documentElement.style.removeProperty("--vc-rvcpfp-glow-color");
         for (const timer of bannerRetryTimers) clearTimeout(timer);
         bannerRetryTimers.clear();
         bannerFetchQueue.length = 0;
@@ -320,14 +319,9 @@ export default definePlugin({
                 && usrbg.userHasBackground(participantUserId);
             if (!usrbgWins) bannerUrl = getProfileBannerUrl(participantUserId);
         }
-        // The glow is independent of the background switch: it wraps the picture
-        // whether the tile box is visible or not.
-        const glow = settings.store.enableGlow ? glowFilter(settings.store.glowColor ?? "") : undefined;
         const ringPic = settings.store.speakingIndicator === "picture";
-        // Picture mode adds the green glow to the filter, other tiles get a box from the stylesheet
-        const filterParts: string[] = [];
-        if (glow) filterParts.push(glow);
-        if (ringPic && speakingGlow) filterParts.push("drop-shadow(0 0 2px var(--green-360, #23a55a)) drop-shadow(0 0 8px var(--green-360, #23a55a))");
+        // Picture mode puts the speaking ring in the filter, other tiles get a box from the stylesheet
+        const glowFilter = ringPic && speakingGlow ? "drop-shadow(0 0 2px var(--status-speaking, #23a55a)) drop-shadow(0 0 8px var(--status-speaking, #23a55a))" : "";
         return {
             "--full-res-avatar": `url("${avatarUrl}")`,
             "--vc-pfp-radius": `${Math.round(settings.store.cornerRadius)}px`,
@@ -362,7 +356,7 @@ export default definePlugin({
             // fallback glow when the slot is present. The filter string carries the
             // configured color; themes and any other stylesheet consume it.
             "--vc-pfp-glow-slot": "1",
-            "--vc-pfp-glow-filter": filterParts.length ? filterParts.join(" ") : ""
+            "--vc-pfp-glow-filter": glowFilter
         };
     },
 });
