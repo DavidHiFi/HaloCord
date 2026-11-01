@@ -1,66 +1,91 @@
 <div align="center">
 
-<img src="docs/images/voice-effects.png" alt="HaloCord's Voice & Video settings with the voice effects panel open" width="100%">
+<img src="desktop/brand/icon.png" alt="HaloCord app icon" width="112">
 
-# <img src="desktop/brand/icon.png" width="36" align="center" alt=""> HaloCord
+# HaloCord
 
 **A Discord client for Windows, built for voice.**
 
-Stereo voice up to 96 kHz, call guards, voice effects, Go Live controls and hundreds of plugins in one app.
+Stereo voice up to 96 kHz, extra mics and speakers with their own pan, voice effects and Go Live controls.
 
-<a href="https://github.com/DavidHiFi/HaloCord/releases/latest">
-<img src="https://img.shields.io/badge/%E2%AC%87%EF%B8%8F%20DOWNLOAD%20FOR%20WINDOWS-2EA043?style=for-the-badge&labelColor=161B22" alt="Download HaloCord for Windows" height="42">
-</a>
+<a href="https://github.com/DavidHiFi/HaloCord/releases/latest"><img src="https://img.shields.io/badge/%E2%AC%87%EF%B8%8F%20DOWNLOAD%20FOR%20WINDOWS-2EA043?style=for-the-badge&labelColor=161B22" alt="Download HaloCord for Windows" height="42"></a>
 
-<br><br>
-
+<p>
 <img src="https://img.shields.io/github/v/release/DavidHiFi/HaloCord?style=flat-square&label=version&color=8957E5&labelColor=161B22" alt="Latest version">
 <img src="https://img.shields.io/github/downloads/DavidHiFi/HaloCord/total?style=flat-square&label=downloads&color=1F6FEB&labelColor=161B22" alt="Total downloads">
 <img src="https://img.shields.io/badge/platform-Windows-DB6D28?style=flat-square&labelColor=161B22" alt="Platform: Windows">
+</p>
+
+<img src="docs/images/voice-card.png" alt="HaloCord's Voice and Video settings with the voice card: Microphone and Speaker volume and pan, plus the Secondary and Third Microphone and Speaker" width="600">
 
 </div>
 
----
-
 ## Installation
 
-1. Download the `HaloCord-Setup` installer from the [latest release](https://github.com/DavidHiFi/HaloCord/releases/latest).
-2. Run it. The installer is not code signed, so Windows may show a SmartScreen warning: choose **More info**, then **Run anyway**.
+1. Download `HaloCord-Setup` from the [latest release](https://github.com/DavidHiFi/HaloCord/releases/latest).
+2. Run it. The installer is not code signed, so Windows SmartScreen may stop it. Choose **More info**, then **Run anyway**.
 3. Pick an install folder, finish the setup and log in with your Discord account.
 
 To build it yourself, follow [docs/building.md](docs/building.md).
 
 ## Features
 
-- **Stereo voice:** up to 96 kHz, with control over Opus bitrate, sample rate, frame time, complexity, FEC, DTX and CBR.
-- **Voice effects:** pitch, echo, robot, bitcrush, muffle, static and ten presets, all audible in the mic test.
-- **Call guards:** locally mute anyone who sends stereo noise or blasts their mic, with a list of people to leave alone.
-- **Go Live controls:** pick resolution, frame rate, bitrate or a quality preset before each stream.
-- **Camera:** up to 4K60 or 1080p120, without Discord's 720p cap or its automatic quality drops.
-- **Microphone:** input volume up to 1000%, a 16-band EQ, up to two extra mics and a raw mode that turns off Discord's voice processing.
-- **Speakers and pan:** play calls on up to two extra output devices, switch each mic and speaker on or off, and pan each one left or right.
-- **Plugins:** hundreds built in, from Vencord, Equicord and TestCord, plus HaloCord's own voice plugins.
-- **Acrylic window:** a blurred, see-through background on Windows 11.
-- **MochaCord theme:** ships built in and stays up to date; turn it on under Themes.
-- **Privacy:** settings stay on your PC. No analytics, no telemetry and no HaloCord server.
+### Voice
 
-<div align="center">
-<img src="docs/images/go-live.png" alt="The Go Live window with resolution, frame rate and bitrate controls" width="70%">
-</div>
+- **Stereo voice:** up to 96 kHz, with control over Opus bitrate, sample rate, frame time, complexity, FEC, DTX and CBR.
+- **Voice card:** Microphone and Speaker side by side, each with volume, pan and an on/off switch.
+- **Extra mics:** send a Secondary and Third Microphone into the call along with your main one.
+- **Extra speakers:** play calls on a Secondary and Third Speaker at the same time.
+- **Hard pan:** pan any mic or speaker fully to one ear; it needs Stereo on.
+- **Mic boost and EQ:** input volume up to 1000% and a 16-band EQ.
+- **Raw mic:** switch off Windows and Discord echo cancellation, noise suppression and auto gain.
+- **Voice effects:** pitch, echo, robot, bitcrush, muffle, static and ten presets, applied live.
+- **Mic Test:** hear yourself through HaloCord's own volume, EQ, effects and pan.
+- **Pick the test mic:** right-click the Mic Test Loopback button next to your name to choose which mic to test.
+- **Call guards:** locally mute people who send stereo noise or blast their mic, and skip friends or anyone you list.
+
+### Streaming and camera
+
+- **Go Live controls:** pick Gaming or Screenshare mode, or set resolution up to 4K and 15 to 360 FPS yourself.
+- **Stream sound:** a window share sends only that app's sound, and a screen share sends everything except HaloCord.
+- **Stream pan:** a Pan slider in Advanced Stream Settings moves your stream's sound left or right.
+- **Camera:** up to 4K at 60 FPS or 1080p at 120 FPS.
+
+### Desktop app
+
+- **In-game overlay:** voice channel members and message pop-ups over windowed and borderless games.
+- **Background keybinds:** your keybinds and push to talk work while HaloCord is in the background.
+- **Stream Deck:** the Elgato Stream Deck Discord plugin works, including mute, deafen, push to talk and soundboard.
+- **Acrylic window:** a blurred, see-through background on Windows 11.
+- **Updates:** HaloCord downloads new releases and installs them when you restart it.
+
+### Plugins and themes
+
+- **Plugins:** hundreds built in, from [Vencord](https://github.com/Vendicated/Vencord), [Equicord](https://github.com/Equicord/Equicord) and [TestCord](https://codeberg.org/Testcord/TestCord), plus HaloCord's own.
+- **MochaCord theme:** [MochaCord Theme](https://github.com/DavidHiFi/MochaCord-Theme), a [Catppuccin](https://github.com/catppuccin/catppuccin) Mocha theme, ships built in and updates hourly; turn it on under Themes.
+- **HaloCord badges:** HaloCord Owner and Contributor badges on the profiles of the people who build it.
+- **Privacy:** settings stay on your PC, Discord's telemetry is blocked by default, and HaloCord runs no server.
+
+<p align="center">
+<img src="docs/images/voice-effects.png" alt="The Voice Effects card with its presets and sliders" width="49%">
+<img src="docs/images/stream-settings.png" alt="Advanced Stream Settings with stream mode, resolution, frame rate and the Pan slider" width="49%">
+</p>
 
 ## Notes
 
 > [!WARNING]
-> **Third-party client.** Discord does not support third-party clients. Spam-like behavior, such as mass friend requests, can get an account actioned. Use it at your own risk.
+> **Third-party client.** Discord does not support third-party clients. Spam-like behavior, such as mass friend requests, can get an account actioned. Use HaloCord at your own risk.
 
 > [!NOTE]
-> **Updates.** HaloCord updates itself. With **Update automatically** on, it downloads each new release in the background, checks it against the SHA-256 published with the release, and installs it the next time you restart or close HaloCord. **Settings > Updater** has **Check for updates** and **Update and restart**. Settings live in `%APPDATA%\HaloCord` and survive updates. Version 2.8.4 only shows a notice, so install 2.9.0 over it once by hand.
+> **Updates.** With **Update automatically** on, HaloCord downloads each release in the background, checks it against the SHA-256 published with it, and installs it the next time you restart or close the app. **Settings > Updater** has **Check for updates** and **Update and restart**. Your settings live in `%APPDATA%\HaloCord` and survive updates. On 2.8.4 or older, install the latest release by hand once.
 
 > [!NOTE]
-> **Plugin checks.** Every 6 hours a GitHub check loads Discord and tests every plugin's patches. When a Discord update breaks one, an issue opens with the list and closes again once it is fixed. Each day, new changes from Equicord (which include Vencord's) and from TestCord arrive as pull requests and ship in the next release.
+> **Plugin checks.** Every 6 hours a GitHub workflow loads Discord and tests every plugin's patches. When a Discord update breaks one, an issue opens with the list and closes once it is fixed. New changes from Equicord (which include Vencord's) and TestCord arrive each day as pull requests.
 
 <details>
-<summary>What is in this repo</summary>
+<summary><b>What is in this repo</b></summary>
+
+<br>
 
 The root follows the Vencord and Equicord layout, so upstream changes merge cleanly.
 
@@ -69,7 +94,7 @@ The root follows the Vencord and Equicord layout, so upstream changes merge clea
 | `src/` | The mod layer, APIs and every built-in plugin. |
 | `src/plugins/` | Plugins from Vencord. |
 | `src/equicordplugins/` | Plugins from Equicord. |
-| `src/testcordplugins/` | TestCord plugins and HaloCord's own voice plugins. |
+| `src/testcordplugins/` | TestCord plugins and HaloCord's own plugins. |
 | `scripts/` | Build, lint and the patch reporter. |
 | `desktop/` | The Windows app: the base Electron shell, HaloCord's shell code, icons and the installer build. |
 | `docs/` | Build steps and README images. |
@@ -78,11 +103,9 @@ The root follows the Vencord and Equicord layout, so upstream changes merge clea
 
 ## Contributing
 
-Bug reports with the client version and a screenshot help most right now.
+Bug reports with your HaloCord version and a screenshot help most right now.
 
-<a href="CONTRIBUTING.md">
-<img src="https://img.shields.io/badge/%F0%9F%A4%9D%20HOW%20TO%20CONTRIBUTE-8957E5?style=for-the-badge&labelColor=161B22" alt="How to contribute" height="36">
-</a>
+<a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/%F0%9F%A4%9D%20HOW%20TO%20CONTRIBUTE-8957E5?style=for-the-badge&labelColor=161B22" alt="How to contribute" height="36"></a>
 
 ## Star history
 
@@ -103,13 +126,15 @@ Thank you for starring the repo.
 
 | Who | What |
 |---|---|
-| **[Kurtzon](https://github.com/kurtzonaudio) and [UNP Beats UK](https://www.youtube.com/@unpbeatsuk)** | Made Kurtcord, the desktop shell HaloCord is built on. Its MIT notice is in [desktop/LICENSE](desktop/LICENSE). |
-| **[Vencord](https://github.com/Vendicated/Vencord) and [Equicord](https://github.com/Equicord/Equicord) contributors** | The mod framework and plugin suites this repo is built on. |
-| **[TestCord](https://codeberg.org/Testcord/TestCord) contributors** | The TestCord plugins. |
+| **[Kurtzon](https://github.com/kurtzonaudio) and [UNP Beats UK](https://www.youtube.com/@unpbeatsuk)** | Made [Kurtcord](https://github.com/kurtzonaudio/kurtcord), the desktop shell and voice engine HaloCord is built on. Its MIT notice is in [desktop/LICENSE](desktop/LICENSE). |
+| **[Vencord](https://github.com/Vendicated/Vencord) contributors** | The mod framework and the plugins in `src/plugins/`. |
+| **[Equicord](https://github.com/Equicord/Equicord) contributors** | The base this repo tracks and the plugins in `src/equicordplugins/`. |
+| **[TestCord](https://codeberg.org/Testcord/TestCord) contributors** | The plugins in `src/testcordplugins/`. |
+| **[Catppuccin](https://github.com/catppuccin/catppuccin)** | The Mocha palette behind the built-in MochaCord theme. |
 | **Sudocord** | The layout of the Updater page header and its status pills. |
 | **[Niels Martignène](https://github.com/Koromix/koffi)** | koffi, which the shell uses to call Windows for the acrylic window. |
 
-Built on [Electron](https://www.electronjs.org/), running [Discord](https://discord.com)'s web app, with [Equicord](https://github.com/Equicord/Equicord), [pnpm](https://pnpm.io/) and [electron-builder](https://www.electron.build/).
+Built on [Electron](https://www.electronjs.org/), running [Discord](https://discord.com)'s web app, with [Equicord](https://github.com/Equicord/Equicord), [pnpm](https://pnpm.io/), [koffi](https://koromix.dev/koffi) and [electron-builder](https://www.electron.build/).
 
 > Missing or wrong credit? [Open an issue](https://github.com/DavidHiFi/HaloCord/issues/new) and I'll fix it.
 
@@ -117,9 +142,9 @@ Built on [Electron](https://www.electronjs.org/), running [Discord](https://disc
 
 HaloCord's own changes are written with AI coding agents (Claude Code and OpenHands) working for the repo owner, who directs and tests every build.
 
-The [MochaCord Theme](https://github.com/DavidHiFi/MochaCord-Theme) is a separate project: a Catppuccin Mocha theme for Vencord-based clients. Old links to `MochaCord.css` in this repo forward to it.
+The [MochaCord Theme](https://github.com/DavidHiFi/MochaCord-Theme) is a separate project. Old links to `MochaCord.css` in this repo forward to it.
 
-Client mods are against Discord's Terms of Service. If your account matters a lot to you, think before you use any of them. Discord is a trademark of Discord Inc., named here only to say what HaloCord works with.
+Client mods break Discord's Terms of Service. If your account matters to you, think before you use any of them. Discord is a trademark of Discord Inc., named here only to say what HaloCord works with.
 
 <div align="center">
 <br>

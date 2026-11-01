@@ -7,7 +7,7 @@ Thanks for helping. Bug reports, ideas and pull requests are all welcome.
 [Open an issue](https://github.com/DavidHiFi/HaloCord/issues/new) and include:
 
 - what you did, what you expected and what happened instead
-- your Windows version and the HaloCord version (bottom of Settings)
+- your Windows version and the HaloCord version (bottom of the Settings sidebar, for example `HaloCord v2.9.3`)
 - a screenshot if the problem is visual
 
 ## Suggesting a feature
@@ -24,7 +24,7 @@ Open an issue that describes what you want and why. A mock-up helps.
 4. Keep license headers and author credits in any file you touch.
 
 Theme changes belong in
-[HaloCord Theme](https://github.com/DavidHiFi/HaloCord-Theme).
+[MochaCord Theme](https://github.com/DavidHiFi/MochaCord-Theme).
 
 ## License
 

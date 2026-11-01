@@ -29,7 +29,7 @@ HaloCord has two halves. The repo root is the mod and plugin bundle, laid out li
    python desktop\assemble.py
    ```
 
-   Put `rcedit-x64.exe` in `<build folder>\tools\rcedit\` first. The script patches the shell, packs the app and writes `<build folder>\installer\dist\HaloCord-Setup-2.8.4.exe`.
+   Put `rcedit-x64.exe` in `<build folder>\tools\rcedit\` first. The script patches the shell, packs the app and writes `<build folder>\installer\dist\HaloCord-Setup-<version>.exe`.
 
 ## Checking a build
 

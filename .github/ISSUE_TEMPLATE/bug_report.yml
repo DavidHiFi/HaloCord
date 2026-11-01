@@ -13,7 +13,7 @@ body:
       id: version
       attributes:
           label: HaloCord version
-          description: Shown at the bottom of Settings, for example `halocord/2.8.4`.
+          description: Shown at the bottom of the Settings sidebar, for example `HaloCord v2.9.3`.
       validations:
           required: true
 
