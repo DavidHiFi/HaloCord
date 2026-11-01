@@ -1,50 +1,255 @@
-.vc-vmsg-buttons {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.5em;
-    margin-bottom: 1em;
+html.hc-theming .vc-vmsg-modal {
+    border: 1px solid var(--hc-panel-border);
+    background: var(--hc-window-bg);
 }
 
-.vc-vmsg-preview {
-    color: var(--text-default);
-    border-radius: 24px;
-    background-color: var(--background-base-lower);
-    position: relative;
+.vc-vmsg-body {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 8px;
+}
+
+.vc-vmsg-mics {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--hc-scroll-thumb) transparent;
+}
+
+.vc-vmsg-mics::-webkit-scrollbar {
+    width: 6px;
+}
+
+.vc-vmsg-mics::-webkit-scrollbar-track,
+.vc-vmsg-mics::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+.vc-vmsg-mics::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: var(--hc-scroll-thumb);
+}
+
+.vc-vmsg-mics::-webkit-scrollbar-button {
+    display: none;
+}
+
+.vc-vmsg-mic {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 11px;
+    background: var(--hc-row-bg);
+    color: var(--hc-text);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+
+.vc-vmsg-mic:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.vc-vmsg-mic:focus-visible {
+    outline: 2px solid var(--hc-accent);
+    outline-offset: 2px;
+}
+
+.vc-vmsg-mic:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--hc-accent) 30%, transparent);
+}
+
+.vc-vmsg-mic-selected {
+    border-color: color-mix(in srgb, var(--hc-accent) 45%, transparent);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--hc-accent) 10%, transparent), transparent), var(--hc-row-bg);
+}
+
+.vc-vmsg-mic-dot {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    box-sizing: border-box;
+    border: 2px solid var(--hc-text-muted);
+    border-radius: 50%;
+}
+
+.vc-vmsg-mic-selected .vc-vmsg-mic-dot {
+    border: 4px solid var(--hc-accent);
+}
+
+.vc-vmsg-mic-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.vc-vmsg-mic-title {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.vc-vmsg-mic-label {
+    overflow: hidden;
+    font-size: 12.5px;
+    color: var(--hc-text-muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.vc-vmsg-switches {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.vc-vmsg-recorder {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 11px;
+    background: var(--hc-row-bg);
+}
+
+.vc-vmsg-dot {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--hc-text-muted);
+    opacity: 0.5;
+}
+
+.vc-vmsg-dot-live {
+    background: var(--status-danger);
+    opacity: 1;
+    animation: vc-vmsg-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes vc-vmsg-pulse {
+    50% { opacity: 0.35; }
+}
+
+.vc-vmsg-timer {
+    min-width: 64px;
+    font-family: var(--font-code);
+    font-size: 26px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--hc-text);
+}
+
+.vc-vmsg-controls,
+.vc-vmsg-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.vc-vmsg-actions {
+    justify-content: flex-end;
+}
+
+.vc-vmsg-player {
     display: flex;
     align-items: center;
-    padding: 0 16px;
-    height: 48px;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 11px;
+    background: var(--hc-row-bg);
 }
 
-.vc-vmsg-preview-indicator {
-    background: var(--control-secondary-background-default);
-    width: 16px;
-    height: 16px;
+.vc-vmsg-play {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
     border-radius: 50%;
-    transition: background 0.2s ease-in-out;
+    background: var(--hc-accent);
+    color: var(--hc-accent-ink);
+    cursor: pointer;
 }
 
-.vc-vmsg-preview-recording .vc-vmsg-preview-indicator {
-    background: var(--status-danger);
+.vc-vmsg-play:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
-.vc-vmsg-preview-time {
-    opacity: 0.8;
-    margin: 0 0.5em;
-    font-size: 80%;
-
-    /* monospace so different digits have same size */
-    font-family: var(--font-code);
-}
-
-.vc-vmsg-preview-label {
-    opacity: 0.5;
-    letter-spacing: 0.125em;
-    font-weight: 600;
+.vc-vmsg-wave {
+    display: flex;
     flex: 1;
-    text-align: center;
+    align-items: center;
+    gap: 2px;
+    height: 48px;
+    border-radius: 6px;
+    cursor: pointer;
+    touch-action: none;
+}
+
+.vc-vmsg-play:focus-visible,
+.vc-vmsg-wave:focus-visible {
+    outline: 2px solid var(--hc-accent);
+    outline-offset: 2px;
+}
+
+.vc-vmsg-player-empty .vc-vmsg-wave {
+    cursor: default;
+}
+
+.vc-vmsg-bar {
+    flex: 1;
+    min-width: 1px;
+    border-radius: 2px;
+    background: var(--hc-text-muted);
+    opacity: 0.45;
+}
+
+.vc-vmsg-bar-played {
+    background: var(--hc-accent);
+    opacity: 1;
+}
+
+.vc-vmsg-time {
+    flex: none;
+    font-family: var(--font-code);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--hc-text-muted);
+}
+
+.vc-vmsg-error,
+.vc-vmsg-warning {
+    font-size: 13px;
+    line-height: 1.45;
 }
 
 .vc-vmsg-error {
-    color: var(--text-feedback-critical, #FF5C5C);
+    color: var(--status-danger);
+}
+
+.vc-vmsg-warning {
+    color: var(--status-warning);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vc-vmsg-mic {
+        transition: none;
+    }
+
+    .vc-vmsg-dot-live {
+        animation: none;
+    }
 }
