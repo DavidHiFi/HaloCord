@@ -25,6 +25,7 @@ import { SyntheticEvent } from "react";
 
 import { CodeViewerModal } from "./CodeViewerModal";
 import { HaloAppearanceSection } from "./HaloAppearanceSection";
+import { HaloIconSection } from "./HaloIconSection";
 import { openMochaCordWindow } from "./MochaCordModal";
 import { OnlineThemesSection } from "./OnlineThemes";
 import { QuickActionsSection } from "./QuickActions";
@@ -520,6 +521,7 @@ function ThemesTab() {
         <SettingsTab>
             <div className={Margins.top16}>
                 <HaloAppearanceSection />
+                <HaloIconSection />
             </div>
 
             <div className={Margins.top16}>
