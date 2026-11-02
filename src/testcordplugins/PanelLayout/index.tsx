@@ -129,9 +129,11 @@ export const settings = definePluginSettings({
             { label: "Outlined (old)", value: "outlineold" },
             { label: "Pill", value: "pill" },
             { label: "Square filled", value: "square" },
+            { label: "HaloCord plated", value: "halo" },
         ],
         onChange: () => apply()
     },
+    buttonRadius: { type: OptionType.SLIDER, description: "Button corner radius (px) for the filled, outlined and HaloCord plated styles", default: 8, markers: makeRange(0, 18, 2), stickToMarkers: false, onChange: () => apply() },
     hoverEffect: {
         type: OptionType.SELECT,
         description: "Hover effect on panel buttons",
@@ -840,16 +842,23 @@ function buildCSS(): string {
     }
 
     lines.push(`${baseBtn} { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }`);
+    const radius = st.buttonRadius ?? 8;
     switch (st.buttonStyle) {
         case "filled":
-            lines.push(`${baseBtn} { background: var(--background-modifier-hover, var(--background-mod-normal)) !important; border-radius: 8px !important; }
+            lines.push(`${baseBtn} { background: var(--background-modifier-hover, var(--background-mod-normal)) !important; border-radius: ${radius}px !important; }
                         ${baseBtnHover} { background: var(--background-modifier-active, var(--background-mod-strong)) !important; }`);
             break;
         case "outlined":
-            lines.push(`${baseBtn} { border: 1.5px solid var(--background-modifier-accent, var(--border-muted)) !important; border-radius: 8px !important; }`);
+            lines.push(`${baseBtn} { border: 1.5px solid var(--background-modifier-accent, var(--border-muted)) !important; border-radius: ${radius}px !important; }`);
             break;
         case "outlineold":
-            lines.push(`${baseBtn} { border: 1.5px solid var(--background-modifier-accent) !important; border-radius: 8px !important; }`);
+            lines.push(`${baseBtn} { border: 1.5px solid var(--background-modifier-accent) !important; border-radius: ${radius}px !important; }`);
+            break;
+        case "halo":
+            lines.push(`${baseBtn} { background: var(--hc-row-bg) !important; box-shadow: inset 0 0 0 1px var(--hc-row-border); border-radius: ${radius}px !important; transition: background-color 0.15s ease, box-shadow 0.15s ease !important; }
+                        ${baseBtnHover} { background: rgb(var(--hc-accent-rgb) / 12%) !important; box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%), 0 0 10px rgb(var(--hc-accent-rgb) / 25%); }
+                        ${S.panelButtons} [class*="redGlow_"]:not(.vc-plugin-icon-button) { background: var(--opacity-red-12) !important; box-shadow: inset 0 0 0 1px var(--opacity-red-24); }
+                        ${S.panelButtons} [class*="redGlow_"]:not(.vc-plugin-icon-button):hover { background: var(--opacity-red-24) !important; }`);
             break;
         case "pill":
             lines.push(`${baseBtn} { background: var(--background-modifier-hover, var(--background-mod-normal)) !important; border-radius: 20px !important; }`);
@@ -1220,6 +1229,7 @@ const BUTTON_STYLES = [
     { value: "outlined", label: "Outlined" }, { value: "outlineold", label: "Outlined (old)" },
     { value: "pill", label: "Pill Shape" },
     { value: "square", label: "Square Filled" },
+    { value: "halo", label: "HaloCord Plated" },
 ];
 const HOVER_EFFECTS = [
     { value: "default", label: "Default" }, { value: "scale", label: "Scale Up" },
@@ -3527,6 +3537,9 @@ function PanelLayoutModal({ modalProps }: { modalProps: RenderModalProps; }) {
                             <div style={{ display: "grid", gap: "8px" }}>
                                 <Dropdown label="Button Base Style" options={BUTTON_STYLES} value={s.buttonStyle} onChange={v => set("buttonStyle", v)} />
                                 <Dropdown label="Interaction Hover Effect" options={HOVER_EFFECTS} value={s.hoverEffect} onChange={v => set("hoverEffect", v)} />
+                                {["filled", "outlined", "outlineold", "halo"].includes(s.buttonStyle) && (
+                                    <SliderRow label="Corner Radius" value={s.buttonRadius ?? 8} min={0} max={18} onChange={v => set("buttonRadius", Math.round(v))} resetKey={resetKey} />
+                                )}
                             </div>
                         </Card>
                     </>}
@@ -3656,7 +3669,7 @@ export default definePlugin({
     id: "PanelLayout",
     name: "PanelLayout",
     description: "Customize the layout, style, and visibility of panel and call buttons, and manage user area modules.",
-    authors: [TestcordDevs.deracul, TestcordDevs.Aviv, TestcordDevs.x2b, TestcordDevs.sirphantom89],
+    authors: [TestcordDevs.deracul, TestcordDevs.Aviv, TestcordDevs.x2b, TestcordDevs.sirphantom89, TestcordDevs.DavidHiFi],
     dependencies: ["UserSettingsAPI", "UserAreaAPI"],
     settings,
     settingsAboutComponent: () => (
