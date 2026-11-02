@@ -74,6 +74,13 @@ m = m.replace("<p class='r'>Kurtzon</p>", "<p class='r'>HaloCord</p>")
 # Match the installer shortcut's id, or the taskbar groups HaloCord under a stale "Kurtcord" name.
 assert m.count('app.setAppUserModelId("com.kurtcord.desktop")') == 1
 m = m.replace('app.setAppUserModelId("com.kurtcord.desktop")', 'app.setAppUserModelId("com.davidhifi.halocord")')
+# Stereo with voice processing: Chromium 138 runs mic processing in the audio service by default, where a
+# renderer bug (num preferred channels -1 cast to uint32) pins it to one channel for good. In the page it
+# goes stereo once a stereo sender takes the mic (userscript dvxStereoAnchor). Echo cancellation still
+# uses Discord's voice playback as its reference, since Discord plays voices through audio elements.
+a = 'app.commandLine.appendSwitch("disable-features","HardwareMediaKeyHandling,CalculateNativeWinOcclusion")'
+assert m.count(a) == 1
+m = m.replace(a, a[:-2] + ',ChromeWideEchoCancellation")')
 # Main window, popout windows and tray load the chosen app icon from resources\icons (hc-icon.js).
 assert m.count('path.join(__dirname,"icon.png")') == 3
 m = m.replace('path.join(__dirname,"icon.png")', 'require("./hc-desktop.js").icon()')
