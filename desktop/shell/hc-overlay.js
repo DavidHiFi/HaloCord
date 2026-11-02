@@ -49,9 +49,10 @@
         for (const [w, el] of Object.entries(widgets)) {
             const p = state.pos && state.pos[w];
             if (!p) {
-                el.style.left = el.style.top = "";
+                el.style.left = el.style.top = el.style.right = el.style.bottom = "";
                 continue;
             }
+            el.style.right = el.style.bottom = "auto";
             el.style.left = Math.max(0, Math.min(p.x, innerWidth - 60)) + "px";
             el.style.top = Math.max(0, Math.min(p.y, innerHeight - 40)) + "px";
         }
