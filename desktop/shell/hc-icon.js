@@ -88,7 +88,7 @@ async function setExeIcon(variant) {
         fs.renameSync(exe, old);
         try { fs.renameSync(next, exe); } catch (e) { fs.renameSync(old, exe); throw e; }
     } finally {
-        fs.rmSync(next, { force: true });
+        try { fs.rmSync(next, { force: true }); } catch { }
     }
     const st = fs.statSync(exe);
     return { variant, size: st.size, mtimeMs: st.mtimeMs };
