@@ -377,7 +377,7 @@ const settings = definePluginSettings({
     },
     tilePlacement: {
         type: OptionType.SELECT,
-        description: "Where the meter sits on call tiles. Profile picture pins it to the bottom right corner of the user's avatar, so it stays on the picture when tile backgrounds are hidden.",
+        description: "Where the meter sits on call tiles. Profile picture pins it inside the edge of the user's picture, centered on its height, so it stays on the picture when tile backgrounds are hidden.",
         options: [
             {
                 label: "Background",
@@ -407,7 +407,7 @@ const settings = definePluginSettings({
     },
     tileMeterHeight: {
         type: OptionType.SLIDER,
-        description: "Tile meter height as a percent of the tile height. 50 is the default height.",
+        description: "Tile meter height as a percent of the tile height, or of the picture in profile picture mode. 50 is the default height.",
         markers: makeRange(25, 100, 5),
         default: 50,
         stickToMarkers: true
@@ -1442,13 +1442,85 @@ function fiberIsStreamTile(tile: HTMLElement): boolean {
     return sawStreamId;
 }
 
+// The visible tile picture in the tile's own pixels: center, side of its square and corner radius
+interface PictureGeometry {
+    centerX: number;
+    centerY: number;
+    side: number;
+    radius: number;
+    tileWidth: number;
+}
+
+// Both bars plus the divider of a tile meter (bars 8 wide, divider 4)
+const TILE_METER_WIDTH = 20;
+// Gap between the picture edge and the meter
+const PICTURE_MARGIN = 8;
+
+function scaleOf(transform: string) {
+    const match = /^matrix\(([-\d.e]+)/.exec(transform);
+    return match ? Number(match[1]) || 1 : 1;
+}
+
+// Discord paints the tile picture as one role=img element. Stock it is the avatar itself.
+// RoundedVCPFP stretches it over the tile and paints a centered square on ::before, scaled
+// by its zoom, so the visible picture is that scaled square, not the element box.
+// FullVCPFP scales the element itself. Rounding is the element's border-radius.
+function measurePicture(tile: HTMLElement): PictureGeometry | null {
+    const picture = tile.querySelector<HTMLElement>("div[role=img]");
+    if (!picture?.clientWidth || !picture.clientHeight || !tile.offsetWidth) return null;
+
+    const tileBox = tile.getBoundingClientRect();
+    const pictureBox = picture.getBoundingClientRect();
+    // page zoom or a scaled call view: convert viewport pixels back to the tile's own pixels
+    const tileScale = tileBox.width / tile.offsetWidth || 1;
+    const elementScale = pictureBox.height / tileScale / picture.clientHeight || 1;
+    const before = getComputedStyle(picture, "::before");
+    const beforeScale = before.content !== "none" && before.transform !== "none" ? scaleOf(before.transform) : 1;
+    const side = Math.min(picture.clientWidth, picture.clientHeight) * elementScale * beforeScale;
+    if (!(side > 0)) return null;
+
+    const rawRadius = getComputedStyle(picture).borderTopRightRadius;
+    const radiusValue = parseFloat(rawRadius) || 0;
+    const radius = Math.min(side / 2, rawRadius.endsWith("%") ? side * radiusValue / 100 : radiusValue * elementScale);
+
+    return {
+        centerX: (pictureBox.left + pictureBox.width / 2 - tileBox.left) / tileScale - tile.clientLeft,
+        centerY: (pictureBox.top + pictureBox.height / 2 - tileBox.top) / tileScale - tile.clientTop,
+        side,
+        radius,
+        tileWidth: tile.clientWidth
+    };
+}
+
+function samePicture(a: PictureGeometry | null, b: PictureGeometry | null) {
+    if (!a || !b) return a === b;
+    return Math.abs(a.centerX - b.centerX) < 0.5 && Math.abs(a.centerY - b.centerY) < 0.5
+        && Math.abs(a.side - b.side) < 0.5 && Math.abs(a.radius - b.radius) < 0.5 && a.tileWidth === b.tileWidth;
+}
+
+// On the picture the meter is sized from the picture, centered on it and kept inside its rounded edge
+function pictureMeterStyle(picture: PictureGeometry, heightPercent: number, fromLeft: boolean): React.CSSProperties {
+    const { side, radius } = picture;
+    const height = Math.max(12, side * heightPercent / 100 - 10);
+    // how far the rounded corner pulls the edge in at the meter's top and bottom ends
+    const intoCorner = Math.min(radius, Math.max(0, height / 2 - (side / 2 - radius)));
+    const cornerInset = radius - Math.sqrt(radius * radius - intoCorner * intoCorner);
+    const fromEdge = Math.min(cornerInset + PICTURE_MARGIN, Math.max(0, side - TILE_METER_WIDTH) / 2);
+
+    const style: React.CSSProperties = { position: "absolute", zIndex: 3, pointerEvents: "none", height, top: picture.centerY - height / 2 };
+    if (fromLeft) style.left = picture.centerX - side / 2 + fromEdge;
+    else style.right = picture.tileWidth - picture.centerX - side / 2 + fromEdge;
+    return style;
+}
+
 function TileMeter({ userId }: { userId?: string; }) {
     settings.use(["tilePlacement", "tileMeterSide", "tileMeterHeight", "tileSurfaces"]);
     const onPicture = settings.store.tilePlacement === "avatar";
     const fromLeft = settings.store.tileMeterSide === "left";
     const surfaces = settings.store.tileSurfaces;
     const boxRef = React.useRef<HTMLDivElement | null>(null);
-    const [pictureInset, setPictureInset] = React.useState<{ right: number; bottom: number; } | null>(null);
+    const measureRef = React.useRef<(() => void) | null>(null);
+    const [picture, setPicture] = React.useState<PictureGeometry | null>(null);
     const [isStreamSlot, setIsStreamSlot] = React.useState(false);
     const [isStreamTile, setIsStreamTile] = React.useState(false);
 
@@ -1473,6 +1545,8 @@ function TileMeter({ userId }: { userId?: string; }) {
             syncTimer = setTimeout(() => {
                 syncTimer = undefined;
                 syncStreamState();
+                // RoundedVCPFP's zoom and rounding arrive as inline style changes that resize nothing
+                measureRef.current?.();
             }, 200);
         });
         observer.observe(tile, { childList: true, subtree: true, attributes: true });
@@ -1487,61 +1561,45 @@ function TileMeter({ userId }: { userId?: string; }) {
         };
     }, []);
 
+    const pictureWanted = onPicture && !isStreamTile;
     React.useLayoutEffect(() => {
-        if (!onPicture) return;
+        const tile = boxRef.current?.closest<HTMLElement>("div[data-selenium-video-tile]");
+        if (!pictureWanted || !tile) {
+            setPicture(null);
+            return;
+        }
 
-        const box = boxRef.current;
-        const tile = box?.closest<HTMLElement>("div[data-selenium-video-tile]");
-        if (!box || !tile) return;
-
-        // Discord paints the tile picture as one role=img element that fills the tile
-        // box, and FullVCPFP scales that box. Mask and background both cover a centered
-        // square, so the visible picture is that square, and the meter must pin to it
-        // instead of the box. ResizeObserver misses style-only changes; a zoom or
-        // rounding change re-measures at the next remount.
         const measure = () => {
-            const picture = tile.querySelector<HTMLElement>("div[role=img]");
-            if (!picture) return;
-
-            const tileBox = tile.getBoundingClientRect();
-            const pictureBox = picture.getBoundingClientRect();
-            if (!tileBox.width || !pictureBox.width) return;
-
-            const zoom = picture.clientHeight ? pictureBox.height / picture.clientHeight : 1;
-            const square = Math.min(picture.clientWidth, picture.clientHeight) * zoom;
-            if (!square) return;
-            const squareRight = pictureBox.left + (pictureBox.width + square) / 2;
-            const squareBottom = pictureBox.top + (pictureBox.height + square) / 2;
-
-            const right = Math.max(0, tileBox.right - squareRight);
-            const bottom = Math.max(0, tileBox.bottom - squareBottom);
-            if (!Number.isFinite(right) || !Number.isFinite(bottom)) return;
-            setPictureInset(prev => (prev && Math.abs(prev.right - right) < 0.5 && Math.abs(prev.bottom - bottom) < 0.5 ? prev : { right, bottom }));
+            const next = measurePicture(tile);
+            setPicture(prev => samePicture(prev, next) ? prev : next);
         };
-
         measure();
+        measureRef.current = measure;
         const observer = new ResizeObserver(measure);
         observer.observe(tile);
-        return () => observer.disconnect();
-    }, [onPicture]);
+        const pictureNode = tile.querySelector("div[role=img]");
+        if (pictureNode) observer.observe(pictureNode);
+        return () => {
+            measureRef.current = null;
+            observer.disconnect();
+        };
+    }, [pictureWanted]);
 
     if (!userId) return null;
     if (isStreamSlot) return null;
     if (isStreamTile && surfaces === "voice") return null;
     if (!isStreamTile && surfaces === "streams") return null;
 
-    const height = `calc(${Math.round(settings.store.tileMeterHeight)}% - 10px)`;
-    // 18px is the native seat (bars centered in the background strip); the
-    // mirrored left seat uses the same inset from the tile's left edge, and the
-    // picture seat hugs the measured square's corner. Every meter is centered
-    // vertically (top 50% + translateY), which clears the strip and the labels.
-    const inset = pictureInset ? pictureInset.right + 14 : 14;
-    const style: React.CSSProperties = { position: "absolute", height, zIndex: 3, pointerEvents: "none", top: "50%", transform: "translateY(-50%)" };
-    if (fromLeft) {
-        style.left = onPicture ? inset : 18;
-    } else {
-        style.right = onPicture ? (pictureInset ? pictureInset.right + 14 : 14) : 18;
-    }
+    // 18px is the native seat (bars centered in the background strip), mirrored for the left side.
+    // Centered vertically, which clears the strip and the labels. Tiles without a picture
+    // (streams, cameras) keep this seat in profile picture mode too.
+    const style: React.CSSProperties = picture
+        ? pictureMeterStyle(picture, settings.store.tileMeterHeight, fromLeft)
+        : {
+            position: "absolute", zIndex: 3, pointerEvents: "none", top: "50%", transform: "translateY(-50%)",
+            height: `calc(${Math.round(settings.store.tileMeterHeight)}% - 10px)`,
+            [fromLeft ? "left" : "right"]: 18
+        };
 
     return (
         <div ref={boxRef} style={style}>
