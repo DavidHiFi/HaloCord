@@ -15,3 +15,23 @@
     vertical-align: top;
     top: -1px;
 }
+
+.vc-platform-indicator-voice {
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+.vc-platform-indicator-voice svg {
+    width: 14px;
+    height: 14px;
+}
+
+.vc-platform-indicator-tile {
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+.vc-platform-indicator-tile svg {
+    width: 16px;
+    height: 16px;
+}
