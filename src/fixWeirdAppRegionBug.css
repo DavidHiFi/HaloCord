@@ -59,3 +59,12 @@ button[aria-label="Close Modal"]:active {
     background-color: var(--background-modifier-active, rgb(255 255 255 / 16%));
 }
 
+/* Discord sizes the custom status emoji with --custom-activity-status-emoji-size but leaves it undefined in
+   the profile status bubble, so the emoji renders at its natural 128px. Supply the fallback only. */
+img[class*="statusEmoji"] {
+    width: var(--custom-activity-status-emoji-size, 1.375em) !important;
+    height: var(--custom-activity-status-emoji-size, 1.375em) !important;
+    max-width: 1.5em;
+    max-height: 1.5em;
+}
+
