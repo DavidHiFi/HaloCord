@@ -10,6 +10,7 @@
  * and re-targets the voice list patch at the current client.
  */
 
+import { NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { definePluginSettings, Settings } from "@api/Settings";
 import { UserAreaButton, UserAreaRenderProps } from "@api/UserArea";
 import ErrorBoundary from "@components/ErrorBoundary";
@@ -1641,6 +1642,126 @@ function VuUserAreaButton({ iconForeground, hideTooltips, nameplate }: UserAreaR
     );
 }
 
+// --- Input level in the user area mic menu ---
+
+// Full scale per second the menu bars fall between level updates
+const MENU_FALL_PER_SECOND = 1.5;
+
+// Discord's own meter in this menu reads the voiceactivity level, the one its mic test uses.
+// This reads the same level, or the self meter's left and right while a call measures them.
+function MenuInputMeter() {
+    const leftRef = React.useRef<HTMLDivElement>(null);
+    const rightRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        const engine = MediaEngineStore.getMediaEngine() as unknown as typeof vadEngine;
+        const listening = typeof engine?.on === "function" && typeof engine.removeListener === "function";
+        let level = 0;
+        const onLevel = (levelDb: number) => {
+            level = Number.isFinite(levelDb) && levelDb > -100 ? Math.min(10 ** (levelDb / 20), 1) : 0;
+        };
+        if (listening) engine.on("voiceactivity", onLevel);
+
+        const shown = [0, 0];
+        const written = [-1, -1];
+        let lastAt = performance.now();
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        let frame: number | undefined;
+        const draw = (now: number) => {
+            frame = undefined;
+            const fall = MENU_FALL_PER_SECOND * (now - lastAt) / 1000;
+            lastAt = now;
+            const me = UserStore.getCurrentUser()?.id;
+            const self = me ? meters.get(me) : undefined;
+            // the self meter's bars only move while its frame loop runs
+            const stereo = self != null && !self.mono && (self.tap != null || self.nativeAvailable === true)
+                && (frameId !== undefined || frameTimer !== undefined);
+            const mono = normalize(level, settings.store.floorDb);
+            for (let channel = 0; channel < 2; channel++) {
+                shown[channel] = Math.max(stereo ? self.display[channel] : mono, shown[channel] - fall);
+                const permille = Math.round(shown[channel] * 1000);
+                const fill = channel ? rightRef.current : leftRef.current;
+                if (fill && permille !== written[channel]) {
+                    written[channel] = permille;
+                    fill.style.transform = `translateX(${(permille - 1000) / 10}%)`;
+                }
+            }
+            timer = setTimeout(() => {
+                timer = undefined;
+                frame = requestAnimationFrame(draw);
+            }, 1000 / settings.store.frameRate);
+        };
+        frame = requestAnimationFrame(draw);
+
+        return () => {
+            if (listening) engine.removeListener("voiceactivity", onLevel);
+            if (timer !== undefined) clearTimeout(timer);
+            if (frame !== undefined) cancelAnimationFrame(frame);
+        };
+    }, []);
+
+    return (
+        <div className="hc-vu-menu-meter" title="Input level. Left | Right">
+            {["L", "R"].map((name, channel) => (
+                <div key={name} className="hc-vu-menu-row">
+                    <span>{name}</span>
+                    <div className="hc-vu-menu-track">
+                        <div ref={channel ? rightRef : leftRef} className="hc-vu-menu-fill" />
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+type MenuRender = (...args: unknown[]) => React.ReactNode;
+
+function isInputLevelItem(props: { id?: unknown; label?: unknown; }) {
+    return (typeof props.id === "string" && /input.?(level|meter)/i.test(props.id))
+        || (typeof props.label === "string" && props.label.trim().toLowerCase() === "input level");
+}
+
+// The stock meter stays mounted but hidden, so whatever it keeps alive keeps running
+function withMenuMeter(render: MenuRender): MenuRender {
+    return (...args) => (
+        <>
+            <div className="hc-vu-menu-stock">{render(...args)}</div>
+            <ErrorBoundary noop><MenuInputMeter /></ErrorBoundary>
+        </>
+    );
+}
+
+function swapInputLevel(list: unknown[]): boolean {
+    for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        if (Array.isArray(item)) {
+            if (swapInputLevel(item)) return true;
+            continue;
+        }
+        if (!React.isValidElement<Record<string, unknown>>(item)) continue;
+        const { props } = item;
+        const renderKey = typeof props.control === "function" ? "control" : typeof props.render === "function" ? "render" : undefined;
+        if (renderKey && isInputLevelItem(props)) {
+            list[i] = React.cloneElement(item, { [renderKey]: withMenuMeter(props[renderKey] as MenuRender) });
+            return true;
+        }
+        const { children } = props;
+        if (children == null || typeof children !== "object") continue;
+        const nested: unknown[] = Array.isArray(children) ? [...children] : [children];
+        if (swapInputLevel(nested)) {
+            list[i] = React.cloneElement(item, {}, ...nested);
+            return true;
+        }
+    }
+    return false;
+}
+
+// Only the mic menu has renderInputVolume. With HaloCord's look off the stock meter stays.
+const audioDeviceMenuPatch: NavContextMenuPatchCallback = (children, props: { renderInputVolume?: boolean; }) => {
+    if (!("renderInputVolume" in props) || !document.documentElement.classList.contains("hc-theming")) return;
+    swapInputLevel(children);
+};
+
 // --- Options on the Voice & Video page, under HaloCord's voice panel ---
 
 const OPTIONS_ID = "hc-guard-options";
@@ -1791,6 +1912,10 @@ export default definePlugin({
     userAreaButton: {
         icon: MeterIcon,
         render: VuUserAreaButton
+    },
+
+    contextMenus: {
+        "audio-device-context": audioDeviceMenuPatch
     },
 
     patches: [

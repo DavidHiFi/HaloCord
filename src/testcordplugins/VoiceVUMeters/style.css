@@ -185,3 +185,51 @@
     background: var(--status-danger);
     color: var(--hc-text);
 }
+
+/* User area mic menu: the HaloCord L and R meter stands in for Discord's input level bar */
+.hc-vu-menu-meter {
+    display: none;
+}
+
+html.hc-theming .hc-vu-menu-stock {
+    display: none;
+}
+
+html.hc-theming .hc-vu-menu-meter {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 6px;
+    padding: 4px 6px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 4px;
+    background: var(--hc-window-bg);
+}
+
+.hc-vu-menu-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.hc-vu-menu-row span {
+    width: 8px;
+    color: var(--hc-text-muted);
+    font: 700 9px/1 var(--font-primary);
+}
+
+.hc-vu-menu-track {
+    position: relative;
+    flex: 1;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: rgb(var(--hc-accent-rgb) / 12%);
+}
+
+.hc-vu-menu-fill {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--hc-accent-2), var(--hc-accent));
+    transform: translateX(-100%);
+}
