@@ -98,6 +98,8 @@ function scan() {
         save();
     }
     running = hits;
+    // A game started (or the overlay was just turned on with one running): the page sends its game notices.
+    for (const id of ids) if (!was.has(id) && store.games[id] && store.games[id].on) emit("playing", { id, name: store.games[id].name });
     if (changed || ids.join() !== runningKey) {
         runningKey = ids.join();
         emit("games", gameList());
@@ -307,7 +309,7 @@ ipcMain.handle("halocord:overlay-config", (e, c) => {
         opacity: num(c.opacity, 10, 100, 100), clickable: !!c.clickable,
         widgets: { voice: w.voice !== false, quick: w.quick !== false, notifications: w.notifications !== false, activity: !!w.activity },
         notices: Object.fromEntries(NOTICES.map(k => [k, n[k] !== false])),
-        accent: hex(c.accent) || "#afe37f"
+        accent: hex(c.accent) || "#dbdee1"
     };
     const keyOk = cfg.enabled ? setKey(cfg.keybind || null) : setKey(null);
     if (!cfg.enabled) voice = null, activity = [];
