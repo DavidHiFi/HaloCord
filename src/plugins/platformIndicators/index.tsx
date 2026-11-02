@@ -19,7 +19,7 @@
 import "./style.css";
 
 import { definePluginSettings, migratePluginSetting } from "@api/Settings";
-import { Devs, EquicordDevs } from "@utils/constants";
+import { Devs, EquicordDevs, TestcordDevs } from "@utils/constants";
 import { classes } from "@utils/misc";
 import definePlugin, { OptionType } from "@utils/types";
 import { DiscordPlatform, User } from "@vencord/discord-types";
@@ -132,9 +132,11 @@ interface PlatformIndicatorProps {
     isProfile?: boolean;
     isMessage?: boolean;
     isMemberList?: boolean;
+    isVoice?: boolean;
+    isTile?: boolean;
 }
 
-const PlatformIndicator = ({ user, isProfile, isMessage, isMemberList }: PlatformIndicatorProps) => {
+const PlatformIndicator = ({ user, isProfile, isMessage, isMemberList, isVoice, isTile }: PlatformIndicatorProps) => {
     useEnsureOwnStatus(user);
 
     const status = useStateFromStores(
@@ -151,7 +153,7 @@ const PlatformIndicator = ({ user, isProfile, isMessage, isMemberList }: Platfor
             key={platform}
             platform={platform as DiscordPlatform}
             status={status}
-            small={isProfile || isMemberList}
+            small={isProfile || isMemberList || isVoice || isTile}
         />
     ));
 
@@ -166,7 +168,7 @@ if (!icons.length) {
 
     return (
         <div
-            className={classes("vc-platform-indicator", isProfile && "vc-platform-indicator-profile", isMessage && "vc-platform-indicator-message")}
+            className={classes("vc-platform-indicator", isProfile && "vc-platform-indicator-profile", isMessage && "vc-platform-indicator-message", isVoice && "vc-platform-indicator-voice", isTile && "vc-platform-indicator-tile")}
             style={{ marginLeft: isMemberList ? "4px" : undefined }}
         >
             {icons}
@@ -189,6 +191,16 @@ const settings = definePluginSettings({
     messages: {
         type: OptionType.BOOLEAN,
         description: "Show indicators inside messages",
+        default: true,
+    },
+    voiceList: {
+        type: OptionType.BOOLEAN,
+        description: "Show indicators next to people in voice channels",
+        default: true,
+    },
+    callTiles: {
+        type: OptionType.BOOLEAN,
+        description: "Show indicators next to names on call tiles",
         default: true,
     },
     colorMobileIndicator: {
@@ -231,7 +243,7 @@ export default definePlugin({
     description: "Adds platform indicators (Desktop, Mobile, Web...) to users",
     dependencies: ["MemberListDecoratorsAPI", "MessageDecorationsAPI", "NicknameIconsAPI"],
     tags: ["Appearance"],
-    authors: [Devs.kemo, Devs.TheSun, Devs.Nuckyz, Devs.Ven, EquicordDevs.neoarz],
+    authors: [Devs.kemo, Devs.TheSun, Devs.Nuckyz, Devs.Ven, EquicordDevs.neoarz, TestcordDevs.DavidHiFi],
     isModified: true,
     settings,
     renderNicknameIcon(props) {
@@ -249,8 +261,30 @@ export default definePlugin({
         if (!settings.store.messages) return null;
         return <PlatformIndicator user={props.message?.author} isMessage />;
     },
+    renderVoiceIndicator(userId: string) {
+        if (!settings.store.voiceList) return null;
+        return <PlatformIndicator user={UserStore.getUser(userId)} isVoice />;
+    },
+    renderTileIndicator(userId?: string) {
+        if (!settings.store.callTiles || !userId) return null;
+        return <PlatformIndicator user={UserStore.getUser(userId)} isTile />;
+    },
 
     patches: [
+        {
+            find: "#{intl::GUEST_NAME_SUFFIX})]",
+            replacement: {
+                match: /#{intl::GUEST_NAME_SUFFIX}\)\]\}\):""(?=.*?userId:(\i\.\i))/,
+                replace: "$&,$self.renderVoiceIndicator($1)"
+            }
+        },
+        {
+            find: '"title-text"',
+            replacement: {
+                match: /(participantUserId:(\i),channel:\i,platform:\i,.{0,3500}?"title-text"\))/,
+                replace: "$1,$self.renderTileIndicator($2)"
+            }
+        },
         {
             find: ".Masks.STATUS_ONLINE_MOBILE",
             predicate: () => settings.store.colorMobileIndicator,

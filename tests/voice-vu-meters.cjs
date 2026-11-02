@@ -43,8 +43,7 @@ function load(name, exports) {
     const source = fs.readFileSync(root + name + '/index.tsx', 'utf8')
         .replace(/^import .*;\r?\n/gm, '').replace('export default definePlugin(', 'const plugin = definePlugin(');
     const suffix = `\nglobalThis.test = { ${exports}, settings, setConnection: value => { connection = value; }, plugin };`;
-    const helper = name === "StereoGuard" ? fs.readFileSync(root + name + "/protection.ts", "utf8").replace("export class VolumeHold", "class VolumeHold") : "";
-    const input = helper + "\n" + source + suffix;
+    const input = source + suffix;
     const options = { loader: 'tsx', jsxFactory: 'VencordCreateElement', target: 'esnext' };
     let code;
     try {

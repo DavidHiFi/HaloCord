@@ -1231,9 +1231,36 @@ return Gz;}var G0='dvx-privacy-panel',G1='dvx-privacy-overlay',G2='dvx-privacy-n
         voiceBus = ctx['createGain']();
         busTarget = outBoost();
         voiceBus['gain']['value'] = busTarget;
-        voiceBus['connect'](mixFor(ctx));
+        busOut = null;
+        routeBus();
         return voiceBus;
     }
+    // MicSpamGuard's hard limiter (window.__hcVoiceLimiter) sits between the voice bus and the mix while it is on.
+    var busOut = null;
+    function routeBus() {
+        if (!voiceBus) return;
+        var mix = mixFor(voiceBus['context']);
+        var lim = null;
+        try {
+            lim = typeof window['__hcVoiceLimiter'] === 'function' ? window['__hcVoiceLimiter'](voiceBus['context']) : null;
+        } catch (e) {}
+        var want = lim || mix;
+        if (busOut === want) return;
+        try {
+            if (busOut) {
+                voiceBus['disconnect']();
+                if (busOut !== mix) busOut['disconnect']();
+            }
+            if (lim) lim['connect'](mix);
+            voiceBus['connect'](want);
+            busOut = want;
+        } catch (e) {
+            try { voiceBus['disconnect'](); } catch (e2) {}
+            voiceBus['connect'](mix);
+            busOut = mix;
+        }
+    }
+    window['__hcVoiceRoute'] = routeBus;
     // Secondary/Third Speaker (window.__hcExtraSpk from the userscript): every call output ends in one mix node.
     // While an extra speaker is on, the mix also feeds a stream that a separate AudioContext plays on that device.
     var mixNode = null;
@@ -1444,6 +1471,7 @@ return Gz;}var G0='dvx-privacy-panel',G1='dvx-privacy-overlay',G2='dvx-privacy-n
             st['buf'] = null;
         });
         voiceBus = null;
+        busOut = null;
         mixNode = null;
         tapDst = null;
         GL('output context retired (' + why + ')');

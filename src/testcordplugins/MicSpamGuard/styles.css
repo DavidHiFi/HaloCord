@@ -1,0 +1,86 @@
+.vc-msg-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.hc-ui-row.vc-msg-field {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.vc-msg-field-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.vc-msg-value {
+    color: var(--hc-accent);
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.vc-msg-meter-row {
+    gap: 12px;
+}
+
+.vc-msg-name {
+    width: 150px;
+    overflow: hidden;
+    color: var(--hc-text);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vc-msg-name-ignored {
+    color: var(--hc-text-muted);
+}
+
+.vc-msg-meter {
+    position: relative;
+    flex: 1;
+    height: 8px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--hc-row-border);
+}
+
+.vc-msg-meter-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--hc-accent);
+}
+
+.vc-msg-meter-loud {
+    background: var(--status-danger, #f23f42);
+}
+
+.vc-msg-meter-mark {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: var(--hc-text-muted);
+}
+
+.vc-msg-meter-target {
+    background: var(--hc-accent-2);
+}
+
+.vc-msg-level {
+    width: 44px;
+    color: var(--hc-text-muted);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.vc-msg-empty {
+    color: var(--hc-text-muted);
+    font-size: 13px;
+}
