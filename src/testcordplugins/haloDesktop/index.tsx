@@ -158,12 +158,15 @@ function CallSettings() {
     );
 }
 
-// Puts a category at the top (or end) of one of Discord's own settings panels (Settings plugin layoutHooks).
-function addCategory(panelKey: string, key: string, title: () => string, terms: string[], Component: ComponentType, atEnd = false) {
+// Puts a category at the top, the end, or right before the first category whose key matches `before`,
+// in one of Discord's own settings panels (Settings plugin layoutHooks).
+function addCategory(panelKey: string, key: string, title: () => string, terms: string[], Component: ComponentType, atEnd = false, before?: RegExp) {
     const Wrapped = () => <ErrorBoundary noop><Component /></ErrorBoundary>;
     SettingsPlugin.layoutHooks[panelKey] = (layout, types) => {
         if (!native() || layout.some(n => n?.key === key)) return;
-        layout[atEnd ? "push" : "unshift"]({
+        const at = before ? layout.findIndex(n => n?.type === types.CATEGORY && before.test(n.key ?? "")) : -1;
+        const index = at >= 0 ? at : atEnd ? layout.length : 0;
+        layout.splice(index, 0, {
             type: types.CATEGORY,
             key,
             useTitle: title,
@@ -248,6 +251,6 @@ export default definePlugin({
         addCategory("developer_options_panel", "halocord_build_category", () => "Discord Build",
             ["Discord Build", "Stable", "PTB", "Canary"], BuildSelector);
         addCategory("voice_and_video_panel", "halocord_calls_category", () => "Calls",
-            ["Calls", "idle", "AFK", "rejoin", "reconnect"], CallSettings, true);
+            ["Calls", "idle", "AFK", "rejoin", "reconnect"], CallSettings, true, /advanced/i);
     }
 });
