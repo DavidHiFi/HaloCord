@@ -33,8 +33,17 @@ let themesStyle: HTMLStyleElement;
 
 const themeChangeListeners = new Set<() => void>();
 
-function getThemeActivationMode(themeId: string) {
-    return Settings.themeActivationModes?.[themeId] ?? "always";
+export const MOCHACORD_FILE = "MochaCord.css";
+
+/** True for any enabledThemes entry or file name that points at the bundled MochaCord theme. */
+export const isMochaCordTheme = (entry: string) => themeFileToId(entry) === "mochacord";
+
+function getThemeActivationMode(...ids: string[]): ThemeActivationMode {
+    for (const id of ids) {
+        const mode = Settings.themeActivationModes?.[id];
+        if (mode) return mode;
+    }
+    return "always";
 }
 
 function shouldApplyTheme(mode: ThemeActivationMode, activeTheme?: "light" | "dark") {
@@ -106,6 +115,9 @@ async function initThemes() {
     themesStyle ??= createAndAppendStyle("vencord-themes", userStyleRootNode);
 
     const { enabledThemeLinks, enabledThemes } = Settings;
+    // The HaloCord theme setting owns MochaCord: it applies whenever HaloCord theming is on.
+    const appliedThemes = enabledThemes.filter(entry => !isMochaCordTheme(entry));
+    if (Settings.haloTheming) appliedThemes.push(MOCHACORD_FILE);
 
     const { ThemeStore } = require("@webpack/common/stores") as typeof import("@webpack/common/stores");
 
@@ -154,9 +166,9 @@ async function initThemes() {
     if (IS_WEB) {
         previousThemeBlobObjectURLs.forEach(url => URL.revokeObjectURL(url));
 
-        const themesToApply = enabledThemes.filter(theme => {
+        const themesToApply = appliedThemes.filter(theme => {
             const file = resolveThemeFile(theme, idMap);
-            return shouldApplyTheme(getThemeActivationMode(theme) ?? getThemeActivationMode(file), activeTheme);
+            return shouldApplyTheme(getThemeActivationMode(theme, file), activeTheme);
         });
 
         const objectUrls = await Promise.all(themesToApply.map(async theme => {
@@ -172,9 +184,9 @@ async function initThemes() {
         previousThemeBlobObjectURLs.forEach(url => links.add(url));
     } else {
         const version = Date.now();
-        for (const entry of enabledThemes) {
+        for (const entry of appliedThemes) {
             const themeFile = resolveThemeFile(entry, idMap);
-            const mode = getThemeActivationMode(entry) ?? getThemeActivationMode(themeFile);
+            const mode = getThemeActivationMode(entry, themeFile);
             if (!shouldApplyTheme(mode, activeTheme)) continue;
             // A missing file would silently produce a dead @import; surface it instead
             const exists = await VencordNative.themes.getThemeData(themeFile).then(() => true).catch(() => false);
@@ -223,7 +235,12 @@ const haloThemingRoots = new WeakSet<HTMLElement>();
 // Discord rewrites <html> className on theme, font and density changes, which drops hc-theming.
 export function keepHaloThemingClass(root: HTMLElement) {
     const sync = () => {
-        if (root.classList.contains("hc-theming") !== Settings.haloTheming) root.classList.toggle("hc-theming", Settings.haloTheming);
+        const on = Settings.haloTheming;
+        if (root.classList.contains("hc-theming") !== on) root.classList.toggle("hc-theming", on);
+        const variant = on ? Settings.haloThemeVariant : null;
+        if (root.getAttribute("data-hc-theme") === variant) return;
+        if (variant) root.setAttribute("data-hc-theme", variant);
+        else root.removeAttribute("data-hc-theme");
     };
     sync();
     if (haloThemingRoots.has(root)) return;
@@ -273,7 +290,8 @@ document.addEventListener("DOMContentLoaded", () => {
     SettingsStore.addChangeListener("enabledThemeLinks", initThemes);
     SettingsStore.addChangeListener("enabledThemes", initThemes);
     SettingsStore.addChangeListener("themeActivationModes", initThemes);
-    SettingsStore.addChangeListener("haloTheming", updatePopoutWindows);
+    SettingsStore.addChangeListener("haloTheming", initThemes);
+    SettingsStore.addChangeListener("haloThemeVariant", updatePopoutWindows);
 
     window.addEventListener("message", event => {
         const { discordPopoutEvent } = event.data || {};

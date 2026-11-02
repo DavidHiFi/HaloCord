@@ -71,6 +71,8 @@ export interface Settings {
     updaterBranch: "main" | "dev" | "dev2";
     useQuickCss: boolean;
     haloTheming: boolean;
+    /** Which look HaloCord theming uses. Disabled in the Theme dropdown is haloTheming off. */
+    haloThemeVariant: "halocord" | "mochacord";
     uiFont: string;
     /** CSS weight of the installed style picked for uiFont; 400 keeps Discord's weights. */
     uiFontWeight: number;
@@ -151,6 +153,7 @@ const DefaultSettings: Settings = {
     updaterBranch: "main",
     useQuickCss: true,
     haloTheming: true,
+    haloThemeVariant: "halocord",
     uiFont: "",
     uiFontWeight: 400,
     uiFontItalic: false,

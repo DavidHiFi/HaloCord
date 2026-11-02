@@ -7,10 +7,12 @@
 import "./HaloThemes.css";
 
 import { facesFor, localFacesReady, nearestFace } from "@api/HaloAppearance";
-import { useSettings } from "@api/Settings";
-import { HaloRow, HaloSection, HaloSwitchRow } from "@components/HaloUI";
+import { type Settings, useSettings } from "@api/Settings";
+import { HaloRow, HaloSection } from "@components/HaloUI";
 import { classNameFactory } from "@utils/css";
-import { useEffect, useState } from "@webpack/common";
+import { Select, useEffect, useState } from "@webpack/common";
+
+import { ThemeFileRows, ThemeOptionRows } from "./MochaCordOptions";
 
 const cl = classNameFactory("hc-mc-");
 
@@ -103,17 +105,35 @@ function FontStyleRow({ setting, title }: { setting: FontKind; title: string; })
     );
 }
 
+type ThemeChoice = "disabled" | Settings["haloThemeVariant"];
+
+const themeChoices: { label: string; value: ThemeChoice; }[] = [
+    { label: "Disabled", value: "disabled" },
+    { label: "HaloCord", value: "halocord" },
+    { label: "MochaCord", value: "mochacord" }
+];
+
 export function HaloAppearanceSection() {
-    const settings = useSettings(["haloTheming"]);
+    const settings = useSettings(["haloTheming", "haloThemeVariant"]);
+    const choice: ThemeChoice = settings.haloTheming ? settings.haloThemeVariant : "disabled";
+
+    const choose = (next: ThemeChoice) => {
+        if (next !== "disabled") settings.haloThemeVariant = next;
+        settings.haloTheming = next !== "disabled";
+    };
 
     return (
         <HaloSection title="HaloCord look">
-            <HaloSwitchRow
-                title="HaloCord theming"
-                description="Style settings, plugin windows and HaloCord windows with the HaloCord look. Turn it off for stock Discord styling."
-                value={settings.haloTheming}
-                onChange={v => settings.haloTheming = v}
-            />
+            <HaloRow
+                accent
+                title="Theme"
+                description="HaloCord has a green accent, MochaCord a Catppuccin Mocha blue one. Both style Discord, settings and HaloCord windows. Disabled shows stock Discord."
+            >
+                <div className={cl("theme-select")}>
+                    <Select options={themeChoices} closeOnSelect isSelected={v => v === choice} serialize={String} select={choose} />
+                </div>
+            </HaloRow>
+            {settings.haloTheming && <ThemeFileRows />}
             <FontRow setting="uiFont" title="UI font" description="The font for the whole app. Type the name of a font installed on this PC. Leave it empty for Discord's font." />
             <FontStyleRow setting="uiFont" title="UI font style" />
             <FontRow setting="codeFont" title="Code font" description="The font for code blocks and inline code. Leave it empty for Discord's font." />
@@ -121,6 +141,7 @@ export function HaloAppearanceSection() {
             <datalist id="hc-font-list">
                 {fonts.map(font => <option key={font} value={font} />)}
             </datalist>
+            {settings.haloTheming && <ThemeOptionRows />}
         </HaloSection>
     );
 }

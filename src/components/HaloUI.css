@@ -30,6 +30,21 @@ html.hc-theming {
     --hc-scroll-thumb: rgb(255 255 255 / 14%);
 }
 
+html.hc-theming[data-hc-theme="mochacord"] {
+    --hc-accent: #89b4fa;
+    --hc-accent-2: #b4befe;
+    --hc-accent-ink: #11111b;
+    --hc-accent-rgb: 137 180 250;
+    --hc-row-bg: rgb(17 17 27 / 32%);
+    --hc-row-border: rgb(205 214 244 / 7%);
+    --hc-panel-bg: rgb(17 17 27 / 22%);
+    --hc-panel-border: rgb(205 214 244 / 9%);
+    --hc-window-bg: var(--background-base-lower, #1e1e2e);
+    --hc-text: #cdd6f4;
+    --hc-text-muted: #a6adc8;
+    --hc-scroll-thumb: rgb(205 214 244 / 16%);
+}
+
 .hc-ui {
     display: flex;
     flex-direction: column;
