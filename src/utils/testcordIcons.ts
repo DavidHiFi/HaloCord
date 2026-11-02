@@ -10,11 +10,16 @@ import type { Plugin } from "@utils/types";
 import equicordTestcordModifiedIconBase64 from "file://../../browser/Equicord_Testcord_Modified_PluginIcon.png?base64";
 import equicordVencordTestcordModifiedIconBase64 from "file://../../browser/Equicord_Vencord_Testcord_Modified_PluginIcon.png?base64";
 import haloCordPluginIconBase64 from "file://../../browser/HaloCord_PluginIcon.png?base64";
+import haloCordPluginIconMochaBase64 from "file://../../browser/HaloCord_PluginIcon_Mocha.png?base64";
 import testcordPluginIconBase64 from "file://../../browser/icon.png?base64";
 import vencordTestcordModifiedIconBase64 from "file://../../browser/Vencord_Testcord_Modified_PluginIcon.png?base64";
 
 export const TestcordPluginIconUrl = `data:image/png;base64,${testcordPluginIconBase64}`;
-export const HaloCordPluginIconUrl = `data:image/png;base64,${haloCordPluginIconBase64}`;
+// Green and Mocha blue, picked by Settings.haloInAppIcon.
+export const HaloCordPluginIconUrls = {
+    green: `data:image/png;base64,${haloCordPluginIconBase64}`,
+    mocha: `data:image/png;base64,${haloCordPluginIconMochaBase64}`
+};
 
 // A HaloCord plugin is written by DavidHiFi alone, or by DavidHiFi together with Kurtzon Audio (firstgenstereo).
 // A few plugins with upstream authors are maintained as HaloCord plugins too.

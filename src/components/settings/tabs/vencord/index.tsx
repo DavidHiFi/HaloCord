@@ -19,7 +19,7 @@ import { Paragraph } from "@components/Paragraph";
 import { openContributorModal, openPluginModal, SettingsTab, wrapTab } from "@components/settings";
 import { QuickAction, QuickActionCard } from "@components/settings/QuickAction";
 import { SpecialCard } from "@components/settings/SpecialCard";
-import { HALOCORD_ICON } from "@components/TestCordLogo";
+import { useHaloCordIcon } from "@components/TestCordLogo";
 import BadgeAPI from "@plugins/_api/badges";
 import SettingsPlugin from "@plugins/_core/settings";
 import { DONOR_ROLE_ID, EQUICORD_GUILD_ID, IS_WINDOWS, VC_DONOR_ROLE_ID, VC_GUILD_ID } from "@utils/constants";
@@ -158,6 +158,7 @@ function Switches() {
 function EquicordSettings() {
 
     const user = UserStore?.getCurrentUser();
+    const haloIcon = useHaloCordIcon();
 
     return (
         <SettingsTab>
@@ -182,7 +183,7 @@ function EquicordSettings() {
                 <SpecialCard
                     title="Support the Project"
                     description="HaloCord is built and kept running by DavidHiFi. If it helps you, a Ko-fi tip keeps it going."
-                    cardImage={HALOCORD_ICON}
+                    cardImage={haloIcon}
                     backgroundImage={DONOR_BACKGROUND_IMAGE}
                     backgroundColor="#c3a3ce"
                 >

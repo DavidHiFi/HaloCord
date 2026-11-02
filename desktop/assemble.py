@@ -37,7 +37,8 @@ for f in ("index.js", "package.json", "LICENSE.txt"):
 shutil.copy2(KOFFI / "build" / "koffi" / "win32_x64" / "koffi.node", kd / "build" / "koffi" / "win32_x64" / "koffi.node")
 shutil.copy2(D / "shell" / "mcblur.js", asrc / "mcblur.js")
 shutil.copy2(D / "shell" / "shareaudio.js", asrc / "shareaudio.js")
-shutil.copy2(D / "shell" / "hc-desktop.js", asrc / "hc-desktop.js")  # hc-desktop: startup, tray, build choice
+shutil.copy2(D / "shell" / "hc-desktop.js", asrc / "hc-desktop.js")  # hc-desktop: startup, tray, build choice, app icon
+shutil.copy2(D / "shell" / "hc-icon.js", asrc / "hc-icon.js")  # hc-icon: applies the green or Mocha blue app icon
 shutil.copy2(D / "shell" / "hc-update.js", asrc / "hc-update.js")  # hc-update: the in-app updater
 # build.json tells hc-update.js which commit this build is, for the list of changes in the next update.
 git = lambda *a: subprocess.run(["git", *a], cwd=D.parent, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW).stdout.strip()
@@ -73,9 +74,9 @@ m = m.replace("<p class='r'>Kurtzon</p>", "<p class='r'>HaloCord</p>")
 # Match the installer shortcut's id, or the taskbar groups HaloCord under a stale "Kurtcord" name.
 assert m.count('app.setAppUserModelId("com.kurtcord.desktop")') == 1
 m = m.replace('app.setAppUserModelId("com.kurtcord.desktop")', 'app.setAppUserModelId("com.davidhifi.halocord")')
-# Main window, popout windows and tray load icon.ico (copied next to main.js below).
+# Main window, popout windows and tray load the chosen app icon from resources\icons (hc-icon.js).
 assert m.count('path.join(__dirname,"icon.png")') == 3
-m = m.replace('path.join(__dirname,"icon.png")', 'path.join(__dirname,"icon.ico")')
+m = m.replace('path.join(__dirname,"icon.png")', 'require("./hc-desktop.js").icon()')
 # Load the bundle's main side first, with its settings in %APPDATA%\HaloCord\TestCord (Stable keeps %APPDATA%\Testcord).
 a = 'Menu:Menu}=require("electron");'
 assert m.count(a) == 1
@@ -261,6 +262,10 @@ shutil.copy2(D / "brand" / "icon.png", asrc / "icon.png")
 # Windows picks the .ico's prerendered 16/20/24 px frames for the title bar and tray instead of
 # shrinking the 256 px PNG into a blocky blur.
 shutil.copy2(D / "brand" / "halocord.ico", asrc / "icon.ico")
+# Both app icons as real files, so shortcuts can point at the chosen one (Themes > App icon).
+(app / "resources" / "icons").mkdir(exist_ok=True)
+for f in ("halocord.ico", "halocord-mocha.ico"):
+    shutil.copy2(D / "brand" / f, app / "resources" / "icons" / f)
 pkg = json.loads((asrc / "package.json").read_text())
 pkg.update(name="halocord", productName="HaloCord", version=VERSION, description="HaloCord", author="DavidHiFi")
 (asrc / "package.json").write_text(json.dumps(pkg, indent=2))

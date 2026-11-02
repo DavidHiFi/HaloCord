@@ -144,6 +144,7 @@ export interface Settings {
     hideThemeMarketplace?: boolean;
     hideSnippetMarketplace?: boolean;
     useTestcordIcon: boolean;
+    haloInAppIcon: "green" | "mocha";
     experimentalDataStoreExport: boolean;
 }
 
@@ -185,6 +186,7 @@ const DefaultSettings: Settings = {
         topBarTitle: "off"
     },
     useTestcordIcon: false,
+    haloInAppIcon: "green",
     hideThemeMarketplace: false,
     hideSnippetMarketplace: false,
     themeLinks: [],

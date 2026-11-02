@@ -18,7 +18,7 @@ import { Logger } from "@utils/Logger";
 import { Margins } from "@utils/margins";
 import { classes } from "@utils/misc";
 import { getPluginWarning } from "@utils/pluginWarnings";
-import { getTestcordModifiedDetails, HaloCordPluginIconUrl, isHaloCordPlugin, isTestcordModified, TestcordPluginIconUrl } from "@utils/testcordIcons";
+import { getTestcordModifiedDetails, HaloCordPluginIconUrls, isHaloCordPlugin, isTestcordModified, TestcordPluginIconUrl } from "@utils/testcordIcons";
 import { Plugin } from "@utils/types";
 import { ConfirmModal, openModal, React, showToast, Toasts, Tooltip } from "@webpack/common";
 
@@ -73,6 +73,7 @@ export function PluginCard({ plugin, disabled, onMouseEnter, onMouseLeave, isNew
     const legacyKey = canonicalId !== plugin.name ? `plugins.${plugin.name}.enabled` as const : null;
     // Subscribe to canonical and (if it differs) legacy path so old installs still react
     useSettings(PLUGIN_ENABLED_PATHS[canonicalId] ??= legacyKey ? [settingsKey, legacyKey] : [settingsKey]);
+    const { haloInAppIcon } = useSettings(["haloInAppIcon"]);
 
     const settings = (Settings.plugins as any)[canonicalId] ?? Settings.plugins[plugin.name];
     const pluginMeta = PluginMeta[plugin.name] || { folderName: "", userPlugin: false };
@@ -211,7 +212,7 @@ showToast(msg, Toasts.Type.FAILURE, {
         },
         {
             condition: isHaloCordPlugin(plugin),
-            src: HaloCordPluginIconUrl,
+            src: HaloCordPluginIconUrls[haloInAppIcon] ?? HaloCordPluginIconUrls.green,
             alt: "HaloCord",
             title: "HaloCord Plugin"
         },
