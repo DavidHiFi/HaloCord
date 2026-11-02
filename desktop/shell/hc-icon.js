@@ -115,7 +115,9 @@ function shortcuts() {
 function setShortcutIcons(variant) {
     const ico = icoPath(variant), all = shortcuts(), changed = [];
     for (const { file, link } of all) {
-        if (link.icon?.toLowerCase() === ico.toLowerCase() && !link.iconIndex) continue;
+        const icon = (link.icon || process.execPath).toLowerCase();
+        // The installer's shortcuts show the exe's own icon, which is green until a rewrite.
+        if (!link.iconIndex && (icon === ico.toLowerCase() || variant === "green" && icon === process.execPath.toLowerCase())) continue;
         if (shell.writeShortcutLink(file, "update", { icon: ico, iconIndex: 0 })) changed.push(file);
     }
     return { changed, total: all.length };

@@ -2,13 +2,12 @@
     display: inline-flex;
     gap: 7px;
     align-items: center;
-    padding-left: 8px;
+    padding: 4px 12px 4px 5px;
 }
 
 .hc-mc-icon-choice img {
-    width: 18px;
-    height: 18px;
-    border-radius: 4px;
+    width: 24px;
+    height: 24px;
 }
 
 .hc-mc-icon-choice:disabled {
