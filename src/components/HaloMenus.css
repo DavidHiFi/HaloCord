@@ -1,0 +1,98 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2026 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/* Menus and hover toolbars are opaque: theme glass made them see-through. */
+html.hc-theming {
+    --hc-menu-bg: var(--background-surface-higher, var(--hc-window-bg));
+}
+
+html.hc-theming .menu_c1e9c4:not(#hc-menus) {
+    --control-brand-foreground: var(--hc-accent);
+    --control-brand-foreground-new: var(--hc-accent);
+    --background-brand: var(--hc-accent);
+    --text-brand: var(--hc-accent);
+    --border-focus: var(--hc-accent);
+    --slider-track-background: var(--hc-scroll-thumb);
+    --scrollbar-thin-thumb: var(--hc-scroll-thumb);
+    --scrollbar-thin-track: transparent;
+
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 14px;
+    background: linear-gradient(var(--hc-panel-bg), var(--hc-panel-bg)), var(--hc-menu-bg) !important;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 40%);
+    backdrop-filter: none !important;
+}
+
+html.hc-theming .menu_c1e9c4:not(#hc-menus)::before {
+    display: none !important;
+}
+
+html.hc-theming .menu_c1e9c4 .item_c1e9c4 {
+    border-radius: 8px;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+html.hc-theming .menu_c1e9c4 .colorDefault_c1e9c4.focused_c1e9c4:not(.colorDanger_c1e9c4) {
+    background: rgb(var(--hc-accent-rgb) / 14%);
+    color: var(--hc-text);
+}
+
+html.hc-theming .menu_c1e9c4 .focused_c1e9c4 :is(.checkbox_c1e9c4, .radioSelection_c1e9c4) {
+    color: var(--hc-accent);
+}
+
+html.hc-theming .menu_c1e9c4 .check_c1e9c4 {
+    color: var(--hc-accent-ink);
+}
+
+html.hc-theming .menu_c1e9c4 .colorDanger_c1e9c4 {
+    color: var(--text-feedback-critical);
+}
+
+html.hc-theming .menu_c1e9c4 .colorDanger_c1e9c4.focused_c1e9c4 {
+    background: color-mix(in srgb, var(--text-feedback-critical) 16%, transparent);
+    color: var(--text-feedback-critical);
+}
+
+html.hc-theming .menu_c1e9c4 .colorDanger_c1e9c4.focused_c1e9c4 :is(.subtext_c1e9c4, .caret_c1e9c4) {
+    color: var(--text-feedback-critical);
+}
+
+html.hc-theming .menu_c1e9c4 .separator_c1e9c4 {
+    border-bottom-color: var(--hc-row-border);
+}
+
+html.hc-theming .menu_c1e9c4 .caret_c1e9c4 {
+    color: var(--hc-text-muted);
+}
+
+html.hc-theming .menu_c1e9c4 .focused_c1e9c4 .caret_c1e9c4 {
+    color: var(--hc-text);
+}
+
+html.hc-theming .menu_c1e9c4 :is(.bar_ec237e, .bar_d061ce) {
+    background: var(--hc-scroll-thumb) !important;
+}
+
+html.hc-theming .menu_c1e9c4 :is(.barFill_ec237e, .barFill_d061ce) {
+    background: var(--hc-accent) !important;
+}
+
+html.hc-theming .menu_c1e9c4 :is(.grabber_ec237e, .grabber_d061ce) {
+    border-color: var(--hc-accent) !important;
+    background: var(--hc-accent-ink) !important;
+}
+
+/* Account popout rows (status, switch accounts) beside the status submenu. */
+html.hc-theming .menus_ce8328 {
+    --user-profile-overlay-background-hover: rgb(var(--hc-accent-rgb) / 14%);
+}
+
+/* Message hover bar and the profile status bubble's react/reply bar. */
+html.hc-theming :is(.popover_f84418, .popover_c97e55):not(#hc-menus) {
+    background: var(--hc-menu-bg) !important;
+    backdrop-filter: none !important;
+}
