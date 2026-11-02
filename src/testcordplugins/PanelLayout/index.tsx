@@ -22,8 +22,8 @@ import { TestcordDevs } from "@utils/constants";
 import { classNameToSelector } from "@utils/css";
 import definePlugin, { makeRange, OptionType } from "@utils/types";
 import type { RenderModalProps } from "@vencord/discord-types";
-import { findCssClassesLazy } from "@webpack";
-import { Modal, openModalLazy, React, Select, Slider } from "@webpack/common";
+import { findCssClassesLazy, findStoreLazy } from "@webpack";
+import { FluxDispatcher, Modal, openModalLazy, React, Select, Slider, useStateFromStores } from "@webpack/common";
 
 import {
     activityBannerPatches,
@@ -164,6 +164,7 @@ export const settings = definePluginSettings({
     fixProfileNameplate: { type: OptionType.BOOLEAN, default: false, description: "Fixes the rounding of the profile nameplate", onChange: () => apply() },
     showUserAndStatus: { type: OptionType.BOOLEAN, default: false, description: "Show the user and the status at the same time", onChange: () => apply() },
     showDrawerLabel: { type: OptionType.BOOLEAN, default: false, description: "Show a 'P' label next to the plugin drawer toggle so it's clear what the arrow opens", onChange: () => apply() },
+    streamInfoButton: { type: OptionType.BOOLEAN, default: false, description: "Show a user area button that turns the stream info overlay on and off" },
 });
 
 // ─── Selectors & Constants ────────────────────────────────────────────────────
@@ -452,6 +453,7 @@ function stopObserver() {
 const STYLE_ID = "deracul-panel-layout";
 const CUSTOM_STYLE_ID = "deracul-panel-custom";
 const VoicePanelClasses = findCssClassesLazy("wrapper", "container", "actionButtons");
+const DeveloperOptionsStore = findStoreLazy("DeveloperOptionsStore");
 
 function gridCSS(selector: string, cols: number, gap: number) {
     return `
@@ -3491,7 +3493,8 @@ function PanelLayoutModal({ modalProps }: { modalProps: RenderModalProps; }) {
                             <FormSwitch title="Lock Button Position" description="Prevents Mute, Deafen, and Settings buttons from dropping down to a new row when you have a long status or share screen." value={s.lockButtonPosition} onChange={v => set("lockButtonPosition", v)} />
                             <FormSwitch title="Hide line" description="Hide the line between user and buttons" value={s.hideLine} onChange={v => set("hideLine", v)} />
                             <FormSwitch title="Fix Profile Nameplate" description="Fixes the rounding of the profile nameplate" value={s.fixProfileNameplate} onChange={v => set("fixProfileNameplate", v)} />
-                            <FormSwitch title="Show User And Status" description="Show the user and the status at the same time" value={s.showUserAndStatus} onChange={v => set("showUserAndStatus", v)} hideBorder />
+                            <FormSwitch title="Show User And Status" description="Show the user and the status at the same time" value={s.showUserAndStatus} onChange={v => set("showUserAndStatus", v)} />
+                            <FormSwitch title="Stream info button" description="Show a user area button that turns the stream info overlay on and off" value={s.streamInfoButton} onChange={v => set("streamInfoButton", v)} hideBorder />
                         </Card>
                     </>}
 
@@ -3617,6 +3620,36 @@ function CollapseToggleButton({ iconForeground, hideTooltips, nameplate }: UserA
     );
 }
 
+function StreamInfoIcon({ style }: { style?: React.CSSProperties; }) {
+    return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>
+            <rect x="3" y="4" width="18" height="14" rx="2" />
+            <path d="M7 14v-3M11 14V8M15 14v-5M8 21h8" />
+        </svg>
+    );
+}
+
+function StreamInfoButton({ iconForeground, hideTooltips, nameplate }: UserAreaRenderProps) {
+    const { streamInfoButton } = settings.use(["streamInfoButton"]);
+    const on = useStateFromStores([DeveloperOptionsStore], () => DeveloperOptionsStore.isStreamInfoOverlayEnabled === true);
+    if (!streamInfoButton) return null;
+
+    const label = on ? "Hide stream info" : "Show stream info";
+
+    return (
+        <UserAreaButton
+            tooltipText={hideTooltips ? void 0 : label}
+            aria-label={label}
+            aria-checked={on}
+            role="switch"
+            className="icon-color-fix"
+            icon={<StreamInfoIcon style={{ color: iconForeground }} />}
+            plated={nameplate != null}
+            onClick={() => FluxDispatcher.dispatch({ type: "DEVELOPER_OPTIONS_UPDATE_SETTINGS", settings: { isStreamInfoOverlayEnabled: !on } })}
+        />
+    );
+}
+
 // ─── Plugin ───────────────────────────────────────────────────────────────────
 
 export default definePlugin({
@@ -3685,6 +3718,7 @@ export default definePlugin({
     async start() {
         await Promise.all([loadConfigs(), initModuleManager()]);
         addUserAreaButton("panel-collapse-toggle", CollapseToggleButton, 50);
+        addUserAreaButton("panel-stream-info", StreamInfoButton, 40);
         apply();
         startObserver();
         unsubscribeModules = subscribeModules(() => apply());
@@ -3694,6 +3728,7 @@ export default definePlugin({
     },
     stop() {
         removeUserAreaButton("panel-collapse-toggle");
+        removeUserAreaButton("panel-stream-info");
         unsubscribeModules?.();
         unsubscribeModules = null;
         stopModuleManager();

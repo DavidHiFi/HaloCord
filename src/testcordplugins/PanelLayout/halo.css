@@ -53,3 +53,37 @@ html.hc-theming .vc-whos-watching-no-viewers,
 html.hc-theming .vc-whos-watching-more-users {
     color: var(--hc-text-muted);
 }
+
+html.hc-theming [class*="streamInfoContainer_"] {
+    min-width: 180px;
+    padding: 8px 10px;
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 10px;
+    background: var(--hc-panel-bg);
+    box-shadow: 0 4px 14px rgb(0 0 0 / 45%);
+    color: var(--hc-text);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    line-height: 17px;
+}
+
+html.hc-theming [class*="streamInfoContainer_"] > div:first-child {
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--hc-row-border);
+    color: var(--hc-accent);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+}
+
+html.hc-theming [class*="streamInfoContainer_"] [class*="infoRow_"] {
+    margin-bottom: 2px;
+}
+
+html.hc-theming [class*="streamInfoContainer_"] [class*="infoRow_"] span {
+    color: var(--hc-text-muted);
+}
+
+html.hc-theming [class*="streamInfoContainer_"] [class*="infoRow_"] strong {
+    color: var(--hc-text);
+}
