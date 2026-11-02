@@ -35,10 +35,13 @@ const reactiveSettings = ["useCrown", "useRoleColor", "ignoreBots", "ignoreSelf"
 // Plugin managedStyle expects the name of an imported "?managed" stylesheet, not CSS text,
 // so the rules are added in start() to keep this plugin a single file.
 const css = `
-.vc-stafftag { display: inline-flex; align-items: center; flex: none; vertical-align: middle; margin-left: 4px; line-height: 1; }
+.vc-stafftag { display: inline-flex; align-items: center; flex: none; vertical-align: middle; margin-left: 4px; line-height: 1; transform: none !important; }
 .vc-stafftag svg { display: block; }
-.vc-stafftag-label { display: inline-block; padding: 2px 4px; border-radius: 3px; border: 1px solid currentColor; font-size: 10px; font-weight: 700; }
-.vc-stafftag-voice { margin-right: 3px; }
+.vc-stafftag-label { display: inline-block; padding: 3px 4px; border-radius: 3px; border: 1px solid currentColor; font-size: 10px; font-weight: 700; text-box: trim-both cap alphabetic; }
+.vc-stafftag-voice { margin-right: 3px; vertical-align: top; line-height: inherit; height: 1lh; }
+.vc-stafftag-message, .vc-stafftag-member { margin-left: 0; }
+.vc-stafftag-message { align-self: flex-start; line-height: normal; height: 1lh; margin-top: calc(round(down, (1.375rem - 1lh) / 2, 1px) - 0.1rem); }
+.vc-stafftag-message svg { width: 1rem; height: 1rem; }
 `;
 let style: HTMLStyleElement | undefined;
 
@@ -87,7 +90,7 @@ function StaffBadge({ guildId, userId, place }: { guildId: string; userId: strin
             style={{ color: settings.store.useRoleColor && color || fallbackColor }}
         >
             {settings.store.useCrown
-                ? <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                ? <svg width="16" height="16" viewBox="0 1.125 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M2 7.5a1.5 1.5 0 1 1 2.6 1.02L8.3 12l2.4-5.5a1.5 1.5 0 1 1 2.6 0l2.4 5.5 3.7-3.48A1.5 1.5 0 1 1 22 7.5L20.5 18h-17L2 7.5ZM4 20h16v2H4v-2Z" />
                 </svg>
                 : <span className="vc-stafftag-label">{label}</span>}
