@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+/* Discord's hashed class names; prefix selectors here would catch unrelated menu_, bar_ and popover_ classes. */
+/* stylelint-disable selector-class-pattern */
+
 /* Menus and hover toolbars are opaque: theme glass made them see-through. */
 html.hc-theming {
     --hc-menu-bg: var(--background-surface-higher, var(--hc-window-bg));
