@@ -630,7 +630,7 @@ function RandomVoiceButton({ iconForeground, hideTooltips, nameplate }: UserArea
             className="button__201d5 wrapper__201d5"
             onClick={() => void joinRandomVoice()}
             onContextMenu={event => ContextMenuApi.openContextMenu(event, () => <RandomVoiceMenu onClose={ContextMenuApi.closeContextMenu} />)}
-            role="switch"
+            role="button"
             tooltipText={hideTooltips ? void 0 : "Random Voice"}
             icon={<RandomVoiceIcon className={iconForeground} />}
             plated={nameplate != null}

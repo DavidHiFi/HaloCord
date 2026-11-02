@@ -5091,6 +5091,8 @@ function RSUserAreaButton({ iconForeground, hideTooltips, nameplate }: UserAreaR
         <UserAreaButton
             tooltipText={hideTooltips ? void 0 : active ? "Rotator Suite - [Running]" : "Rotator Suite"}
             redGlow={!active}
+            role="switch"
+            aria-checked={active}
             plated={nameplate != null}
             icon={
                 <svg className={iconForeground} width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

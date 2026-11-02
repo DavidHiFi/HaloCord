@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import "./halo.css";
+
 import * as DataStore from "@api/DataStore";
 import { definePluginSettings, migratePluginSettings, SettingsStore } from "@api/Settings";
 import { addUserAreaButton, removeUserAreaButton, UserAreaButton, UserAreaRenderProps } from "@api/UserArea";
@@ -20,8 +22,8 @@ import { TestcordDevs } from "@utils/constants";
 import { classNameToSelector } from "@utils/css";
 import definePlugin, { makeRange, OptionType } from "@utils/types";
 import type { RenderModalProps } from "@vencord/discord-types";
-import { findCssClassesLazy } from "@webpack";
-import { Modal, openModalLazy, React, Select, Slider } from "@webpack/common";
+import { findCssClassesLazy, findStoreLazy } from "@webpack";
+import { FluxDispatcher, Modal, openModalLazy, React, Select, Slider, useStateFromStores } from "@webpack/common";
 
 import {
     activityBannerPatches,
@@ -127,9 +129,11 @@ export const settings = definePluginSettings({
             { label: "Outlined (old)", value: "outlineold" },
             { label: "Pill", value: "pill" },
             { label: "Square filled", value: "square" },
+            { label: "HaloCord plated", value: "halo" },
         ],
         onChange: () => apply()
     },
+    buttonRadius: { type: OptionType.SLIDER, description: "Button corner radius (px) for the filled, outlined and HaloCord plated styles", default: 8, markers: makeRange(0, 18, 2), stickToMarkers: false, onChange: () => apply() },
     hoverEffect: {
         type: OptionType.SELECT,
         description: "Hover effect on panel buttons",
@@ -162,6 +166,7 @@ export const settings = definePluginSettings({
     fixProfileNameplate: { type: OptionType.BOOLEAN, default: false, description: "Fixes the rounding of the profile nameplate", onChange: () => apply() },
     showUserAndStatus: { type: OptionType.BOOLEAN, default: false, description: "Show the user and the status at the same time", onChange: () => apply() },
     showDrawerLabel: { type: OptionType.BOOLEAN, default: false, description: "Show a 'P' label next to the plugin drawer toggle so it's clear what the arrow opens", onChange: () => apply() },
+    streamInfoButton: { type: OptionType.BOOLEAN, default: false, description: "Show a user area button that turns the stream info overlay on and off" },
 });
 
 // ─── Selectors & Constants ────────────────────────────────────────────────────
@@ -450,6 +455,7 @@ function stopObserver() {
 const STYLE_ID = "deracul-panel-layout";
 const CUSTOM_STYLE_ID = "deracul-panel-custom";
 const VoicePanelClasses = findCssClassesLazy("wrapper", "container", "actionButtons");
+const DeveloperOptionsStore = findStoreLazy("DeveloperOptionsStore");
 
 function gridCSS(selector: string, cols: number, gap: number) {
     return `
@@ -836,16 +842,23 @@ function buildCSS(): string {
     }
 
     lines.push(`${baseBtn} { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }`);
+    const radius = st.buttonRadius ?? 8;
     switch (st.buttonStyle) {
         case "filled":
-            lines.push(`${baseBtn} { background: var(--background-modifier-hover, var(--background-mod-normal)) !important; border-radius: 8px !important; }
+            lines.push(`${baseBtn} { background: var(--background-modifier-hover, var(--background-mod-normal)) !important; border-radius: ${radius}px !important; }
                         ${baseBtnHover} { background: var(--background-modifier-active, var(--background-mod-strong)) !important; }`);
             break;
         case "outlined":
-            lines.push(`${baseBtn} { border: 1.5px solid var(--background-modifier-accent, var(--border-muted)) !important; border-radius: 8px !important; }`);
+            lines.push(`${baseBtn} { border: 1.5px solid var(--background-modifier-accent, var(--border-muted)) !important; border-radius: ${radius}px !important; }`);
             break;
         case "outlineold":
-            lines.push(`${baseBtn} { border: 1.5px solid var(--background-modifier-accent) !important; border-radius: 8px !important; }`);
+            lines.push(`${baseBtn} { border: 1.5px solid var(--background-modifier-accent) !important; border-radius: ${radius}px !important; }`);
+            break;
+        case "halo":
+            lines.push(`${baseBtn} { background: var(--hc-row-bg) !important; box-shadow: inset 0 0 0 1px var(--hc-row-border); border-radius: ${radius}px !important; transition: background-color 0.15s ease, box-shadow 0.15s ease !important; }
+                        ${baseBtnHover} { background: rgb(var(--hc-accent-rgb) / 12%) !important; box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%), 0 0 10px rgb(var(--hc-accent-rgb) / 25%); }
+                        ${S.panelButtons} [class*="redGlow_"]:not(.vc-plugin-icon-button) { background: var(--opacity-red-12) !important; box-shadow: inset 0 0 0 1px var(--opacity-red-24); }
+                        ${S.panelButtons} [class*="redGlow_"]:not(.vc-plugin-icon-button):hover { background: var(--opacity-red-24) !important; }`);
             break;
         case "pill":
             lines.push(`${baseBtn} { background: var(--background-modifier-hover, var(--background-mod-normal)) !important; border-radius: 20px !important; }`);
@@ -981,6 +994,7 @@ function buildCustomCSS(): string {
 
     try {
         const userAreaOrder = getUserAreaOrder();
+        const bannerModuleOn = userAreaOrder.some(it => (it.id === "activity-banner" || it.moduleId === "activity-banner") && it.enabled);
         userAreaOrder.forEach((item, idx) => {
             const orderVal = (idx + 1) * 10;
             const hiddenStyle = !item.enabled ? "display: none !important;" : "";
@@ -994,6 +1008,8 @@ function buildCustomCSS(): string {
                     }
                 `);
             } else if (item.type === "native-activity-banner" || item.id === "activity-banner" || item.moduleId === "activity-banner") {
+                // Both items target Discord's own activity panel; only the one shown in the reorder list may decide its visibility.
+                if ((item.type === "native-activity-banner") === bannerModuleOn) return;
                 lines.push(`
                     section[class*="panels_"] > [class*="activityPanel_"],
                     .vc-panel-module-item[data-module-id="activity-banner"] {
@@ -1046,18 +1062,17 @@ function buildCustomCSS(): string {
             const finalColor = `${baseColor.slice(0, 7)}${alpha}`;
             const finalRadius = cfg.radius != null ? `${cfg.radius}px` : "10px";
             const label = getCanonicalLabel(cfg.label);
+            const baseSelectors = [
+                `${S.callControls} [data-deracul-label="${label}"] ${S.callButton}[type="button"]:not([aria-pressed="false"])`,
+                `${S.panelButtons} ${S.panelButton}[data-deracul-label="${label}"]:not([aria-checked="false"])`,
+                `${S.callControls} ${S.callButton}[data-deracul-label="${label}"]:not([aria-pressed="false"])`,
+                `${S.panelButtons} ${S.panelButton}[aria-label="${label}"]:not([aria-checked="false"])`,
+                `${S.previewButtonOn}[data-deracul-label="${label}"]`,
+            ];
+            const activeSelectors = baseSelectors.flatMap(sel => [`${sel}:hover`, sel]);
 
             lines.push(`
-                ${S.callControls} [data-deracul-label="${label}"] ${S.callButton}[type="button"]:not([aria-pressed="false"]):hover,
-                ${S.callControls} [data-deracul-label="${label}"] ${S.callButton}[type="button"]:not([aria-pressed="false"]),
-                ${S.panelButtons} ${S.panelButton}[data-deracul-label="${label}"]:not([aria-checked="false"]):hover,
-                ${S.panelButtons} ${S.panelButton}[data-deracul-label="${label}"]:not([aria-checked="false"]),
-                ${S.callControls} ${S.callButton}[data-deracul-label="${label}"]:not([aria-pressed="false"]):hover,
-                ${S.callControls} ${S.callButton}[data-deracul-label="${label}"]:not([aria-pressed="false"]),
-                ${S.panelButtons} ${S.panelButton}[aria-label="${label}"]:not([aria-checked="false"]):hover,
-                ${S.panelButtons} ${S.panelButton}[aria-label="${label}"]:not([aria-checked="false"]),
-                ${S.previewButtonOn}[data-deracul-label="${label}"]:hover,
-                ${S.previewButtonOn}[data-deracul-label="${label}"] {
+                ${activeSelectors.join(",\n")} {
                     background-color: ${finalColor} !important;
                     color: white !important;
                     border-radius: ${finalRadius} !important;
@@ -1069,6 +1084,28 @@ function buildCustomCSS(): string {
                     color: white !important;
                 }
             `);
+
+            // The untouched default is Discord blue; HaloCord shows those buttons in its own accent instead.
+            if (baseColor.slice(0, 7).toLowerCase() === "#5865f2") {
+                lines.push(`
+                    ${activeSelectors.map(sel => `html.hc-theming ${sel}`).join(",\n")} {
+                        --vc-plugin-icon-color: var(--hc-accent) !important;
+                        background-color: rgb(var(--hc-accent-rgb) / 18%) !important;
+                        color: var(--hc-accent) !important;
+                        box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%) !important;
+                    }
+
+                    ${baseSelectors.map(sel => `html.hc-theming ${sel}:hover`).join(",\n")} {
+                        background-color: rgb(var(--hc-accent-rgb) / 28%) !important;
+                        box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 65%), 0 0 10px rgb(var(--hc-accent-rgb) / 35%) !important;
+                    }
+
+                    html.hc-theming ${S.previewButtonOn}[data-deracul-label="${label}"] svg {
+                        fill: var(--hc-accent) !important;
+                        color: var(--hc-accent) !important;
+                    }
+                `);
+            }
         }
 
         if (cfg.colorfulInActiveButton) {
@@ -1130,10 +1167,22 @@ function buildCustomCSS(): string {
             border-bottom: 2px solid var(--brand-experiment, var(--background-brand)) !important;
             background-color: transparent !important;
         }
+    `);
 
-        settings.store.showDrawerLabel
-            ? "\n        .vc-panel-collapse-button {\n            display: flex !important;\n            align-items: center !important;\n            gap: 6px !important;\n        }\n        .vc-drawer-label {\n            font-weight: 700 !important;\n            font-size: 10px !important;\n            color: var(--text-muted, #8e9397) !important;\n            text-transform: uppercase !important;\n            letter-spacing: 0.4px !important;\n            white-space: nowrap !important;\n        }"
-            : ""
+    if (settings.store.showDrawerLabel) lines.push(`
+        .vc-panel-collapse-button {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+        }
+        .vc-drawer-label {
+            font-weight: 700 !important;
+            font-size: 10px !important;
+            color: var(--text-muted, #8e9397) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.4px !important;
+            white-space: nowrap !important;
+        }
     `);
 
     return lines.join("\n");
@@ -1180,6 +1229,7 @@ const BUTTON_STYLES = [
     { value: "outlined", label: "Outlined" }, { value: "outlineold", label: "Outlined (old)" },
     { value: "pill", label: "Pill Shape" },
     { value: "square", label: "Square Filled" },
+    { value: "halo", label: "HaloCord Plated" },
 ];
 const HOVER_EFFECTS = [
     { value: "default", label: "Default" }, { value: "scale", label: "Scale Up" },
@@ -3453,7 +3503,8 @@ function PanelLayoutModal({ modalProps }: { modalProps: RenderModalProps; }) {
                             <FormSwitch title="Lock Button Position" description="Prevents Mute, Deafen, and Settings buttons from dropping down to a new row when you have a long status or share screen." value={s.lockButtonPosition} onChange={v => set("lockButtonPosition", v)} />
                             <FormSwitch title="Hide line" description="Hide the line between user and buttons" value={s.hideLine} onChange={v => set("hideLine", v)} />
                             <FormSwitch title="Fix Profile Nameplate" description="Fixes the rounding of the profile nameplate" value={s.fixProfileNameplate} onChange={v => set("fixProfileNameplate", v)} />
-                            <FormSwitch title="Show User And Status" description="Show the user and the status at the same time" value={s.showUserAndStatus} onChange={v => set("showUserAndStatus", v)} hideBorder />
+                            <FormSwitch title="Show User And Status" description="Show the user and the status at the same time" value={s.showUserAndStatus} onChange={v => set("showUserAndStatus", v)} />
+                            <FormSwitch title="Stream info button" description="Show a user area button that turns the stream info overlay on and off" value={s.streamInfoButton} onChange={v => set("streamInfoButton", v)} hideBorder />
                         </Card>
                     </>}
 
@@ -3486,6 +3537,9 @@ function PanelLayoutModal({ modalProps }: { modalProps: RenderModalProps; }) {
                             <div style={{ display: "grid", gap: "8px" }}>
                                 <Dropdown label="Button Base Style" options={BUTTON_STYLES} value={s.buttonStyle} onChange={v => set("buttonStyle", v)} />
                                 <Dropdown label="Interaction Hover Effect" options={HOVER_EFFECTS} value={s.hoverEffect} onChange={v => set("hoverEffect", v)} />
+                                {["filled", "outlined", "outlineold", "halo"].includes(s.buttonStyle) && (
+                                    <SliderRow label="Corner Radius" value={s.buttonRadius ?? 8} min={0} max={18} onChange={v => set("buttonRadius", Math.round(v))} resetKey={resetKey} />
+                                )}
                             </div>
                         </Card>
                     </>}
@@ -3579,13 +3633,43 @@ function CollapseToggleButton({ iconForeground, hideTooltips, nameplate }: UserA
     );
 }
 
+function StreamInfoIcon({ style }: { style?: React.CSSProperties; }) {
+    return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>
+            <rect x="3" y="4" width="18" height="14" rx="2" />
+            <path d="M7 14v-3M11 14V8M15 14v-5M8 21h8" />
+        </svg>
+    );
+}
+
+function StreamInfoButton({ iconForeground, hideTooltips, nameplate }: UserAreaRenderProps) {
+    const { streamInfoButton } = settings.use(["streamInfoButton"]);
+    const on = useStateFromStores([DeveloperOptionsStore], () => DeveloperOptionsStore.isStreamInfoOverlayEnabled === true);
+    if (!streamInfoButton) return null;
+
+    const label = on ? "Hide stream info" : "Show stream info";
+
+    return (
+        <UserAreaButton
+            tooltipText={hideTooltips ? void 0 : label}
+            aria-label={label}
+            aria-checked={on}
+            role="switch"
+            className="icon-color-fix"
+            icon={<StreamInfoIcon style={{ color: iconForeground }} />}
+            plated={nameplate != null}
+            onClick={() => FluxDispatcher.dispatch({ type: "DEVELOPER_OPTIONS_UPDATE_SETTINGS", settings: { isStreamInfoOverlayEnabled: !on } })}
+        />
+    );
+}
+
 // ─── Plugin ───────────────────────────────────────────────────────────────────
 
 export default definePlugin({
     id: "PanelLayout",
     name: "PanelLayout",
     description: "Customize the layout, style, and visibility of panel and call buttons, and manage user area modules.",
-    authors: [TestcordDevs.deracul, TestcordDevs.Aviv, TestcordDevs.x2b, TestcordDevs.sirphantom89],
+    authors: [TestcordDevs.deracul, TestcordDevs.Aviv, TestcordDevs.x2b, TestcordDevs.sirphantom89, TestcordDevs.DavidHiFi],
     dependencies: ["UserSettingsAPI", "UserAreaAPI"],
     settings,
     settingsAboutComponent: () => (
@@ -3647,6 +3731,7 @@ export default definePlugin({
     async start() {
         await Promise.all([loadConfigs(), initModuleManager()]);
         addUserAreaButton("panel-collapse-toggle", CollapseToggleButton, 50);
+        addUserAreaButton("panel-stream-info", StreamInfoButton, 40);
         apply();
         startObserver();
         unsubscribeModules = subscribeModules(() => apply());
@@ -3656,6 +3741,7 @@ export default definePlugin({
     },
     stop() {
         removeUserAreaButton("panel-collapse-toggle");
+        removeUserAreaButton("panel-stream-info");
         unsubscribeModules?.();
         unsubscribeModules = null;
         stopModuleManager();

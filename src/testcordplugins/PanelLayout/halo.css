@@ -1,0 +1,89 @@
+html.hc-theming .vc-whos-watching-spectating-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 8px 0 0;
+    padding: 6px 8px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 8px;
+    background: var(--hc-row-bg);
+}
+
+html.hc-theming .vc-whos-watching-spectating-header {
+    margin: 0;
+    color: var(--hc-accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+html.hc-theming .vc-whos-watching-spectating-panel > p {
+    margin: 0;
+    color: var(--hc-text-muted);
+    font-size: 12px;
+}
+
+html.hc-theming .vc-whos-watching-spectating-users [class*="moreUsers_"] {
+    border: 1px solid var(--hc-row-border);
+    background: var(--hc-panel-bg);
+    color: var(--hc-accent);
+    font-weight: 700;
+}
+
+html.hc-theming .vc-whos-watching-spectating-users [class*="moreUsers_"]:hover {
+    box-shadow: 0 0 8px rgb(var(--hc-accent-rgb) / 35%);
+}
+
+html.hc-theming .vc-whos-watching-content {
+    color: var(--hc-text);
+}
+
+html.hc-theming .vc-whos-watching-spectating h2,
+html.hc-theming .vc-whos-watching-spectating [class*="heading"] {
+    color: var(--hc-accent);
+}
+
+html.hc-theming .vc-whos-watching-user-avatar {
+    border-radius: 50%;
+}
+
+html.hc-theming .vc-whos-watching-no-viewers,
+html.hc-theming .vc-whos-watching-more-users {
+    color: var(--hc-text-muted);
+}
+
+html.hc-theming [class*="streamInfoContainer_"] {
+    min-width: 180px;
+    padding: 8px 10px;
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 10px;
+    background: var(--hc-panel-bg);
+    box-shadow: 0 4px 14px rgb(0 0 0 / 45%);
+    color: var(--hc-text);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    line-height: 17px;
+}
+
+html.hc-theming [class*="streamInfoContainer_"] > div:first-child {
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--hc-row-border);
+    color: var(--hc-accent);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+}
+
+html.hc-theming [class*="streamInfoContainer_"] [class*="infoRow_"] {
+    margin-bottom: 2px;
+}
+
+html.hc-theming [class*="streamInfoContainer_"] [class*="infoRow_"] span {
+    color: var(--hc-text-muted);
+}
+
+html.hc-theming [class*="streamInfoContainer_"] [class*="infoRow_"] strong {
+    color: var(--hc-text);
+}

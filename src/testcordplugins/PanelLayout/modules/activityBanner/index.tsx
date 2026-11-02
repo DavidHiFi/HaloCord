@@ -117,8 +117,8 @@ export const activityBannerPatches = [
                 replace: "($self.saveRenderer($2),$1)?($self.markRenderedInEI(),$2($3,$4,{isGameRunning:!0}))"
             },
             {
-                match: /children:\[(\i),\(0,(\i)\.jsx\)\((\i),{stream:(\i),canGoLive:(\i),(?:canGoLiveActivity:\i,)?guildId:(\i),isStreaming:(\i),channel:(\i),canStream:(\i),runningGame:(\i),activity:(\i),application:(\i),/,
-                replace: "children:[$1,($7&&null!=$10?$self.renderStreamingGame($12,$10):null),(0,$2.jsx)($3,{stream:$4,canGoLive:$5,guildId:$6,isStreaming:$7,channel:$8,canStream:$9,runningGame:$10,activity:$11,application:$12,"
+                match: /children:\[(\i),\(0,(\i)\.jsx\)\((\i),{stream:(\i),canGoLive:(\i),((?:canGoLiveActivity:\i,)?)guildId:(\i),isStreaming:(\i),channel:(\i),canStream:(\i),runningGame:(\i),activity:(\i),application:(\i),/,
+                replace: "children:[$1,($8&&null!=$11?$self.renderStreamingGame($13,$11):null),(0,$2.jsx)($3,{stream:$4,canGoLive:$5,$6guildId:$7,isStreaming:$8,channel:$9,canStream:$10,runningGame:$11,activity:$12,application:$13,"
             }
         ]
     }
