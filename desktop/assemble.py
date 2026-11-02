@@ -222,8 +222,6 @@ for f in ("preload.js", "userscript.js"):
         # Voice & Video wording. desktop/base no longer carries the "kurtopus 1.6 HD" label (the libopus
         # version is not 1.6; see notes/2026-11-01-halocord-2.10.0-release-notes.md), so only these remain.
         for a, b in [
-            # No QEXT row any more: stock Discord peers can't decode it, so HaloCord stays at 510 kbps.
-            (r"'Enable\x20Experimental\x20QEXT\x20Layer'", r"'Enable\x20Opus\x20HD\x20(QEXT)'"),
             (r"Ping\x20(Kurtzon)", r"Ping\x20(HaloCord)"),
         ]:
             assert s.count(a) >= 1, a
