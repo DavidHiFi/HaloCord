@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import "./halo.css";
+
 import * as DataStore from "@api/DataStore";
 import { definePluginSettings, migratePluginSettings, SettingsStore } from "@api/Settings";
 import { addUserAreaButton, removeUserAreaButton, UserAreaButton, UserAreaRenderProps } from "@api/UserArea";
@@ -981,6 +983,7 @@ function buildCustomCSS(): string {
 
     try {
         const userAreaOrder = getUserAreaOrder();
+        const bannerModuleOn = userAreaOrder.some(it => (it.id === "activity-banner" || it.moduleId === "activity-banner") && it.enabled);
         userAreaOrder.forEach((item, idx) => {
             const orderVal = (idx + 1) * 10;
             const hiddenStyle = !item.enabled ? "display: none !important;" : "";
@@ -994,6 +997,8 @@ function buildCustomCSS(): string {
                     }
                 `);
             } else if (item.type === "native-activity-banner" || item.id === "activity-banner" || item.moduleId === "activity-banner") {
+                // Both items target Discord's own activity panel; only the one shown in the reorder list may decide its visibility.
+                if ((item.type === "native-activity-banner") === bannerModuleOn) return;
                 lines.push(`
                     section[class*="panels_"] > [class*="activityPanel_"],
                     .vc-panel-module-item[data-module-id="activity-banner"] {
@@ -1130,10 +1135,22 @@ function buildCustomCSS(): string {
             border-bottom: 2px solid var(--brand-experiment, var(--background-brand)) !important;
             background-color: transparent !important;
         }
+    `);
 
-        settings.store.showDrawerLabel
-            ? "\n        .vc-panel-collapse-button {\n            display: flex !important;\n            align-items: center !important;\n            gap: 6px !important;\n        }\n        .vc-drawer-label {\n            font-weight: 700 !important;\n            font-size: 10px !important;\n            color: var(--text-muted, #8e9397) !important;\n            text-transform: uppercase !important;\n            letter-spacing: 0.4px !important;\n            white-space: nowrap !important;\n        }"
-            : ""
+    if (settings.store.showDrawerLabel) lines.push(`
+        .vc-panel-collapse-button {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+        }
+        .vc-drawer-label {
+            font-weight: 700 !important;
+            font-size: 10px !important;
+            color: var(--text-muted, #8e9397) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.4px !important;
+            white-space: nowrap !important;
+        }
     `);
 
     return lines.join("\n");
