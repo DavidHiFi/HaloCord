@@ -331,6 +331,7 @@ initStyles();
 applyHaloTheming();
 document.addEventListener("DOMContentLoaded", applyHaloTheming, { once: true });
 SettingsStore.addChangeListener("haloTheming", applyHaloTheming);
+SettingsStore.addChangeListener("haloThemeVariant", applyHaloTheming);
 startAllPlugins(StartAt.Init);
 init();
 

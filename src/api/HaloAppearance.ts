@@ -5,6 +5,7 @@
  */
 
 import { type MochaCordSettings, Settings, SettingsStore } from "@api/Settings";
+import { IS_MAC, IS_WINDOWS } from "@utils/constants";
 import { createAndAppendStyle } from "@utils/css";
 import { PopoutWindowStore } from "@webpack/common";
 
@@ -137,11 +138,22 @@ function fontCss() {
     ].filter(Boolean).join("\n");
 }
 
+let mainWindowBlur: boolean | undefined;
+
+// The window material is picked once, when the window is created, and popouts never get one.
+function hasWindowBlur(root: HTMLElement) {
+    if (root !== document.documentElement) return false;
+    return mainWindowBlur ??= Settings.transparent
+        || (IS_WINDOWS && Settings.windowsMaterial !== "none")
+        || (IS_MAC && !!Settings.macosVibrancyStyle);
+}
+
 export function applyHaloAppearance(root: HTMLElement) {
     const mc = Settings.mochacord;
     for (const attr of Array.from(root.attributes)) {
         if (attr.name.startsWith("data-mc-")) root.removeAttribute(attr.name);
     }
+    if (!hasWindowBlur(root)) root.setAttribute("data-mc-window-blur", "off");
     for (const [key, name, fallback, value] of flags) {
         if (mc[key] !== fallback) root.setAttribute(`data-mc-${name}`, value);
     }
@@ -150,9 +162,12 @@ export function applyHaloAppearance(root: HTMLElement) {
     }
     for (const [key, name] of mochaColors) {
         const value = mc[key];
-        if (isHexColor(value)) {
+        // The HaloCord look tints MochaCord's accent and hover border with the HaloCord accent unless the user picked one.
+        const fallback = Settings.haloThemeVariant === "halocord" && (key === "accent" || key === "hoverColor") ? "var(--hc-accent)" : null;
+        const colour = isHexColor(value) ? value : fallback;
+        if (colour) {
             root.setAttribute(`data-mc-${name}`, "");
-            root.style.setProperty(`--mc-${name}`, value);
+            root.style.setProperty(`--mc-${name}`, colour);
         } else {
             root.style.removeProperty(`--mc-${name}`);
         }
@@ -191,7 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     localFacesReady.then(applyEverywhere);
 
-    for (const key of ["uiFont", "uiFontWeight", "uiFontItalic", "codeFont", "codeFontWeight", "codeFontItalic"])
+    for (const key of ["uiFont", "uiFontWeight", "uiFontItalic", "codeFont", "codeFontWeight", "codeFontItalic", "haloThemeVariant"])
         SettingsStore.addChangeListener(key, applyEverywhere);
     SettingsStore.addPrefixChangeListener("mochacord", applyEverywhere);
 }, { once: true });

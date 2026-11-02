@@ -8,7 +8,6 @@ import "./styles.css";
 
 import { Settings, type ThemeActivationMode, useSettings } from "@api/Settings";
 import { Divider } from "@components/Divider";
-import { HaloSection } from "@components/HaloUI";
 import { Heading } from "@components/Heading";
 import { Link } from "@components/Link";
 import { Paragraph } from "@components/Paragraph";
@@ -25,7 +24,6 @@ import { SyntheticEvent } from "react";
 
 import { CodeViewerModal } from "./CodeViewerModal";
 import { HaloAppearanceSection } from "./HaloAppearanceSection";
-import { openMochaCordWindow } from "./MochaCordModal";
 import { OnlineThemesSection } from "./OnlineThemes";
 import { QuickActionsSection } from "./QuickActions";
 import { SnippetMarketplaceSection } from "./SnippetMarketplace";
@@ -49,8 +47,6 @@ const filterOptions = [
     { label: "Enabled", value: ThemeFilter.Enabled },
     { label: "Disabled", value: ThemeFilter.Disabled }
 ];
-
-const haloFilterOptions = filterOptions.filter(o => o.value === ThemeFilter.All || o.value === ThemeFilter.Enabled || o.value === ThemeFilter.Disabled);
 
 const isHaloTheme = (t: UnifiedTheme) => t.header.id === "mochacord" || themeFileToId(t.header.fileName) === "mochacord" || t.name === "MochaCord";
 
@@ -179,8 +175,6 @@ function ThemesTab() {
     });
     const [searchQuery, setSearchQuery] = useState("");
     const [filter, setFilter] = useState(ThemeFilter.All);
-    const [haloSearch, setHaloSearch] = useState("");
-    const [haloFilter, setHaloFilter] = useState(ThemeFilter.All);
 
     useEffect(() => {
         void updateThemes();
@@ -447,10 +441,8 @@ function ThemesTab() {
         return themes;
     }, [onlineThemes, userThemes, themeNames, settings.enabledThemeLinks, settings.enabledThemes, settings.themeActivationModes]);
 
-    const haloThemes = useMemo(() => allThemes.filter(isHaloTheme), [allThemes]);
     const installedThemes = useMemo(() => allThemes.filter(t => !isHaloTheme(t)), [allThemes]);
     const filteredThemes = useMemo(() => filterThemes(installedThemes, searchQuery, filter, settings.pinnedThemes), [installedThemes, searchQuery, filter, settings.pinnedThemes]);
-    const filteredHaloThemes = useMemo(() => filterThemes(haloThemes, haloSearch, haloFilter, settings.pinnedThemes), [haloThemes, haloSearch, haloFilter, settings.pinnedThemes]);
 
     const localCount = installedThemes.filter(t => t.type === "local").length;
     const onlineCount = installedThemes.filter(t => t.type === "online").length;
@@ -512,7 +504,6 @@ function ThemesTab() {
             };
         }
 
-        if (isHaloTheme(theme)) props.onOpenMenu = () => openMochaCordWindow(props.theme, props, theme.link);
         return <ThemeCard key={theme.link ?? theme.header.fileName} {...props} />;
     }
 
@@ -520,19 +511,6 @@ function ThemesTab() {
         <SettingsTab>
             <div className={Margins.top16}>
                 <HaloAppearanceSection />
-            </div>
-
-            <div className={Margins.top16}>
-                <HaloSection title="HaloCord Themes">
-                    <FilterRow search={haloSearch} setSearch={setHaloSearch} filter={haloFilter} setFilter={setHaloFilter} options={haloFilterOptions} />
-                    {userThemes === null ? (
-                        <p className="hc-mc-empty">Loading themes...</p>
-                    ) : filteredHaloThemes.length === 0 ? (
-                        <p className="hc-mc-empty">{haloThemes.length === 0 ? "MochaCord is not installed yet. HaloCord downloads it by itself." : "No HaloCord themes match your search or filter."}</p>
-                    ) : (
-                        <div className={cl("grid")}>{filteredHaloThemes.map(renderThemeCard)}</div>
-                    )}
-                </HaloSection>
             </div>
 
             <Heading className={Margins.top20}>Theme Management</Heading>
