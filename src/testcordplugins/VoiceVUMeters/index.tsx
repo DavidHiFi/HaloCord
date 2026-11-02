@@ -11,6 +11,7 @@
  */
 
 import { definePluginSettings, Settings } from "@api/Settings";
+import { UserAreaButton, UserAreaRenderProps } from "@api/UserArea";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { TestcordDevs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
@@ -129,6 +130,8 @@ interface Meter {
     peak: [number, number];
     peakAt: [number, number];
     sampleAt: [number, number];
+    // Highest linear level since the peak number was last reset
+    peakHold: number;
     ownsInput?: boolean;
     // Web self meter: taps the stream Discord sends, so it reads zero while muted.
     webSelf?: boolean;
@@ -139,6 +142,8 @@ interface Meter {
 }
 
 const meters = new Map<string, Meter>();
+// Peak holds of dropped meters, so a rebuilt meter in the same call keeps its peak number
+const peakCarry = new Map<string, number>();
 const subscribers = new Set<() => void>();
 // Remembered SSRC resolutions; getUserIdBySsrc can miss for a while in packed calls.
 const ssrcUserCache = new Map<number, string>();
@@ -181,16 +186,21 @@ interface MeterDom {
     lastPeak: [string, string];
     lastPeakOpacity: [string, string];
     height: number;
+    peakNumber: HTMLElement | null;
+    // NaN forces the next write; -Infinity is "-inf"
+    lastPeakTenths: number;
 }
 
 const meterDoms = new Map<string, Set<MeterDom>>();
 const meterDomByRoot = new WeakMap<HTMLElement, MeterDom>();
 let frameId: number | undefined;
 let frameTimer: ReturnType<typeof setTimeout> | undefined;
+let nextFrameAt = 0;
 let domResize: ResizeObserver | undefined;
-// Levels arrive at 4-10 Hz, so 30 fps keeps the bars smooth. Running at the
+// Levels arrive at 4-10 Hz, so the 30 fps default keeps the bars smooth. Running at the
 // display rate (165 Hz here) repainted the panel every vsync for no visible gain.
-const FRAME_MS = 33;
+// The timer wakes this early so the animation frame after it lands on time, even at 60 fps on a 60 Hz display.
+const FRAME_SLACK_MS = 4;
 
 // Live counters for diagnostics over the CDP port
 const debugState = (globalThis as { __vumDebug?: Record<string, number>; }).__vumDebug ??= {};
@@ -202,11 +212,14 @@ function ensureFrameLoop() {
     }
 }
 
-function scheduleNextFrame() {
+// Frames aim at fixed targets one interval apart, so the average rate matches the setting on any display refresh
+function scheduleNextFrame(frameAt: number) {
+    const interval = 1000 / settings.store.frameRate;
+    nextFrameAt = frameAt - nextFrameAt > interval ? frameAt + interval : nextFrameAt + interval;
     frameTimer = setTimeout(() => {
         frameTimer = undefined;
         ensureFrameLoop();
-    }, FRAME_MS);
+    }, Math.max(0, nextFrameAt - performance.now() - FRAME_SLACK_MS));
 }
 
 function parkFrameLoop() {
@@ -230,8 +243,19 @@ function peakColor(peak: number) {
 }
 
 function writeMeterDom(meter: Meter, dom: MeterDom) {
-    const { showPeak } = settings.store;
+    const { showPeak, floorDb } = settings.store;
     const peakRange = Math.max(0, dom.height - 2);
+    if (dom.peakNumber) {
+        // Below the meter floor the bars stay empty, so the number reads silence too
+        const db = meter.peakHold > 0 ? 20 * Math.log10(meter.peakHold) : -Infinity;
+        const tenths = db < floorDb ? -Infinity : Math.round(db * 10);
+        if (tenths !== dom.lastPeakTenths) {
+            const clip = tenths >= 0;
+            if (clip !== dom.lastPeakTenths >= 0) dom.peakNumber.toggleAttribute("data-clip", clip);
+            dom.lastPeakTenths = tenths;
+            dom.peakNumber.textContent = tenths === -Infinity ? "-inf" : (tenths / 10).toFixed(1);
+        }
+    }
     for (let channel = 0; channel < 2; channel++) {
         // skip unchanged writes so a silent call causes no style churn
         const fill = dom.fills[channel];
@@ -281,10 +305,48 @@ const settings = definePluginSettings({
         default: -60,
         stickToMarkers: true
     },
+    frameRate: {
+        type: OptionType.SELECT,
+        description: "How often the meters redraw. Higher looks smoother and costs a little more while meters are on screen.",
+        options: [
+            { label: "15 FPS", value: 15 },
+            { label: "24 FPS", value: 24 },
+            { label: "30 FPS", value: 30, default: true },
+            { label: "60 FPS", value: 60 }
+        ]
+    },
+    showUserAreaButton: {
+        type: OptionType.BOOLEAN,
+        description: "Adds a button next to mute and deafen that turns VU meters on and off.",
+        default: false
+    },
     showPeak: {
         type: OptionType.BOOLEAN,
         description: "Show the peak hold line on each bar.",
         default: true
+    },
+    showPeakNumbers: {
+        type: OptionType.BOOLEAN,
+        description: "Shows the highest level in dB above each meter. Click a number to reset it. It turns red at 0 dB.",
+        default: true
+    },
+    peakNumberUsers: {
+        type: OptionType.SELECT,
+        description: "Whose meters show a peak number.",
+        options: [
+            { label: "Everyone", value: "all", default: true },
+            { label: "Only you", value: "self" },
+            { label: "Only others", value: "others" }
+        ]
+    },
+    peakNumberSurfaces: {
+        type: OptionType.SELECT,
+        description: "Which meters show a peak number. Voice profiles covers the voice channel list and voice call tiles.",
+        options: [
+            { label: "Voice profiles only", value: "voice" },
+            { label: "Screen shares only", value: "streams" },
+            { label: "Both", value: "both", default: true }
+        ]
     },
     showSelf: {
         type: OptionType.BOOLEAN,
@@ -378,7 +440,20 @@ function isWebConnection(conn: VoiceConnection) {
 }
 
 function newMeter(mono: boolean, tap?: WebTap): Meter {
-    return { tap, amplitude: 0, mono, display: [0, 0], peak: [0, 0], peakAt: [0, 0], sampleAt: [0, 0] };
+    return { tap, amplitude: 0, mono, display: [0, 0], peak: [0, 0], peakAt: [0, 0], sampleAt: [0, 0], peakHold: 0 };
+}
+
+function addMeter(key: string, meter: Meter) {
+    // the self input tap replaces its placeholder meter without dropping it
+    meter.peakHold = meters.get(key)?.peakHold ?? peakCarry.get(key) ?? 0;
+    peakCarry.delete(key);
+    meters.set(key, meter);
+}
+
+function resetPeak(key: string) {
+    const meter = meters.get(key);
+    if (meter) meter.peakHold = 0;
+    peakCarry.delete(key);
 }
 
 function channelCount(output: AudioOutput) {
@@ -409,7 +484,7 @@ function createWebMeter(conn: VoiceConnection, userId: string) {
     right.connect(silent);
     silent.connect(context.destination);
 
-    meters.set(userId, newMeter(channelCount(output) === 1, {
+    addMeter(userId, newMeter(channelCount(output) === 1, {
         output,
         source,
         splitter,
@@ -426,6 +501,7 @@ function dropMeter(userId: string) {
     if (!meter) return;
 
     meters.delete(userId);
+    if (meter.peakHold > 0) peakCarry.set(userId, meter.peakHold);
     if (!meter.tap) return;
 
     if (meter.ownsInput) {
@@ -449,6 +525,7 @@ function dropAll() {
     inputGeneration++;
     ssrcUserCache.clear();
     for (const userId of [...meters.keys()]) dropMeter(userId);
+    peakCarry.clear();
 }
 
 async function syncSelfInput(conn: VoiceConnection) {
@@ -464,7 +541,7 @@ async function syncSelfInput(conn: VoiceConnection) {
     if (inputPending || Date.now() < inputRetryAt) return;
 
     dropMeter(userId);
-    meters.set(userId, newMeter(true));
+    addMeter(userId, newMeter(true));
     const generation = inputGeneration;
     inputPending = true;
     let stream: MediaStream | undefined;
@@ -588,7 +665,7 @@ function syncDesktopMeters() {
         const meter = meters.get(userId);
         if (!meter || (meter.tap && !meter.ownsInput)) {
             dropMeter(userId);
-            meters.set(userId, newMeter(true));
+            addMeter(userId, newMeter(true));
         }
     }
 
@@ -629,7 +706,7 @@ function setStreamAmplitude(ownerId: string, level: unknown) {
     if (!meter || meter.tap) {
         dropMeter(key);
         meter = newMeter(true);
-        meters.set(key, meter);
+        addMeter(key, meter);
     }
     meter.lastStreamAt = Date.now();
     meter.amplitude = toLinear(level);
@@ -859,7 +936,11 @@ function normalize(amplitude: number, floorDb: number) {
     return Math.max(0, Math.min(1, (db - floorDb) / -floorDb));
 }
 
-function readChannel(analyser: AnalyserNode, buffer: Float32Array<ArrayBuffer>, floorDb: number) {
+// Linear results of the last readChannel call, kept in module scope so a frame allocates nothing
+let readRms = 0;
+let readPeak = 0;
+
+function readChannel(analyser: AnalyserNode, buffer: Float32Array<ArrayBuffer>) {
     analyser.getFloatTimeDomainData(buffer);
 
     let sum = 0;
@@ -870,7 +951,8 @@ function readChannel(analyser: AnalyserNode, buffer: Float32Array<ArrayBuffer>, 
         sum += value * value;
     }
 
-    return { rms: normalize(Math.sqrt(sum / buffer.length), floorDb), peak: normalize(peak, floorDb) };
+    readRms = Math.sqrt(sum / buffer.length);
+    readPeak = peak;
 }
 
 function smooth(meter: Meter, channel: 0 | 1, rms: number, peak: number, now: number) {
@@ -970,26 +1052,39 @@ function advanceEnvelopes(now: number) {
             // The input meter shows only while Discord is sending, so it matches what people hear
             const muted = meter.webSelf ? MediaEngineStore.isSelfMute() || MediaEngineStore.isSelfDeaf()
                 : meter.ownsInput && (MediaEngineStore.isSelfMute() || now - selfSentAt > SELF_SEND_HOLD_MS);
-            let left = muted ? { rms: 0, peak: 0 } : readChannel(meter.tap.left, meter.tap.bufLeft, floorDb);
-            let right = muted || meter.mono ? left : readChannel(meter.tap.right, meter.tap.bufRight, floorDb);
-            const tapRaw = Math.max(left.rms, right.rms);
+            let rmsLeft = 0, peakLeft = 0;
+            if (!muted) {
+                readChannel(meter.tap.left, meter.tap.bufLeft);
+                rmsLeft = readRms;
+                peakLeft = readPeak;
+            }
+            let rmsRight = rmsLeft, peakRight = peakLeft;
+            if (!muted && !meter.mono) {
+                readChannel(meter.tap.right, meter.tap.bufRight);
+                rmsRight = readRms;
+                peakRight = readPeak;
+            }
+            const tapRaw = Math.max(normalize(rmsLeft, floorDb), normalize(rmsRight, floorDb));
 
             // A tap that reads nothing while Discord hears speech (muted capture session, wrong device) would
             // leave the bars flat until it is dropped, so show Discord's own level meanwhile
             if (meter.ownsInput && !muted && tapRaw === 0 && selfVadLive(now) && selfVadSpeaking) {
-                const vad = normalize(selfVadLinear, floorDb);
-                left = right = { rms: vad, peak: vad };
+                rmsLeft = peakLeft = rmsRight = peakRight = selfVadLinear;
             }
 
-            smooth(meter, 0, left.rms, left.peak, now);
-            smooth(meter, 1, right.rms, right.peak, now);
-            noteActive(meter, Math.max(left.rms, right.rms), now);
+            const left = normalize(rmsLeft, floorDb);
+            const right = normalize(rmsRight, floorDb);
+            smooth(meter, 0, left, normalize(peakLeft, floorDb), now);
+            smooth(meter, 1, right, normalize(peakRight, floorDb), now);
+            meter.peakHold = Math.max(meter.peakHold, peakLeft, peakRight);
+            noteActive(meter, Math.max(left, right), now);
             if (meter.ownsInput) checkSelfMismatch(meter, muted === true, tapRaw, now);
         } else if (meter.nativeAvailable && !meter.nativeGap) {
             const rmsLeft = normalize(meter.native?.rmsLeft ?? 0, floorDb);
             const rmsRight = normalize(meter.native?.rmsRight ?? 0, floorDb);
             smooth(meter, 0, rmsLeft, normalize(meter.native?.peakLeft ?? 0, floorDb), now);
             smooth(meter, 1, rmsRight, normalize(meter.native?.peakRight ?? 0, floorDb), now);
+            meter.peakHold = Math.max(meter.peakHold, meter.native?.peakLeft ?? 0, meter.native?.peakRight ?? 0);
             noteActive(meter, Math.max(rmsLeft, rmsRight), now);
         } else {
             // Bars follow measured audio only. A flagged speaker with no level reads flat, never a made-up one.
@@ -1001,12 +1096,13 @@ function advanceEnvelopes(now: number) {
 
             smooth(meter, 0, value * panL, value * panL, now);
             smooth(meter, 1, value * panR, value * panR, now);
+            if (heard) meter.peakHold = Math.max(meter.peakHold, meter.amplitude * Math.max(panL, panR));
         }
     }
 }
 
 // Samples every level source, advances the envelopes and writes the bars
-function frameTick() {
+function frameTick(frameAt: number) {
     frameId = undefined;
     if (!meterDoms.size || !meters.size || document.hidden) return;
 
@@ -1032,7 +1128,7 @@ function frameTick() {
     debugState.meters = meters.size;
     debugState.frameAt = Date.now();
 
-    if (meterDoms.size && meters.size && !document.hidden) scheduleNextFrame();
+    if (meterDoms.size && meters.size && !document.hidden) scheduleNextFrame(frameAt);
 }
 
 // The self tap reads the OS device before Discord processing, so bleed that
@@ -1168,8 +1264,26 @@ function MeterBar({ width, value, peak, showPeak, fillRef, peakRef }: {
     );
 }
 
-const VoiceMeter = ErrorBoundary.wrap(({ userId, height = BAR_HEIGHT, width = BAR_WIDTH, style }: { userId: string; height?: number | string; width?: number; style?: React.CSSProperties; }) => {
-    const { showWhileDeafened } = settings.use(["showPeak", "showWhileDeafened"]);
+function peakNumberWanted(key: string) {
+    const { showPeakNumbers, peakNumberUsers, peakNumberSurfaces } = settings.store;
+    if (!showPeakNumbers) return false;
+    const stream = key.startsWith("stream:");
+    if (peakNumberSurfaces !== "both" && (peakNumberSurfaces === "streams") !== stream) return false;
+    if (peakNumberUsers === "all") return true;
+    const mine = (stream ? key.slice(7) : key) === UserStore.getCurrentUser()?.id;
+    return (peakNumberUsers === "self") === mine;
+}
+
+// Keeps a click on the peak number from opening the user popout or focusing the call tile
+function stopEvent(event: React.SyntheticEvent) {
+    event.stopPropagation();
+}
+
+// List rows center the meter, so this margin moves it down by half its value to make room for the number above it
+const ROW_PEAK_NUMBER_ROOM = 6;
+
+const VoiceMeter = ErrorBoundary.wrap(({ userId, kind, height = BAR_HEIGHT, width = BAR_WIDTH, style }: { userId: string; kind: "row" | "tile"; height?: number | string; width?: number; style?: React.CSSProperties; }) => {
+    const { showWhileDeafened } = settings.use(["showPeak", "showWhileDeafened", "showPeakNumbers", "peakNumberUsers", "peakNumberSurfaces"]);
     const deaf = useStateFromStores([MediaEngineStore], () => MediaEngineStore.isDeaf());
     const [, forceUpdate] = React.useReducer(x => x + 1, 0);
     const lastKey = React.useRef("");
@@ -1193,6 +1307,7 @@ const VoiceMeter = ErrorBoundary.wrap(({ userId, height = BAR_HEIGHT, width = BA
 
     const fillRefs = [React.useRef<HTMLDivElement | null>(null), React.useRef<HTMLDivElement | null>(null)];
     const peakRefs = [React.useRef<HTMLDivElement | null>(null), React.useRef<HTMLDivElement | null>(null)];
+    const peakNumberRef = React.useRef<HTMLButtonElement | null>(null);
     const domRef = React.useRef<MeterDom | null>(null);
 
     const attachRoot = React.useCallback((root: HTMLDivElement | null) => {
@@ -1214,7 +1329,9 @@ const VoiceMeter = ErrorBoundary.wrap(({ userId, height = BAR_HEIGHT, width = BA
             lastFill: ["", ""],
             lastPeak: ["", ""],
             lastPeakOpacity: ["", ""],
-            height: root.clientHeight || BAR_HEIGHT
+            height: root.clientHeight || BAR_HEIGHT,
+            peakNumber: peakNumberRef.current,
+            lastPeakTenths: NaN
         };
         let set = meterDoms.get(userId);
         if (!set) {
@@ -1246,6 +1363,14 @@ const VoiceMeter = ErrorBoundary.wrap(({ userId, height = BAR_HEIGHT, width = BA
         dom.colors = ["", ""];
     }, [showPeak]);
 
+    const peakNumberShown = peakNumberWanted(userId);
+    React.useEffect(() => {
+        const dom = domRef.current;
+        if (!dom) return;
+        dom.peakNumber = peakNumberRef.current;
+        dom.lastPeakTenths = NaN;
+    }, [peakNumberShown]);
+
     const meter = meters.get(userId);
     if (!meter || (deaf && !showWhileDeafened)) return null;
 
@@ -1261,8 +1386,28 @@ const VoiceMeter = ErrorBoundary.wrap(({ userId, height = BAR_HEIGHT, width = BA
                 ? "Participant audio channels. Left | Right"
             : "Left | Right after your local pan. Discord Desktop reports one level per participant, so both bars carry it.";
 
+    const rootStyle: React.CSSProperties = { position: "relative", display: "flex", alignItems: "stretch", height, ...style };
+    if (peakNumberShown && kind === "row") rootStyle.marginTop = ROW_PEAK_NUMBER_ROOM;
+
     return (
-        <div ref={attachRoot} style={{ display: "flex", alignItems: "stretch", height, ...style }} data-vu-meter={measured ? "lr" : "level"} title={title}>
+        <div ref={attachRoot} style={rootStyle} data-vu-meter={measured ? "lr" : "level"} title={title}>
+            {peakNumberShown && (
+                <button
+                    type="button"
+                    ref={peakNumberRef}
+                    className="hc-vu-peak"
+                    data-kind={kind}
+                    aria-label="Reset peak level"
+                    title="Highest level since the last reset. Click to reset."
+                    onClick={event => {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        resetPeak(userId);
+                    }}
+                    onMouseDown={stopEvent}
+                    onDoubleClick={stopEvent}
+                />
+            )}
             <MeterBar width={width} fillRef={fillRefs[0]} peakRef={peakRefs[0]} showPeak={showPeak} />
             <div style={{ width: gap, display: "flex", alignItems: "stretch", justifyContent: "center" }}>
                 <div style={{ width: 1, background: "rgba(235,235,235,0.6)", borderRadius: 1 }} />
@@ -1400,8 +1545,41 @@ function TileMeter({ userId }: { userId?: string; }) {
 
     return (
         <div ref={boxRef} style={style}>
-            <VoiceMeter userId={isStreamTile ? `stream:${userId}` : userId} height="100%" width={8} />
+            <VoiceMeter userId={isStreamTile ? `stream:${userId}` : userId} kind="tile" height="100%" width={8} />
         </div>
+    );
+}
+
+// Two meter bars at different levels, each with its peak tick
+function MeterIcon({ className }: { className?: string; }) {
+    return (
+        <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="5" y="3" width="5.5" height="18" rx="1.5" opacity="0.3" />
+            <rect x="13.5" y="3" width="5.5" height="18" rx="1.5" opacity="0.3" />
+            <rect x="5" y="11" width="5.5" height="10" rx="1.5" />
+            <rect x="13.5" y="15" width="5.5" height="6" rx="1.5" />
+            <rect x="5" y="7" width="5.5" height="2" rx="1" />
+            <rect x="13.5" y="11" width="5.5" height="2" rx="1" />
+        </svg>
+    );
+}
+
+const USER_AREA_KEYS = ["showMeters", "showUserAreaButton"] as const;
+
+function VuUserAreaButton({ iconForeground, hideTooltips, nameplate }: UserAreaRenderProps) {
+    const { showMeters, showUserAreaButton } = settings.use(USER_AREA_KEYS);
+    if (!showUserAreaButton) return null;
+
+    return (
+        <UserAreaButton
+            icon={<MeterIcon className={iconForeground} />}
+            tooltipText={hideTooltips ? void 0 : showMeters ? "Hide VU meters" : "Show VU meters"}
+            aria-label="VU meters"
+            role="switch"
+            aria-checked={showMeters}
+            plated={nameplate != null}
+            onClick={() => settings.store.showMeters = !showMeters}
+        />
     );
 }
 
@@ -1412,8 +1590,8 @@ let optionsRoot: ReturnType<typeof createRoot> | undefined;
 let optionsNode: HTMLDivElement | undefined;
 let optionsTimer: ReturnType<typeof setInterval> | undefined;
 
-type BoolKey = "showMeters" | "showPeak" | "showSelf" | "showWhileDeafened" | "showMutedStreamAudio";
-type SelectKey = "tileSurfaces" | "tilePlacement" | "tileMeterSide";
+type BoolKey = "showMeters" | "showUserAreaButton" | "showPeak" | "showPeakNumbers" | "showSelf" | "showWhileDeafened" | "showMutedStreamAudio";
+type SelectKey = "frameRate" | "peakNumberUsers" | "peakNumberSurfaces" | "tileSurfaces" | "tilePlacement" | "tileMeterSide";
 type RangeKey = "floorDb" | "tileMeterHeight";
 
 function Row({ label, sub, off, children }: { label: string; sub: string; off?: boolean; children: React.ReactNode; }) {
@@ -1441,10 +1619,20 @@ function SwitchRow({ name, label, sub = settings.def[name].description, off }: {
 
 function SelectRow({ name, label, off }: { name: SelectKey; label: string; off: boolean; }) {
     const value = settings.use([name])[name];
+    const { options } = settings.def[name];
     return (
         <Row label={label} sub={settings.def[name].description} off={off}>
-            <select className="hc-vu-select" aria-label={label} disabled={off} value={value} onChange={e => Object.assign(settings.store, { [name]: e.currentTarget.value })}>
-                {settings.def[name].options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            <select
+                className="hc-vu-select"
+                aria-label={label}
+                disabled={off}
+                value={value}
+                onChange={e => {
+                    const picked = options.find(o => String(o.value) === e.currentTarget.value);
+                    if (picked) Object.assign(settings.store, { [name]: picked.value });
+                }}
+            >
+                {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
         </Row>
     );
@@ -1453,6 +1641,9 @@ function SelectRow({ name, label, off }: { name: SelectKey; label: string; off: 
 function RangeRow({ name, label, unit, off }: { name: RangeKey; label: string; unit: string; off: boolean; }) {
     const value = settings.use([name])[name];
     const { markers } = settings.def[name];
+    const min = markers[0];
+    const max = markers[markers.length - 1];
+    const fill: React.CSSProperties & Record<"--hc-vu-fill", string> = { "--hc-vu-fill": `${(value - min) / (max - min) * 100}%` };
     return (
         <Row label={label} sub={settings.def[name].description} off={off}>
             <div className="hc-vu-range">
@@ -1460,10 +1651,11 @@ function RangeRow({ name, label, unit, off }: { name: RangeKey; label: string; u
                     type="range"
                     aria-label={label}
                     disabled={off}
-                    min={markers[0]}
-                    max={markers[markers.length - 1]}
+                    min={min}
+                    max={max}
                     step={markers[1] - markers[0]}
                     value={value}
+                    style={fill}
                     onChange={e => settings.store[name] = Number(e.currentTarget.value)}
                 />
                 <span className="hc-vu-val">{value}{unit}</span>
@@ -1473,13 +1665,19 @@ function RangeRow({ name, label, unit, off }: { name: RangeKey; label: string; u
 }
 
 function GuardOptions() {
-    const off = !settings.use(["showMeters"]).showMeters;
+    const { showMeters, showPeakNumbers } = settings.use(["showMeters", "showPeakNumbers"]);
+    const off = !showMeters;
     return (
         <>
             <div className="dvx-sec-title">VU Meters</div>
             <SwitchRow name="showMeters" label="Show VU meters" />
+            <SwitchRow name="showUserAreaButton" label="Show VU button in user area" />
             <RangeRow name="floorDb" label="Meter floor" unit=" dB" off={off} />
+            <SelectRow name="frameRate" label="Frame rate" off={off} />
             <SwitchRow name="showPeak" label="Peak hold line" off={off} />
+            <SwitchRow name="showPeakNumbers" label="Peak numbers" off={off} />
+            <SelectRow name="peakNumberUsers" label="Peak numbers for" off={off || !showPeakNumbers} />
+            <SelectRow name="peakNumberSurfaces" label="Meters with peak numbers" off={off || !showPeakNumbers} />
             <SwitchRow name="showSelf" label="Meter for your own microphone" off={off} />
             <SelectRow name="tileSurfaces" label="Call tiles with meters" off={off} />
             <SelectRow name="tilePlacement" label="Meter position on call tiles" off={off} />
@@ -1532,6 +1730,11 @@ export default definePlugin({
     settings,
     managedStyle: meterStyle,
 
+    userAreaButton: {
+        icon: MeterIcon,
+        render: VuUserAreaButton
+    },
+
     patches: [
         {
             // Voice channel list row: the meter goes last, after the mute/deafen icons, so every bar lines up.
@@ -1551,7 +1754,7 @@ export default definePlugin({
     ],
 
     renderMeter(userId: string) {
-        return <VoiceMeter userId={userId} style={{ flexShrink: 0 }} />;
+        return <VoiceMeter userId={userId} kind="row" style={{ flexShrink: 0 }} />;
     },
 
     renderTileMeter(userId?: string) {
