@@ -15,7 +15,8 @@ import { FluxDispatcher, showToast, Toasts } from "@webpack/common";
 // Web port of StereoLoader's user-area button. The HaloCord shell's voice engine
 // already sends stereo Opus, so the button flips that engine switch (exposed by the
 // shell as window.HaloCordStereo) and moves the mic to the Custom input profile with
-// echo cancellation, noise suppression and gain control off, since those fold the signal back to mono.
+// echo cancellation, noise suppression and gain control off, for a raw stereo mic. Stereo itself
+// also works with that processing on (the shell keeps Chromium's processing and Krisp stereo).
 const AudioActions = findByPropsLazy("setActiveInputProfile", "setNoiseSuppression");
 const VoiceState = findByPropsLazy("getActiveInputProfile", "getNoiseSuppression");
 
