@@ -27,23 +27,23 @@ import { Button } from "@components/Button";
 import { Card } from "@components/Card";
 import { Divider } from "@components/Divider";
 import ErrorBoundary from "@components/ErrorBoundary";
+import { noteRestartChange, openRestartPrompt, useRestartPending } from "@components/HaloRestart";
 import { HeadingTertiary } from "@components/Heading";
 import { Paragraph } from "@components/Paragraph";
 import { SettingsTab } from "@components/settings";
-import { ChangeList } from "@utils/ChangeList";
 import { Devs, EquicordDevs, TestcordDevs } from "@utils/constants";
 import { classNameFactory } from "@utils/css";
 import { isTruthy } from "@utils/guards";
 import { Logger } from "@utils/Logger";
 import { Margins } from "@utils/margins";
 import { classes } from "@utils/misc";
+import { relaunch } from "@utils/native";
 import { PluginTarget } from "@utils/pluginTargets";
 import { isExperimentalPlugin } from "@utils/pluginWarnings";
-import { promptToRestart } from "@utils/promptToRestart";
-import { useAwaiter, useCleanupEffect, useIntersection } from "@utils/react";
+import { useAwaiter, useIntersection } from "@utils/react";
 import { isHaloCordPlugin, isTestcordModified } from "@utils/testcordIcons";
 import { Plugin, PluginTag, PluginTags } from "@utils/types";
-import { Alerts, Parser, React, SearchableSelect, Select, showToast, TextInput, Toasts, Tooltip, useCallback, useEffect, useMemo, useRef, useState } from "@webpack/common";
+import { Alerts, React, SearchableSelect, Select, showToast, TextInput, Tooltip, useCallback, useEffect, useMemo, useState } from "@webpack/common";
 
 import Plugins, { ExcludedPlugins, PluginMeta } from "~plugins";
 
@@ -103,14 +103,14 @@ function setPluginEnabledFlag(plugin: Plugin, enabled: boolean) {
  * flipping hundreds of plugins at runtime is a great way to end up with a half-broken client,
  * so every changed plugin is marked as needing a restart instead.
  */
-function applyPluginBulk(plugins: Plugin[], enabled: boolean, markRestartNeeded: (name: string, key: string) => void) {
+function applyPluginBulk(plugins: Plugin[], enabled: boolean) {
     const changed: string[] = [];
 
     for (const plugin of plugins) {
         if (isPluginEnabled(plugin.name) === enabled) continue;
 
         setPluginEnabledFlag(plugin, enabled);
-        markRestartNeeded(plugin.name, "enabled");
+        noteRestartChange(`plugins.${plugin.name}.enabled`, !enabled, enabled);
         changed.push(plugin.name);
     }
 
@@ -138,7 +138,7 @@ function ReloadRequiredCard({ required, enabledPlugins, openWarningModal, resetC
             </div>
             <div className={cl("info-card-actions")}>
                 {required ? (
-                    <Button variant="primary" className={cl("restart-button")} onClick={() => location.reload()}>
+                    <Button variant="primary" className={cl("restart-button")} onClick={relaunch}>
                         Restart
                     </Button>
 ) : enabledPlugins.length > 0 && (
@@ -146,7 +146,7 @@ function ReloadRequiredCard({ required, enabledPlugins, openWarningModal, resetC
                         variant="secondary"
                         size="small"
                         className={"vc-plugins-disable-warning vc-modal-align-reset"}
-                        onClick={() => openWarningModal(null, undefined, false, enabledPlugins.length, resetCheckAndDo)}
+                        onClick={() => openWarningModal(null, false, enabledPlugins.length, resetCheckAndDo)}
                     >
                         Disable All Plugins
                     </Button>
@@ -213,35 +213,7 @@ function PluginSettings() {
     // Every settings read in this tab is under `plugins`, so scoping the subscription
     // stops unrelated settings writes (themes, layout, ...) from re-rendering it.
     const settings = useSettings(["plugins.*"]);
-    const changeRef = useRef<ChangeList<string>>(null);
-    const changes = changeRef.current ??= new ChangeList<string>();
-
-    useCleanupEffect(() => {
-        return () => {
-            if (!changes.hasChanges) return;
-
-            const allChanges = [...changes.getChanges()];
-            const pluginNames = [...new Set(allChanges.map(s => s.split(":")[0]))];
-            const maxDisplay = 15;
-            const displayed = pluginNames.slice(0, maxDisplay);
-            const remainingCount = pluginNames.length - displayed.length;
-
-            promptToRestart("reload", {
-                children: <>
-                    <p>The following plugins require a restart:</p>
-                    <div>
-                        {displayed.map((s, i) => (
-                            <React.Fragment key={i}>
-                                {i > 0 && ", "}
-                                {Parser.parse("`" + s + "`")}
-                            </React.Fragment>
-                        ))}
-                        {remainingCount > 0 && <span> and {remainingCount} more</span>}
-                    </div>
-                </>
-            });
-        };
-    }, []);
+    const restartPending = useRestartPending();
 
     const depMap = useMemo(() => {
         const o = {} as Record<string, string[]>;
@@ -437,8 +409,6 @@ function PluginSettings() {
         return newPlugins.length ? new Set(newPlugins) : null;
     }));
 
-    const handleRestartNeeded = useCallback((name: string, key: string) => changes.handleChange(`${name}:${key}`), [changes]);
-
     // Filtering is cheap; building JSX is not. This used to allocate a <PluginCard>
     // element for every matching plugin (~700) on each keystroke, of which the
     // visiblePlugins slice below then discarded all but `visibleCount`. Split the two:
@@ -480,14 +450,13 @@ function PluginSettings() {
                     <PluginCard
                         onMouseLeave={onMouseLeave}
                         onMouseEnter={onMouseEnter}
-                        onRestartNeeded={handleRestartNeeded}
                         disabled={true}
                         plugin={p}
                     />
                 )}
             </Tooltip>
         );
-    }), [requiredPluginDefs, depMap, settings.plugins, handleRestartNeeded]);
+    }), [requiredPluginDefs, depMap, settings.plugins]);
 
     function resetCheckAndDo() {
         let restartNeeded = false;
@@ -498,7 +467,7 @@ function PluginSettings() {
             if (Plugins[plugin].patches?.length) {
                 pluginSettings.enabled = false;
                 void PluginHealth.recordPluginChange(plugin, false);
-                changes.handleChange(plugin);
+                noteRestartChange(`plugins.${plugin}.enabled`, true, false);
                 restartNeeded = true;
                 continue;
             }
@@ -515,20 +484,7 @@ function PluginSettings() {
             void PluginHealth.recordPluginChange(plugin, false);
         }
 
-        if (restartNeeded) {
-            Alerts.show({
-                title: "Restart Required",
-                body: (
-                    <>
-                        <p style={{ textAlign: "center" }}>Some plugins require a restart to fully disable.</p>
-                        <p style={{ textAlign: "center" }}>Would you like to restart now?</p>
-                    </>
-                ),
-                confirmText: "Restart Now",
-                cancelText: "Later",
-                onConfirm: () => location.reload()
-            });
-        }
+        if (restartNeeded) void openRestartPrompt("Turning off plugins that patch Discord");
     }
 
     // Code directly taken from supportHelper.tsx
@@ -570,13 +526,12 @@ function PluginSettings() {
 
     const visiblePlugins = useMemo(() => filteredPlugins.slice(0, visibleCount).map(p => (
         <PluginCard
-            onRestartNeeded={handleRestartNeeded}
             disabled={false}
             plugin={p}
             isNew={newPluginsSet?.has(p.name)}
             key={p.name}
         />
-    )), [filteredPlugins, visibleCount, newPluginsSet, handleRestartNeeded]);
+    )), [filteredPlugins, visibleCount, newPluginsSet]);
     const rawAuthorGithub = searchValue.author ? (authorOptions.find(a => a.value === searchValue.author)?.github || searchValue.author) : "";
     const authorGithub = rawAuthorGithub ? (rawAuthorGithub.startsWith("http") ? rawAuthorGithub : "https://github.com/" + rawAuthorGithub) : "";
 
@@ -598,16 +553,16 @@ function PluginSettings() {
             confirmText: enabled ? "Enable All" : "Disable All",
             cancelText: "Cancel",
             onConfirm: () => {
-                const changed = applyPluginBulk(targets, enabled, handleRestartNeeded);
+                const changed = applyPluginBulk(targets, enabled);
                 forceBulkUpdate();
-                showToast(`${changed.length} plugin${changed.length === 1 ? "" : "s"} ${enabled ? "enabled" : "disabled"}, restart to apply`, Toasts.Type.SUCCESS);
+                void openRestartPrompt(`${enabled ? "Turning on" : "Turning off"} ${changed.length} plugin${changed.length === 1 ? "" : "s"}`);
             }
         });
     };
 
     return (
         <SettingsTab>
-            <ReloadRequiredCard required={changes.hasChanges} enabledPlugins={enabledPlugins} openWarningModal={openWarningModal} resetCheckAndDo={resetCheckAndDo} />
+            <ReloadRequiredCard required={restartPending} enabledPlugins={enabledPlugins} openWarningModal={openWarningModal} resetCheckAndDo={resetCheckAndDo} />
 
             <div className={cl("stats-container")}>
                 <StockPluginsCard

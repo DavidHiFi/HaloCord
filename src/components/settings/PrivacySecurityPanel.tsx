@@ -10,10 +10,10 @@ import { hasAnyVisibleSettings, isPluginEnabled, setPluginEnabled } from "@api/P
 import { useSettings } from "@api/Settings";
 import { Button } from "@components/Button";
 import { Card } from "@components/Card";
+import { changeNeedsRestart, HaloRestartButton } from "@components/HaloRestart";
 import { SettingsTab } from "@components/settings/tabs/BaseTab";
 import { openPluginModal } from "@components/settings/tabs/plugins/PluginModal";
-import { relaunch } from "@utils/native";
-import { Alerts, Modal, openModal, React, useEffect, useRef, useState } from "@webpack/common";
+import { Modal, openModal, React, useEffect, useRef, useState } from "@webpack/common";
 
 import Plugins from "~plugins";
 
@@ -37,15 +37,8 @@ const FOLDED_PLUGINS = [
     { name: "AlwaysTrust", title: "Skip Link Warnings", description: "Opens links and downloads without Discord's untrusted site and dangerous file popups." }
 ] as const;
 
-function togglePlugin(name: string, enabled: boolean) {
-    if (!setPluginEnabled(name, enabled)) return;
-    Alerts.show({
-        title: "Restart HaloCord?",
-        body: "This change applies after a restart.",
-        confirmText: "Restart now",
-        cancelText: "Later",
-        onConfirm: relaunch
-    });
+function togglePlugin(name: string, enabled: boolean, title: string) {
+    if (setPluginEnabled(name, enabled)) changeNeedsRestart(`plugins.${name}.enabled`, !enabled, enabled, title);
 }
 
 export type BlockOutcome = "blocked" | "stripped" | "monitored" | "alert";
@@ -1277,7 +1270,7 @@ export function PrivacySecurityPanel() {
                             return (
                                 <div className="ps-toggle-row" key={name}>
                                     <div className="ps-toggle-info">
-                                        <span className="ps-toggle-title">{title}</span>
+                                        <span className="ps-toggle-title">{title}<HaloRestartButton label={title} pendingKey={`plugins.${name}.enabled`} /></span>
                                         <span className="ps-toggle-desc">{description}</span>
                                     </div>
                                     {hasAnyVisibleSettings(Plugins[name]) && (
@@ -1286,7 +1279,7 @@ export function PrivacySecurityPanel() {
                                     <button
                                         type="button"
                                         className={`ps-toggle-switch${on ? " ps-toggle-switch-on" : ""}`}
-                                        onClick={() => togglePlugin(name, !on)}
+                                        onClick={() => togglePlugin(name, !on, title)}
                                         aria-label={`Toggle ${title}`}
                                     >
                                         <span className="ps-toggle-knob" />

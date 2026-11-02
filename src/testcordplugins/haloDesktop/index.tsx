@@ -8,13 +8,13 @@ import { isPluginEnabled, setPluginEnabled } from "@api/PluginManager";
 import { useSettings } from "@api/Settings";
 import { Button } from "@components/Button";
 import ErrorBoundary from "@components/ErrorBoundary";
+import { changeNeedsRestart, HaloRestartButton } from "@components/HaloRestart";
 import { HaloRow, HaloSection, HaloSwitchRow } from "@components/HaloUI";
 import { openPluginModal } from "@components/settings/tabs/plugins/PluginModal";
 import SettingsPlugin from "@plugins/_core/settings";
 import { TestcordDevs } from "@utils/constants";
-import { relaunch } from "@utils/native";
 import definePlugin from "@utils/types";
-import { Alerts, i18n, Select, useEffect, useState } from "@webpack/common";
+import { i18n, Select, useEffect, useState } from "@webpack/common";
 import type { ComponentType } from "react";
 
 import Plugins from "~plugins";
@@ -90,13 +90,16 @@ const BUILDS = [
     { label: "Canary", value: "canary" }
 ];
 
+const BUILD_KEY = "halocord.desktop.build";
+const buildLabel = (build: string) => `Switching to ${BUILDS.find(b => b.value === build)?.label ?? build}`;
+
 function BuildSelector() {
     const [prefs, set] = useDesktopPrefs();
     if (!prefs) return null;
     return (
         <HaloSection>
             <HaloRow
-                title="Discord build"
+                title={<>Discord build<HaloRestartButton label={buildLabel(prefs.build)} pendingKey={BUILD_KEY} /></>}
                 description="Which Discord web build HaloCord loads. Each build is its own site, so you log in again the first time and plugin data kept in the page (like the voice panel) starts fresh there."
             >
                 <div style={{ width: 160 }}>
@@ -107,14 +110,9 @@ function BuildSelector() {
                         serialize={String}
                         select={async v => {
                             if (v === prefs.build) return;
+                            const from = prefs.build;
                             await set("build", v);
-                            Alerts.show({
-                                title: "Restart HaloCord?",
-                                body: `HaloCord loads ${BUILDS.find(b => b.value === v)!.label} after a restart.`,
-                                confirmText: "Restart now",
-                                cancelText: "Later",
-                                onConfirm: () => window.HaloCordNative?.relaunch()
-                            });
+                            changeNeedsRestart(BUILD_KEY, from, v, buildLabel(v));
                         }}
                     />
                 </div>
@@ -123,16 +121,12 @@ function BuildSelector() {
     );
 }
 
-function togglePlugin(name: string, enabled: boolean) {
-    if (!setPluginEnabled(name, enabled)) return;
-    Alerts.show({
-        title: "Restart HaloCord?",
-        body: "This change applies after a restart.",
-        confirmText: "Restart now",
-        cancelText: "Later",
-        onConfirm: relaunch
-    });
+function togglePlugin(name: string, enabled: boolean, title: string) {
+    if (setPluginEnabled(name, enabled)) changeNeedsRestart(`plugins.${name}.enabled`, !enabled, enabled, title);
 }
+
+const IDLE_TITLE = "Stay in calls when idle";
+const REJOIN_TITLE = "Rejoin calls after a restart";
 
 // DisableCallIdle and VoiceRejoin are hidden from the plugin list; they are switched here instead.
 function CallSettings() {
@@ -141,17 +135,20 @@ function CallSettings() {
     return (
         <HaloSection>
             <HaloSwitchRow
-                title="Stay in calls when idle"
+                title={IDLE_TITLE}
                 description="Stops Discord from dropping you from a DM call after 3 minutes alone or moving you to the AFK channel."
                 value={isPluginEnabled("DisableCallIdle")}
-                onChange={v => togglePlugin("DisableCallIdle", v)}
-            />
+                onChange={v => togglePlugin("DisableCallIdle", v, IDLE_TITLE)}
+            >
+                <HaloRestartButton label={IDLE_TITLE} pendingKey="plugins.DisableCallIdle.enabled" />
+            </HaloSwitchRow>
             <HaloSwitchRow
-                title="Rejoin calls after a restart"
+                title={REJOIN_TITLE}
                 description="Puts you back in the DM or server call you were in when HaloCord restarts."
                 value={rejoin}
-                onChange={v => togglePlugin("VoiceRejoin", v)}
+                onChange={v => togglePlugin("VoiceRejoin", v, REJOIN_TITLE)}
             >
+                <HaloRestartButton label={REJOIN_TITLE} pendingKey="plugins.VoiceRejoin.enabled" />
                 {rejoin && <Button variant="secondary" size="small" className="hc-ui-btn-quiet" onClick={() => openPluginModal(Plugins.VoiceRejoin)}>Options</Button>}
             </HaloSwitchRow>
         </HaloSection>

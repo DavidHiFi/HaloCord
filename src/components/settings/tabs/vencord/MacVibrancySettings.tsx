@@ -6,6 +6,7 @@
 
 import { useSettings } from "@api/Settings";
 import ErrorBoundary from "@components/ErrorBoundary";
+import { changeNeedsRestart, HaloRestartButton } from "@components/HaloRestart";
 import { Heading } from "@components/Heading";
 import { IS_MAC } from "@utils/constants";
 import { Margins } from "@utils/margins";
@@ -19,7 +20,7 @@ export function MacOSVibrancySettings() {
 
     return (
         <ErrorBoundary noop>
-            <Heading tag="h5">MacOS Window vibrancy style (requires restart)</Heading>
+            <Heading tag="h5">MacOS Window vibrancy style (requires restart)<HaloRestartButton label="Window vibrancy" pendingKey="macosVibrancyStyle" /></Heading>
             <Select
                 className={Margins.bottom20}
                 placeholder="Window vibrancy style"
@@ -77,7 +78,11 @@ export function MacOSVibrancySettings() {
                         value: "hud"
                     },
                 ]}
-                select={v => settings.macosVibrancyStyle = v}
+                select={v => {
+                    const from = settings.macosVibrancyStyle;
+                    settings.macosVibrancyStyle = v;
+                    changeNeedsRestart("macosVibrancyStyle", from, v, "Window vibrancy");
+                }}
                 isSelected={v => settings.macosVibrancyStyle === v}
                 serialize={identity}
             />

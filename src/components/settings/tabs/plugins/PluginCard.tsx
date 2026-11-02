@@ -8,6 +8,7 @@ import { showNotice } from "@api/Notices";
 import { PluginHealth } from "@api/PluginHealth";
 import { hasAnyVisibleSettings, isPluginEnabled, pluginRequiresRestart, startDependenciesRecursive, startPlugin, stopPlugin } from "@api/PluginManager";
 import { Settings, useSettings } from "@api/Settings";
+import { changeNeedsRestart, HaloRestartButton, isRestartPending, noteRestartChange } from "@components/HaloRestart";
 import { CogWheel, InfoIcon } from "@components/Icons";
 import { Paragraph } from "@components/Paragraph";
 import { AddonCard } from "@components/settings/AddonCard";
@@ -61,13 +62,12 @@ function showEnableWarningModal(plugin: Plugin, onConfirm: () => void) {
 interface PluginCardProps extends React.HTMLProps<HTMLDivElement> {
     plugin: Plugin;
     disabled?: boolean;
-    onRestartNeeded(name: string, key: string): void;
     isNew?: boolean;
     onMouseEnter?: React.MouseEventHandler<HTMLDivElement>;
     onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
 }
 
-export function PluginCard({ plugin, disabled, onRestartNeeded, onMouseEnter, onMouseLeave, isNew }: PluginCardProps) {
+export function PluginCard({ plugin, disabled, onMouseEnter, onMouseLeave, isNew }: PluginCardProps) {
     const canonicalId = (plugin as any).id ?? plugin.name;
     const settingsKey = `plugins.${canonicalId}.enabled` as const;
     const legacyKey = canonicalId !== plugin.name ? `plugins.${plugin.name}.enabled` as const : null;
@@ -99,8 +99,12 @@ export function PluginCard({ plugin, disabled, onRestartNeeded, onMouseEnter, on
     const warning = getPluginWarning(plugin);
     const isEnabled = () => isPluginEnabled(plugin.name);
 
+    const restartKey = `plugins.${plugin.name}.enabled`;
+    const restartLabel = (enabled: boolean) => `${enabled ? "Turning on" : "Turning off"} ${plugin.name}`;
+
     function doToggle(wasEnabled: boolean) {
         const nextEnabled = !wasEnabled;
+        const needsRestart = () => changeNeedsRestart(restartKey, wasEnabled, nextEnabled, restartLabel(nextEnabled));
 
         const setEnabledState = (enabled: boolean) => {
             (Settings.plugins as any)[canonicalId] = (Settings.plugins as any)[canonicalId] ?? {};
@@ -125,7 +129,7 @@ export function PluginCard({ plugin, disabled, onRestartNeeded, onMouseEnter, on
             if (restartNeeded) {
                 // If any dependencies have patches, don't start the plugin yet.
                 setEnabledState(true);
-                onRestartNeeded(plugin.name, "enabled");
+                needsRestart();
                 return;
             }
         }
@@ -133,13 +137,15 @@ export function PluginCard({ plugin, disabled, onRestartNeeded, onMouseEnter, on
         // if the plugin requires a restart, don't use stopPlugin/startPlugin. Wait for restart to apply changes.
         if (pluginRequiresRestart(plugin)) {
             setEnabledState(nextEnabled);
-            onRestartNeeded(plugin.name, "enabled");
+            needsRestart();
             return;
         }
 
         // If the plugin is enabled, but hasn't been started, then we can just toggle it off.
         if (wasEnabled && !plugin.started) {
             setEnabledState(false);
+            // Turned on this session but waiting for a restart: turning it off again needs none.
+            if (isRestartPending(restartKey)) noteRestartChange(restartKey, wasEnabled, false);
             return;
         }
 
@@ -363,16 +369,19 @@ showToast(msg, Toasts.Type.FAILURE, {
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             infoButton={
-                <button
-                    role="switch"
-                    onClick={() => openPluginModal(plugin, onRestartNeeded)}
-                    className={cl("info-button")}
-                >
-                    {hasAnyVisibleSettings(plugin)
-                        ? <CogWheel className={cl("info-icon")} />
-                        : <InfoIcon className={cl("info-icon")} />
-                    }
-                </button>
+                <>
+                    <HaloRestartButton label={restartLabel(isEnabled())} pendingKey={restartKey} />
+                    <button
+                        role="switch"
+                        onClick={() => openPluginModal(plugin)}
+                        className={cl("info-button")}
+                    >
+                        {hasAnyVisibleSettings(plugin)
+                            ? <CogWheel className={cl("info-icon")} />
+                            : <InfoIcon className={cl("info-icon")} />
+                        }
+                    </button>
+                </>
             }
             footer={footer}
         />

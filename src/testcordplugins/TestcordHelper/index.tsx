@@ -1099,8 +1099,6 @@ function ChatPluginCard({ pluginName, description }: { pluginName: string; descr
             : card;
     }
 
-    const onRestartNeeded = () => showToast("A restart is required for the change to take effect!");
-
     const depMap = getDepMap();
 
     const required = isPluginRequired(pluginName);
@@ -1118,7 +1116,6 @@ function ChatPluginCard({ pluginName, description }: { pluginName: string; descr
                         key={p.name}
                         onMouseLeave={onMouseLeave}
                         onMouseEnter={onMouseEnter}
-                        onRestartNeeded={onRestartNeeded}
                         plugin={p}
                         disabled
                     />
@@ -1130,7 +1127,6 @@ function ChatPluginCard({ pluginName, description }: { pluginName: string; descr
     return (
         <PluginCard
             key={p.name}
-            onRestartNeeded={onRestartNeeded}
             plugin={p}
         />
     );

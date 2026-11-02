@@ -232,11 +232,10 @@ async function init() {
         // already running. The old gate was `autoUpdate &&
         // !autoUpdateNotification`, which only polled for users who had opted
         // out of being told about updates -- the exact users least likely to
-        // notice a silent update. Poll whenever auto-update is enabled; the
+        // notice a silent update. Poll whenever auto-update is enabled, read on
+        // each tick so turning it on applies without a restart; the
         // once-per-session notification guard keeps it from nagging.
-        if (Settings.autoUpdate) {
-            setInterval(runUpdateCheck, 1000 * 60 * 30); // 30 minutes
-        }
+        setInterval(() => Settings.autoUpdate && runUpdateCheck(), 1000 * 60 * 30); // 30 minutes
     }
 
     if (IS_DEV) {

@@ -25,6 +25,7 @@ import { BaseText } from "@components/BaseText";
 import { Button } from "@components/Button";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Flex } from "@components/Flex";
+import { changeNeedsRestart, noteRestartChange, openRestartPrompt } from "@components/HaloRestart";
 import { Paragraph } from "@components/Paragraph";
 import { gitRemote } from "@shared/vencordUserAgent";
 import { classNameFactory } from "@utils/css";
@@ -43,6 +44,7 @@ import { Constructor } from "type-fest";
 import Plugins, { PluginMeta } from "~plugins";
 
 import { OptionComponentMap } from "./components";
+import { restartKeyOf, settingTitle } from "./components/Common";
 import { openContributorModal } from "./ContributorModal";
 import { jumpToPlugin } from "./jumpToPlugin";
 import { FavoriteButton, GithubButton, WebsiteButton } from "./PluginModalButtons";
@@ -57,8 +59,10 @@ const UserRecord = proxyLazy(() => UserStore.getCurrentUser().constructor) as Co
 
 interface PluginModalProps extends RenderModalProps {
     plugin: Plugin;
-    onRestartNeeded(key: string): void;
 }
+
+// Typed values would open the restart prompt on the first keystroke, so those only get the restart pill.
+const PROMPT_ON_CHANGE = new Set([OptionType.BOOLEAN, OptionType.SELECT, OptionType.SLIDER]);
 
 export function findPluginByName(name: string): Plugin | undefined {
     const norm = name.trim().toLowerCase().replace(/[\s\-_]/g, "");
@@ -105,7 +109,7 @@ function PluginTags({ tags }: { tags: PluginTag[]; }) {
     );
 }
 
-export default function PluginModal({ plugin, onRestartNeeded, onClose, transitionState }: PluginModalProps) {
+export default function PluginModal({ plugin, onClose, transitionState }: PluginModalProps) {
     const pluginSettings = useSettings([`plugins.${plugin.name}.*`]).plugins[plugin.name];
     const hasSettings = hasAnyVisibleSettings(plugin);
 
@@ -129,7 +133,7 @@ export default function PluginModal({ plugin, onRestartNeeded, onClose, transiti
     }, [plugin.authors]);
 
     function handleResetClick() {
-        openWarningModal(plugin, onRestartNeeded);
+        openWarningModal(plugin);
     }
 
     function renderSettings() {
@@ -146,9 +150,13 @@ export default function PluginModal({ plugin, onRestartNeeded, onClose, transiti
                 const option = plugin.settings!.def[key];
                 if (!option || option.type === OptionType.CUSTOM) return;
 
+                const restartKey = restartKeyOf(settings!, option, key);
+                const oldValue = pluginSettings[key];
                 pluginSettings[key] = newValue;
 
-                if (option.restartNeeded) onRestartNeeded(key);
+                if (!restartKey) return;
+                if (PROMPT_ON_CHANGE.has(option.type)) changeNeedsRestart(restartKey, oldValue, newValue, settingTitle(option.displayName, key));
+                else noteRestartChange(restartKey, oldValue, newValue);
             }
 
             const Component = OptionComponentMap[setting.type];
@@ -389,23 +397,18 @@ export default function PluginModal({ plugin, onRestartNeeded, onClose, transiti
     );
 }
 
-export function openPluginModal(plugin: Plugin, onRestartNeeded?: (pluginName: string, key: string) => void) {
-    openModal(modalProps => (
-        <PluginModal
-            {...modalProps}
-            plugin={plugin}
-            onRestartNeeded={(key: string) => onRestartNeeded?.(plugin.name, key)}
-        />
-    ));
+export function openPluginModal(plugin: Plugin) {
+    openModal(modalProps => <PluginModal {...modalProps} plugin={plugin} />);
 }
 
-function resetSettings(plugin: Plugin, onRestartNeeded?: (pluginName: string) => void) {
+function resetSettings(plugin: Plugin) {
     const defaultSettings = plugin.settings?.def;
     const pluginName = plugin.name;
 
     if (!defaultSettings) return;
 
     const newSettings: Record<string, any> = {};
+    const currentSettings = plugin.settings?.store;
     let restartNeeded = false;
 
     for (const key in defaultSettings) {
@@ -420,18 +423,18 @@ function resetSettings(plugin: Plugin, onRestartNeeded?: (pluginName: string) =>
             newSettings[key] = setting.default;
         }
 
-        if (setting?.restartNeeded) {
+        const restartKey = restartKeyOf(plugin.settings!, setting, key);
+        if (restartKey && key in newSettings && noteRestartChange(restartKey, currentSettings?.[key], newSettings[key])) {
             restartNeeded = true;
         }
     }
 
-    const currentSettings = plugin.settings?.store;
     if (currentSettings) {
         Object.assign(currentSettings, newSettings);
     }
 
     if (restartNeeded) {
-        onRestartNeeded?.(plugin.name);
+        void openRestartPrompt(`Resetting ${pluginName}`);
     }
 
     showToast({
@@ -441,7 +444,7 @@ function resetSettings(plugin: Plugin, onRestartNeeded?: (pluginName: string) =>
     });
 }
 
-export function openWarningModal(plugin?: Plugin | null, onRestartNeeded?: (pluginName: string) => void, isPlugin = true, enabledPlugins?: number | null, reset?: () => void) {
+export function openWarningModal(plugin?: Plugin | null, isPlugin = true, enabledPlugins?: number | null, reset?: () => void) {
     openModal(props => (
         <ConfirmModal
             {...props}
@@ -451,7 +454,7 @@ export function openWarningModal(plugin?: Plugin | null, onRestartNeeded?: (plug
             cancelText="Cancel"
             onConfirm={() => {
                 if (isPlugin && plugin) {
-                    resetSettings(plugin, onRestartNeeded);
+                    resetSettings(plugin);
                 } else {
                     reset?.();
                 }

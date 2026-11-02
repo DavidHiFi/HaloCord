@@ -21,7 +21,7 @@ import { Switch } from "@components/Switch";
 import { PluginSettingBooleanDef } from "@utils/types";
 import { React, useState } from "@webpack/common";
 
-import { resolveError, SettingProps, SettingsSection } from "./Common";
+import { resolveError, restartKeyOf, SettingProps, SettingsSection } from "./Common";
 
 export function BooleanSetting({ setting, pluginSettings, definedSettings, id, onChange }: SettingProps<PluginSettingBooleanDef>) {
     // Read straight from pluginSettings (a reactive useSettings proxy) instead of mirroring
@@ -43,7 +43,7 @@ export function BooleanSetting({ setting, pluginSettings, definedSettings, id, o
     }
 
     return (
-        <SettingsSection tag="label" name={setting.displayName} id={id} description={setting.description} error={error} inlineSetting>
+        <SettingsSection tag="label" name={setting.displayName} id={id} description={setting.description} error={error} restartKey={restartKeyOf(definedSettings, setting, id)} inlineSetting>
             <Switch
                 checked={state}
                 onChange={handleChange}

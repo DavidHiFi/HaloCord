@@ -19,7 +19,6 @@ export function openQuestifySettingsModal(plugin: Plugin): void {
             <PluginModal
                 {...modalProps}
                 plugin={plugin}
-                onRestartNeeded={() => { }}
             />
         ),
         {
