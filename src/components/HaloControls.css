@@ -1,0 +1,355 @@
+/* HaloCord look for Discord's own controls and settings pages: sliders, selects, switches, radios,
+   checkboxes, buttons, inputs, keybinds, tabs, links, info boxes and setting cards.
+   Every rule needs html.hc-theming, so stock Discord is untouched without it.
+   HasStrip deletes any rule with :has(, so none are used here. Menus ([role="menu"]) belong to HaloMenus. */
+
+/* Discord's brand and control tokens in the HaloCord accent. The selector out-ranks Discord's .theme-* blocks and the MochaCord theme. */
+html.hc-theming,
+html.hc-theming:is(.theme-dark, .theme-darker, .theme-midnight, .theme-light),
+html.hc-theming body,
+html.hc-theming :is(.theme-dark, .theme-darker, .theme-midnight, .theme-light):not(.custom-user-profile-theme) {
+    --control-primary-background-default: var(--hc-accent);
+    --control-primary-background-hover: color-mix(in srgb, var(--hc-accent) 85%, #fff);
+    --control-primary-background-active: color-mix(in srgb, var(--hc-accent) 80%, #000);
+    --control-primary-border-default: transparent;
+    --control-primary-border-hover: transparent;
+    --control-primary-border-active: transparent;
+    --control-primary-text-default: var(--hc-accent-ink);
+    --control-primary-text-hover: var(--hc-accent-ink);
+    --control-primary-text-active: var(--hc-accent-ink);
+    --control-primary-icon-default: var(--hc-accent-ink);
+    --control-primary-icon-hover: var(--hc-accent-ink);
+    --control-primary-icon-active: var(--hc-accent-ink);
+    --control-brand-foreground: var(--hc-accent);
+    --control-brand-foreground-new: var(--hc-accent);
+    --background-brand: var(--hc-accent);
+    --text-brand: var(--hc-accent);
+    --icon-brand: var(--hc-accent);
+    --text-link: var(--hc-accent);
+    --brand-500: var(--hc-accent);
+    --brand-360: var(--hc-accent);
+    --border-focus: var(--hc-accent);
+    --focus-primary: var(--hc-accent);
+    --input-border-active: var(--hc-accent);
+    --input-border-hover: rgb(var(--hc-accent-rgb) / 40%);
+    --button-outline-brand-background-hover: rgb(var(--hc-accent-rgb) / 12%);
+    --button-outline-brand-border-active: var(--hc-accent);
+    --radio-background-selected-default: var(--hc-accent);
+    --radio-background-selected-hover: color-mix(in srgb, var(--hc-accent) 85%, #fff);
+    --radio-border-selected-default: var(--hc-accent);
+    --radio-border-selected-hover: var(--hc-accent);
+    --radio-background-active: color-mix(in srgb, var(--hc-accent) 80%, #000);
+    --radio-foreground-active: var(--hc-accent);
+    --radio-thumb-background-active: var(--hc-accent-ink);
+    --checkbox-background-selected-default: var(--hc-accent);
+    --checkbox-background-selected-hover: color-mix(in srgb, var(--hc-accent) 85%, #fff);
+    --checkbox-border-selected-default: var(--hc-accent);
+    --checkbox-border-selected-hover: var(--hc-accent);
+    --checkbox-background-active: var(--hc-accent);
+    --checkbox-icon-active: var(--hc-accent-ink);
+    --switch-background-selected-default: var(--hc-accent);
+    --switch-background-selected-hover: color-mix(in srgb, var(--hc-accent) 85%, #fff);
+    --switch-background-active: var(--hc-accent);
+    --switch-border-selected-default: var(--hc-accent);
+    --switch-border-selected-hover: var(--hc-accent);
+    --switch-thumb-background-selected-default: var(--hc-accent-ink);
+    --switch-thumb-icon-active: var(--hc-accent);
+    --togglebutton-background-selected: rgb(var(--hc-accent-rgb) / 18%);
+    --togglebutton-background-selected-hover: rgb(var(--hc-accent-rgb) / 26%);
+    --togglebutton-background-selected-active: rgb(var(--hc-accent-rgb) / 30%);
+    --togglebutton-border-selected: var(--hc-accent);
+    --togglebutton-border-active: var(--hc-accent);
+    --togglebutton-icon-selected: var(--hc-accent);
+    --togglebutton-icon-selected-hover: var(--hc-accent);
+    --interactive-accent-background-selected: rgb(var(--hc-accent-rgb) / 18%);
+    --interactive-accent-background-hover: rgb(var(--hc-accent-rgb) / 12%);
+    --interactive-accent-background-active: rgb(var(--hc-accent-rgb) / 22%);
+    --background-feedback-info: rgb(var(--hc-accent-rgb) / 10%);
+    --border-feedback-info: rgb(var(--hc-accent-rgb) / 40%);
+    --text-feedback-info: var(--hc-accent);
+    --icon-feedback-info: var(--hc-accent);
+    --notice-background-info: var(--hc-accent);
+    --notice-text-info: var(--hc-accent-ink);
+    --slider-track-background: color-mix(in srgb, var(--hc-text-muted) 45%, transparent);
+    --progressbar-indicator-background: var(--hc-accent);
+    --badge-primary-background: var(--hc-accent);
+    --badge-primary-border: var(--hc-accent);
+    --standard-tab-gradient-center: var(--hc-accent);
+    --standard-tab-gradient-inner-ring: rgb(var(--hc-accent-rgb) / 50%);
+    --standard-tab-gradient-outer-ring: rgb(var(--hc-accent-rgb) / 0%);
+
+    accent-color: var(--hc-accent);
+}
+
+/* Settings pages and HaloCord windows: inputs and scrollbars on the dark row surface. */
+html.hc-theming :is([class*="scroller__6131a"], .vc-settings-tab, .vc-settings-modal-content, .hc-window) {
+    --input-background-default: var(--hc-row-bg);
+    --input-border-default: var(--hc-row-border);
+    --scrollbar-thin-thumb: var(--hc-scroll-thumb);
+    --scrollbar-thin-track: transparent;
+    --scrollbar-auto-thumb: var(--hc-scroll-thumb);
+    --scrollbar-auto-track: transparent;
+}
+
+/* Sliders: grey track, accent fill, round accent knob with a soft ring like the voice panel. */
+html.hc-theming :is([class^="slider_"], [class*=" slider_"]):not([role="menu"] *) :is([class^="bar_"], [class*=" bar_"]) {
+    background-color: var(--slider-track-background);
+}
+
+html.hc-theming :is([class^="slider_"], [class*=" slider_"]):not([role="menu"] *) [class*="barFill_"] {
+    border: none;
+    background: var(--hc-accent);
+}
+
+html.hc-theming :is([class^="slider_"], [class*=" slider_"]):not([role="menu"] *) [class*="grabber_"] {
+    border: none;
+    border-radius: 50%;
+    background-color: var(--hc-accent);
+    box-shadow: 0 0 0 4px rgb(var(--hc-accent-rgb) / 18%);
+    transition: box-shadow 0.15s;
+}
+
+html.hc-theming :is([class^="slider_"], [class*=" slider_"]):not([role="menu"] *) [class*="grabber_"]:hover {
+    box-shadow: 0 0 0 5px rgb(var(--hc-accent-rgb) / 25%), 0 0 10px rgb(var(--hc-accent-rgb) / 35%);
+}
+
+html.hc-theming :is([class^="slider_"], [class*=" slider_"]):not([role="menu"] *) [class*="markDash_"] {
+    background-color: var(--slider-track-background);
+}
+
+/* Select pills: dark row, thin border, accent edge and glow on hover or when open. */
+html.hc-theming [data-mana-component="select-input-field"]:not([role="menu"] *),
+html.hc-theming :is([class^="select_"], [class*=" select_"])[aria-expanded]:not([role="menu"] *) {
+    border: 1px solid var(--hc-row-border);
+    border-radius: 8px;
+    background: var(--hc-row-bg);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+html.hc-theming [data-mana-component="select-input-field"]:not([role="menu"] *):is(:hover, :focus-within, [aria-expanded="true"]),
+html.hc-theming :is([class^="select_"], [class*=" select_"])[aria-expanded]:not([role="menu"] *):is(:hover, [aria-expanded="true"]) {
+    border-color: color-mix(in srgb, var(--hc-accent) 55%, transparent);
+    box-shadow: 0 0 10px rgb(var(--hc-accent-rgb) / 25%);
+}
+
+/* Select popouts: the list in the HaloCord window colour with an accent hover and pick. */
+html.hc-theming [data-mana-component="listbox"],
+html.hc-theming :is([class^="popout_"], [class*=" popout_"])[role="listbox"] {
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 8px;
+    background: var(--hc-window-bg);
+    color: var(--hc-text);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+}
+
+html.hc-theming :is([data-mana-component="listbox"], [class*="popout_"][role="listbox"]) [role="option"] {
+    border-radius: 6px;
+}
+
+html.hc-theming :is([data-mana-component="listbox"], [class*="popout_"][role="listbox"]) [role="option"]:is(:hover, [data-focused], [data-hovered]) {
+    background: rgb(var(--hc-accent-rgb) / 14%);
+}
+
+html.hc-theming :is([data-mana-component="listbox"], [class*="popout_"][role="listbox"]) [role="option"]:is([aria-selected="true"], [data-selected]) {
+    background: rgb(var(--hc-accent-rgb) / 22%);
+    color: var(--hc-accent);
+}
+
+/* Native selects outside the voice panel (the voice panel styles its own). */
+html.hc-theming select:not(#dvx-native-settings *) {
+    color-scheme: dark;
+}
+
+html.hc-theming select:not(#dvx-native-settings *) option {
+    background: var(--hc-window-bg);
+    color: var(--hc-text);
+}
+
+html.hc-theming select:not(#dvx-native-settings *) option:checked {
+    background: rgb(var(--hc-accent-rgb) / 22%);
+    color: var(--hc-accent);
+}
+
+/* Discord's switch paints its colours inline (rgb 88 101 242 when on), so only !important reaches it. */
+html.hc-theming [data-mana-component="switch"]:is([style*="88, 101, 242"], [style*="68, 82, 187"], [style*="58, 72, 163"]) {
+    border-color: var(--hc-accent) !important;
+    background-color: var(--hc-accent) !important;
+}
+
+html.hc-theming [data-mana-component="switch"]:is([style*="88, 101, 242"], [style*="68, 82, 187"], [style*="58, 72, 163"]) rect {
+    fill: var(--hc-accent-ink) !important;
+}
+
+/* HaloCord's own switch: the theme paints its square label, which shows behind the round track. */
+html.hc-theming .vc-switch-container {
+    background-color: transparent !important;
+}
+
+/* Buttons: accent buttons glow a little on hover. */
+html.hc-theming :is([class*="lookFilled__"][class*="colorBrand__"], [data-mana-component="button"][class*="primary_"]):not(:disabled):hover {
+    box-shadow: 0 0 10px rgb(var(--hc-accent-rgb) / 30%);
+}
+
+html.hc-theming [class*="lookFilled__"][class*="colorLink__"] {
+    background-color: var(--hc-accent);
+    color: var(--hc-accent-ink);
+}
+
+/* Keybind recorder: accent edge on hover and an accent pulse while recording, not red. */
+html.hc-theming [class*="recorderContainer__"]:hover {
+    border-color: color-mix(in srgb, var(--hc-accent) 55%, transparent);
+}
+
+html.hc-theming [class*="recorderContainer__"][class*="recording__"] {
+    border-color: var(--hc-accent);
+    color: var(--hc-accent);
+    box-shadow: 0 0 10px rgb(var(--hc-accent-rgb) / 35%);
+    animation: none;
+}
+
+html.hc-theming [class*="recorderContainer__"][class*="recording__"] :is(input, [class*="text"]) {
+    color: var(--hc-accent);
+}
+
+/* Tab bars: the open tab in the accent. */
+html.hc-theming [class*="tabItemSelected__"] {
+    border-bottom-color: var(--hc-accent);
+    color: var(--hc-accent);
+}
+
+html.hc-theming [class*="pillItemSelected__"] {
+    background-color: rgb(var(--hc-accent-rgb) / 16%);
+    color: var(--hc-accent);
+}
+
+/* Radio cards: the picked card gets an accent edge and tint. */
+html.hc-theming [class*="itemFilled__"][aria-checked="true"],
+html.hc-theming [class*="radioBarSelected__"] {
+    border-color: rgb(var(--hc-accent-rgb) / 45%);
+    background-color: rgb(var(--hc-accent-rgb) / 10%);
+}
+
+/* Settings pages: every setting is a dark rounded row; card groups are thin-bordered panels holding rows.
+   The setting wrapper sets its padding inline, hence !important. */
+html.hc-theming [class*="scroller__6131a"] :is([class*="baseControlItem_dbfbe0"], [class*="baseSettingWrapper__32428"]) {
+    margin: 0;
+    padding: 12px 14px !important;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 11px;
+    background: var(--hc-row-bg);
+    transition: border-color 0.15s ease;
+}
+
+html.hc-theming [class*="scroller__6131a"] :is([class*="baseControlItem_dbfbe0"], [class*="baseSettingWrapper__32428"]):hover {
+    border-color: rgb(var(--hc-accent-rgb) / 22%);
+    background: var(--hc-row-bg);
+}
+
+html.hc-theming [class*="scroller__6131a"] [class*="divider__1de9c"]:not([class*="divider__6131a"]) {
+    display: none;
+}
+
+html.hc-theming [class*="scroller__6131a"] [class*="divider__6131a"] {
+    border-color: var(--hc-row-border);
+}
+
+html.hc-theming [class*="scroller__6131a"] [class*="card_b2d910"] {
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 14px;
+    background: var(--hc-panel-bg);
+    box-shadow: inset 0 1px rgb(255 255 255 / 3%);
+}
+
+html.hc-theming [class*="scroller__6131a"] [class*="cardHeader_b2d910"] {
+    padding: 12px 12px 0;
+    border-bottom: none;
+    background: transparent;
+}
+
+html.hc-theming [class*="scroller__6131a"] [class*="cardBody_b2d910"] {
+    gap: 8px;
+    padding: 12px;
+    background: transparent;
+}
+
+html.hc-theming [class*="scroller__6131a"] [class*="triggerButton__64c86"] {
+    border: 1px solid var(--hc-row-border);
+    background-color: var(--hc-row-bg);
+    transition: border-color 0.15s ease;
+}
+
+html.hc-theming [class*="scroller__6131a"] [class*="triggerButton__64c86"]:hover {
+    border-color: color-mix(in srgb, var(--hc-accent) 55%, transparent);
+}
+
+html.hc-theming [class*="scroller__6131a"] {
+    scrollbar-color: var(--hc-scroll-thumb) transparent;
+    scrollbar-width: thin;
+}
+
+/* HaloCord's own pages and plugin windows (the :has rules in HaloUI.css are removed by HasStrip, so they live here). */
+html.hc-theming :is(.vc-settings-tab, .vc-settings-modal-content, .hc-window) .vc-form-switch-container,
+html.hc-theming :is(.vc-settings-tab, .vc-settings-modal-content, .hc-window) .vc-plugins-setting-section {
+    margin-bottom: 8px;
+    padding: 12px 14px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 11px;
+    background: var(--hc-row-bg);
+    transition: border-color 0.15s ease;
+}
+
+html.hc-theming :is(.vc-settings-tab, .vc-settings-modal-content, .hc-window) .vc-form-switch-container:hover,
+html.hc-theming :is(.vc-settings-tab, .vc-settings-modal-content, .hc-window) .vc-plugins-setting-section:hover {
+    border-color: rgb(var(--hc-accent-rgb) / 22%);
+}
+
+/* Themes force button colours, hence !important. */
+html.hc-theming :is(.vc-settings-tab, .vc-settings-modal-content, .hc-window) .vc-btn-base:is(.vc-btn-primary, .vc-btn-positive) {
+    border-color: transparent !important;
+    background-color: var(--hc-accent) !important;
+    color: var(--hc-accent-ink) !important;
+    font-weight: 700;
+}
+
+html.hc-theming :is(.vc-settings-tab, .vc-settings-modal-content, .hc-window) .vc-btn-base:is(.vc-btn-primary, .vc-btn-positive):hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--hc-accent) 85%, #fff) !important;
+    box-shadow: 0 0 10px rgb(var(--hc-accent-rgb) / 30%);
+}
+
+html.hc-theming :is(.vc-settings-tab, .vc-settings-modal-content, .hc-window) .vc-btn-base.vc-btn-secondary {
+    border: 1px solid rgb(var(--hc-accent-rgb) / 30%) !important;
+    background-color: var(--hc-row-bg) !important;
+    color: var(--hc-accent) !important;
+    font-weight: 700;
+}
+
+html.hc-theming :is(.vc-settings-tab, .vc-settings-modal-content, .hc-window) .vc-btn-base.vc-btn-secondary:hover:not(:disabled) {
+    border-color: rgb(var(--hc-accent-rgb) / 55%) !important;
+    background-color: rgb(var(--hc-accent-rgb) / 10%) !important;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+html.hc-theming :is(.vc-settings-tab, .vc-settings-modal-content, .hc-window) .vc-btn-base:is(.vc-btn-dangerPrimary, .vc-btn-dangerSecondary) {
+    border: 1px solid color-mix(in srgb, var(--status-danger) 45%, transparent) !important;
+    background-color: color-mix(in srgb, var(--status-danger) 12%, transparent) !important;
+    color: color-mix(in srgb, var(--status-danger) 60%, #fff) !important;
+    font-weight: 700;
+}
+
+html.hc-theming :is(.vc-settings-tab, .vc-settings-modal-content, .hc-window) .vc-btn-base:is(.vc-btn-dangerPrimary, .vc-btn-dangerSecondary):hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--status-danger) 70%, transparent) !important;
+    background-color: color-mix(in srgb, var(--status-danger) 22%, transparent) !important;
+}
+
+html.hc-theming .vc-link {
+    color: var(--hc-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.hc-theming [class*="scroller__6131a"] :is([class*="baseControlItem_dbfbe0"], [class*="baseSettingWrapper__32428"], [class*="triggerButton__64c86"]),
+    html.hc-theming [data-mana-component="select-input-field"],
+    html.hc-theming [class*="grabber_"],
+    html.hc-theming :is(.vc-settings-tab, .vc-settings-modal-content, .hc-window) :is(.vc-form-switch-container, .vc-plugins-setting-section) {
+        transition: none;
+    }
+}
