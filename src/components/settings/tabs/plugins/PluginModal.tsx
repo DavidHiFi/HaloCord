@@ -155,7 +155,7 @@ export default function PluginModal({ plugin, onClose, transitionState }: Plugin
                 pluginSettings[key] = newValue;
 
                 if (!restartKey) return;
-                if (PROMPT_ON_CHANGE.has(option.type)) changeNeedsRestart(restartKey, oldValue, newValue, settingTitle(option.displayName, key));
+                if (PROMPT_ON_CHANGE.has(option.type)) changeNeedsRestart(restartKey, oldValue, newValue, settingTitle("displayName" in option ? option.displayName : undefined, key));
                 else noteRestartChange(restartKey, oldValue, newValue);
             }
 
