@@ -45,8 +45,8 @@ git = lambda *a: subprocess.run(["git", *a], cwd=D.parent, capture_output=True, 
 base = lambda f: (D.parent / ".github" / f).read_text().strip() if (D.parent / ".github" / f).exists() else ""
 (asrc / "build.json").write_text(json.dumps({"version": VERSION, "commit": git("rev-parse", "HEAD"),
                                             "upstream": {"Equicord": base("equicord-base"), "TestCord": base("testcord-base")}}))
-# hc-overlay: in-game overlay window (main side, its preload and page), next to main.js.
-for f in ("hc-overlay-main.js", "hc-overlay-preload.js", "hc-overlay.html", "hc-overlay.js"):
+# hc-overlay: in-game overlay window (main side, game detection, its preload and page), next to main.js.
+for f in ("hc-overlay-main.js", "hc-overlay-games.js", "hc-overlay-preload.js", "hc-overlay.html", "hc-overlay.js"):
     shutil.copy2(D / "shell" / f, asrc / f)
 # halocord-loopback.exe sits next to app.asar (process.resourcesPath); build it if it is missing.
 lb = D / "loopback" / "halocord-loopback.exe"
@@ -170,7 +170,10 @@ for f in ("preload.js", "userscript.js"):
         a = 'contextBridge.exposeInMainWorld("__audiocord",__kcBridge)'
         assert s.count(a) == 1
         s = s.replace(a, a + ',contextBridge.exposeInMainWorld("HaloCordOverlay",{setConfig:A=>ipcRenderer.invoke("halocord:overlay-config",A),'
-                             'voice:A=>ipcRenderer.send("halocord:overlay-voice",A),notify:A=>ipcRenderer.send("halocord:overlay-notify",A)})')
+                             'voice:A=>ipcRenderer.send("halocord:overlay-voice",A),notify:A=>ipcRenderer.send("halocord:overlay-notify",A),'
+                             'activity:A=>ipcRenderer.send("halocord:overlay-activity",A),games:()=>ipcRenderer.invoke("halocord:overlay-games"),'
+                             'setGame:(A,B)=>ipcRenderer.invoke("halocord:overlay-set-game",String(A),!!B),reset:()=>ipcRenderer.invoke("halocord:overlay-reset"),'
+                             'onEvent:A=>{ipcRenderer.removeAllListeners("halocord:overlay-event");ipcRenderer.on("halocord:overlay-event",(B,C,D)=>A(C,D));return!0}})')
         # hc-keys: HaloCordKeys, the page side of shell/hc-keys.js.
         a = 'contextBridge.exposeInMainWorld("__kurtcord",__kcBridge),'
         assert s.count(a) == 1
