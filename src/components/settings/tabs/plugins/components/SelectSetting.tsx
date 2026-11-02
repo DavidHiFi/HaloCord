@@ -20,7 +20,7 @@ import { isSettingDisabled } from "@api/PluginManager";
 import { PluginSettingSelectDef } from "@utils/types";
 import { React, Select, useState } from "@webpack/common";
 
-import { resolveError, SettingProps, SettingsSection } from "./Common";
+import { resolveError, restartKeyOf, SettingProps, SettingsSection } from "./Common";
 
 export function SelectSetting({ setting, pluginSettings, definedSettings, onChange, id }: SettingProps<PluginSettingSelectDef>) {
     // Derived, not mirrored: local state went stale when the value was changed outside
@@ -40,7 +40,7 @@ export function SelectSetting({ setting, pluginSettings, definedSettings, onChan
     }
 
     return (
-        <SettingsSection name={setting.displayName} id={id} description={setting.description} error={error}>
+        <SettingsSection name={setting.displayName} id={id} description={setting.description} error={error} restartKey={restartKeyOf(definedSettings, setting, id)}>
             <Select
                 placeholder={setting.placeholder ?? "Select an option"}
                 maxVisibleItems={5}

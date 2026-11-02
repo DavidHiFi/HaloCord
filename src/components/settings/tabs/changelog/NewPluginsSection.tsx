@@ -5,15 +5,12 @@
  */
 
 import { useSettings } from "@api/Settings";
-import { Button } from "@components/Button";
 import { Card } from "@components/Card";
 import { Heading } from "@components/Heading";
 import { Paragraph } from "@components/Paragraph";
 import { PluginCard } from "@components/settings/tabs/plugins/PluginCard";
-import { ChangeList } from "@utils/ChangeList";
 import { classNameFactory } from "@utils/css";
 import { Margins } from "@utils/margins";
-import { useForceUpdater } from "@utils/react";
 import { React, Tooltip } from "@webpack/common";
 
 import Plugins from "~plugins";
@@ -30,8 +27,6 @@ export function NewPluginsSection({
     onPluginToggle,
 }: NewPluginsSectionProps) {
     const settings = useSettings();
-    const changes = React.useMemo(() => new ChangeList<string>(), []);
-    const forceUpdate = useForceUpdater();
 
     const depMap = React.useMemo(() => {
         const o = {} as Record<string, string[]>;
@@ -115,10 +110,6 @@ export function NewPluginsSection({
                                         <PluginCard
                                             onMouseLeave={onMouseLeave}
                                             onMouseEnter={onMouseEnter}
-                                            onRestartNeeded={name => {
-                                                changes.handleChange(name);
-                                                forceUpdate();
-                                            }}
                                             disabled={true}
                                             plugin={plugin}
                                             isNew={true}
@@ -135,10 +126,6 @@ export function NewPluginsSection({
                             className={cl("new-plugin-card")}
                         >
                             <PluginCard
-                                onRestartNeeded={name => {
-                                    changes.handleChange(name);
-                                    forceUpdate();
-                                }}
                                 disabled={false}
                                 plugin={plugin}
                                 isNew={true}
@@ -147,36 +134,6 @@ export function NewPluginsSection({
                     );
                 })}
             </div>
-
-            {changes.hasChanges && (
-                <div className={cl("restart-notice")}>
-                    <Tooltip
-                        text={
-                            <>
-                                The following plugins require a restart:
-                                <div className={Margins.bottom8} />
-                                <ul>
-                                    {Array.from(changes, p => (
-                                        <li key={p}>{p}</li>
-                                    ))}
-                                </ul>
-                            </>
-                        }
-                    >
-                        {tooltipProps => (
-                            <Button
-                                {...tooltipProps}
-                                variant="link"
-                                size="small"
-                                onClick={() => location.reload()}
-                                className={Margins.top16}
-                            >
-                                Restart Required
-                            </Button>
-                        )}
-                    </Tooltip>
-                </div>
-            )}
         </div>
     );
 }

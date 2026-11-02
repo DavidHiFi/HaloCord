@@ -19,11 +19,11 @@
 import { definePluginSettings, migratePluginSetting, migratePluginSettings } from "@api/Settings";
 import { Button, LinkButton } from "@components/Button";
 import { Card } from "@components/Card";
+import { openRestartPrompt } from "@components/HaloRestart";
 import { Heading } from "@components/Heading";
 import { Margins } from "@components/margins";
 import { Paragraph } from "@components/Paragraph";
 import { Devs } from "@utils/constants";
-import { promptToRestart } from "@utils/promptToRestart";
 import { useAwaiter, useForceUpdater } from "@utils/react";
 import definePlugin, { OptionType } from "@utils/types";
 import { Activity, ActivityAssets, ActivityButton } from "@vencord/discord-types";
@@ -269,7 +269,7 @@ function CustomInstanceAboutComponent() {
                             if (!res) return;
                         }
                         forceUpdate();
-                        promptToRestart("relaunch");
+                        openRestartPrompt("Allowing your ListenBrainz instance");
                     }}
                 >
                     Allow Instance

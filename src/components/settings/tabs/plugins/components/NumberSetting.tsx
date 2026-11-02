@@ -20,7 +20,7 @@ import { isSettingDisabled } from "@api/PluginManager";
 import { OptionType, PluginSettingBigIntDef, PluginSettingNumberDef } from "@utils/types";
 import { React, TextInput, useState } from "@webpack/common";
 
-import { resolveError, SettingProps, SettingsSection } from "./Common";
+import { resolveError, restartKeyOf, SettingProps, SettingsSection } from "./Common";
 
 const MAX_SAFE_NUMBER = BigInt(Number.MAX_SAFE_INTEGER);
 
@@ -51,7 +51,7 @@ export function NumberSetting({ setting, pluginSettings, definedSettings, id, on
     }
 
     return (
-        <SettingsSection name={setting.displayName} id={id} description={setting.description} error={error}>
+        <SettingsSection name={setting.displayName} id={id} description={setting.description} error={error} restartKey={restartKeyOf(definedSettings, setting, id)}>
             <TextInput
                 type="number"
                 pattern="-?[0-9]+"

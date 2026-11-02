@@ -9,13 +9,13 @@ import "./styles.css";
 import { Settings, useSettings } from "@api/Settings";
 import { BaseText } from "@components/BaseText";
 import ErrorBoundary from "@components/ErrorBoundary";
+import { useRestartPending } from "@components/HaloRestart";
 import { Link } from "@components/Link";
 import { Notice } from "@components/Notice";
 import { PluginDependencyList } from "@components/settings/tabs/plugins";
 import { PluginCard } from "@components/settings/tabs/plugins/PluginCard";
-import { ChangeList } from "@utils/ChangeList";
 import { classNameFactory } from "@utils/css";
-import { useForceUpdater } from "@utils/react";
+import { relaunch } from "@utils/native";
 import { RenderModalProps } from "@vencord/discord-types";
 import { closeModal, Modal, openModal, Tooltip, useMemo } from "@webpack/common";
 import { ReactNode } from "react";
@@ -36,8 +36,7 @@ interface ModalComponentProps {
 
 function NewPluginsModal({ modalProps, newPlugins, newSettings }: ModalComponentProps) {
     const settings = useSettings();
-    const changes = useMemo(() => new ChangeList<string>(), []);
-    const forceUpdate = useForceUpdater();
+    const restartPending = useRestartPending();
 
     const depMap = useMemo(() => {
         const o = {} as Record<string, string[]>;
@@ -61,11 +60,6 @@ function NewPluginsModal({ modalProps, newPlugins, newSettings }: ModalComponent
         ];
     }, []);
 
-    const onRestartNeeded = (name: string) => {
-        changes.handleChange(name);
-        forceUpdate();
-    };
-
     const pluginCards: ReactNode[] = [];
     const requiredPluginCards: ReactNode[] = [];
 
@@ -85,7 +79,6 @@ function NewPluginsModal({ modalProps, newPlugins, newSettings }: ModalComponent
                         <PluginCard
                             onMouseLeave={onMouseLeave}
                             onMouseEnter={onMouseEnter}
-                            onRestartNeeded={onRestartNeeded}
                             disabled={true}
                             plugin={p}
                             isNew={newPlugins.has(p.name)}
@@ -96,7 +89,6 @@ function NewPluginsModal({ modalProps, newPlugins, newSettings }: ModalComponent
         } else {
             pluginCards.push(
                 <PluginCard
-                    onRestartNeeded={onRestartNeeded}
                     disabled={false}
                     plugin={p}
                     key={p.name}
@@ -110,8 +102,8 @@ function NewPluginsModal({ modalProps, newPlugins, newSettings }: ModalComponent
 
     const handleContinue = async () => {
         await writeKnownSettings();
-        if (changes.hasChanges) {
-            location.reload();
+        if (restartPending) {
+            relaunch();
         } else {
             modalProps.onClose();
         }
@@ -149,7 +141,7 @@ function NewPluginsModal({ modalProps, newPlugins, newSettings }: ModalComponent
                     variant: "secondary"
                 },
                 {
-                    text: changes.hasChanges ? "Restart" : "Continue",
+                    text: restartPending ? "Restart" : "Continue",
                     onClick: handleContinue,
                     variant: "primary"
                 }

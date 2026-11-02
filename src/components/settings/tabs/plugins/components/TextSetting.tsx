@@ -20,7 +20,7 @@ import { isSettingDisabled } from "@api/PluginManager";
 import { PluginSettingStringDef } from "@utils/types";
 import { React, TextArea, TextInput, useState } from "@webpack/common";
 
-import { resolveError, SettingProps, SettingsSection } from "./Common";
+import { resolveError, restartKeyOf, SettingProps, SettingsSection } from "./Common";
 
 export function TextSetting({ setting, pluginSettings, definedSettings, id, onChange }: SettingProps<PluginSettingStringDef>) {
     // Derived, not mirrored, so external writes to this setting show up immediately.
@@ -38,7 +38,7 @@ export function TextSetting({ setting, pluginSettings, definedSettings, id, onCh
     }
 
     return (
-        <SettingsSection name={setting.displayName} id={id} description={setting.description} error={error}>
+        <SettingsSection name={setting.displayName} id={id} description={setting.description} error={error} restartKey={restartKeyOf(definedSettings, setting, id)}>
             {setting.multiline
                 ? <TextArea
                     placeholder={setting.placeholder ?? "Enter a value"}

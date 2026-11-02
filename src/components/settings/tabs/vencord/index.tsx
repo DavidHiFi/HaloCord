@@ -11,6 +11,7 @@ import { useSettings } from "@api/Settings";
 import { Button } from "@components/Button";
 import { Divider } from "@components/Divider";
 import { FormSwitch } from "@components/FormSwitch";
+import { changeNeedsRestart, HaloRestartButton } from "@components/HaloRestart";
 import { Heading } from "@components/Heading";
 import { FolderIcon, GithubIcon, LogIcon, PaintbrushIcon, RestartIcon } from "@components/Icons";
 import { Notice } from "@components/Notice";
@@ -26,7 +27,6 @@ import { classNameFactory } from "@utils/css";
 import { Margins } from "@utils/margins";
 import { isAnyPluginDev } from "@utils/misc";
 import { relaunch } from "@utils/native";
-import { promptToRestart } from "@utils/promptToRestart";
 import { GuildMemberStore, React, UserStore } from "@webpack/common";
 
 import { DonateButtonComponent } from "./DonateButton";
@@ -128,7 +128,7 @@ function Switches() {
         return (
             <FormSwitch
                 key={key}
-                title={title}
+                title={restartRequired ? <>{title}<HaloRestartButton label={title} pendingKey={key} /></> : title}
                 description={
                     warning ? (
                         <>
@@ -144,12 +144,11 @@ function Switches() {
                 value={settings[key]}
                 hideBorder
                 onChange={v => {
+                    const from = settings[key];
                     settings[key] = v;
                     syncShellWindowPrefs();
 
-                    if (restartRequired) {
-                        promptToRestart("relaunch");
-                    }
+                    if (restartRequired) changeNeedsRestart(key, from, v, title);
                 }}
             />
         );
