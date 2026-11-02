@@ -4,19 +4,26 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import "./styles.css";
+
 import { DataStore } from "@api/index";
 import NotificationComponent from "@api/Notifications/NotificationComponent";
 import { persistNotification } from "@api/Notifications/notificationLog";
 import { plugins } from "@api/PluginManager";
 import { definePluginSettings } from "@api/Settings";
 import { UserAreaButton, UserAreaRenderProps } from "@api/UserArea";
+import { Button } from "@components/Button";
+import { HaloPill, HaloRow, HaloSection, HaloSwitchRow } from "@components/HaloUI";
 import { openPluginModal } from "@components/settings";
 import { TestcordDevs } from "@utils/constants";
+import { classNameFactory } from "@utils/css";
 import { Logger } from "@utils/Logger";
+import { classes } from "@utils/misc";
 import definePlugin, { makeRange, OptionType } from "@utils/types";
 import { findByCodeLazy, findByPropsLazy } from "@webpack";
-import { Button, lodash, MediaEngineStore, React, ReactDOM, RelationshipStore, SelectedChannelStore, UserStore, VoiceStateStore } from "@webpack/common";
+import { lodash, MediaEngineStore, React, ReactDOM, RelationshipStore, SelectedChannelStore, Slider, UserStore, VoiceStateStore } from "@webpack/common";
 
+import { hasVoiceRoute, isLimiterActive, setLimiter } from "./limiter";
 import { VolumeHold } from "./protection";
 
 const logger = new Logger("MicSpamGuard");
@@ -37,6 +44,9 @@ const PERSIST_DEBOUNCE_MS = 1000;
 const NOTICE_LIFETIME_MS = 3000;
 
 const MIC_GUARD_KEYS = ["enabled"] as const;
+const LIMITER_KEYS = ["enabled", "limiter", "limiterCeiling", "limiterRelease"] as const;
+const RELEASE_CHOICES = [25, 50, 100, 200, 500, 1000];
+const cl = classNameFactory("vc-msg-");
 
 interface VoiceStats {
     rtp?: { inbound?: Record<string, unknown> | unknown[]; };
@@ -92,6 +102,19 @@ let boundConnection: VoiceConnection | null = null;
 let intervalId: ReturnType<typeof setInterval> | undefined;
 let persistQueue = Promise.resolve();
 let heldWrite: { (): void; flush(): void; } | undefined;
+let running = false;
+
+function syncRunning() {
+    const on = running && settings.store.enabled;
+    setLimiter(on && settings.store.limiter, settings.store.limiterCeiling, settings.store.limiterRelease);
+    if (on && intervalId === undefined) intervalId = setInterval(poll, POLL_MS);
+    if (!on && intervalId !== undefined) {
+        clearInterval(intervalId);
+        intervalId = undefined;
+        bindConnection(null);
+        connection = null;
+    }
+}
 
 const settings = definePluginSettings({
     enabled: {
@@ -104,7 +127,36 @@ const settings = definePluginSettings({
                 unmuteAll("silent");
                 restoreAll("silent");
             }
+            syncRunning();
         }
+    },
+    limiter: {
+        type: OptionType.BOOLEAN,
+        displayName: "Hard limiter",
+        description: "Keep everyone's voice under a fixed loudness ceiling.",
+        default: true,
+        hidden: () => true,
+        onChange: () => syncRunning()
+    },
+    limiterCeiling: {
+        type: OptionType.SLIDER,
+        displayName: "Limiter ceiling",
+        description: "The loudest any voice can play, in dB below full scale.",
+        markers: makeRange(-12, 0, 1),
+        default: -1,
+        stickToMarkers: true,
+        hidden: () => true,
+        onChange: () => syncRunning()
+    },
+    limiterRelease: {
+        type: OptionType.SLIDER,
+        displayName: "Limiter release",
+        description: "How fast the volume comes back after a peak, in milliseconds.",
+        markers: RELEASE_CHOICES,
+        default: 100,
+        stickToMarkers: true,
+        hidden: () => true,
+        onChange: () => syncRunning()
     },
     autoMute: {
         type: OptionType.BOOLEAN,
@@ -131,7 +183,7 @@ const settings = definePluginSettings({
     sensitivity: {
         type: OptionType.SLIDER,
         displayName: "Mute sensitivity",
-        description: "Higher reacts sooner. Lower requires more consecutive extreme samples. A normal or quiet sample resets the count.",
+        description: "How many extreme seconds in a row it takes to mute: 1 second at 8 to 10, 2 at 5 to 7, 3 at 3 or 4, 4 at 1 or 2. A normal or quiet second resets the count.",
         hidden: () => !settings.store.autoMute,
         markers: makeRange(1, 10, 1),
         default: 5,
@@ -278,7 +330,7 @@ function GuardNotice() {
     return ReactDOM.createPortal(
         <NotificationComponent title="MicSpamGuard" body={items.map(item => item.body).join("\n")}
             richBody={<div>{items.map(item => <p key={item.key} className="vc-notification-p">{item.body}</p>)}</div>}
-            color={items.some(item => item.warning) ? "#f9e2af" : "#a6e3a1"}
+            color={noticeColor(items.some(item => item.warning))}
             permanent onClose={clearNotices} />,
         document.body
     );
@@ -299,7 +351,11 @@ function notifyAction(message: string, options: { warning?: boolean; verboseOnly
         { key, body, warning: !!options.warning, at: now }].slice(-3);
     publishNotices();
     scheduleNoticeExpiry();
-    void persistNotification({ title: "MicSpamGuard", body, color: options.warning ? "#f9e2af" : "#a6e3a1" });
+    void persistNotification({ title: "MicSpamGuard", body, color: noticeColor(!!options.warning) });
+}
+
+function noticeColor(warning: boolean) {
+    return warning ? "var(--status-warning, #f0b232)" : "var(--hc-accent)";
 }
 
 function formatDuration(seconds: number) {
@@ -729,37 +785,95 @@ function unmuteAll(mode: "manual" | "silent" = "manual") {
 }
 
 function MeterRow({ userId }: { userId: string; }) {
+    const { autoMute, threshold, dynamicUserVolume, dynamicTarget } = settings.store;
     const level = levels.get(userId) ?? 0;
-    const threshold = settings.store.dynamicUserVolume ? settings.store.dynamicTarget : settings.store.threshold;
-    const loud = level >= threshold;
+    const loud = autoMute && level >= threshold;
     const ignoredUser = isIgnored(userId);
-    const muted = mutedByUs.has(userId);
-    const turned = turnedDown.has(userId);
 
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0" }}>
-            <div style={{ width: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--header-primary)" }}>
-                {displayName(userId)}
+        <div className={classes("hc-ui-row", cl("meter-row"))}>
+            <div className={cl("name", ignoredUser && "name-ignored")}>{displayName(userId)}</div>
+            <div className={cl("meter")}>
+                <div className={cl("meter-fill", loud && "meter-loud")} style={{ width: `${level}%` }} />
+                {dynamicUserVolume && <div className={cl("meter-mark", "meter-target")} style={{ left: `${dynamicTarget}%` }} />}
+                {autoMute && <div className={cl("meter-mark")} style={{ left: `${threshold}%` }} />}
             </div>
-            <div style={{ position: "relative", flex: 1, height: 10, borderRadius: 5, background: "var(--background-modifier-accent)", overflow: "hidden" }}>
-                <div style={{ width: `${level}%`, height: "100%", background: loud ? "var(--status-danger)" : "var(--status-positive)" }} />
-                <div style={{ position: "absolute", top: 0, left: `${threshold}%`, width: 2, height: "100%", background: "var(--text-muted)" }} />
-            </div>
-            <div style={{ width: 68, color: ignoredUser ? "var(--text-muted)" : "var(--header-secondary)", fontVariantNumeric: "tabular-nums" }}>
-                {level}%
-            </div>
-            <Button size={Button.Sizes.SMALL} color={Button.Colors.PRIMARY} onClick={() => toggleIgnored(userId)}>
+            <div className={cl("level")}>{level}%</div>
+            <Button size="small" variant="secondary" className="hc-ui-btn-quiet" onClick={() => toggleIgnored(userId)}>
                 {ignored.has(userId) ? "Allow" : "Ignore"}
             </Button>
-            {muted && <Button size={Button.Sizes.SMALL} color={Button.Colors.BRAND} onClick={() => unmute(userId, "manual")}>Unmute</Button>}
-            {turned && <Button size={Button.Sizes.SMALL} color={Button.Colors.BRAND} onClick={() => restoreVolume(userId, "manual")}>Restore</Button>}
-            {pausedDynamics.has(userId) && <Button size={Button.Sizes.SMALL} color={Button.Colors.BRAND} onClick={() => pausedDynamics.delete(userId)}>Resume</Button>}
+            {mutedByUs.has(userId) && <Button size="small" className="hc-ui-btn-accent" onClick={() => unmute(userId, "manual")}>Unmute</Button>}
+            {turnedDown.has(userId) && <Button size="small" className="hc-ui-btn-accent" onClick={() => restoreVolume(userId, "manual")}>Restore</Button>}
+            {pausedDynamics.has(userId) && <Button size="small" className="hc-ui-btn-accent" onClick={() => pausedDynamics.delete(userId)}>Resume</Button>}
         </div>
+    );
+}
+
+function LimiterStatus({ enabled, limiter }: { enabled: boolean; limiter: boolean; }) {
+    if (!limiter) return <HaloPill tone="muted">Off</HaloPill>;
+    if (!enabled) return <HaloPill tone="muted">Guard off</HaloPill>;
+    if (isLimiterActive()) return <HaloPill tone="good">Active</HaloPill>;
+    if (!hasVoiceRoute()) return <HaloPill tone="warn">Needs HaloCord voice</HaloPill>;
+    return <HaloPill tone="info">Waiting for voice</HaloPill>;
+}
+
+function LimiterSection() {
+    const { enabled, limiter, limiterCeiling, limiterRelease } = settings.use(LIMITER_KEYS);
+    const releaseIndex = Math.max(0, RELEASE_CHOICES.indexOf(limiterRelease));
+
+    return (
+        <HaloSection title="Hard limiter">
+            <HaloSwitchRow
+                title="Limit everyone's voice"
+                description="A brickwall ceiling like a studio limiter: no voice plays louder than the ceiling, peaks between samples included. Go Live audio is not touched."
+                value={limiter}
+                onChange={value => settings.store.limiter = value}
+            >
+                <LimiterStatus enabled={enabled} limiter={limiter} />
+            </HaloSwitchRow>
+            <div className={classes("hc-ui-row", cl("field"))}>
+                <div className={cl("field-head")}>
+                    <span className="hc-ui-row-title">Ceiling</span>
+                    <span className={cl("value")}>{limiterCeiling} dB</span>
+                </div>
+                <Slider
+                    disabled={!limiter}
+                    minValue={-12}
+                    maxValue={0}
+                    markers={makeRange(-12, 0, 1)}
+                    stickToMarkers
+                    initialValue={limiterCeiling}
+                    onValueChange={value => settings.store.limiterCeiling = Math.round(value)}
+                    onMarkerRender={value => value % 3 === 0 ? `${value}` : ""}
+                    onValueRender={value => `${Math.round(value)} dB`}
+                />
+                <div className="hc-ui-row-desc">-1 dB leaves a little headroom. Lower values make loud voices quieter.</div>
+            </div>
+            <div className={classes("hc-ui-row", cl("field"))}>
+                <div className={cl("field-head")}>
+                    <span className="hc-ui-row-title">Release</span>
+                    <span className={cl("value")}>{limiterRelease} ms</span>
+                </div>
+                <Slider
+                    disabled={!limiter}
+                    minValue={0}
+                    maxValue={RELEASE_CHOICES.length - 1}
+                    markers={RELEASE_CHOICES.map((_, i) => i)}
+                    stickToMarkers
+                    initialValue={releaseIndex}
+                    onValueChange={index => settings.store.limiterRelease = RELEASE_CHOICES[Math.round(index)] ?? 100}
+                    onMarkerRender={index => `${RELEASE_CHOICES[index]}`}
+                    onValueRender={index => `${RELEASE_CHOICES[Math.round(index)]} ms`}
+                />
+                <div className="hc-ui-row-desc">How fast the volume comes back after a peak. Short is punchy, long is smoother.</div>
+            </div>
+        </HaloSection>
     );
 }
 
 function GuardPanel() {
     const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+    const { enabled } = settings.use(MIC_GUARD_KEYS);
 
     React.useEffect(() => {
         const id = setInterval(forceUpdate, 250);
@@ -769,52 +883,55 @@ function GuardPanel() {
     const live = currentVoiceMembers();
 
     return (
-        <div style={{ marginBottom: 16 }}>
-            <div style={{ color: "var(--header-primary)", fontWeight: 600, fontSize: 16 }}>Live levels</div>
-            <div style={{ color: "var(--header-secondary)", fontSize: 13, marginBottom: 8 }}>
-                Voice volumes balance automatically while Dynamic User Volume is on. Restore pauses it for that person until Resume.
-            </div>
+        <div className={cl("panel")}>
+            <LimiterSection />
 
-            {live.length === 0
-                ? <div style={{ color: "var(--text-muted)" }}>Join a voice channel to see levels.</div>
-                : live.map(userId => <MeterRow key={userId} userId={userId} />)}
+            <HaloSection title="Live levels">
+                <div className="hc-ui-row-desc">
+                    Voice volumes balance automatically while Dynamic User Volume is on. Restore pauses it for that person until Resume.
+                </div>
+                {!enabled
+                    ? <div className={cl("empty")}>Turn the guard on to see levels.</div>
+                    : live.length === 0
+                        ? <div className={cl("empty")}>Join a voice channel to see levels.</div>
+                        : live.map(userId => <MeterRow key={userId} userId={userId} />)}
+            </HaloSection>
 
             {turnedDown.size > 0 && (
-                <div style={{ marginTop: 12 }}>
-                    <div style={{ color: "var(--header-primary)", fontWeight: 600, fontSize: 16, marginBottom: 4 }}>Automatic user volumes</div>
+                <HaloSection title="Automatic user volumes">
                     {[...turnedDown].map(([userId, entry]) => (
-                        <div key={userId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "4px 0" }}>
-                            <span style={{ color: "var(--status-warning)" }}>{displayName(userId)}: {Math.round(amplitudeToVolume(entry.applied))}% volume</span>
-                            <Button size={Button.Sizes.SMALL} color={Button.Colors.PRIMARY} onClick={() => restoreVolume(userId, "manual")}>Restore</Button>
-                        </div>
+                        <HaloRow key={userId} title={displayName(userId)} description={`${Math.round(amplitudeToVolume(entry.applied))}% volume`}>
+                            <Button size="small" variant="secondary" className="hc-ui-btn-quiet" onClick={() => restoreVolume(userId, "manual")}>Restore</Button>
+                        </HaloRow>
                     ))}
-                    <Button size={Button.Sizes.SMALL} color={Button.Colors.PRIMARY} onClick={() => restoreAll("manual")} style={{ marginTop: 4 }}>Restore all</Button>
-                </div>
+                    <div className="hc-ui-actions">
+                        <Button size="small" variant="secondary" className="hc-ui-btn-quiet" onClick={() => restoreAll("manual")}>Restore all</Button>
+                    </div>
+                </HaloSection>
             )}
 
             {mutedByUs.size > 0 && (
-                <div style={{ marginTop: 12 }}>
-                    <div style={{ color: "var(--header-primary)", fontWeight: 600, fontSize: 16, marginBottom: 4 }}>Muted by the guard</div>
+                <HaloSection title="Muted by the guard">
                     {[...mutedByUs.keys()].map(userId => (
-                        <div key={userId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "4px 0" }}>
-                            <span style={{ color: "var(--status-danger)" }}>{displayName(userId)}</span>
-                            <Button size={Button.Sizes.SMALL} color={Button.Colors.BRAND} onClick={() => unmute(userId, "manual")}>Unmute</Button>
-                        </div>
+                        <HaloRow key={userId} title={displayName(userId)}>
+                            <HaloPill tone="bad">Muted</HaloPill>
+                            <Button size="small" className="hc-ui-btn-accent" onClick={() => unmute(userId, "manual")}>Unmute</Button>
+                        </HaloRow>
                     ))}
-                    <Button size={Button.Sizes.SMALL} color={Button.Colors.PRIMARY} onClick={() => unmuteAll("manual")} style={{ marginTop: 4 }}>Unmute all</Button>
-                </div>
+                    <div className="hc-ui-actions">
+                        <Button size="small" variant="secondary" className="hc-ui-btn-quiet" onClick={() => unmuteAll("manual")}>Unmute all</Button>
+                    </div>
+                </HaloSection>
             )}
 
             {ignored.size > 0 && (
-                <div style={{ marginTop: 12 }}>
-                    <div style={{ color: "var(--header-primary)", fontWeight: 600, fontSize: 16, marginBottom: 4 }}>Never muted</div>
+                <HaloSection title="Never muted">
                     {[...ignored].map(userId => (
-                        <div key={userId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "4px 0" }}>
-                            <span>{displayName(userId)}</span>
-                            <Button size={Button.Sizes.SMALL} color={Button.Colors.PRIMARY} onClick={() => toggleIgnored(userId)}>Allow again</Button>
-                        </div>
+                        <HaloRow key={userId} title={displayName(userId)}>
+                            <Button size="small" variant="secondary" className="hc-ui-btn-quiet" onClick={() => toggleIgnored(userId)}>Allow again</Button>
+                        </HaloRow>
                     ))}
-                </div>
+                </HaloSection>
             )}
         </div>
     );
@@ -908,16 +1025,14 @@ export default definePlugin({
             logger.error("failed to restore held volumes", e);
         }
 
-        intervalId = setInterval(poll, POLL_MS);
+        running = true;
+        syncRunning();
     },
 
     stop() {
         clearNotices();
-        if (intervalId !== undefined) {
-            clearInterval(intervalId);
-            intervalId = undefined;
-        }
-
+        running = false;
+        syncRunning();
         bindConnection(null);
         connection = null;
         loudAt.clear();

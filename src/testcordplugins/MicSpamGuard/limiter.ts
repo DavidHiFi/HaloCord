@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { Logger } from "@utils/Logger";
+
 export const LIMITER_PROCESSOR = "hc-voice-limiter";
 
 // Brickwall limiter for everyone's voice, run as an AudioWorklet. Peaks are found on the 8x oversampled
@@ -133,3 +135,78 @@ class HcVoiceLimiter extends AudioWorkletProcessor {
 
 registerProcessor("${LIMITER_PROCESSOR}", HcVoiceLimiter);
 `;
+
+// HaloCord's audio guard (desktop/base/userscript.js) asks window.__hcVoiceLimiter for a node to put between
+// the voice bus and the output mix, and window.__hcVoiceRoute() makes it ask again. Go Live audio never
+// passes the voice bus, so stream sound is untouched.
+type LimiterWindow = Window & {
+    __hcVoiceLimiter?: (ctx: BaseAudioContext) => AudioNode | null;
+    __hcVoiceRoute?: () => void;
+};
+
+const logger = new Logger("MicSpamGuard");
+const limiterWindow = window as LimiterWindow;
+const loaded = new WeakMap<BaseAudioContext, boolean>();
+let moduleUrl: string | undefined;
+let node: AudioWorkletNode | null = null;
+let wanted = false;
+let ceilingDb = -1;
+let releaseMs = 100;
+
+function dropNode() {
+    node?.port.postMessage("stop");
+    node = null;
+}
+
+function provide(ctx: BaseAudioContext): AudioNode | null {
+    if (!wanted) return null;
+    if (node?.context === ctx) return node;
+    const state = loaded.get(ctx);
+    if (state === undefined) {
+        loaded.set(ctx, false);
+        moduleUrl ??= URL.createObjectURL(new Blob([LIMITER_SOURCE], { type: "application/javascript" }));
+        ctx.audioWorklet.addModule(moduleUrl).then(() => {
+            loaded.set(ctx, true);
+            limiterWindow.__hcVoiceRoute?.();
+        }, e => logger.error("failed to load the limiter", e));
+    }
+    if (!state) return null;
+    dropNode();
+    node = new AudioWorkletNode(ctx, LIMITER_PROCESSOR, {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+        outputChannelCount: [2],
+        channelCount: 2,
+        channelCountMode: "explicit",
+        channelInterpretation: "speakers"
+    });
+    applyParams();
+    return node;
+}
+
+function applyParams() {
+    node?.parameters.get("ceiling")?.setValueAtTime(ceilingDb, 0);
+    node?.parameters.get("release")?.setValueAtTime(releaseMs, 0);
+}
+
+export function isLimiterActive() {
+    return node !== null;
+}
+
+export function hasVoiceRoute() {
+    return typeof limiterWindow.__hcVoiceRoute === "function";
+}
+
+export function setLimiter(on: boolean, ceiling: number, release: number) {
+    ceilingDb = ceiling;
+    releaseMs = release;
+    applyParams();
+    if (on === wanted) return;
+    wanted = on;
+    if (on) limiterWindow.__hcVoiceLimiter = provide;
+    limiterWindow.__hcVoiceRoute?.();
+    if (!on) {
+        dropNode();
+        if (limiterWindow.__hcVoiceLimiter === provide) delete limiterWindow.__hcVoiceLimiter;
+    }
+}
