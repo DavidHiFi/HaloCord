@@ -83,7 +83,7 @@ function mcFxAttach(ctx,src){
 }
 function mcFxPanel(QP,Qr){
   var box=document['createElement']('div');box['id']='mc-fx-card';
-  box['style']['cssText']='margin-top:12px;padding:12px 12px 6px;border:1px solid var(--background-modifier-accent,rgba(255,255,255,.08));border-radius:8px;background:rgba(0,0,0,.12)';
+  box['style']['cssText']='margin-top:12px;padding:12px 12px 6px;border:1px solid var(--hc-panel-border);border-radius:8px;background:var(--hc-panel-bg)';
   var head=document['createElement']('div');head['style']['cssText']='display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px';
   var hl=document['createElement']('div'),t=document['createElement']('div'),s=document['createElement']('div');
   t['className']='dvx-lbl';t['textContent']='Voice Effects';
@@ -93,13 +93,13 @@ function mcFxPanel(QP,Qr){
   function paintBody(){body['style']['opacity']=Q['micFxOn']?'1':'.45';}
   var sw=QP(function(){return!!Q['micFxOn'];},function(v){Q['micFxOn']=!!v;e4();sw['_render']();paintBody();});
   head['appendChild'](sw);box['appendChild'](head);box['appendChild'](body);
-  function paintChips(){for(var i=0;i<chips.length;i++){var on=chips[i][0]===Q['micFxPreset'];chips[i][1]['style']['borderColor']=on?'#AFE37F':'var(--background-modifier-accent,rgba(255,255,255,.12))';chips[i][1]['style']['color']=on?'#AFE37F':'var(--header-primary,#f2f3f5)';chips[i][1]['setAttribute']('aria-pressed',on?'true':'false');}}
+  function paintChips(){for(var i=0;i<chips.length;i++){var on=chips[i][0]===Q['micFxPreset'];chips[i][1]['style']['borderColor']=on?'var(--hc-accent)':'var(--hc-row-border)';chips[i][1]['style']['color']=on?'var(--hc-accent)':'var(--hc-text)';chips[i][1]['setAttribute']('aria-pressed',on?'true':'false');}}
   function label(txt){var d=document['createElement']('div');d['className']='dvx-sub';d['style']['cssText']='margin:14px 0 6px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase';d['textContent']=txt;return d;}
   body['appendChild'](label('Presets'));
   var row=document['createElement']('div');row['style']['cssText']='display:flex;gap:8px;flex-wrap:wrap';
   mcFxPresets['forEach'](function(p){
     var b=document['createElement']('button');b['type']='button';b['textContent']=p[1];
-    b['style']['cssText']='flex:1 1 110px;min-width:100px;padding:8px 10px;border:1px solid var(--background-modifier-accent,rgba(255,255,255,.12));border-radius:8px;background:var(--background-tertiary,#1e1f22);color:var(--header-primary,#f2f3f5);font-size:12px;font-weight:600;cursor:pointer';
+    b['className']='dvx-chip';b['style']['cssText']='flex:1 1 110px;min-width:100px;padding:8px 10px;border:1px solid var(--hc-row-border);border-radius:8px;background:var(--hc-row-bg);color:var(--hc-text);font-size:12px;font-weight:600;cursor:pointer';
     b['onclick']=function(){
       for(var i=0;i<mcFxKeys.length;i++)Q[mcFxKeys[i]]=0;
       for(var k in p[2])Q[k]=p[2][k];
@@ -118,7 +118,7 @@ function mcFxPanel(QP,Qr){
     var v=document['createElement']('span');v['className']='dvx-val';
     top['appendChild'](l);top['appendChild'](v);
     var r=document['createElement']('input');r['type']='range';r['min']=String(min);r['max']=String(max);r['step']='1';r['setAttribute']('aria-label',name);
-    function show(){var n=mcFxNum(key);r['value']=String(n);v['textContent']=(n>0&&min<0?'+':'')+n+unit;var pc=(n-min)/(max-min)*100;r['style']['background']='linear-gradient(to right,var(--brand-experiment,#5865f2) '+pc+'%,var(--background-tertiary,#1e1f22) '+pc+'%)';}
+    function show(){var n=mcFxNum(key);r['value']=String(n);v['textContent']=(n>0&&min<0?'+':'')+n+unit;var pc=(n-min)/(max-min)*100;r['style']['background']='linear-gradient(to right,var(--hc-accent) '+pc+'%,var(--dvx-track) '+pc+'%)';}
     r['oninput']=function(){Q[key]=Number(r['value']);custom();show();e4();};
     w['appendChild'](top);w['appendChild'](r);show();sliders['push'](show);return w;
   }
@@ -137,9 +137,20 @@ function mcFxPanel(QP,Qr){
   body['appendChild'](slider('micFxStatic','Static','Adds radio hiss while you talk.',0,100,'%'));
   body['appendChild'](slider('micFxDropout','Dropouts','Randomly cuts short pieces of your voice, like a bad connection.',0,100,'%'));
   body['appendChild'](slider('micFxClip','Clipping','Hard distortion, like a blown-out mic.',0,100,'%'));
-  var reset=document['createElement']('button');reset['type']='button';reset['className']='dvx-btn';reset['textContent']='Turn off and reset effects';reset['style']['margin']='10px 0 6px';
-  reset['onclick']=function(){chips[0][1]['onclick']();};
-  body['appendChild'](reset);
+  var resetRow=document['createElement']('div');resetRow['style']['cssText']='display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 6px';
+  var reset=document['createElement']('button');reset['type']='button';reset['className']='dvx-btn dvx-danger';
+  reset['innerHTML']='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2 1 21h22L12 2Zm1 15h-2v-2h2v2Zm0-4h-2V9h2v4Z"/></svg><span>Turn off and reset effects</span>';
+  function resetNow(){chips[0][1]['onclick']();}
+  reset['onclick']=function(){
+    if(Q['micFxAskReset']===false){resetNow();return;}
+    var opts={title:'Reset voice effects?',body:'Voice Effects turn off and every effect slider goes back to 0.',confirmText:'Reset',danger:true},ui=window['HaloCordUI'];
+    if(ui&&typeof ui['confirm']==='function'){Promise['resolve'](ui['confirm'](opts))['then'](function(ok){if(ok)resetNow();},function(){});return;}
+    if(window['confirm'](opts['title']+'\n\n'+opts['body']))resetNow();
+  };
+  var askL=document['createElement']('span');askL['className']='dvx-sub';askL['style']['margin']='0 0 0 6px';askL['textContent']='Ask first';
+  var askSw=QP(function(){return Q['micFxAskReset']!==false;},function(v){Q['micFxAskReset']=!!v;e4();});askSw['setAttribute']('aria-label','Ask before resetting effects');
+  resetRow['appendChild'](reset);resetRow['appendChild'](askL);resetRow['appendChild'](askSw);
+  body['appendChild'](resetRow);
   paintBody();paintChips();
   return box;
 }
