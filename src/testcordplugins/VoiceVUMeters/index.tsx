@@ -10,7 +10,9 @@
  * and re-targets the voice list patch at the current client.
  */
 
+import { NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { definePluginSettings, Settings } from "@api/Settings";
+import { UserAreaButton, UserAreaRenderProps } from "@api/UserArea";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { TestcordDevs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
@@ -129,6 +131,8 @@ interface Meter {
     peak: [number, number];
     peakAt: [number, number];
     sampleAt: [number, number];
+    // Highest linear level since the peak number was last reset
+    peakHold: number;
     ownsInput?: boolean;
     // Web self meter: taps the stream Discord sends, so it reads zero while muted.
     webSelf?: boolean;
@@ -139,6 +143,8 @@ interface Meter {
 }
 
 const meters = new Map<string, Meter>();
+// Peak holds of dropped meters, so a rebuilt meter in the same call keeps its peak number
+const peakCarry = new Map<string, number>();
 const subscribers = new Set<() => void>();
 // Remembered SSRC resolutions; getUserIdBySsrc can miss for a while in packed calls.
 const ssrcUserCache = new Map<number, string>();
@@ -181,16 +187,21 @@ interface MeterDom {
     lastPeak: [string, string];
     lastPeakOpacity: [string, string];
     height: number;
+    peakNumber: HTMLElement | null;
+    // NaN forces the next write; -Infinity is "-inf"
+    lastPeakTenths: number;
 }
 
 const meterDoms = new Map<string, Set<MeterDom>>();
 const meterDomByRoot = new WeakMap<HTMLElement, MeterDom>();
 let frameId: number | undefined;
 let frameTimer: ReturnType<typeof setTimeout> | undefined;
+let nextFrameAt = 0;
 let domResize: ResizeObserver | undefined;
-// Levels arrive at 4-10 Hz, so 30 fps keeps the bars smooth. Running at the
+// Levels arrive at 4-10 Hz, so the 30 fps default keeps the bars smooth. Running at the
 // display rate (165 Hz here) repainted the panel every vsync for no visible gain.
-const FRAME_MS = 33;
+// The timer wakes this early so the animation frame after it lands on time, even at 60 fps on a 60 Hz display.
+const FRAME_SLACK_MS = 4;
 
 // Live counters for diagnostics over the CDP port
 const debugState = (globalThis as { __vumDebug?: Record<string, number>; }).__vumDebug ??= {};
@@ -202,11 +213,14 @@ function ensureFrameLoop() {
     }
 }
 
-function scheduleNextFrame() {
+// Frames aim at fixed targets one interval apart, so the average rate matches the setting on any display refresh
+function scheduleNextFrame(frameAt: number) {
+    const interval = 1000 / settings.store.frameRate;
+    nextFrameAt = frameAt - nextFrameAt > interval ? frameAt + interval : nextFrameAt + interval;
     frameTimer = setTimeout(() => {
         frameTimer = undefined;
         ensureFrameLoop();
-    }, FRAME_MS);
+    }, Math.max(0, nextFrameAt - performance.now() - FRAME_SLACK_MS));
 }
 
 function parkFrameLoop() {
@@ -230,8 +244,19 @@ function peakColor(peak: number) {
 }
 
 function writeMeterDom(meter: Meter, dom: MeterDom) {
-    const { showPeak } = settings.store;
+    const { showPeak, floorDb } = settings.store;
     const peakRange = Math.max(0, dom.height - 2);
+    if (dom.peakNumber) {
+        // Below the meter floor the bars stay empty, so the number reads silence too
+        const db = meter.peakHold > 0 ? 20 * Math.log10(meter.peakHold) : -Infinity;
+        const tenths = db < floorDb ? -Infinity : Math.round(db * 10);
+        if (tenths !== dom.lastPeakTenths) {
+            const clip = tenths >= 0;
+            if (clip !== dom.lastPeakTenths >= 0) dom.peakNumber.toggleAttribute("data-clip", clip);
+            dom.lastPeakTenths = tenths;
+            dom.peakNumber.textContent = tenths === -Infinity ? "-inf" : (tenths / 10).toFixed(1);
+        }
+    }
     for (let channel = 0; channel < 2; channel++) {
         // skip unchanged writes so a silent call causes no style churn
         const fill = dom.fills[channel];
@@ -281,10 +306,48 @@ const settings = definePluginSettings({
         default: -60,
         stickToMarkers: true
     },
+    frameRate: {
+        type: OptionType.SELECT,
+        description: "How often the meters redraw. Higher looks smoother and costs a little more while meters are on screen.",
+        options: [
+            { label: "15 FPS", value: 15 },
+            { label: "24 FPS", value: 24 },
+            { label: "30 FPS", value: 30, default: true },
+            { label: "60 FPS", value: 60 }
+        ]
+    },
+    showUserAreaButton: {
+        type: OptionType.BOOLEAN,
+        description: "Adds a button next to mute and deafen that turns VU meters on and off.",
+        default: false
+    },
     showPeak: {
         type: OptionType.BOOLEAN,
         description: "Show the peak hold line on each bar.",
         default: true
+    },
+    showPeakNumbers: {
+        type: OptionType.BOOLEAN,
+        description: "Shows the highest level in dB above each meter. Click a number to reset it. It turns red at 0 dB.",
+        default: true
+    },
+    peakNumberUsers: {
+        type: OptionType.SELECT,
+        description: "Whose meters show a peak number.",
+        options: [
+            { label: "Everyone", value: "all", default: true },
+            { label: "Only you", value: "self" },
+            { label: "Only others", value: "others" }
+        ]
+    },
+    peakNumberSurfaces: {
+        type: OptionType.SELECT,
+        description: "Which meters show a peak number. Voice profiles covers the voice channel list and voice call tiles.",
+        options: [
+            { label: "Voice profiles only", value: "voice" },
+            { label: "Screen shares only", value: "streams" },
+            { label: "Both", value: "both", default: true }
+        ]
     },
     showSelf: {
         type: OptionType.BOOLEAN,
@@ -315,7 +378,7 @@ const settings = definePluginSettings({
     },
     tilePlacement: {
         type: OptionType.SELECT,
-        description: "Where the meter sits on call tiles. Profile picture pins it to the bottom right corner of the user's avatar, so it stays on the picture when tile backgrounds are hidden.",
+        description: "Where the meter sits on call tiles. Profile picture pins it inside the edge of the user's picture, centered on its height, so it stays on the picture when tile backgrounds are hidden.",
         options: [
             {
                 label: "Background",
@@ -345,7 +408,7 @@ const settings = definePluginSettings({
     },
     tileMeterHeight: {
         type: OptionType.SLIDER,
-        description: "Tile meter height as a percent of the tile height. 50 is the default height.",
+        description: "Tile meter height as a percent of the tile height, or of the picture in profile picture mode. 50 is the default height.",
         markers: makeRange(25, 100, 5),
         default: 50,
         stickToMarkers: true
@@ -378,7 +441,20 @@ function isWebConnection(conn: VoiceConnection) {
 }
 
 function newMeter(mono: boolean, tap?: WebTap): Meter {
-    return { tap, amplitude: 0, mono, display: [0, 0], peak: [0, 0], peakAt: [0, 0], sampleAt: [0, 0] };
+    return { tap, amplitude: 0, mono, display: [0, 0], peak: [0, 0], peakAt: [0, 0], sampleAt: [0, 0], peakHold: 0 };
+}
+
+function addMeter(key: string, meter: Meter) {
+    // the self input tap replaces its placeholder meter without dropping it
+    meter.peakHold = meters.get(key)?.peakHold ?? peakCarry.get(key) ?? 0;
+    peakCarry.delete(key);
+    meters.set(key, meter);
+}
+
+function resetPeak(key: string) {
+    const meter = meters.get(key);
+    if (meter) meter.peakHold = 0;
+    peakCarry.delete(key);
 }
 
 function channelCount(output: AudioOutput) {
@@ -409,7 +485,7 @@ function createWebMeter(conn: VoiceConnection, userId: string) {
     right.connect(silent);
     silent.connect(context.destination);
 
-    meters.set(userId, newMeter(channelCount(output) === 1, {
+    addMeter(userId, newMeter(channelCount(output) === 1, {
         output,
         source,
         splitter,
@@ -426,6 +502,7 @@ function dropMeter(userId: string) {
     if (!meter) return;
 
     meters.delete(userId);
+    if (meter.peakHold > 0) peakCarry.set(userId, meter.peakHold);
     if (!meter.tap) return;
 
     if (meter.ownsInput) {
@@ -449,6 +526,7 @@ function dropAll() {
     inputGeneration++;
     ssrcUserCache.clear();
     for (const userId of [...meters.keys()]) dropMeter(userId);
+    peakCarry.clear();
 }
 
 async function syncSelfInput(conn: VoiceConnection) {
@@ -464,7 +542,7 @@ async function syncSelfInput(conn: VoiceConnection) {
     if (inputPending || Date.now() < inputRetryAt) return;
 
     dropMeter(userId);
-    meters.set(userId, newMeter(true));
+    addMeter(userId, newMeter(true));
     const generation = inputGeneration;
     inputPending = true;
     let stream: MediaStream | undefined;
@@ -588,7 +666,7 @@ function syncDesktopMeters() {
         const meter = meters.get(userId);
         if (!meter || (meter.tap && !meter.ownsInput)) {
             dropMeter(userId);
-            meters.set(userId, newMeter(true));
+            addMeter(userId, newMeter(true));
         }
     }
 
@@ -629,7 +707,7 @@ function setStreamAmplitude(ownerId: string, level: unknown) {
     if (!meter || meter.tap) {
         dropMeter(key);
         meter = newMeter(true);
-        meters.set(key, meter);
+        addMeter(key, meter);
     }
     meter.lastStreamAt = Date.now();
     meter.amplitude = toLinear(level);
@@ -859,7 +937,11 @@ function normalize(amplitude: number, floorDb: number) {
     return Math.max(0, Math.min(1, (db - floorDb) / -floorDb));
 }
 
-function readChannel(analyser: AnalyserNode, buffer: Float32Array<ArrayBuffer>, floorDb: number) {
+// Linear results of the last readChannel call, kept in module scope so a frame allocates nothing
+let readRms = 0;
+let readPeak = 0;
+
+function readChannel(analyser: AnalyserNode, buffer: Float32Array<ArrayBuffer>) {
     analyser.getFloatTimeDomainData(buffer);
 
     let sum = 0;
@@ -870,7 +952,8 @@ function readChannel(analyser: AnalyserNode, buffer: Float32Array<ArrayBuffer>, 
         sum += value * value;
     }
 
-    return { rms: normalize(Math.sqrt(sum / buffer.length), floorDb), peak: normalize(peak, floorDb) };
+    readRms = Math.sqrt(sum / buffer.length);
+    readPeak = peak;
 }
 
 function smooth(meter: Meter, channel: 0 | 1, rms: number, peak: number, now: number) {
@@ -970,26 +1053,39 @@ function advanceEnvelopes(now: number) {
             // The input meter shows only while Discord is sending, so it matches what people hear
             const muted = meter.webSelf ? MediaEngineStore.isSelfMute() || MediaEngineStore.isSelfDeaf()
                 : meter.ownsInput && (MediaEngineStore.isSelfMute() || now - selfSentAt > SELF_SEND_HOLD_MS);
-            let left = muted ? { rms: 0, peak: 0 } : readChannel(meter.tap.left, meter.tap.bufLeft, floorDb);
-            let right = muted || meter.mono ? left : readChannel(meter.tap.right, meter.tap.bufRight, floorDb);
-            const tapRaw = Math.max(left.rms, right.rms);
+            let rmsLeft = 0, peakLeft = 0;
+            if (!muted) {
+                readChannel(meter.tap.left, meter.tap.bufLeft);
+                rmsLeft = readRms;
+                peakLeft = readPeak;
+            }
+            let rmsRight = rmsLeft, peakRight = peakLeft;
+            if (!muted && !meter.mono) {
+                readChannel(meter.tap.right, meter.tap.bufRight);
+                rmsRight = readRms;
+                peakRight = readPeak;
+            }
+            const tapRaw = Math.max(normalize(rmsLeft, floorDb), normalize(rmsRight, floorDb));
 
             // A tap that reads nothing while Discord hears speech (muted capture session, wrong device) would
             // leave the bars flat until it is dropped, so show Discord's own level meanwhile
             if (meter.ownsInput && !muted && tapRaw === 0 && selfVadLive(now) && selfVadSpeaking) {
-                const vad = normalize(selfVadLinear, floorDb);
-                left = right = { rms: vad, peak: vad };
+                rmsLeft = peakLeft = rmsRight = peakRight = selfVadLinear;
             }
 
-            smooth(meter, 0, left.rms, left.peak, now);
-            smooth(meter, 1, right.rms, right.peak, now);
-            noteActive(meter, Math.max(left.rms, right.rms), now);
+            const left = normalize(rmsLeft, floorDb);
+            const right = normalize(rmsRight, floorDb);
+            smooth(meter, 0, left, normalize(peakLeft, floorDb), now);
+            smooth(meter, 1, right, normalize(peakRight, floorDb), now);
+            meter.peakHold = Math.max(meter.peakHold, peakLeft, peakRight);
+            noteActive(meter, Math.max(left, right), now);
             if (meter.ownsInput) checkSelfMismatch(meter, muted === true, tapRaw, now);
         } else if (meter.nativeAvailable && !meter.nativeGap) {
             const rmsLeft = normalize(meter.native?.rmsLeft ?? 0, floorDb);
             const rmsRight = normalize(meter.native?.rmsRight ?? 0, floorDb);
             smooth(meter, 0, rmsLeft, normalize(meter.native?.peakLeft ?? 0, floorDb), now);
             smooth(meter, 1, rmsRight, normalize(meter.native?.peakRight ?? 0, floorDb), now);
+            meter.peakHold = Math.max(meter.peakHold, meter.native?.peakLeft ?? 0, meter.native?.peakRight ?? 0);
             noteActive(meter, Math.max(rmsLeft, rmsRight), now);
         } else {
             // Bars follow measured audio only. A flagged speaker with no level reads flat, never a made-up one.
@@ -1001,12 +1097,13 @@ function advanceEnvelopes(now: number) {
 
             smooth(meter, 0, value * panL, value * panL, now);
             smooth(meter, 1, value * panR, value * panR, now);
+            if (heard) meter.peakHold = Math.max(meter.peakHold, meter.amplitude * Math.max(panL, panR));
         }
     }
 }
 
 // Samples every level source, advances the envelopes and writes the bars
-function frameTick() {
+function frameTick(frameAt: number) {
     frameId = undefined;
     if (!meterDoms.size || !meters.size || document.hidden) return;
 
@@ -1032,7 +1129,7 @@ function frameTick() {
     debugState.meters = meters.size;
     debugState.frameAt = Date.now();
 
-    if (meterDoms.size && meters.size && !document.hidden) scheduleNextFrame();
+    if (meterDoms.size && meters.size && !document.hidden) scheduleNextFrame(frameAt);
 }
 
 // The self tap reads the OS device before Discord processing, so bleed that
@@ -1168,8 +1265,26 @@ function MeterBar({ width, value, peak, showPeak, fillRef, peakRef }: {
     );
 }
 
-const VoiceMeter = ErrorBoundary.wrap(({ userId, height = BAR_HEIGHT, width = BAR_WIDTH, style }: { userId: string; height?: number | string; width?: number; style?: React.CSSProperties; }) => {
-    const { showWhileDeafened } = settings.use(["showPeak", "showWhileDeafened"]);
+function peakNumberWanted(key: string) {
+    const { showPeakNumbers, peakNumberUsers, peakNumberSurfaces } = settings.store;
+    if (!showPeakNumbers) return false;
+    const stream = key.startsWith("stream:");
+    if (peakNumberSurfaces !== "both" && (peakNumberSurfaces === "streams") !== stream) return false;
+    if (peakNumberUsers === "all") return true;
+    const mine = (stream ? key.slice(7) : key) === UserStore.getCurrentUser()?.id;
+    return (peakNumberUsers === "self") === mine;
+}
+
+// Keeps a click on the peak number from opening the user popout or focusing the call tile
+function stopEvent(event: React.SyntheticEvent) {
+    event.stopPropagation();
+}
+
+// List rows center the meter, so this margin moves it down by half its value to make room for the number above it
+const ROW_PEAK_NUMBER_ROOM = 6;
+
+const VoiceMeter = ErrorBoundary.wrap(({ userId, kind, height = BAR_HEIGHT, width = BAR_WIDTH, style }: { userId: string; kind: "row" | "tile"; height?: number | string; width?: number; style?: React.CSSProperties; }) => {
+    const { showWhileDeafened } = settings.use(["showPeak", "showWhileDeafened", "showPeakNumbers", "peakNumberUsers", "peakNumberSurfaces"]);
     const deaf = useStateFromStores([MediaEngineStore], () => MediaEngineStore.isDeaf());
     const [, forceUpdate] = React.useReducer(x => x + 1, 0);
     const lastKey = React.useRef("");
@@ -1193,6 +1308,7 @@ const VoiceMeter = ErrorBoundary.wrap(({ userId, height = BAR_HEIGHT, width = BA
 
     const fillRefs = [React.useRef<HTMLDivElement | null>(null), React.useRef<HTMLDivElement | null>(null)];
     const peakRefs = [React.useRef<HTMLDivElement | null>(null), React.useRef<HTMLDivElement | null>(null)];
+    const peakNumberRef = React.useRef<HTMLButtonElement | null>(null);
     const domRef = React.useRef<MeterDom | null>(null);
 
     const attachRoot = React.useCallback((root: HTMLDivElement | null) => {
@@ -1214,7 +1330,9 @@ const VoiceMeter = ErrorBoundary.wrap(({ userId, height = BAR_HEIGHT, width = BA
             lastFill: ["", ""],
             lastPeak: ["", ""],
             lastPeakOpacity: ["", ""],
-            height: root.clientHeight || BAR_HEIGHT
+            height: root.clientHeight || BAR_HEIGHT,
+            peakNumber: peakNumberRef.current,
+            lastPeakTenths: NaN
         };
         let set = meterDoms.get(userId);
         if (!set) {
@@ -1246,6 +1364,14 @@ const VoiceMeter = ErrorBoundary.wrap(({ userId, height = BAR_HEIGHT, width = BA
         dom.colors = ["", ""];
     }, [showPeak]);
 
+    const peakNumberShown = peakNumberWanted(userId);
+    React.useEffect(() => {
+        const dom = domRef.current;
+        if (!dom) return;
+        dom.peakNumber = peakNumberRef.current;
+        dom.lastPeakTenths = NaN;
+    }, [peakNumberShown]);
+
     const meter = meters.get(userId);
     if (!meter || (deaf && !showWhileDeafened)) return null;
 
@@ -1261,8 +1387,28 @@ const VoiceMeter = ErrorBoundary.wrap(({ userId, height = BAR_HEIGHT, width = BA
                 ? "Participant audio channels. Left | Right"
             : "Left | Right after your local pan. Discord Desktop reports one level per participant, so both bars carry it.";
 
+    const rootStyle: React.CSSProperties = { position: "relative", display: "flex", alignItems: "stretch", height, ...style };
+    if (peakNumberShown && kind === "row") rootStyle.marginTop = ROW_PEAK_NUMBER_ROOM;
+
     return (
-        <div ref={attachRoot} style={{ display: "flex", alignItems: "stretch", height, ...style }} data-vu-meter={measured ? "lr" : "level"} title={title}>
+        <div ref={attachRoot} style={rootStyle} data-vu-meter={measured ? "lr" : "level"} title={title}>
+            {peakNumberShown && (
+                <button
+                    type="button"
+                    ref={peakNumberRef}
+                    className="hc-vu-peak"
+                    data-kind={kind}
+                    aria-label="Reset peak level"
+                    title="Highest level since the last reset. Click to reset."
+                    onClick={event => {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        resetPeak(userId);
+                    }}
+                    onMouseDown={stopEvent}
+                    onDoubleClick={stopEvent}
+                />
+            )}
             <MeterBar width={width} fillRef={fillRefs[0]} peakRef={peakRefs[0]} showPeak={showPeak} />
             <div style={{ width: gap, display: "flex", alignItems: "stretch", justifyContent: "center" }}>
                 <div style={{ width: 1, background: "rgba(235,235,235,0.6)", borderRadius: 1 }} />
@@ -1297,13 +1443,85 @@ function fiberIsStreamTile(tile: HTMLElement): boolean {
     return sawStreamId;
 }
 
+// The visible tile picture in the tile's own pixels: center, side of its square and corner radius
+interface PictureGeometry {
+    centerX: number;
+    centerY: number;
+    side: number;
+    radius: number;
+    tileWidth: number;
+}
+
+// Both bars plus the divider of a tile meter (bars 8 wide, divider 4)
+const TILE_METER_WIDTH = 20;
+// Gap between the picture edge and the meter
+const PICTURE_MARGIN = 8;
+
+function scaleOf(transform: string) {
+    const match = /^matrix\(([-\d.e]+)/.exec(transform);
+    return match ? Number(match[1]) || 1 : 1;
+}
+
+// Discord paints the tile picture as one role=img element. Stock it is the avatar itself.
+// RoundedVCPFP stretches it over the tile and paints a centered square on ::before, scaled
+// by its zoom, so the visible picture is that scaled square, not the element box.
+// FullVCPFP scales the element itself. Rounding is the element's border-radius.
+function measurePicture(tile: HTMLElement): PictureGeometry | null {
+    const picture = tile.querySelector<HTMLElement>("div[role=img]");
+    if (!picture?.clientWidth || !picture.clientHeight || !tile.offsetWidth) return null;
+
+    const tileBox = tile.getBoundingClientRect();
+    const pictureBox = picture.getBoundingClientRect();
+    // page zoom or a scaled call view: convert viewport pixels back to the tile's own pixels
+    const tileScale = tileBox.width / tile.offsetWidth || 1;
+    const elementScale = pictureBox.height / tileScale / picture.clientHeight || 1;
+    const before = getComputedStyle(picture, "::before");
+    const beforeScale = before.content !== "none" && before.transform !== "none" ? scaleOf(before.transform) : 1;
+    const side = Math.min(picture.clientWidth, picture.clientHeight) * elementScale * beforeScale;
+    if (!(side > 0)) return null;
+
+    const rawRadius = getComputedStyle(picture).borderTopRightRadius;
+    const radiusValue = parseFloat(rawRadius) || 0;
+    const radius = Math.min(side / 2, rawRadius.endsWith("%") ? side * radiusValue / 100 : radiusValue * elementScale);
+
+    return {
+        centerX: (pictureBox.left + pictureBox.width / 2 - tileBox.left) / tileScale - tile.clientLeft,
+        centerY: (pictureBox.top + pictureBox.height / 2 - tileBox.top) / tileScale - tile.clientTop,
+        side,
+        radius,
+        tileWidth: tile.clientWidth
+    };
+}
+
+function samePicture(a: PictureGeometry | null, b: PictureGeometry | null) {
+    if (!a || !b) return a === b;
+    return Math.abs(a.centerX - b.centerX) < 0.5 && Math.abs(a.centerY - b.centerY) < 0.5
+        && Math.abs(a.side - b.side) < 0.5 && Math.abs(a.radius - b.radius) < 0.5 && a.tileWidth === b.tileWidth;
+}
+
+// On the picture the meter is sized from the picture, centered on it and kept inside its rounded edge
+function pictureMeterStyle(picture: PictureGeometry, heightPercent: number, fromLeft: boolean): React.CSSProperties {
+    const { side, radius } = picture;
+    const height = Math.max(12, side * heightPercent / 100 - 10);
+    // how far the rounded corner pulls the edge in at the meter's top and bottom ends
+    const intoCorner = Math.min(radius, Math.max(0, height / 2 - (side / 2 - radius)));
+    const cornerInset = radius - Math.sqrt(radius * radius - intoCorner * intoCorner);
+    const fromEdge = Math.min(cornerInset + PICTURE_MARGIN, Math.max(0, side - TILE_METER_WIDTH) / 2);
+
+    const style: React.CSSProperties = { position: "absolute", zIndex: 3, pointerEvents: "none", height, top: picture.centerY - height / 2 };
+    if (fromLeft) style.left = picture.centerX - side / 2 + fromEdge;
+    else style.right = picture.tileWidth - picture.centerX - side / 2 + fromEdge;
+    return style;
+}
+
 function TileMeter({ userId }: { userId?: string; }) {
     settings.use(["tilePlacement", "tileMeterSide", "tileMeterHeight", "tileSurfaces"]);
     const onPicture = settings.store.tilePlacement === "avatar";
     const fromLeft = settings.store.tileMeterSide === "left";
     const surfaces = settings.store.tileSurfaces;
     const boxRef = React.useRef<HTMLDivElement | null>(null);
-    const [pictureInset, setPictureInset] = React.useState<{ right: number; bottom: number; } | null>(null);
+    const measureRef = React.useRef<(() => void) | null>(null);
+    const [picture, setPicture] = React.useState<PictureGeometry | null>(null);
     const [isStreamSlot, setIsStreamSlot] = React.useState(false);
     const [isStreamTile, setIsStreamTile] = React.useState(false);
 
@@ -1328,6 +1546,8 @@ function TileMeter({ userId }: { userId?: string; }) {
             syncTimer = setTimeout(() => {
                 syncTimer = undefined;
                 syncStreamState();
+                // RoundedVCPFP's zoom and rounding arrive as inline style changes that resize nothing
+                measureRef.current?.();
             }, 200);
         });
         observer.observe(tile, { childList: true, subtree: true, attributes: true });
@@ -1342,68 +1562,205 @@ function TileMeter({ userId }: { userId?: string; }) {
         };
     }, []);
 
+    const pictureWanted = onPicture && !isStreamTile;
     React.useLayoutEffect(() => {
-        if (!onPicture) return;
+        const tile = boxRef.current?.closest<HTMLElement>("div[data-selenium-video-tile]");
+        if (!pictureWanted || !tile) {
+            setPicture(null);
+            return;
+        }
 
-        const box = boxRef.current;
-        const tile = box?.closest<HTMLElement>("div[data-selenium-video-tile]");
-        if (!box || !tile) return;
-
-        // Discord paints the tile picture as one role=img element that fills the tile
-        // box, and FullVCPFP scales that box. Mask and background both cover a centered
-        // square, so the visible picture is that square, and the meter must pin to it
-        // instead of the box. ResizeObserver misses style-only changes; a zoom or
-        // rounding change re-measures at the next remount.
         const measure = () => {
-            const picture = tile.querySelector<HTMLElement>("div[role=img]");
-            if (!picture) return;
-
-            const tileBox = tile.getBoundingClientRect();
-            const pictureBox = picture.getBoundingClientRect();
-            if (!tileBox.width || !pictureBox.width) return;
-
-            const zoom = picture.clientHeight ? pictureBox.height / picture.clientHeight : 1;
-            const square = Math.min(picture.clientWidth, picture.clientHeight) * zoom;
-            if (!square) return;
-            const squareRight = pictureBox.left + (pictureBox.width + square) / 2;
-            const squareBottom = pictureBox.top + (pictureBox.height + square) / 2;
-
-            const right = Math.max(0, tileBox.right - squareRight);
-            const bottom = Math.max(0, tileBox.bottom - squareBottom);
-            if (!Number.isFinite(right) || !Number.isFinite(bottom)) return;
-            setPictureInset(prev => (prev && Math.abs(prev.right - right) < 0.5 && Math.abs(prev.bottom - bottom) < 0.5 ? prev : { right, bottom }));
+            const next = measurePicture(tile);
+            setPicture(prev => samePicture(prev, next) ? prev : next);
         };
-
         measure();
+        measureRef.current = measure;
         const observer = new ResizeObserver(measure);
         observer.observe(tile);
-        return () => observer.disconnect();
-    }, [onPicture]);
+        const pictureNode = tile.querySelector("div[role=img]");
+        if (pictureNode) observer.observe(pictureNode);
+        return () => {
+            measureRef.current = null;
+            observer.disconnect();
+        };
+    }, [pictureWanted]);
 
     if (!userId) return null;
     if (isStreamSlot) return null;
     if (isStreamTile && surfaces === "voice") return null;
     if (!isStreamTile && surfaces === "streams") return null;
 
-    const height = `calc(${Math.round(settings.store.tileMeterHeight)}% - 10px)`;
-    // 18px is the native seat (bars centered in the background strip); the
-    // mirrored left seat uses the same inset from the tile's left edge, and the
-    // picture seat hugs the measured square's corner. Every meter is centered
-    // vertically (top 50% + translateY), which clears the strip and the labels.
-    const inset = pictureInset ? pictureInset.right + 14 : 14;
-    const style: React.CSSProperties = { position: "absolute", height, zIndex: 3, pointerEvents: "none", top: "50%", transform: "translateY(-50%)" };
-    if (fromLeft) {
-        style.left = onPicture ? inset : 18;
-    } else {
-        style.right = onPicture ? (pictureInset ? pictureInset.right + 14 : 14) : 18;
-    }
+    // 18px is the native seat (bars centered in the background strip), mirrored for the left side.
+    // Centered vertically, which clears the strip and the labels. Tiles without a picture
+    // (streams, cameras) keep this seat in profile picture mode too.
+    const style: React.CSSProperties = picture
+        ? pictureMeterStyle(picture, settings.store.tileMeterHeight, fromLeft)
+        : {
+            position: "absolute", zIndex: 3, pointerEvents: "none", top: "50%", transform: "translateY(-50%)",
+            height: `calc(${Math.round(settings.store.tileMeterHeight)}% - 10px)`,
+            [fromLeft ? "left" : "right"]: 18
+        };
 
     return (
         <div ref={boxRef} style={style}>
-            <VoiceMeter userId={isStreamTile ? `stream:${userId}` : userId} height="100%" width={8} />
+            <VoiceMeter userId={isStreamTile ? `stream:${userId}` : userId} kind="tile" height="100%" width={8} />
         </div>
     );
 }
+
+// Two meter bars at different levels, each with its peak tick
+function MeterIcon({ className }: { className?: string; }) {
+    return (
+        <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="5" y="3" width="5.5" height="18" rx="1.5" opacity="0.3" />
+            <rect x="13.5" y="3" width="5.5" height="18" rx="1.5" opacity="0.3" />
+            <rect x="5" y="11" width="5.5" height="10" rx="1.5" />
+            <rect x="13.5" y="15" width="5.5" height="6" rx="1.5" />
+            <rect x="5" y="7" width="5.5" height="2" rx="1" />
+            <rect x="13.5" y="11" width="5.5" height="2" rx="1" />
+        </svg>
+    );
+}
+
+const USER_AREA_KEYS = ["showMeters", "showUserAreaButton"] as const;
+
+function VuUserAreaButton({ iconForeground, hideTooltips, nameplate }: UserAreaRenderProps) {
+    const { showMeters, showUserAreaButton } = settings.use(USER_AREA_KEYS);
+    if (!showUserAreaButton) return null;
+
+    return (
+        <UserAreaButton
+            icon={<MeterIcon className={iconForeground} />}
+            tooltipText={hideTooltips ? void 0 : showMeters ? "Hide VU meters" : "Show VU meters"}
+            aria-label="VU meters"
+            role="switch"
+            aria-checked={showMeters}
+            plated={nameplate != null}
+            onClick={() => settings.store.showMeters = !showMeters}
+        />
+    );
+}
+
+// --- Input level in the user area mic menu ---
+
+// Full scale per second the menu bars fall between level updates
+const MENU_FALL_PER_SECOND = 1.5;
+
+// Discord's own meter in this menu reads the voiceactivity level, the one its mic test uses.
+// This reads the same level, or the self meter's left and right while a call measures them.
+function MenuInputMeter() {
+    const leftRef = React.useRef<HTMLDivElement>(null);
+    const rightRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        const engine = MediaEngineStore.getMediaEngine() as unknown as typeof vadEngine;
+        const listening = typeof engine?.on === "function" && typeof engine.removeListener === "function";
+        let level = 0;
+        const onLevel = (levelDb: number) => {
+            level = Number.isFinite(levelDb) && levelDb > -100 ? Math.min(10 ** (levelDb / 20), 1) : 0;
+        };
+        if (listening) engine.on("voiceactivity", onLevel);
+
+        const shown = [0, 0];
+        const written = [-1, -1];
+        let lastAt = performance.now();
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        let frame: number | undefined;
+        const draw = (now: number) => {
+            frame = undefined;
+            const fall = MENU_FALL_PER_SECOND * (now - lastAt) / 1000;
+            lastAt = now;
+            const me = UserStore.getCurrentUser()?.id;
+            const self = me ? meters.get(me) : undefined;
+            // the self meter's bars only move while its frame loop runs
+            const stereo = self != null && !self.mono && (self.tap != null || self.nativeAvailable === true)
+                && (frameId !== undefined || frameTimer !== undefined);
+            const mono = normalize(level, settings.store.floorDb);
+            for (let channel = 0; channel < 2; channel++) {
+                shown[channel] = Math.max(stereo ? self.display[channel] : mono, shown[channel] - fall);
+                const permille = Math.round(shown[channel] * 1000);
+                const fill = channel ? rightRef.current : leftRef.current;
+                if (fill && permille !== written[channel]) {
+                    written[channel] = permille;
+                    fill.style.transform = `translateX(${(permille - 1000) / 10}%)`;
+                }
+            }
+            timer = setTimeout(() => {
+                timer = undefined;
+                frame = requestAnimationFrame(draw);
+            }, 1000 / settings.store.frameRate);
+        };
+        frame = requestAnimationFrame(draw);
+
+        return () => {
+            if (listening) engine.removeListener("voiceactivity", onLevel);
+            if (timer !== undefined) clearTimeout(timer);
+            if (frame !== undefined) cancelAnimationFrame(frame);
+        };
+    }, []);
+
+    return (
+        <div className="hc-vu-menu-meter" title="Input level. Left | Right">
+            {["L", "R"].map((name, channel) => (
+                <div key={name} className="hc-vu-menu-row">
+                    <span>{name}</span>
+                    <div className="hc-vu-menu-track">
+                        <div ref={channel ? rightRef : leftRef} className="hc-vu-menu-fill" />
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+type MenuRender = (...args: unknown[]) => React.ReactNode;
+
+function isInputLevelItem(props: { id?: unknown; label?: unknown; }) {
+    return (typeof props.id === "string" && /input.?(level|meter)/i.test(props.id))
+        || (typeof props.label === "string" && props.label.trim().toLowerCase() === "input level");
+}
+
+// The stock meter stays mounted but hidden, so whatever it keeps alive keeps running
+function withMenuMeter(render: MenuRender): MenuRender {
+    return (...args) => (
+        <>
+            <div className="hc-vu-menu-stock">{render(...args)}</div>
+            <ErrorBoundary noop><MenuInputMeter /></ErrorBoundary>
+        </>
+    );
+}
+
+function swapInputLevel(list: unknown[]): boolean {
+    for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        if (Array.isArray(item)) {
+            if (swapInputLevel(item)) return true;
+            continue;
+        }
+        if (!React.isValidElement<Record<string, unknown>>(item)) continue;
+        const { props } = item;
+        const renderKey = typeof props.control === "function" ? "control" : typeof props.render === "function" ? "render" : undefined;
+        if (renderKey && isInputLevelItem(props)) {
+            list[i] = React.cloneElement(item, { [renderKey]: withMenuMeter(props[renderKey] as MenuRender) });
+            return true;
+        }
+        const { children } = props;
+        if (children == null || typeof children !== "object") continue;
+        const nested = (Array.isArray(children) ? [...children] : [children]) as React.ReactNode[];
+        if (swapInputLevel(nested)) {
+            list[i] = React.cloneElement(item, {}, ...nested);
+            return true;
+        }
+    }
+    return false;
+}
+
+// Only the mic menu has renderInputVolume. With HaloCord's look off the stock meter stays.
+const audioDeviceMenuPatch: NavContextMenuPatchCallback = (children, props: { renderInputVolume?: boolean; }) => {
+    if (!("renderInputVolume" in props) || !document.documentElement.classList.contains("hc-theming")) return;
+    swapInputLevel(children);
+};
 
 // --- Options on the Voice & Video page, under HaloCord's voice panel ---
 
@@ -1412,8 +1769,8 @@ let optionsRoot: ReturnType<typeof createRoot> | undefined;
 let optionsNode: HTMLDivElement | undefined;
 let optionsTimer: ReturnType<typeof setInterval> | undefined;
 
-type BoolKey = "showMeters" | "showPeak" | "showSelf" | "showWhileDeafened" | "showMutedStreamAudio";
-type SelectKey = "tileSurfaces" | "tilePlacement" | "tileMeterSide";
+type BoolKey = "showMeters" | "showUserAreaButton" | "showPeak" | "showPeakNumbers" | "showSelf" | "showWhileDeafened" | "showMutedStreamAudio";
+type SelectKey = "frameRate" | "peakNumberUsers" | "peakNumberSurfaces" | "tileSurfaces" | "tilePlacement" | "tileMeterSide";
 type RangeKey = "floorDb" | "tileMeterHeight";
 
 function Row({ label, sub, off, children }: { label: string; sub: string; off?: boolean; children: React.ReactNode; }) {
@@ -1441,10 +1798,20 @@ function SwitchRow({ name, label, sub = settings.def[name].description, off }: {
 
 function SelectRow({ name, label, off }: { name: SelectKey; label: string; off: boolean; }) {
     const value = settings.use([name])[name];
+    const { options } = settings.def[name];
     return (
         <Row label={label} sub={settings.def[name].description} off={off}>
-            <select className="hc-vu-select" aria-label={label} disabled={off} value={value} onChange={e => Object.assign(settings.store, { [name]: e.currentTarget.value })}>
-                {settings.def[name].options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            <select
+                className="hc-vu-select"
+                aria-label={label}
+                disabled={off}
+                value={value}
+                onChange={e => {
+                    const picked = options.find(o => String(o.value) === e.currentTarget.value);
+                    if (picked) Object.assign(settings.store, { [name]: picked.value });
+                }}
+            >
+                {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
         </Row>
     );
@@ -1453,6 +1820,9 @@ function SelectRow({ name, label, off }: { name: SelectKey; label: string; off: 
 function RangeRow({ name, label, unit, off }: { name: RangeKey; label: string; unit: string; off: boolean; }) {
     const value = settings.use([name])[name];
     const { markers } = settings.def[name];
+    const min = markers[0];
+    const max = markers[markers.length - 1];
+    const fill: React.CSSProperties & Record<"--hc-vu-fill", string> = { "--hc-vu-fill": `${(value - min) / (max - min) * 100}%` };
     return (
         <Row label={label} sub={settings.def[name].description} off={off}>
             <div className="hc-vu-range">
@@ -1460,10 +1830,11 @@ function RangeRow({ name, label, unit, off }: { name: RangeKey; label: string; u
                     type="range"
                     aria-label={label}
                     disabled={off}
-                    min={markers[0]}
-                    max={markers[markers.length - 1]}
+                    min={min}
+                    max={max}
                     step={markers[1] - markers[0]}
                     value={value}
+                    style={fill}
                     onChange={e => settings.store[name] = Number(e.currentTarget.value)}
                 />
                 <span className="hc-vu-val">{value}{unit}</span>
@@ -1473,13 +1844,19 @@ function RangeRow({ name, label, unit, off }: { name: RangeKey; label: string; u
 }
 
 function GuardOptions() {
-    const off = !settings.use(["showMeters"]).showMeters;
+    const { showMeters, showPeakNumbers } = settings.use(["showMeters", "showPeakNumbers"]);
+    const off = !showMeters;
     return (
         <>
             <div className="dvx-sec-title">VU Meters</div>
             <SwitchRow name="showMeters" label="Show VU meters" />
+            <SwitchRow name="showUserAreaButton" label="Show VU button in user area" />
             <RangeRow name="floorDb" label="Meter floor" unit=" dB" off={off} />
+            <SelectRow name="frameRate" label="Frame rate" off={off} />
             <SwitchRow name="showPeak" label="Peak hold line" off={off} />
+            <SwitchRow name="showPeakNumbers" label="Peak numbers" off={off} />
+            <SelectRow name="peakNumberUsers" label="Peak numbers for" off={off || !showPeakNumbers} />
+            <SelectRow name="peakNumberSurfaces" label="Meters with peak numbers" off={off || !showPeakNumbers} />
             <SwitchRow name="showSelf" label="Meter for your own microphone" off={off} />
             <SelectRow name="tileSurfaces" label="Call tiles with meters" off={off} />
             <SelectRow name="tilePlacement" label="Meter position on call tiles" off={off} />
@@ -1532,6 +1909,15 @@ export default definePlugin({
     settings,
     managedStyle: meterStyle,
 
+    userAreaButton: {
+        icon: MeterIcon,
+        render: VuUserAreaButton
+    },
+
+    contextMenus: {
+        "audio-device-context": audioDeviceMenuPatch
+    },
+
     patches: [
         {
             // Voice channel list row: the meter goes last, after the mute/deafen icons, so every bar lines up.
@@ -1551,7 +1937,7 @@ export default definePlugin({
     ],
 
     renderMeter(userId: string) {
-        return <VoiceMeter userId={userId} style={{ flexShrink: 0 }} />;
+        return <VoiceMeter userId={userId} kind="row" style={{ flexShrink: 0 }} />;
     },
 
     renderTileMeter(userId?: string) {

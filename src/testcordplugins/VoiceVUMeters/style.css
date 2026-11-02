@@ -2,17 +2,77 @@
    keeps them clear of the hover controls strip and the nameplate row, so no
    hover repositioning is needed. */
 
+#hc-guard-options .hc-vu-select,
+#hc-guard-options .hc-vu-select::picker(select) {
+    appearance: base-select;
+}
+
 #hc-guard-options .hc-vu-select {
+    display: flex;
     flex: none;
+    align-items: center;
+    gap: 8px;
     min-width: 170px;
-    padding: 6px 8px;
-    border: 1px solid var(--hc-row-border, rgb(255 255 255 / 8%));
-    border-radius: 6px;
-    background: var(--hc-panel-bg, #1e1f22);
-    color: var(--hc-text, #f2f3f5);
+    padding: 6px 10px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 8px;
+    background: var(--hc-window-bg);
+    color: var(--hc-text);
     font-size: 13px;
     outline: none;
     cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+#hc-guard-options .hc-vu-select:hover:not(:disabled),
+#hc-guard-options .hc-vu-select:open {
+    border-color: color-mix(in srgb, var(--hc-accent) 55%, transparent);
+    box-shadow: 0 0 10px rgb(var(--hc-accent-rgb) / 25%);
+}
+
+#hc-guard-options .hc-vu-select::picker-icon {
+    margin-left: auto;
+    color: var(--hc-text-muted);
+    transition: rotate 0.15s;
+}
+
+#hc-guard-options .hc-vu-select:open::picker-icon {
+    rotate: 180deg;
+}
+
+#hc-guard-options .hc-vu-select::picker(select) {
+    margin-top: 4px;
+    padding: 4px;
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 8px;
+    background: var(--hc-window-bg);
+    color: var(--hc-text);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+}
+
+/* the background and color also darken the native list where base-select is missing */
+#hc-guard-options .hc-vu-select option {
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: var(--hc-window-bg);
+    color: var(--hc-text);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+#hc-guard-options .hc-vu-select option:hover,
+#hc-guard-options .hc-vu-select option:focus-visible {
+    background: rgb(var(--hc-accent-rgb) / 14%);
+    outline: none;
+}
+
+#hc-guard-options .hc-vu-select option:checked {
+    background: rgb(var(--hc-accent-rgb) / 22%);
+    color: var(--hc-accent);
+}
+
+#hc-guard-options .hc-vu-select option::checkmark {
+    color: var(--hc-accent);
 }
 
 #hc-guard-options .hc-vu-range {
@@ -23,11 +83,16 @@
     width: 220px;
 }
 
+/* --hc-vu-fill is the value's position, set inline by the component */
 #hc-guard-options .hc-vu-range input {
     flex: 1;
     height: 8px;
     border-radius: 4px;
-    background: var(--hc-panel-bg, #1e1f22);
+    background: linear-gradient(
+        to right,
+        var(--hc-accent) var(--hc-vu-fill, 0%),
+        color-mix(in srgb, var(--hc-text-muted) 45%, transparent) var(--hc-vu-fill, 0%)
+    );
     outline: none;
     cursor: pointer;
     appearance: none;
@@ -38,15 +103,20 @@
     height: 18px;
     border: none;
     border-radius: 50%;
-    background: var(--hc-accent, #afe37f);
-    box-shadow: 0 0 0 4px rgb(var(--hc-accent-rgb, 175 227 127) / 18%);
+    background: var(--hc-accent);
+    box-shadow: 0 0 0 4px rgb(var(--hc-accent-rgb) / 18%);
     cursor: pointer;
+    transition: box-shadow 0.15s;
     appearance: none;
+}
+
+#hc-guard-options .hc-vu-range input:hover:not(:disabled)::-webkit-slider-thumb {
+    box-shadow: 0 0 0 5px rgb(var(--hc-accent-rgb) / 25%), 0 0 10px rgb(var(--hc-accent-rgb) / 35%);
 }
 
 #hc-guard-options .hc-vu-val {
     min-width: 48px;
-    color: var(--hc-accent, #afe37f);
+    color: var(--hc-accent);
     font-size: 13px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -59,6 +129,107 @@
 
 #hc-guard-options .hc-vu-select:focus-visible,
 #hc-guard-options .hc-vu-range input:focus-visible {
-    outline: 2px solid var(--hc-accent, #afe37f);
+    outline: 2px solid var(--hc-accent);
     outline-offset: 2px;
+}
+
+/* Peak number above a meter. Its text and data-clip are written by the frame loop. */
+.hc-vu-peak {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 1px);
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0 2px;
+    border: none;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--hc-window-bg) 85%, transparent);
+    color: var(--hc-text);
+    font-family: var(--font-code);
+    font-size: 9px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 9px;
+    white-space: nowrap;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: box-shadow 0.15s, color 0.15s;
+}
+
+.hc-vu-peak[data-kind="tile"] {
+    right: auto;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    padding: 1px 3px;
+    border: 1px solid var(--hc-panel-border);
+    font-size: 10px;
+    line-height: 10px;
+    transform: translateX(-50%);
+}
+
+.hc-vu-peak:empty {
+    visibility: hidden;
+}
+
+.hc-vu-peak:hover {
+    color: var(--hc-accent);
+    box-shadow: 0 0 6px rgb(var(--hc-accent-rgb) / 45%);
+}
+
+.hc-vu-peak:focus-visible {
+    outline: 1px solid var(--hc-accent);
+    outline-offset: 1px;
+}
+
+.hc-vu-peak[data-clip] {
+    background: var(--status-danger);
+    color: var(--hc-text);
+}
+
+/* User area mic menu: the HaloCord L and R meter stands in for Discord's input level bar */
+.hc-vu-menu-meter {
+    display: none;
+}
+
+html.hc-theming .hc-vu-menu-stock {
+    display: none;
+}
+
+html.hc-theming .hc-vu-menu-meter {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 6px;
+    padding: 4px 6px;
+    border: 1px solid var(--hc-row-border);
+    border-radius: 4px;
+    background: var(--hc-window-bg);
+}
+
+.hc-vu-menu-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.hc-vu-menu-row span {
+    width: 8px;
+    color: var(--hc-text-muted);
+    font: 700 9px/1 var(--font-primary);
+}
+
+.hc-vu-menu-track {
+    position: relative;
+    flex: 1;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: rgb(var(--hc-accent-rgb) / 12%);
+}
+
+.hc-vu-menu-fill {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--hc-accent-2), var(--hc-accent));
+    transform: translateX(-100%);
 }
