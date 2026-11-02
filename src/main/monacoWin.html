@@ -8,6 +8,46 @@
         integrity="sha256-tiJPQ2O04z/pZ/AwdyIghrOMzewf+PIvEl1YKbQvsZk=" crossorigin="anonymous"
         referrerpolicy="no-referrer" />
     <style>
+        :root {
+            --bg: #1e1e1e;
+            --bar: #252526;
+            --border: #333;
+            --text: #ddd;
+            --muted: #999;
+            --btn: #3a3d41;
+            --btn-border: #4a4d51;
+            --btn-hover: #4a4d51;
+            --ok: #89d185;
+            --err: #f48771;
+        }
+
+        :root[data-hc="halocord"] {
+            --bg: #16191d;
+            --bar: #10151a;
+            --border: rgb(255 255 255 / 8%);
+            --text: #e6e9ee;
+            --muted: #9aa3ad;
+            --btn: #1f242a;
+            --btn-border: rgb(255 255 255 / 10%);
+            --btn-hover: #262c33;
+            --accent: #afe37f;
+            --ok: #afe37f;
+        }
+
+        :root[data-hc="mochacord"] {
+            --bg: #1e1e2e;
+            --bar: #181825;
+            --border: #313244;
+            --text: #cdd6f4;
+            --muted: #a6adc8;
+            --btn: #313244;
+            --btn-border: #45475a;
+            --btn-hover: #45475a;
+            --accent: #89b4fa;
+            --ok: #89b4fa;
+            --err: #f38ba8;
+        }
+
         html,
         body {
             position: absolute;
@@ -18,9 +58,29 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background: #1e1e1e;
-            color: #ddd;
+            background: var(--bg);
+            color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+            accent-color: var(--accent, auto);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track,
+        ::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--btn-border);
+            border-radius: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent, var(--muted));
         }
 
         #toolbar {
@@ -28,16 +88,16 @@
             align-items: center;
             gap: 12px;
             padding: 6px 12px;
-            background: #252526;
-            border-bottom: 1px solid #333;
+            background: var(--bar);
+            border-bottom: 1px solid var(--border);
             font-size: 12px;
             user-select: none;
         }
 
         #toolbar button {
-            background: #3a3d41;
-            color: #ddd;
-            border: 1px solid #4a4d51;
+            background: var(--btn);
+            color: var(--text);
+            border: 1px solid var(--btn-border);
             border-radius: 3px;
             padding: 4px 10px;
             cursor: pointer;
@@ -45,7 +105,23 @@
         }
 
         #toolbar button:hover {
-            background: #4a4d51;
+            background: var(--btn-hover);
+        }
+
+        :root[data-hc] #toolbar button {
+            border-radius: 6px;
+            transition: border-color 0.15s, box-shadow 0.15s, color 0.15s;
+        }
+
+        :root[data-hc] #toolbar button:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 35%, transparent);
+        }
+
+        :root[data-hc] #toolbar :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 1px;
         }
 
         #toolbar button:disabled {
@@ -65,18 +141,18 @@
         }
 
         #status {
-            color: #999;
+            color: var(--muted);
             font-size: 12px;
             min-width: 200px;
             text-align: right;
         }
 
         #status.error {
-            color: #f48771;
+            color: var(--err);
         }
 
         #status.saved {
-            color: #89d185;
+            color: var(--ok);
         }
 
         #container {
@@ -87,6 +163,10 @@
             bottom: 0;
         }
     </style>
+    <script>
+        const editorTheme = getTheme();
+        if (editorTheme.startsWith("hc-")) document.documentElement.dataset.hc = editorTheme.slice(3);
+    </script>
 </head>
 
 <body>
@@ -424,7 +504,76 @@
             }
         }
 
+        const HC_PALETTES = {
+            halocord: { bg: "16191d", bar: "10151a", text: "e6e9ee", muted: "5c6670", accent: "afe37f", accent2: "63c98f", number: "e5c07b", string: "9fd3c7" },
+            mochacord: { bg: "1e1e2e", bar: "181825", text: "cdd6f4", muted: "6c7086", accent: "89b4fa", accent2: "b4befe", number: "fab387", string: "a6e3a1" }
+        };
+
+        function defineHaloThemes(monaco) {
+            for (const [name, p] of Object.entries(HC_PALETTES)) {
+                const a = "#" + p.accent;
+                monaco.editor.defineTheme("hc-" + name, {
+                    base: "vs-dark",
+                    inherit: true,
+                    rules: [
+                        { token: "", foreground: p.text, background: p.bg },
+                        { token: "comment", foreground: p.muted, fontStyle: "italic" },
+                        { token: "tag", foreground: p.accent },
+                        { token: "keyword", foreground: p.accent2 },
+                        { token: "attribute.name", foreground: p.accent2 },
+                        { token: "attribute.value", foreground: p.text },
+                        { token: "number", foreground: p.number },
+                        { token: "string", foreground: p.string }
+                    ],
+                    colors: {
+                        "editor.background": "#" + p.bg,
+                        "editor.foreground": "#" + p.text,
+                        "editorGutter.background": "#" + p.bg,
+                        "editorCursor.foreground": a,
+                        "editorLineNumber.foreground": "#" + p.muted,
+                        "editorLineNumber.activeForeground": a,
+                        "editor.lineHighlightBackground": "#ffffff08",
+                        "editor.lineHighlightBorder": "#00000000",
+                        "editor.selectionBackground": a + "4d",
+                        "editor.inactiveSelectionBackground": a + "26",
+                        "editor.selectionHighlightBackground": a + "1f",
+                        "editor.wordHighlightBackground": a + "1f",
+                        "editor.findMatchBackground": a + "66",
+                        "editor.findMatchHighlightBackground": a + "33",
+                        "editorBracketMatch.background": a + "26",
+                        "editorBracketMatch.border": a + "80",
+                        "editorIndentGuide.background": "#ffffff10",
+                        "editorIndentGuide.activeBackground": a + "59",
+                        "editorWhitespace.foreground": "#ffffff1a",
+                        "editorLink.activeForeground": a,
+                        "editorWidget.background": "#" + p.bar,
+                        "editorWidget.border": "#ffffff14",
+                        "editorSuggestWidget.background": "#" + p.bar,
+                        "editorSuggestWidget.border": "#ffffff14",
+                        "editorSuggestWidget.selectedBackground": a + "2e",
+                        "editorSuggestWidget.highlightForeground": a,
+                        "editorHoverWidget.background": "#" + p.bar,
+                        "editorHoverWidget.border": "#ffffff14",
+                        "list.hoverBackground": "#ffffff0d",
+                        "list.activeSelectionBackground": a + "2e",
+                        "list.focusBackground": a + "2e",
+                        "list.highlightForeground": a,
+                        "input.background": "#" + p.bg,
+                        "input.border": "#ffffff14",
+                        "inputOption.activeBorder": a,
+                        "focusBorder": a + "80",
+                        "scrollbar.shadow": "#00000000",
+                        "scrollbarSlider.background": "#ffffff1f",
+                        "scrollbarSlider.hoverBackground": a + "59",
+                        "scrollbarSlider.activeBackground": a + "80",
+                        "editorOverviewRuler.border": "#00000000"
+                    }
+                });
+            }
+        }
+
         require(["vs/editor/editor.main"], () => {
+            defineHaloThemes(monaco);
             const prefs = loadPrefs();
             const chkFormat = document.getElementById("chk-format-on-save");
             const chkLint = document.getElementById("chk-lint");
@@ -471,14 +620,17 @@
                     {
                         value: css,
                         language: "css",
-                        theme: getTheme(),
+                        theme: editorTheme,
                         automaticLayout: true,
                         formatOnPaste: true,
                         tabSize: 4,
                         insertSpaces: true,
                         renderWhitespace: "selection",
                         wordWrap: "on",
-                        minimap: { enabled: false }
+                        minimap: { enabled: false },
+                        scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8, useShadows: false },
+                        overviewRulerBorder: false,
+                        hideCursorInOverviewRuler: true
                     }
                 );
 

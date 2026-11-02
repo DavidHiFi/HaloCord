@@ -20,6 +20,7 @@
 import "~plugins";
 import "./fixWeirdAppRegionBug.css";
 import "./components/HaloUI.css";
+import "./components/HaloControls.css";
 import "./components/HaloMenus.css";
 
 import nativeTitleBarStyles from "./nativeTitleBar.css?managed";

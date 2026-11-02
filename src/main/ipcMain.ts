@@ -18,7 +18,6 @@
 
 import "./updater";
 import "./ipcPlugins";
-import "./settings";
 
 import { debounce } from "@shared/debounce";
 import { IpcEvents } from "@shared/IpcEvents";
@@ -31,6 +30,7 @@ import { join } from "path";
 
 import { registerCspIpcHandlers } from "./csp/manager";
 import { registerPrivacyIpcHandlers } from "./privacy/ipc";
+import { RendererSettings } from "./settings";
 import { getThemeInfo, stripBOM, UserThemeHeader } from "./themes";
 import { ALLOWED_PROTOCOLS, QUICK_CSS_PATH, SETTINGS_DIR, THEMES_DIR } from "./utils/constants";
 import { ensureSafePath } from "./utils/ensureSafePath";
@@ -153,8 +153,15 @@ ipcMain.handle(IpcEvents.INIT_FILE_WATCHERS, ({ sender }) => {
     });
 });
 
+function getHaloEditorVariant() {
+    const { haloTheming, haloThemeVariant } = RendererSettings.plain;
+    if (haloTheming === false) return null;
+    return haloThemeVariant === "mochacord" ? "mochacord" : "halocord";
+}
+
 ipcMain.on(IpcEvents.GET_MONACO_THEME, e => {
-    e.returnValue = nativeTheme.shouldUseDarkColors ? "vs-dark" : "vs-light";
+    const variant = getHaloEditorVariant();
+    e.returnValue = variant ? `hc-${variant}` : nativeTheme.shouldUseDarkColors ? "vs-dark" : "vs-light";
 });
 
 let monacoWin: BrowserWindow | null = null;
@@ -166,11 +173,12 @@ ipcMain.handle(IpcEvents.OPEN_MONACO_EDITOR, async () => {
         return;
     }
 
+    const variant = getHaloEditorVariant();
     monacoWin = new BrowserWindow({
         title: "Testcord QuickCSS Editor",
         autoHideMenuBar: true,
         darkTheme: true,
-        backgroundColor: nativeTheme.shouldUseDarkColors ? "#1e1e1e" : "white",
+        backgroundColor: variant === "mochacord" ? "#1e1e2e" : variant ? "#16191d" : nativeTheme.shouldUseDarkColors ? "#1e1e1e" : "white",
         webPreferences: {
             preload: join(__dirname, "preload.js"),
             contextIsolation: true,
