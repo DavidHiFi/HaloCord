@@ -789,6 +789,8 @@ const GhostUserAreaButton: UserAreaButtonFactory = ({ iconForeground, hideToolti
                 icon={<GhostIcon className={`${iconForeground} ${anyActive ? "gc-icon--active" : ""}`} active={anyActive} />}
                 plated={nameplate != null}
                 redGlow={!anyActive}
+                role="switch"
+                aria-checked={anyActive}
                 onClick={handleLeftClick}
                 onContextMenu={e => { e.preventDefault(); e.stopPropagation(); openPopover(); }}
             />

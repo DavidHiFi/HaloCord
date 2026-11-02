@@ -1051,18 +1051,17 @@ function buildCustomCSS(): string {
             const finalColor = `${baseColor.slice(0, 7)}${alpha}`;
             const finalRadius = cfg.radius != null ? `${cfg.radius}px` : "10px";
             const label = getCanonicalLabel(cfg.label);
+            const baseSelectors = [
+                `${S.callControls} [data-deracul-label="${label}"] ${S.callButton}[type="button"]:not([aria-pressed="false"])`,
+                `${S.panelButtons} ${S.panelButton}[data-deracul-label="${label}"]:not([aria-checked="false"])`,
+                `${S.callControls} ${S.callButton}[data-deracul-label="${label}"]:not([aria-pressed="false"])`,
+                `${S.panelButtons} ${S.panelButton}[aria-label="${label}"]:not([aria-checked="false"])`,
+                `${S.previewButtonOn}[data-deracul-label="${label}"]`,
+            ];
+            const activeSelectors = baseSelectors.flatMap(sel => [`${sel}:hover`, sel]);
 
             lines.push(`
-                ${S.callControls} [data-deracul-label="${label}"] ${S.callButton}[type="button"]:not([aria-pressed="false"]):hover,
-                ${S.callControls} [data-deracul-label="${label}"] ${S.callButton}[type="button"]:not([aria-pressed="false"]),
-                ${S.panelButtons} ${S.panelButton}[data-deracul-label="${label}"]:not([aria-checked="false"]):hover,
-                ${S.panelButtons} ${S.panelButton}[data-deracul-label="${label}"]:not([aria-checked="false"]),
-                ${S.callControls} ${S.callButton}[data-deracul-label="${label}"]:not([aria-pressed="false"]):hover,
-                ${S.callControls} ${S.callButton}[data-deracul-label="${label}"]:not([aria-pressed="false"]),
-                ${S.panelButtons} ${S.panelButton}[aria-label="${label}"]:not([aria-checked="false"]):hover,
-                ${S.panelButtons} ${S.panelButton}[aria-label="${label}"]:not([aria-checked="false"]),
-                ${S.previewButtonOn}[data-deracul-label="${label}"]:hover,
-                ${S.previewButtonOn}[data-deracul-label="${label}"] {
+                ${activeSelectors.join(",\n")} {
                     background-color: ${finalColor} !important;
                     color: white !important;
                     border-radius: ${finalRadius} !important;
@@ -1074,6 +1073,28 @@ function buildCustomCSS(): string {
                     color: white !important;
                 }
             `);
+
+            // The untouched default is Discord blue; HaloCord shows those buttons in its own accent instead.
+            if (baseColor.slice(0, 7).toLowerCase() === "#5865f2") {
+                lines.push(`
+                    ${activeSelectors.map(sel => `html.hc-theming ${sel}`).join(",\n")} {
+                        --vc-plugin-icon-color: var(--hc-accent) !important;
+                        background-color: rgb(var(--hc-accent-rgb) / 18%) !important;
+                        color: var(--hc-accent) !important;
+                        box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%) !important;
+                    }
+
+                    ${baseSelectors.map(sel => `html.hc-theming ${sel}:hover`).join(",\n")} {
+                        background-color: rgb(var(--hc-accent-rgb) / 28%) !important;
+                        box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 65%), 0 0 10px rgb(var(--hc-accent-rgb) / 35%) !important;
+                    }
+
+                    html.hc-theming ${S.previewButtonOn}[data-deracul-label="${label}"] svg {
+                        fill: var(--hc-accent) !important;
+                        color: var(--hc-accent) !important;
+                    }
+                `);
+            }
         }
 
         if (cfg.colorfulInActiveButton) {

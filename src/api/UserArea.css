@@ -1,0 +1,35 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2026 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+html.hc-theming .vc-plugin-icon-button[aria-checked] {
+    transition: background-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+
+html.hc-theming .vc-plugin-icon-button[aria-checked="true"] {
+    --vc-plugin-icon-color: var(--hc-accent) !important;
+
+    background-color: rgb(var(--hc-accent-rgb) / 18%) !important;
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
+}
+
+html.hc-theming .vc-plugin-icon-button[aria-checked="true"]:hover {
+    background-color: rgb(var(--hc-accent-rgb) / 28%) !important;
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 65%), 0 0 10px rgb(var(--hc-accent-rgb) / 35%);
+}
+
+html.hc-theming .vc-plugin-icon-button[aria-checked="false"] {
+    --vc-plugin-icon-color: var(--hc-text-muted) !important;
+}
+
+html.hc-theming button.vc-plugin-icon-button[aria-checked="false"][class*="redGlow_"] {
+    background-color: transparent;
+}
+
+html.hc-theming .vc-plugin-icon-button[aria-checked="false"]:hover {
+    --vc-plugin-icon-color: var(--hc-text) !important;
+
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 30%), 0 0 8px rgb(var(--hc-accent-rgb) / 20%);
+}

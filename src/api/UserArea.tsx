@@ -5,6 +5,7 @@
  */
 
 import "./PluginIconColor.css";
+import "./UserArea.css";
 
 import { useSettings } from "@api/Settings";
 import ErrorBoundary from "@components/ErrorBoundary";
