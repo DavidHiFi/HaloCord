@@ -764,12 +764,26 @@ function dvxPanNote(){var c=document['querySelector']('[data-dvx-voice-card]');i
 // Mic Test input: Discord's own test covers the main microphone. For an extra microphone HaloCord runs its own
 // loopback to the main speaker with that device's volume and pan, and drives Discord's meter while it runs.
 var dvxMt=null,dvxMtNative=false,dvxMtSources=[['main','Microphone'],['sec','Secondary Microphone'],['thr','Third Microphone']];
-function dvxMtStop(){var m=dvxMt;dvxMt=null;if(!m)return;try{cancelAnimationFrame(m['raf']);}catch(e){}try{m['st']&&m['st']['getTracks']()['forEach'](function(t){t['stop']();});}catch(e){}try{m['main']&&dvxGainPrune();}catch(e){}try{m['ctx']&&m['ctx']['close']();}catch(e){}try{m['btn']['removeAttribute']('data-dvx-testing');}catch(e){}try{if(m['vu'])m['vu']['remove'](),m['box']['style']['position']=m['pos'];}catch(e){}if(m['deaf'])dvxMtDeafen(false,m['deafMode']);}
+function dvxMtStop(){var m=dvxMt;dvxMt=null;if(!m)return;try{cancelAnimationFrame(m['raf']);}catch(e){}try{m['st']&&m['st']['getTracks']()['forEach'](function(t){t['stop']();});}catch(e){}try{m['main']&&dvxGainPrune();}catch(e){}try{m['ctx']&&m['ctx']['close']();}catch(e){}try{m['btn']['removeAttribute']('data-dvx-testing');}catch(e){}try{if(m['vu'])m['vu']['remove'](),m['box']['style']['position']=m['pos'];}catch(e){}if(m['vu'])try{var mt=document['querySelector']('[role="dialog"] [class*="micTest__"]');if(mt)dvxMtIdle(mt);}catch(e){}if(m['deaf'])dvxMtDeafen(false,m['deafMode']);}
 // Like Discord's own test: deafen while testing in a call, and undeafen after only if the test did it.
 function dvxMtDeafen(on,mode){try{var mute=mode==='mute',W=window['Vencord']['Webpack'],ME=dvxVpGet(),A=W['findByProps']('setLoopback','toggleSelfDeaf'),SC=W['findStore']('SelectedChannelStore');if(!ME||!A)return false;var d=!!(mute?ME['isSelfMute']():ME['isSelfDeaf']());if(on?d||!SC||!SC['getVoiceChannelId']():!d)return false;mute?A['toggleSelfMute']():A['toggleSelfDeaf']();return true;}catch(e){return false;}}
 function dvxMtSilenced(m){var ME=dvxVpGet();return !ME||!!(m['deafMode']==='mute'?ME['isSelfMute']():ME['isSelfDeaf']());}
 // Stereo meter laid over Discord's level bar: one row per channel.
 function dvxMtVu(m){var box=m['bar']&&m['bar']['parentElement'];if(!box)return null;var v=document['createElement']('div'),f=[];v['id']='dvx-mt-vu',v['style']['cssText']='position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:2px 6px;box-sizing:border-box;border-radius:inherit;background:var(--hc-window-bg,#1e1f22);pointer-events:none';['L','R']['forEach'](function(n){var r=document['createElement']('div'),t=document['createElement']('span'),w=document['createElement']('div'),x=document['createElement']('div');r['style']['cssText']='display:flex;align-items:center;gap:6px;flex:1 1 0;min-height:0',t['textContent']=n,t['style']['cssText']='width:8px;font:700 9px/1 var(--font-primary,sans-serif);color:var(--hc-text-muted,#949ba4)',w['style']['cssText']='position:relative;flex:1;height:100%;max-height:8px;border-radius:2px;overflow:hidden;background:rgb(var(--hc-accent-rgb,175 227 127) / 12%)',x['style']['cssText']='position:absolute;inset:0;background:linear-gradient(90deg,var(--hc-accent-2,#63c98f),var(--hc-accent,#AFE37F));transform:translateX(-100%)';w['appendChild'](x),r['appendChild'](t),r['appendChild'](w),v['appendChild'](r),f['push'](x);});m['box']=box,m['pos']=box['style']['position'];if(getComputedStyle(box)['position']==='static')box['style']['position']='relative';box['appendChild'](v),m['vu']=v;return f;}
+// Between tests the same meter stays over Discord's bar, fed by the engine's voiceactivity level (the source Discord's own input meters use). No capture of its own.
+var dvxMtIdleVu=null;
+function dvxMtIdleOff(){var I=dvxMtIdleVu;dvxMtIdleVu=null;if(!I)return;try{I['eng']&&I['eng']['removeListener']('voiceactivity',I['fn']);}catch(e){}try{I['vu']['remove']();if(I['box']['isConnected'])I['box']['style']['position']=I['pos'];}catch(e){}}
+function dvxMtIdle(mt){
+  var bar=mt['querySelector']('[class*="progress__"]'),I=dvxMtIdleVu;
+  if(I&&bar&&I['vu']['isConnected']&&I['box']===bar['parentElement'])return;
+  dvxMtIdleOff();
+  if(!bar||dvxMt&&dvxMt['vu'])return;
+  var im={'bar':bar},f=dvxMtVu(im);if(!f)return;
+  I=dvxMtIdleVu={'box':im['box'],'vu':im['vu'],'pos':im['pos'],'fills':f,'eng':null,'fn':null};
+  try{var ME=dvxVpGet(),E=ME&&ME['getMediaEngine']&&ME['getMediaEngine']();if(!E||typeof E['on']!=='function'||typeof E['removeListener']!=='function')return;
+    I['fn']=function(db){if(!I['vu']['isConnected']){if(dvxMtIdleVu===I)dvxMtIdleOff();else try{E['removeListener']('voiceactivity',I['fn']);}catch(e){}return;}if(dvxMt&&dvxMt['ivu'])return;var lvl=db>-100?Math['max'](0,Math['min'](1,(db+60)/60)):0,t='translateX('+((lvl-1)*100)['toFixed'](1)+'%)';f[0]['style']['transform']=t,f[1]['style']['transform']=t;};
+    E['on']('voiceactivity',I['fn']),I['eng']=E;}catch(e){}
+}
 function dvxMtStart(S,btn){
   dvxMtStop();
   var mt=btn&&btn['closest']('[class*="micTest__"]'),m=dvxMt={'btn':btn,'bar':mt&&mt['querySelector']('[class*="progress__"]'),'st':null,'ctx':null,'raf':0,'main':!S,'src':S?S['p']:'main'};
@@ -785,7 +799,7 @@ function dvxMtStart(S,btn){
     up['channelCount']=2,up['channelCountMode']='explicit',up['channelInterpretation']='speakers',an[0]['fftSize']=an[1]['fftSize']=1024;
     (g['__hcBal']?g['__hcBal']['out']:g)['connect'](up),up['connect'](sp),sp['connect'](an[0],0),sp['connect'](an[1],1);
     if(Q['micTestDeafen']!==false)m['deafMode']=Q['micTestDeafenMode']==='mute'?'mute':'deafen',m['deaf']=dvxMtDeafen(true,m['deafMode']);
-    var fills=dvxMtVu(m);
+    var IV=dvxMtIdleVu,fills=IV&&m['bar']&&IV['vu']['isConnected']&&IV['box']===m['bar']['parentElement']?(m['ivu']=true,IV['fills']):dvxMtVu(m);
     try{var ME=dvxVpGet();out=String(ME&&ME['getOutputDeviceId']&&ME['getOutputDeviceId']()||'');}catch(e){}
     if(out&&out!=='default'&&typeof c['setSinkId']==='function')c['setSinkId'](out)['catch'](function(){});
     (function draw(){
@@ -826,6 +840,7 @@ try{document['addEventListener']('click',function(ev){
 function dvxMtMount(){
   if(dvxMt&&dvxMt['btn']&&!dvxMt['btn']['isConnected'])dvxMtStop();
   var mt=document['querySelector']('[role="dialog"] [class*="micTest__"]');if(!mt||!mt['parentElement'])return;
+  dvxMtIdle(mt);
   var row=document['getElementById']('dvx-mt-row');
   if(row&&mt['parentElement']['contains'](row))return;
   if(row&&row['parentNode'])row['parentNode']['removeChild'](row);
