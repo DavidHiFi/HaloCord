@@ -10,7 +10,7 @@ import { facesFor, localFacesReady, nearestFace } from "@api/HaloAppearance";
 import { type Settings, useSettings } from "@api/Settings";
 import { HaloRow, HaloSection } from "@components/HaloUI";
 import { classNameFactory } from "@utils/css";
-import { Select, useEffect, useState } from "@webpack/common";
+import { React, Select, useEffect, useRef, useState } from "@webpack/common";
 
 import { ThemeFileRows, ThemeOptionRows } from "./MochaCordOptions";
 
@@ -23,31 +23,93 @@ const fonts = [
 
 type FontKind = "uiFont" | "codeFont";
 
+// A text input with a styled suggestion menu. Chromium draws <datalist> popups itself, light and unstyleable.
 function FontRow({ setting, title, description }: { setting: FontKind; title: string; description: string; }) {
     const settings = useSettings([setting, `${setting}Weight`, `${setting}Italic`]);
     const value = settings[setting];
     const [draft, setDraft] = useState(value);
+    const [query, setQuery] = useState<string | null>(null);
+    const [active, setActive] = useState(-1);
+    const input = useRef<HTMLInputElement>(null);
+    const list = useRef<HTMLDivElement>(null);
+    const listId = `hc-font-list-${setting}`;
 
     useEffect(() => setDraft(value), [value]);
 
+    const matches = query == null ? [] : fonts.filter(f => f.toLowerCase().includes(query.trim().toLowerCase()));
+    const open = matches.length > 0;
+
+    useEffect(() => { list.current?.children[active]?.scrollIntoView({ block: "nearest" }); }, [active]);
+
+    const close = () => { setQuery(null); setActive(-1); };
     const commit = (next: string) => {
         setDraft(next.trim());
         settings[setting] = next.trim();
+        close();
+    };
+
+    const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            if (!open) { setQuery(""); setActive(0); return; }
+            setActive(i => (i + (e.key === "ArrowDown" ? 1 : -1) + matches.length) % matches.length);
+        } else if (e.key === "Enter") {
+            commit(open && active >= 0 ? matches[active] : draft);
+        } else if (e.key === "Escape" && open) {
+            e.preventDefault();
+            e.stopPropagation();
+            close();
+        }
     };
 
     return (
         <HaloRow title={title} description={description}>
-            <input
-                className={cl("input", "font")}
-                list="hc-font-list"
-                placeholder="Discord default"
-                spellCheck={false}
-                value={draft}
-                style={draft ? { fontFamily: `"${draft}"`, fontWeight: settings[`${setting}Weight`], fontStyle: settings[`${setting}Italic`] ? "italic" : undefined } : undefined}
-                onChange={e => setDraft(e.currentTarget.value)}
-                onBlur={() => commit(draft)}
-                onKeyDown={e => e.key === "Enter" && commit(draft)}
-            />
+            <div className={cl("combo")}>
+                <input
+                    ref={input}
+                    className={cl("input", "font")}
+                    role="combobox"
+                    aria-expanded={open}
+                    aria-controls={listId}
+                    aria-autocomplete="list"
+                    aria-activedescendant={open && active >= 0 ? `${listId}-${active}` : undefined}
+                    placeholder="Discord default"
+                    spellCheck={false}
+                    value={draft}
+                    style={draft ? { fontFamily: `"${draft}"`, fontWeight: settings[`${setting}Weight`], fontStyle: settings[`${setting}Italic`] ? "italic" : undefined } : undefined}
+                    onChange={e => { setDraft(e.currentTarget.value); setQuery(e.currentTarget.value); setActive(-1); }}
+                    onBlur={() => commit(draft)}
+                    onKeyDown={onKeyDown}
+                />
+                <button
+                    type="button"
+                    tabIndex={-1}
+                    aria-label={`Show ${title.toLowerCase()} suggestions`}
+                    className={cl("combo-arrow", open && "combo-arrow-open")}
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => { input.current?.focus(); open ? close() : setQuery(""); }}
+                >
+                    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" /></svg>
+                </button>
+                {open && (
+                    <div ref={list} id={listId} role="listbox" className={cl("combo-menu")} onMouseDown={e => e.preventDefault()}>
+                        {matches.map((font, i) => (
+                            <div
+                                key={font}
+                                id={`${listId}-${i}`}
+                                role="option"
+                                aria-selected={i === active}
+                                className={cl("combo-option", i === active && "combo-option-active", font === value && "combo-option-current")}
+                                style={{ fontFamily: `"${font}"` }}
+                                onMouseEnter={() => setActive(i)}
+                                onClick={() => commit(font)}
+                            >
+                                {font}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
             <button type="button" className={cl("button")} disabled={!value && !draft} onClick={() => commit("")}>Reset</button>
         </HaloRow>
     );
@@ -138,9 +200,6 @@ export function HaloAppearanceSection() {
             <FontStyleRow setting="uiFont" title="UI font style" />
             <FontRow setting="codeFont" title="Code font" description="The font for code blocks and inline code. Leave it empty for Discord's font." />
             <FontStyleRow setting="codeFont" title="Code font style" />
-            <datalist id="hc-font-list">
-                {fonts.map(font => <option key={font} value={font} />)}
-            </datalist>
             {settings.haloTheming && <ThemeOptionRows />}
         </HaloSection>
     );

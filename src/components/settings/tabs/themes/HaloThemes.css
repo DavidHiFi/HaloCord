@@ -76,6 +76,78 @@
 
 .hc-mc-font {
     width: 220px;
+    padding-right: 32px;
+    text-overflow: ellipsis;
+}
+
+.hc-mc-combo {
+    position: relative;
+}
+
+.hc-mc-combo-arrow {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    color: var(--hc-text-muted, var(--text-muted));
+    cursor: pointer;
+    transform: translateY(-50%);
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.hc-mc-combo-arrow:hover,
+.hc-mc-combo-arrow-open {
+    color: var(--hc-accent, var(--brand-500));
+}
+
+.hc-mc-combo-arrow-open {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.hc-mc-combo-menu {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    box-sizing: border-box;
+    max-height: 232px;
+    padding: 4px;
+    overflow-y: auto;
+    border: 1px solid var(--hc-panel-border, var(--border-subtle));
+    border-radius: 10px;
+    background: var(--hc-window-bg, var(--background-floating));
+    box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+    backdrop-filter: blur(16px);
+    scrollbar-width: thin;
+    scrollbar-color: var(--hc-scroll-thumb, var(--scrollbar-thin-thumb)) transparent;
+}
+
+.hc-mc-combo-option {
+    overflow: hidden;
+    padding: 7px 10px;
+    border-radius: 6px;
+    color: var(--hc-text, var(--text-normal));
+    font-size: 13px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.hc-mc-combo-option-current {
+    color: var(--hc-accent, var(--brand-500));
+}
+
+.hc-mc-combo-option-active {
+    background: rgb(var(--hc-accent-rgb) / 18%);
 }
 
 .hc-mc-font-styles {
