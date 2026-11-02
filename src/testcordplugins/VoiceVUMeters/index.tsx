@@ -1747,7 +1747,7 @@ function swapInputLevel(list: unknown[]): boolean {
         }
         const { children } = props;
         if (children == null || typeof children !== "object") continue;
-        const nested: unknown[] = Array.isArray(children) ? [...children] : [children];
+        const nested = (Array.isArray(children) ? [...children] : [children]) as React.ReactNode[];
         if (swapInputLevel(nested)) {
             list[i] = React.cloneElement(item, {}, ...nested);
             return true;
