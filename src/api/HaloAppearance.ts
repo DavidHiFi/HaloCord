@@ -5,6 +5,7 @@
  */
 
 import { type MochaCordSettings, Settings, SettingsStore } from "@api/Settings";
+import { IS_MAC, IS_WINDOWS } from "@utils/constants";
 import { createAndAppendStyle } from "@utils/css";
 import { PopoutWindowStore } from "@webpack/common";
 
@@ -137,11 +138,22 @@ function fontCss() {
     ].filter(Boolean).join("\n");
 }
 
+let mainWindowBlur: boolean | undefined;
+
+// The window material is picked once, when the window is created, and popouts never get one.
+function hasWindowBlur(root: HTMLElement) {
+    if (root !== document.documentElement) return false;
+    return mainWindowBlur ??= Settings.transparent
+        || (IS_WINDOWS && Settings.windowsMaterial !== "none")
+        || (IS_MAC && !!Settings.macosVibrancyStyle);
+}
+
 export function applyHaloAppearance(root: HTMLElement) {
     const mc = Settings.mochacord;
     for (const attr of Array.from(root.attributes)) {
         if (attr.name.startsWith("data-mc-")) root.removeAttribute(attr.name);
     }
+    if (!hasWindowBlur(root)) root.setAttribute("data-mc-window-blur", "off");
     for (const [key, name, fallback, value] of flags) {
         if (mc[key] !== fallback) root.setAttribute(`data-mc-${name}`, value);
     }
