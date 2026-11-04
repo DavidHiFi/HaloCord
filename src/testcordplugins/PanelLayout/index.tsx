@@ -936,7 +936,7 @@ function buildCSS(): string {
         lines.push(`
             ${S.panelContainer} .container_df39b2 { border-radius: 0px !important; }
             ${S.panelContainer} { border-radius: 0px !important; }
-            .panels__5e434 { overflow: hidden !important; }
+            .panels__5e434 { overflow: visible !important; clip-path: inset(-100vh 0 0 0 round 0 0 var(--radius-lg, 16px) var(--radius-lg, 16px)); }
         `);
     }
 

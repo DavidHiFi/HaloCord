@@ -1122,13 +1122,13 @@ function dvxAuxBuildRow(S,dvxLabel){
   var dvxWrap=document['createElement']('div'),dvxLab=dvxLabel['cloneNode'](![]),dvxLabRow=document['createElement']('div'),dvxSt=document['createElement']('span'),dvxSel=document['createElement']('select'),dvxGw=document['createElement']('div'),dvxGh=document['createElement']('div'),dvxGl=document['createElement']('div'),dvxGv=document['createElement']('span'),dvxGr=document['createElement']('input');
   dvxWrap['setAttribute']('data-dvx-aux',S['p']),dvxWrap['style']['marginTop']='16px';
   dvxLab['textContent']=S['label'],dvxLab['removeAttribute']('for'),dvxLab['removeAttribute']('id');
-  dvxLabRow['style']['cssText']='display:flex;align-items:center;justify-content:space-between;gap:8px',dvxLabRow['appendChild'](dvxLab);
+  dvxLab['style']['margin']='0',dvxLabRow['style']['cssText']='display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px;margin-bottom:8px',dvxLabRow['appendChild'](dvxLab);
   dvxSt['id']='dvx-'+S['p']+'-status',dvxSt['style']['cssText']='font-size:12px;line-height:16px;color:var(--hc-text-muted);text-align:right',dvxSt['textContent']='Off';
   var dvxRt=document['createElement']('div');dvxRt['style']['cssText']='display:flex;align-items:center;gap:10px';
   dvxRt['appendChild'](dvxSt),dvxRt['appendChild'](dvxSwitch('dvx-'+S['p']+'-switch',S['label'],function(){return dvxAuxOn(S);},function(v){Q[S['on']]=v;}));
   dvxLabRow['appendChild'](dvxRt),dvxWrap['appendChild'](dvxLabRow);
   dvxSel['id']='dvx-'+S['p']+'-select',dvxSel['setAttribute']('aria-label',S['label']);
-  dvxSel['style']['cssText']='margin-top:8px;width:100%;height:40px;box-sizing:border-box;background:var(--background-secondary,#2b2d31);color:var(--text-strong,#f2f3f5);border:1px solid rgb(var(--hc-accent-rgb,175 227 127) / .16);border-radius:10px;padding:0 12px;font-size:14px;outline:none;cursor:pointer';
+  dvxSel['style']['cssText']='width:100%;height:40px;box-sizing:border-box;background:var(--background-secondary,#2b2d31);color:var(--text-strong,#f2f3f5);border:1px solid rgb(var(--hc-accent-rgb,175 227 127) / .16);border-radius:10px;padding:0 12px;font-size:14px;outline:none;cursor:pointer';
   dvxSel['onchange']=function(){Q[S['on']]=!![],Q[S['dev']]=dvxSel['value'],e4();},dvxWrap['appendChild'](dvxDd(dvxSel));
   dvxGw['id']='dvx-'+S['p']+'-gainwrap',dvxGw['style']['cssText']='margin-top:10px';
   dvxGh['style']['cssText']='display:flex;align-items:center;justify-content:space-between;margin-bottom:4px';
