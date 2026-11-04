@@ -55,10 +55,10 @@ export default definePlugin({
             // onboarding condition as true), which shows as a black screen — so we also
             // kick off the bypass here, which clears the impersonation state the parent
             // gate reads and lets the real channel view take over.
-            find: "getOnboardingPromptsForOnboarding(t)),",
+            find: ".getOnboardingConnections(",
             replacement: {
-                match: /function ec\(e\)\{/,
-                replace: "function ec(e){if($self.shouldSkip(e.guildId)){$self.autoBypass(e.guildId);return null;}"
+                match: /function \i\((\i)\)\{(?=let\{guildId:\i\}=\1,.{0,80}getOnboardingPromptsForOnboarding\()/,
+                replace: "$&if($self.shouldSkip($1.guildId)){$self.autoBypass($1.guildId);return null;}"
             }
         }
     ],

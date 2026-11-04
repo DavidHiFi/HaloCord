@@ -201,7 +201,7 @@ export default definePlugin({
 
     patches: [
         {
-            find: "className:\"attachmentLink\",",
+            find: "attachmentUrl,onClick:",
             replacement: {
                 match: /(?:(\i).noStyleAndInteraction.*?)attachmentName:\i.attachmentName/,
                 replace: "$&,channelId:$1.channelId,messageId:$1.messageId",

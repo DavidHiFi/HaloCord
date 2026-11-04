@@ -34,6 +34,7 @@
  */
 
 import * as DataStore from "@api/DataStore";
+import { gitHash } from "@shared/vencordUserAgent";
 
 export type PatchFailureKind = "noModule" | "noEffect" | "errored" | "undoingGroup" | "conflict" | "codeChanged";
 
@@ -95,6 +96,8 @@ export interface SessionRecord {
     id: string;
     startedAt: number;
     endedAt: number;
+    /** Client git hash, Discord build number and dev flag; only sessions with the current stamp are scored. */
+    build?: string;
     /** Names of plugins that were enabled during the session. */
     enabledPlugins: string[];
     /**
@@ -316,13 +319,19 @@ function sessionEnabledPlugins(session: { enabledPlugins?: string[]; }): Set<str
     return set;
 }
 
-function computeStability(plugin: string, options?: { excludeSourceChanges?: boolean; excludePastHistory?: boolean; }): StabilityScore {
+function buildStamp(): string {
+    const discordBuild = typeof window !== "undefined" ? window.GLOBAL_ENV?.BUILD_NUMBER : undefined;
+    return `${gitHash}/${discordBuild ?? "unknown"}${IS_DEV ? "/dev" : ""}`;
+}
+
+// Sessions from another client or Discord build say nothing about this one, and source
+// changes mean the patch still applied, so neither may count against a plugin.
+function computeStability(plugin: string): StabilityScore {
     let sessionsSeen = 0;
     let sessionsBroken = 0;
 
-    // Include the current session too, but only if the plugin is in
-    // enabledPlugins (otherwise "seen" is not meaningful).
-    const sessions = [...history.filter(s => s.id !== currentSession.id), currentSession];
+    const build = currentSession.build ?? buildStamp();
+    const sessions = [...history.filter(s => s.id !== currentSession.id && s.build === build), currentSession];
     for (const session of sessions) {
         const counts = session.plugins?.[plugin];
         // A plugin counts as "seen" this session if it was registered as
@@ -335,17 +344,8 @@ function computeStability(plugin: string, options?: { excludeSourceChanges?: boo
         sessionsSeen++;
         if (counts) {
             const isPast = session.id !== currentSession.id;
-            const ignorePast = options?.excludePastHistory ?? (isPast && ignoreSourceHistory);
-            if (isPast && ignorePast) {
-                continue;
-            }
-            const excludeSource = options?.excludeSourceChanges ?? (isPast ? false : ignoreSourceHealth);
-            const hasPatch = counts.patchFailures > 0;
-            const hasRuntime = counts.runtimeErrors > 0;
-            const hasSource = !excludeSource && (counts.sourceChanges ?? 0) > 0;
-            if (hasPatch || hasRuntime || hasSource) {
-                sessionsBroken++;
-            }
+            if (isPast && ignoreSourceHistory) continue;
+            if (counts.patchFailures > 0 || counts.runtimeErrors > 0) sessionsBroken++;
         }
     }
 
@@ -440,6 +440,7 @@ export const PluginHealth = {
      */
     registerEnabledPlugins(plugins: readonly string[]) {
         currentSession.enabledPlugins = Array.from(new Set(plugins));
+        currentSession.build = buildStamp();
         currentSession.endedAt = Date.now();
         scheduleFlush();
         // No notify() needed — this doesn't change the visible failure list.
@@ -548,8 +549,8 @@ export const PluginHealth = {
      * Compute the stability score for a plugin across the rolling session
      * window (including the current session).
      */
-    getStability(plugin: string, options?: { excludeSourceChanges?: boolean }): StabilityScore {
-        return computeStability(plugin, options);
+    getStability(plugin: string): StabilityScore {
+        return computeStability(plugin);
     },
 
     /** Snapshot of the recorded session history (oldest first). */

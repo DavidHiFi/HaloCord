@@ -795,15 +795,13 @@ function SessionRow({ session, isCurrent, ignoreSourceHistory }: { session: Sess
     const brokenNames = Object.entries(session.plugins || {})
         .filter(([, counts]) => {
             if (!isCurrent && ignoreSourceHistory) return false;
-            const hasPatch = counts.patchFailures > 0;
-            const hasRuntime = counts.runtimeErrors > 0;
-            const hasSource = (counts.sourceChanges ?? 0) > 0;
-            return hasPatch || hasRuntime || hasSource;
+            return counts.patchFailures > 0 || counts.runtimeErrors > 0;
         })
         .map(([name]) => name)
         .sort();
     const [expanded, setExpanded] = useState(false);
     const hasBroken = brokenNames.length > 0;
+    const scored = isCurrent || session.build === PluginHealth.getCurrentSession().build;
 
     return (
         <li>
@@ -826,6 +824,7 @@ function SessionRow({ session, isCurrent, ignoreSourceHistory }: { session: Sess
                     {hasBroken
                         ? `${brokenNames.length} broken`
                         : "no failures"}
+                    {!scored && " · other build, not scored"}
                 </div>
             </div>
             {hasBroken && expanded && (
@@ -1578,7 +1577,7 @@ function HealthTab() {
         const past = PluginHealth.getHistory();
         const lastHealthy = [...past].reverse().find(s =>
             !Object.values(s.plugins ?? {}).some(c =>
-                (c.patchFailures + c.runtimeErrors + (c.sourceChanges ?? 0)) > 0
+                (c.patchFailures + c.runtimeErrors) > 0
             )
         );
         if (!lastHealthy) return null;

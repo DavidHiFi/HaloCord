@@ -32,7 +32,7 @@ export interface CoveredSurfacesState {
 }
 
 const FOLDED_PLUGINS = [
-    { name: "NoTelemetry", title: "Block Extra Telemetry", description: "Also blocks experiment reports, call diagnostics, remote debug logs and Sentry crash reports." },
+    { name: "NoTelemetry", title: "Block Extra Telemetry", description: "Also stops Sentry crash reports from being captured or sent." },
     { name: "ClearURLs", title: "Clean Links You Send", description: "Removes tracking parts such as utm and fbclid from links in your messages." },
     { name: "AlwaysTrust", title: "Skip Link Warnings", description: "Opens links and downloads without Discord's untrusted site and dangerous file popups." }
 ] as const;

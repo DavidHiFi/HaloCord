@@ -257,7 +257,7 @@ match: /GLOBAL_DISCOVERY_TABS/g,
                 },
                 {
                     // QUESTS_FETCH_QUEST_TO_DELIVER_BEGIN
-                    match: /(?=let \i=Date.now\(\);\i.recordQuestRequestAttempt.{0,50}QUESTS_FETCH_QUEST_TO_DELIVER_BEGIN)/,
+                    match: /(?=let \i=Date.now\(\),\i=\i.recordQuestRequestAttempt.{0,50}QUESTS_FETCH_QUEST_TO_DELIVER_BEGIN)/,
                     replace: "return;"
                 }
             ]
@@ -324,16 +324,7 @@ match: /GLOBAL_DISCOVERY_TABS/g,
         },
         {
             // Prevent Video Quests from pausing on lost focus.
-            find: "[QV] | Pausing video | playerState:",
-            predicate: () => !getQuestifySettings().disableQuestsEverything && getQuestifySettings().preventVideoQuestsPausing,
-            replacement: {
-                match: /(?<=setCaptionEnabled\),)({focused:)(\i)/,
-                replace: "$2=true,$1questifyFocused"
-            }
-        },
-        {
-            // Prevent Video Quests from pausing on lost focus.
-            find: ",listenForHlsErrors:!1",
+            find: "trackQuestVideoFocusChange:",
             predicate: () => !getQuestifySettings().disableQuestsEverything && getQuestifySettings().preventVideoQuestsPausing,
             replacement: {
                 match: /(?<=pauseOnLostVisibility:)!\i/,
@@ -395,7 +386,7 @@ match: /GLOBAL_DISCOVERY_TABS/g,
         },
         {
             // Keeps Questify completion progress visible when Discord marks the native Quest bar dismissed.
-            find: "prevIsQuestAccepted:",
+            find: "handleGameSheetOpened:",
             predicate: () => !getQuestifySettings().disableQuestsEverything && !getQuestifySettings().disableAccountPanelQuestProgress,
             replacement: {
                 match: /(?<=isLoading:\i}=\(0,\i\.\i\)\(\),\i=\i\.useContext\(\i\.\i\),\i=\i\|\|\i&&)(\i)/,
@@ -430,7 +421,7 @@ match: /GLOBAL_DISCOVERY_TABS/g,
             ]
         },
         {
-            find: 'STEP_2_CLICKED_INTERNAL,"quest_embed_card_footer',
+            find: ".GameProfileSources.QuestEmbed,",
             group: true,
             predicate: () => !getQuestifySettings().disableQuestsEverything,
             replacement: [
@@ -558,7 +549,7 @@ match: /GLOBAL_DISCOVERY_TABS/g,
         },
         {
             // Adds a maxDigits prop to the LowerBadge component which allows for not truncating, or for truncating at a specific threshold.
-            find: ".BADGE_NOTIFICATION_BACKGROUND.css,disableColor",
+            find: /\.BADGE_NOTIFICATION_BACKGROUND\.css,disableColor:\i=!1,shape:/,
             group: true,
             replacement: [
                 {
