@@ -72,7 +72,7 @@ export default definePlugin({
     authors: [TestcordDevs.x2b, TestcordDevs.nnenaza],
     patches: [
         {
-            find: /\i\.\i\.APP_ICON_UPSELL/,
+            find: "isEditor:!0,iconSize:",
             replacement: [
                 {
                     match: /\w+\.jsx\)\(\w+,{markAsDismissed:\w+,isCoachmark:\w+}\)/,

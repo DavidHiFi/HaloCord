@@ -216,9 +216,9 @@ export default definePlugin({
 
     patches: [
         {
-            find: "PROFILE_CUSTOMIZATION_GUILD_HINT.format",
+            find: "#{intl::PROFILE_CUSTOMIZATION_GUILD_HINT}",
             replacement: {
-                match: /\(0,\i\.jsx\)\(\i\.\i,\{guildId:(\i)\.id,/,
+                match: /\(0,\i\.jsx\)\(\i\.\i,\{guildId:(\i)\.id,(?=onChange:)/,
                 replace: "$self.patchServerProfiles($1),$&"
             }
         }
