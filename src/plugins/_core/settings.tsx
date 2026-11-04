@@ -742,7 +742,8 @@ export default definePlugin({
                     replace: "$1.hideTitle?$2:(0,$3.jsx)($self.SectionHeader,{section:$1,className:"
                 },
                 {
-                    match: /(?<=\$self\.SectionHeader,\{section:(\i).{0,300}?\(0,\i\.jsxs?\)\()"ul",\{(?=className:\i\.\i,children:\1\.layout\.map)/,
+                    // $self from the replace above is already expanded to the plugin path, so anchor on ".SectionHeader".
+                    match: /(?<=\.SectionHeader,\{section:(\i).{0,300}?\(0,\i\.jsxs?\)\()"ul",\{(?=className:\i\.\i,children:\1\.layout\.map)/,
                     replace: "$self.SectionBody,{section:$1,"
                 }
             ]
