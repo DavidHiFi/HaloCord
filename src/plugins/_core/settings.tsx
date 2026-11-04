@@ -5,6 +5,7 @@
  */
 
 import { definePluginSettings, useSettings } from "@api/Settings";
+import ErrorBoundary from "@components/ErrorBoundary";
 import { Heading } from "@components/Heading";
 import { BackupRestoreIcon, BookmarkIcon, CloudIcon, CogWheel, InfoIcon, LogIcon, PaintbrushIcon, PatchHelperIcon, PluginsIcon, SafetyIcon, TestCordIcon, UpdaterIcon } from "@components/Icons";
 import { Paragraph } from "@components/Paragraph";
@@ -22,6 +23,7 @@ import {
     UpdaterTab,
     VencordTab,
 } from "@components/settings";
+import { SectionBodyProps, SectionHeaderProps, SettingsSectionBody, SettingsSectionHeader } from "@components/settings/SettingsSidebarSection";
 import { gitHashShort } from "@shared/vencordUserAgent";
 import { Devs } from "@utils/constants";
 import { isTruthy } from "@utils/guards";
@@ -30,6 +32,8 @@ import definePlugin, { IconProps, OptionType } from "@utils/types";
 import { waitFor } from "@webpack";
 import { React, Toasts, useState } from "@webpack/common";
 import type { ComponentType, PropsWithChildren, ReactNode } from "react";
+
+import gitBranch from "~git-branch";
 
 const enum LayoutType {
     ROOT = 0,
@@ -279,6 +283,8 @@ function syncVisibleTestcordSidebarTabs(tabs: TestcordTabDescriptor[], visibleKe
 
     requestAnimationFrame(sync);
 }
+
+let resyncTestcordTabs: (() => void) | undefined;
 
 function TestcordTabsEditor({ tabs }: { tabs: TestcordTabDescriptor[]; }) {
     const validKeys = tabs.map(tab => tab.key);
@@ -650,8 +656,38 @@ const settings = definePluginSettings({
         type: OptionType.BOOLEAN,
         description: "Force export and import of DataStore even when it's too large. Uses chunked processing to avoid memory issues.",
         default: false
+    },
+    collapsedSettingsSections: {
+        type: OptionType.CUSTOM,
+        description: "Collapsed settings sidebar sections",
+        hidden: true,
+        default: [] as string[]
     }
 });
+
+function useSectionCollapsed(key: string | undefined) {
+    const { collapsedSettingsSections } = settings.use(["collapsedSettingsSections"]);
+    const collapsed = key != null && Array.isArray(collapsedSettingsSections) && collapsedSettingsSections.includes(key);
+
+    function toggle() {
+        if (key == null) return;
+        const current = settings.store.collapsedSettingsSections ?? [];
+        settings.store.collapsedSettingsSections = collapsed ? current.filter(k => k !== key) : [...current, key];
+    }
+
+    return [collapsed, toggle] as const;
+}
+
+const SectionHeader = ErrorBoundary.wrap((props: Omit<SectionHeaderProps, "collapsed" | "onToggle">) => {
+    const [collapsed, onToggle] = useSectionCollapsed(props.section?.key);
+    return <SettingsSectionHeader {...props} collapsed={collapsed} onToggle={onToggle} />;
+}, { fallback: ({ wrappedProps }) => <div className={wrappedProps.className}>{wrappedProps.children}</div> });
+
+const SectionBody = ErrorBoundary.wrap((props: Omit<SectionBodyProps, "collapsed" | "onItemsShown">) => {
+    const [collapsed] = useSectionCollapsed(props.section?.key);
+    const onItemsShown = props.section?.key === "testcord_section" ? resyncTestcordTabs : undefined;
+    return <SettingsSectionBody {...props} collapsed={collapsed} onItemsShown={onItemsShown} />;
+}, { fallback: ({ wrappedProps }) => <ul className={wrappedProps.className}>{wrappedProps.children}</ul> });
 
 function TestCordDiscordIcon({ original }: { original: any; }) {
     const { useTestcordIcon } = useSettings(["useTestcordIcon"]);
@@ -677,9 +713,10 @@ export default definePlugin({
                     replace: "$&.replace(/^./, c => c.toUpperCase())"
                 },
                 {
-                    match: /"text-xxs\/normal".{0,300}?(?=null!=(\i)&&(.{0,20}\i\.\i.{0,200}?,children:).{0,15}?("span"),{className:(\i\.\i),children:\["Build Override: ",\1\.id,\i\]\}\)\}\))/,
+                    // Discord moved the footer rows from "text-xxs/normal" to "footnote/normal".
+                    match: /"footnote\/normal".{0,300}?(?=null!=(\i)&&(.{0,20}\i\.\i.{0,200}?,children:).{0,15}?("span"),{className:(\i\.\i),children:\["Build Override: ",\1\.id,\i\]\}\)\}\))/,
                     replace: (m, _buildOverride, makeRow, component, className) => {
-                        return `${m},$self.makeInfoElements(${component},${className}).map(e=>${makeRow}e})),`;
+                        return `${m}$self.makeInfoElements(${component},${className}).map(e=>${makeRow}e})),`;
                     }
                 },
                 {
@@ -694,6 +731,21 @@ export default definePlugin({
                 match: /(\i)\.buildLayout\(\)(?=\.map)/,
                 replace: "$self.buildLayout($1)"
             }
+        },
+        {
+            // Settings sidebar sections: make the title a collapse toggle and let the list hide its items.
+            find: ".hideTitle?",
+            group: true,
+            replacement: [
+                {
+                    match: /(\i)\.hideTitle\?(.{0,150}?):\(0,(\i)\.jsxs?\)\("div",\{className:/,
+                    replace: "$1.hideTitle?$2:(0,$3.jsx)($self.SectionHeader,{section:$1,className:"
+                },
+                {
+                    match: /(?<=\$self\.SectionHeader,\{section:(\i).{0,300}?\(0,\i\.jsxs?\)\()"ul",\{(?=className:\i\.\i,children:\1\.layout\.map)/,
+                    replace: "$self.SectionBody,{section:$1,"
+                }
+            ]
         },
         {
             find: "#{intl::DISCODO_DISABLED}",
@@ -880,10 +932,12 @@ export default definePlugin({
             readPinnedTestcordTabs(testcordEntries.map(entry => entry.key!))
         );
 
-        syncVisibleTestcordSidebarTabs(
+        // Also rerun when a collapsed HaloCord section expands, since its items mount fresh.
+        resyncTestcordTabs = () => syncVisibleTestcordSidebarTabs(
             getTestcordTabDescriptors(testcordEntries),
             readVisibleTestcordTabs(testcordEntries.map(entry => entry.key!))
         );
+        resyncTestcordTabs();
 
         const testcordSection: SettingsLayoutNode = {
             key: "testcord_section",
@@ -974,10 +1028,17 @@ export default definePlugin({
         return support && version ? ` (${version})` : version;
     },
 
-    getInfoRows() {
-        const { electronVersion, chromiumVersion, getVersionInfo } = this;
+    // Same wording as the user-area dev banner: "HaloCord 2.11.0 (abc1234) [release]".
+    getVersionLine() {
+        const branch = /(^|\/)(main|master)$/.test(gitBranch) ? "release" : gitBranch;
+        const platform = IS_STANDALONE ? "" : this.getVersionInfo();
+        return `${VERSION} (${gitHashShort}) [${branch}]${platform}`;
+    },
 
-        const rows = [`HaloCord ${gitHashShort}${getVersionInfo()}`];
+    getInfoRows() {
+        const { electronVersion, chromiumVersion } = this;
+
+        const rows = [`HaloCord ${this.getVersionLine()}`];
 
         if (electronVersion) rows.push(`Electron ${electronVersion}`);
         if (chromiumVersion) rows.push(`Chromium ${chromiumVersion}`);
@@ -992,9 +1053,16 @@ export default definePlugin({
 
     makeInfoElements(Component: ComponentType<PropsWithChildren<{ className?: string; }>>, className: string) {
         return this.getInfoRows().map((text, i) =>
-            <Component key={i} className={className}>{text}</Component>
+            <Component key={i} className={className}>
+                {i === 0
+                    ? <><span className="hc-settings-footer-name">HaloCord</span>{text.slice("HaloCord".length)}</>
+                    : text}
+            </Component>
         );
     },
+
+    SectionHeader,
+    SectionBody,
 
     renderDiscordIcon(originalIcon: any) {
         return <TestCordDiscordIcon original={originalIcon} />;
