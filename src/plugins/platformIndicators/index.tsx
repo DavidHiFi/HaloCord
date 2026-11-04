@@ -134,9 +134,13 @@ interface PlatformIndicatorProps {
     isMemberList?: boolean;
     isVoice?: boolean;
     isTile?: boolean;
+    hidePlatform?: string;
 }
 
-const PlatformIndicator = ({ user, isProfile, isMessage, isMemberList, isVoice, isTile }: PlatformIndicatorProps) => {
+// Call tiles already draw Discord's own icon for these voice platforms (1 mobile, 2 Xbox, 3 PlayStation, 4 Quest).
+const NATIVE_TILE_PLATFORMS: Record<number, string> = { 1: "mobile", 2: "embedded", 3: "embedded", 4: "vr" };
+
+const PlatformIndicator = ({ user, isProfile, isMessage, isMemberList, isVoice, isTile, hidePlatform }: PlatformIndicatorProps) => {
     useEnsureOwnStatus(user);
 
     const status = useStateFromStores(
@@ -148,7 +152,7 @@ const PlatformIndicator = ({ user, isProfile, isMessage, isMemberList, isVoice, 
     if (user == null || (user.bot && !settings.store.showBots)) return null;
     if (!status) return null;
 
-    const icons = Array.from(Object.entries(status), ([platform, status]) => (
+    const icons = Object.entries(status).filter(([platform]) => platform !== hidePlatform).map(([platform, status]) => (
         <PlatformIcon
             key={platform}
             platform={platform as DiscordPlatform}
@@ -265,9 +269,9 @@ export default definePlugin({
         if (!settings.store.voiceList) return null;
         return <PlatformIndicator user={UserStore.getUser(userId)} isVoice />;
     },
-    renderTileIndicator(userId?: string) {
+    renderTileIndicator(userId?: string, nativePlatform?: number) {
         if (!settings.store.callTiles || !userId) return null;
-        return <PlatformIndicator user={UserStore.getUser(userId)} isTile />;
+        return <PlatformIndicator user={UserStore.getUser(userId)} isTile hidePlatform={NATIVE_TILE_PLATFORMS[nativePlatform ?? 0]} />;
     },
 
     patches: [
@@ -281,8 +285,8 @@ export default definePlugin({
         {
             find: '"title-text"',
             replacement: {
-                match: /(participantUserId:(\i),channel:\i,platform:\i,.{0,3500}?"title-text"\))/,
-                replace: "$1,$self.renderTileIndicator($2)"
+                match: /(participantUserId:(\i),channel:\i,platform:(\i),.{0,3500}?"title-text"\))/,
+                replace: "$1,$self.renderTileIndicator($2,$3)"
             }
         },
         {
