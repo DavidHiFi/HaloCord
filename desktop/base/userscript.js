@@ -822,7 +822,7 @@ function dvxSlider(id,name,min,max,step,get,set,fmt){
   return w;
 }
 function dvxSliderFill(id,val,txt,on){var r=document['getElementById'](id);if(!r)return;r['disabled']=!on;if(document['activeElement']!==r&&Math['abs'](Number(r['value'])-val)>1e-6)r['value']=String(val);dvxAuxPaintRange(r);var w=document['getElementById'](id+'wrap');if(w)w['style']['opacity']=on?'1':'0.55';var t=document['getElementById'](id+'val');if(t&&t['textContent']!==txt)t['textContent']=txt;}
-function dvxPanFill(id,k,on){var v=Number(Q[k])||0;dvxSliderFill(id,v,Q['stereo']?dvxPanText(v):'Needs Stereo',on&&!!Q['stereo']);}
+function dvxPanFill(id,k,on){var v=Number(Q[k])||0;dvxSliderFill(id,v,Q['stereo']?dvxPanText(v):'Needs Stereo',on&&!!Q['stereo']);dvxPanNoteState();}
 function dvxSwitchPaint(b,on){if(b['getAttribute']('aria-checked')!==String(on))b['setAttribute']('aria-checked',String(on));}
 function dvxSwitch(id,name,get,set){var b=document['createElement']('button');b['id']=id,b['type']='button',b['className']='dvx-switch',b['setAttribute']('role','switch'),b['setAttribute']('aria-label',name);b['onclick']=function(dvxEv){dvxEv['preventDefault'](),dvxEv['stopPropagation']();set(!get()),dvxSwitchPaint(b,get()),e4(),dvxAuxUIRefresh();};dvxSwitchPaint(b,get());return b;}
 function dvxMainRows(M){var w=document['createElement']('div');w['setAttribute']('data-dvx-main',M['p']);w['appendChild'](dvxSlider('dvx-'+M['p']+'-gain','Volume',0,10,0.1,M['get'],M['set'],dvxTimes));w['appendChild'](dvxSlider('dvx-'+M['p']+'-pan','Pan',-1,1,0.05,function(){return Number(Q[M['pan']])||0;},function(v){Q[M['pan']]=v;},dvxPanText));return w;}
@@ -830,7 +830,9 @@ function dvxMainSwitch(M,dvxLabel){var lc=dvxLabel['parentElement'];if(!lc)retur
 function dvxMainStatus(M,on){var st=document['getElementById']('dvx-'+M['p']+'-status');if(!st)return;var tx=on?'Live':'Off';if(st['textContent']!==tx)st['textContent']=tx;st['style']['color']=on?'var(--hc-accent)':'var(--hc-text-muted)';}
 function dvxMainFill(M){var on=!Q[M['off']],v=M['get']();dvxSliderFill('dvx-'+M['p']+'-gain',v,dvxTimes(v),on);dvxPanFill('dvx-'+M['p']+'-pan',M['pan'],on);var sw=document['getElementById']('dvx-'+M['p']+'-switch');if(sw)dvxSwitchPaint(sw,on);dvxMainStatus(M,on);}
 // The card note: pan needs Stereo, which lives further down the page.
-function dvxPanNote(){var c=document['querySelector']('[data-dvx-voice-card]');if(!c)return;var n=document['getElementById']('dvx-pan-note');if(!n||!c['contains'](n)){if(n&&n['parentNode'])n['parentNode']['removeChild'](n);n=document['createElement']('div'),n['id']='dvx-pan-note',n['style']['cssText']='margin:12px 0 2px;padding:9px 11px;border-radius:6px;background:rgba(240,178,50,.10);border:1px solid rgba(240,178,50,.35);color:#f0b232;font-size:12px;line-height:1.5',n['innerHTML']='⚠️ <b>Pan needs Stereo.</b> The Pan sliders only work while Stereo is on, under Stereo and Advanced Audio Controls further down this page.';c['appendChild'](n);}}
+function dvxPanNote(){var c=document['querySelector']('[data-dvx-voice-card]');if(!c)return;var n=document['getElementById']('dvx-pan-note');if(!n||!c['contains'](n)){if(n&&n['parentNode'])n['parentNode']['removeChild'](n);n=document['createElement']('div'),n['id']='dvx-pan-note',n['style']['cssText']='margin:12px 0 2px;padding:9px 11px;border-radius:6px;background:rgba(240,178,50,.10);border:1px solid rgba(240,178,50,.35);color:#f0b232;font-size:12px;line-height:1.5',n['innerHTML']='⚠️ <b>Pan needs Stereo.</b> The Pan sliders only work while Stereo is on, under Stereo and Advanced Audio Controls further down this page. <span id="dvx-pan-note-state"></span>';c['appendChild'](n);}dvxPanNoteState();}
+// The box always shows; this line says whether pan is doing anything right now.
+function dvxPanNoteState(){var s=document['getElementById']('dvx-pan-note-state');if(s)s['textContent']=Q['stereo']?'Stereo is on now, so pan is active.':'Stereo is off now, so the Pan sliders do nothing.';}
 // Mic Test input: Discord's own test covers the main microphone. For an extra microphone HaloCord runs its own
 // loopback to the main speaker with that device's volume and pan, and drives Discord's meter while it runs.
 var dvxMt=null,dvxMtNative=false,dvxMtSources=[['main','Microphone'],['sec','Secondary Microphone'],['thr','Third Microphone']];
@@ -840,18 +842,40 @@ function dvxMtDeafen(on,mode){try{var mute=mode==='mute',W=window['Vencord']['We
 function dvxMtSilenced(m){var ME=dvxVpGet();return !ME||!!(m['deafMode']==='mute'?ME['isSelfMute']():ME['isSelfDeaf']());}
 // Stereo meter laid over Discord's level bar: one row per channel.
 function dvxMtVu(m){var box=m['bar']&&m['bar']['parentElement'];if(!box)return null;var v=document['createElement']('div'),f=[];v['id']='dvx-mt-vu',v['style']['cssText']='position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:2px 6px;box-sizing:border-box;border-radius:inherit;background:var(--hc-window-bg,#1e1f22);pointer-events:none';['L','R']['forEach'](function(n){var r=document['createElement']('div'),t=document['createElement']('span'),w=document['createElement']('div'),x=document['createElement']('div');r['style']['cssText']='display:flex;align-items:center;gap:6px;flex:1 1 0;min-height:0',t['textContent']=n,t['style']['cssText']='width:8px;font:700 9px/1 var(--font-primary,sans-serif);color:var(--hc-text-muted,#949ba4)',w['style']['cssText']='position:relative;flex:1;height:100%;max-height:8px;border-radius:2px;overflow:hidden;background:rgb(var(--hc-accent-rgb,175 227 127) / 12%)',x['style']['cssText']='position:absolute;inset:0;background:linear-gradient(90deg,var(--hc-accent-2,#63c98f),var(--hc-accent,#AFE37F));transform:translateX(-100%)';w['appendChild'](x),r['appendChild'](t),r['appendChild'](w),v['appendChild'](r),f['push'](x);});m['box']=box,m['pos']=box['style']['position'];if(getComputedStyle(box)['position']==='static')box['style']['position']='relative';box['appendChild'](v),m['vu']=v;return f;}
-// Between tests the same meter stays over Discord's bar, fed by the engine's voiceactivity level (the source Discord's own input meters use). No capture of its own.
+// Between tests the same meter stays over Discord's bar. Each row reads its own channel of the mic chain HaloCord
+// sends, after volume and pan, from analysers on that chain's last node (no capture of its own). With no chain yet it
+// falls back to the engine's voiceactivity level, which is one number for both rows.
 var dvxMtIdleVu=null;
-function dvxMtIdleOff(){var I=dvxMtIdleVu;dvxMtIdleVu=null;if(!I)return;try{I['eng']&&I['eng']['removeListener']('voiceactivity',I['fn']);}catch(e){}try{I['vu']['remove']();if(I['box']['isConnected'])I['box']['style']['position']=I['pos'];}catch(e){}}
+function dvxMtSendChain(){for(var i=dvxGainChains.length-1;i>=0;i--){var g=dvxGainChains[i];try{if(!g['noAux']&&g['raw']['readyState']==='live'&&g['ctx']['state']!=='closed')return g;}catch(e){}}return null;}
+function dvxMtTapPoint(ch){var p=ch['panOut'];return p['__hcBal']?p['__hcBal']['out']:p;}
+function dvxMtTapOff(I){var T=I['tap'];I['tap']=null;if(!T)return;try{T['node']['disconnect'](T['up']);}catch(e){}try{T['up']['disconnect'](),T['sp']['disconnect']();}catch(e){}}
+function dvxMtTapOn(I,ch){try{var c=ch['ctx'],T={'ch':ch,'node':dvxMtTapPoint(ch),'up':c['createGain'](),'sp':c['createChannelSplitter'](2),'an':[c['createAnalyser'](),c['createAnalyser']()]};
+  T['up']['channelCount']=2,T['up']['channelCountMode']='explicit',T['up']['channelInterpretation']='speakers',T['an'][0]['fftSize']=T['an'][1]['fftSize']=1024;
+  T['node']['connect'](T['up']),T['up']['connect'](T['sp']),T['sp']['connect'](T['an'][0],0),T['sp']['connect'](T['an'][1],1);
+  return I['tap']=T;}catch(e){return null;}}
+function dvxMtIdleTick(I){
+  if(dvxMtIdleVu!==I)return;
+  if(!I['vu']['isConnected']){dvxMtIdleOff();return;}
+  I['raf']=requestAnimationFrame(I['tick']);
+  if(dvxMt&&dvxMt['ivu'])return;
+  var ch=dvxMtSendChain(),T=I['tap'];
+  if(T&&(T['ch']!==ch||T['node']!==dvxMtTapPoint(T['ch'])))dvxMtTapOff(I),T=null;
+  if(!T&&ch)T=dvxMtTapOn(I,ch);
+  if(!T)return;
+  for(var k=0;k<2;k++){T['an'][k]['getFloatTimeDomainData'](I['buf']);var sq=0,b=I['buf'];for(var i=0;i<b['length'];i++)sq+=b[i]*b[i];
+    var lvl=Math['max'](0,Math['min'](1,(20*Math['log10'](Math['sqrt'](sq/b['length'])||1e-8)+60)/60));I['fills'][k]['style']['transform']='translateX('+((lvl-1)*100)['toFixed'](1)+'%)';}
+}
+function dvxMtIdleOff(){var I=dvxMtIdleVu;dvxMtIdleVu=null;if(!I)return;try{cancelAnimationFrame(I['raf']);}catch(e){}dvxMtTapOff(I);try{I['eng']&&I['eng']['removeListener']('voiceactivity',I['fn']);}catch(e){}try{I['vu']['remove']();if(I['box']['isConnected'])I['box']['style']['position']=I['pos'];}catch(e){}}
 function dvxMtIdle(mt){
   var bar=mt['querySelector']('[class*="progress__"]'),I=dvxMtIdleVu;
   if(I&&bar&&I['vu']['isConnected']&&I['box']===bar['parentElement'])return;
   dvxMtIdleOff();
   if(!bar||dvxMt&&dvxMt['vu'])return;
   var im={'bar':bar},f=dvxMtVu(im);if(!f)return;
-  I=dvxMtIdleVu={'box':im['box'],'vu':im['vu'],'pos':im['pos'],'fills':f,'eng':null,'fn':null};
+  I=dvxMtIdleVu={'box':im['box'],'vu':im['vu'],'pos':im['pos'],'fills':f,'eng':null,'fn':null,'tap':null,'raf':0,'buf':new Float32Array(1024)};
+  I['tick']=function(){dvxMtIdleTick(I);};dvxMtIdleTick(I);
   try{var ME=dvxVpGet(),E=ME&&ME['getMediaEngine']&&ME['getMediaEngine']();if(!E||typeof E['on']!=='function'||typeof E['removeListener']!=='function')return;
-    I['fn']=function(db){if(!I['vu']['isConnected']){if(dvxMtIdleVu===I)dvxMtIdleOff();else try{E['removeListener']('voiceactivity',I['fn']);}catch(e){}return;}if(dvxMt&&dvxMt['ivu'])return;var lvl=db>-100?Math['max'](0,Math['min'](1,(db+60)/60)):0,t='translateX('+((lvl-1)*100)['toFixed'](1)+'%)';f[0]['style']['transform']=t,f[1]['style']['transform']=t;};
+    I['fn']=function(db){if(!I['vu']['isConnected']){if(dvxMtIdleVu===I)dvxMtIdleOff();else try{E['removeListener']('voiceactivity',I['fn']);}catch(e){}return;}if(dvxMt&&dvxMt['ivu']||I['tap'])return;var lvl=db>-100?Math['max'](0,Math['min'](1,(db+60)/60)):0,t='translateX('+((lvl-1)*100)['toFixed'](1)+'%)';f[0]['style']['transform']=t,f[1]['style']['transform']=t;};
     E['on']('voiceactivity',I['fn']),I['eng']=E;}catch(e){}
 }
 function dvxMtStart(S,btn){

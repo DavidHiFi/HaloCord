@@ -21,7 +21,9 @@ const { setLocalVolume } = findByPropsLazy("setLocalVolume");
 const oldGuard = SettingsStore.plain.plugins.StereoGuard;
 if (oldGuard) {
     const { plugins } = SettingsStore.plain;
-    if (!plugins.ForceMono) {
+    // An entry made before this move (disabled, nothing set) is a default, not a choice, so it must not block the carry-over.
+    const prev = plugins.ForceMono;
+    if (!prev || (!prev.enabled && prev.forceMono !== true && prev.showButton !== true)) {
         const forceMono = oldGuard.forceMono === true;
         const showButton = oldGuard.forceMonoButton === true;
         plugins.ForceMono = { enabled: oldGuard.enabled === true && (forceMono || showButton), forceMono, showButton };
