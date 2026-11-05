@@ -70,11 +70,11 @@ export default definePlugin({
             find: '"refresh-title-bar-small"',
             replacement: [
                 {
-                    match: /\i===\i\.PlatformTypes\.WINDOWS/g,
+                    match: /\i===\i\.\i\.WINDOWS/g,
                     replace: "false"
                 },
                 {
-                    match: /\i===\i\.PlatformTypes\.WEB/g,
+                    match: /\i===\i\.\i\.WEB/g,
                     replace: "true"
                 }
             ],
@@ -84,7 +84,7 @@ export default definePlugin({
         {
             find: "renderEmptyFavorite",
             replacement: {
-                match: /(?<=handleContextMenu.{0,150})(?=link:(\i)\.url)/,
+                match: /(?<=handleContextMenu.{0,350})(?=link:(\i)\.url)/,
                 replace: "...$1,"
             }
         }
