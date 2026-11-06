@@ -39,10 +39,17 @@ html.hc-theming[data-hc-theme="mochacord"] {
     --hc-row-border: rgb(205 214 244 / 7%);
     --hc-panel-bg: rgb(17 17 27 / 22%);
     --hc-panel-border: rgb(205 214 244 / 9%);
-    --hc-window-bg: var(--background-base-lower, #1e1e2e);
+
+    /* Opaque Mocha base. Discord Midnight sets base-lower to pure black on <html>, where these are resolved. */
+    --hc-window-bg: #1e1e2e;
     --hc-text: #cdd6f4;
     --hc-text-muted: #a6adc8;
     --hc-scroll-thumb: rgb(205 214 244 / 16%);
+}
+
+/* Menus blur a see-through window, so the theme's 76% glass reads near black. */
+html.hc-theming[data-hc-theme="mochacord"] body {
+    --mochacord-acrylic-background: color-mix(in srgb, var(--bg-floating, #1e1e2e) 92%, transparent);
 }
 
 .hc-ui {

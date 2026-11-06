@@ -167,6 +167,15 @@
     transform: translateX(-50%);
 }
 
+.hc-vu-peak[data-kind="row"] {
+    right: auto;
+    left: 50%;
+    padding: 0 2px;
+    font-size: 8px;
+    line-height: 8px;
+    transform: translateX(-50%);
+}
+
 .hc-vu-peak:empty {
     visibility: hidden;
 }

@@ -424,6 +424,31 @@ function updateDomAttributes() {
     }
 }
 
+// Square children paint over the panel's rounded border, so the first and last visible ones get rounded corners.
+function markPanelEdges() {
+    const section = document.querySelector<HTMLElement>('section[class*="panels_"]');
+    if (!section) return;
+    const items: { el: HTMLElement; order: number; index: number; }[] = [];
+    const add = (el: HTMLElement) => {
+        const target = el.matches('[class*="mask__"]') ? el.querySelector<HTMLElement>(':scope > [class*="wrapper__"]') : el;
+        if (!target || target.offsetHeight === 0) return;
+        items.push({ el: target, order: Number(getComputedStyle(el).order) || 0, index: items.length });
+    };
+    for (const child of section.children as HTMLCollectionOf<HTMLElement>) {
+        if (getComputedStyle(child).display === "contents") for (const sub of child.children as HTMLCollectionOf<HTMLElement>) add(sub);
+        else add(child);
+    }
+    items.sort((a, b) => a.order - b.order || a.index - b.index);
+    const first = items[0]?.el, last = items[items.length - 1]?.el;
+    for (const old of section.querySelectorAll<HTMLElement>("[data-hc-edge]")) {
+        if (old !== first && old !== last) old.removeAttribute("data-hc-edge");
+    }
+    for (const { el } of items) {
+        const edge = [el === first && "top", el === last && "bottom"].filter(Boolean).join(" ");
+        if (edge && el.getAttribute("data-hc-edge") !== edge) el.setAttribute("data-hc-edge", edge);
+    }
+}
+
 function startObserver() {
     if (observer) return;
     observer = setInterval(() => {
@@ -433,9 +458,11 @@ function startObserver() {
             updateQueued = false;
             updateFrame = 0;
             updateDomAttributes();
+            markPanelEdges();
         });
     }, 1000);
     updateDomAttributes();
+    markPanelEdges();
 }
 
 function stopObserver() {
@@ -936,7 +963,7 @@ function buildCSS(): string {
         lines.push(`
             ${S.panelContainer} .container_df39b2 { border-radius: 0px !important; }
             ${S.panelContainer} { border-radius: 0px !important; }
-            .panels__5e434 { overflow: visible !important; clip-path: inset(-100vh 0 0 0 round 0 0 var(--radius-lg, 16px) var(--radius-lg, 16px)); }
+            .panels__5e434 { overflow: visible !important; clip-path: none !important; }
         `);
     }
 
@@ -992,9 +1019,32 @@ function buildCustomCSS(): string {
         }
     `);
 
+    const edgeRadius = "calc(var(--radius-lg, 16px) - 2px)";
+    lines.push(`
+        /* Discord's empty quest overlay sits above the hovered card's buttons and swallows their clicks */
+        section[class*="panels_"] > [class*="mask__"] [class*="overlay__"] { pointer-events: none !important; }
+        section[class*="panels_"] > [class*="mask__"] > [data-hc-edge~="top"],
+        section[class*="panels_"] > [class*="mask__"] > [data-hc-edge~="top"] [class*="contentWrapper__"],
+        section[class*="panels_"] > [class*="mask__"] > [data-hc-edge~="top"] [class*="contentWrapper__"]::after,
+        section[class*="panels_"] > [class*="mask__"] > [data-hc-edge~="top"] [class*="overlay__"] {
+            border-top-left-radius: ${edgeRadius} !important;
+            border-top-right-radius: ${edgeRadius} !important;
+        }
+        section[class*="panels_"] > [class*="mask__"] > [data-hc-edge~="top"] [class*="overlay__"] { overflow: hidden; }
+        section[class*="panels_"] > [data-hc-edge="top"],
+        section[class*="panels_"] > .vc-panel-layout-modules-container > [data-hc-edge="top"] { clip-path: inset(0 0 -100vh 0 round ${edgeRadius} ${edgeRadius} 0 0); }
+        section[class*="panels_"] > [data-hc-edge="bottom"],
+        section[class*="panels_"] > .vc-panel-layout-modules-container > [data-hc-edge="bottom"] { clip-path: inset(-100vh 0 0 0 round 0 0 ${edgeRadius} ${edgeRadius}); }
+        section[class*="panels_"] > [data-hc-edge="top bottom"],
+        section[class*="panels_"] > .vc-panel-layout-modules-container > [data-hc-edge="top bottom"] { clip-path: inset(0 round ${edgeRadius}); }
+    `);
+
     try {
         const userAreaOrder = getUserAreaOrder();
         const bannerModuleOn = userAreaOrder.some(it => (it.id === "activity-banner" || it.moduleId === "activity-banner") && it.enabled);
+        // The quest card has no reorder item; keep it just above the first Discord panel so top modules stay above it
+        const nativeIdx = userAreaOrder.findIndex(it => it.type === "voice-connected" || it.type === "account-panel" || it.type === "native-activity-banner");
+        if (nativeIdx >= 0) lines.push(`section[class*="panels_"] > [class*="mask__"] { order: ${(nativeIdx + 1) * 10 - 5} !important; }`);
         userAreaOrder.forEach((item, idx) => {
             const orderVal = (idx + 1) * 10;
             const hiddenStyle = !item.enabled ? "display: none !important;" : "";

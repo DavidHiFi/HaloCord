@@ -9,3 +9,43 @@
     margin-bottom: 0;
     text-transform: uppercase;
 }
+
+.vc-whos-watching-screenshare-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--hc-row-border, var(--border-subtle));
+    border-radius: 8px;
+    background: var(--hc-row-bg, var(--background-secondary));
+}
+
+.vc-whos-watching-screenshare-panel > [class*="body_"] {
+    display: contents;
+}
+
+.vc-whos-watching-screenshare-panel > [class*="body_"] > [class*="gameWrapper_"] {
+    display: none;
+}
+
+.vc-whos-watching-screenshare-panel > [class*="body_"] > [class*="actions_"] {
+    grid-area: 1 / 3;
+}
+
+.vc-whos-watching-screenshare-panel > .vc-whos-watching-spectating-panel {
+    display: contents;
+}
+
+.vc-whos-watching-screenshare-panel .vc-whos-watching-spectating-header {
+    grid-area: 1 / 1;
+    margin: 0;
+}
+
+.vc-whos-watching-screenshare-panel :is(.vc-whos-watching-spectating-users, .vc-whos-watching-spectating-panel > p) {
+    grid-area: 1 / 2;
+}
+
+html.hc-theming .vc-whos-watching-screenshare-panel > .vc-whos-watching-spectating-panel {
+    display: contents;
+}

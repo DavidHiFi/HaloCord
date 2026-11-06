@@ -134,13 +134,12 @@ interface PlatformIndicatorProps {
     isMemberList?: boolean;
     isVoice?: boolean;
     isTile?: boolean;
-    hidePlatform?: string;
 }
 
-// Call tiles already draw Discord's own icon for these voice platforms (1 mobile, 2 Xbox, 3 PlayStation, 4 Quest).
-const NATIVE_TILE_PLATFORMS: Record<number, string> = { 1: "mobile", 2: "embedded", 3: "embedded", 4: "vr" };
+// Call tile participant type for a person; streams and activities use other values.
+const TILE_PARTICIPANT_USER = 2;
 
-const PlatformIndicator = ({ user, isProfile, isMessage, isMemberList, isVoice, isTile, hidePlatform }: PlatformIndicatorProps) => {
+const PlatformIndicator = ({ user, isProfile, isMessage, isMemberList, isVoice, isTile }: PlatformIndicatorProps) => {
     useEnsureOwnStatus(user);
 
     const status = useStateFromStores(
@@ -152,7 +151,7 @@ const PlatformIndicator = ({ user, isProfile, isMessage, isMemberList, isVoice, 
     if (user == null || (user.bot && !settings.store.showBots)) return null;
     if (!status) return null;
 
-    const icons = Object.entries(status).filter(([platform]) => platform !== hidePlatform).map(([platform, status]) => (
+    const icons = Object.entries(status).map(([platform, status]) => (
         <PlatformIcon
             key={platform}
             platform={platform as DiscordPlatform}
@@ -280,9 +279,14 @@ export default definePlugin({
         if (!settings.store.voiceList || user == null || (user.bot && !settings.store.showBots)) return false;
         return Object.keys(PresenceStore.getClientStatus(user.id) ?? {}).length > 0;
     },
-    renderTileIndicator(userId?: string, nativePlatform?: number) {
-        if (!settings.store.callTiles || !userId) return null;
-        return <PlatformIndicator user={UserStore.getUser(userId)} isTile hidePlatform={NATIVE_TILE_PLATFORMS[nativePlatform ?? 0]} />;
+    // Our coloured icons replace Discord's grey one, which sits before the name.
+    hideNativeTile(userId: string | undefined, participantType: number) {
+        if (!settings.store.callTiles || !userId || participantType !== TILE_PARTICIPANT_USER) return false;
+        return Object.keys(PresenceStore.getClientStatus(userId) ?? {}).length > 0;
+    },
+    renderTileIndicator(userId: string | undefined, participantType: number) {
+        if (!settings.store.callTiles || !userId || participantType !== TILE_PARTICIPANT_USER) return null;
+        return <PlatformIndicator key="vc-platform-indicator" user={UserStore.getUser(userId)} isTile />;
     },
 
     patches: [
@@ -303,8 +307,8 @@ export default definePlugin({
         {
             find: '"title-text"',
             replacement: {
-                match: /(participantUserId:(\i),channel:\i,platform:(\i),.{0,3500}?"title-text"\))/,
-                replace: "$1,$self.renderTileIndicator($2,$3)"
+                match: /(participantType:(\i),participantUserId:(\i),channel:\i,platform:\i,.{0,3500}?)(\i)\|\|((\i)\.push\(\(0,\i\.jsxs?\)\(\i,\{participantType:\i,platform:\i,className:\i\.\i\},"title-icon"\)\))(.{0,200}?"title-text"\)\))/,
+                replace: "$1$4||$self.hideNativeTile($3,$2)||$5$7,$4||$6.push($self.renderTileIndicator($3,$2))"
             }
         },
         {

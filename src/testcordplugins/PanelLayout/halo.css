@@ -59,7 +59,8 @@ html.hc-theming [class*="streamInfoContainer_"] {
     padding: 8px 10px;
     border: 1px solid var(--hc-panel-border);
     border-radius: 10px;
-    background: var(--hc-panel-bg);
+    background: color-mix(in srgb, var(--hc-window-bg) 88%, transparent);
+    backdrop-filter: blur(24px) saturate(140%);
     box-shadow: 0 4px 14px rgb(0 0 0 / 45%);
     color: var(--hc-text);
     font-size: 13px;
@@ -86,4 +87,46 @@ html.hc-theming [class*="streamInfoContainer_"] [class*="infoRow_"] span {
 
 html.hc-theming [class*="streamInfoContainer_"] [class*="infoRow_"] strong {
     color: var(--hc-text);
+}
+
+html.hc-theming [data-call-tile]:not(:has(video)) [class*="streamInfoContainer_"] {
+    display: none;
+}
+
+html.hc-theming [data-call-tile] :is([class*="experimentOverlayTitle_"], [class*="overlayTitle_"], [class*="activityContainer_"]) {
+    border: 1px solid var(--hc-panel-border);
+    background: color-mix(in srgb, var(--hc-window-bg) 82%, transparent);
+    backdrop-filter: blur(24px) saturate(140%);
+    color: var(--hc-text);
+}
+
+html.hc-theming [data-list-item-id="guildsnav___home"] :is(img, svg) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Extend the rail behind the existing history buttons without moving the server list. */
+html.hc-theming [data-window-chrome] > [class*="leading_"] {
+    left: 15px;
+    width: 69px;
+    height: 28px;
+    align-self: end;
+    justify-content: center;
+    box-sizing: border-box;
+    border: 2px solid var(--border-faint, var(--hc-panel-border));
+    border-bottom: 0;
+    border-radius: 16px 16px 0 0;
+    background: var(--background-base-low, var(--hc-window-bg));
+}
+
+html.hc-theming nav[class*="guilds_"] {
+    border-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+html.hc-theming [data-call-tile] [class*="overlayIconsContainer_"] > :is([class*="experimentOverlayTitle_"], [class*="activityContainer_"]) {
+    padding: 4px 8px;
+    border-radius: 8px;
 }

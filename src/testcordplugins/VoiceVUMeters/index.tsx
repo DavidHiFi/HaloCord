@@ -254,7 +254,9 @@ function writeMeterDom(meter: Meter, dom: MeterDom) {
             const clip = tenths >= 0;
             if (clip !== dom.lastPeakTenths >= 0) dom.peakNumber.toggleAttribute("data-clip", clip);
             dom.lastPeakTenths = tenths;
-            dom.peakNumber.textContent = tenths === -Infinity ? "-inf" : (tenths / 10).toFixed(1);
+            // The voice list meter is narrow, so its number drops the decimal to fit above it
+            const row = dom.peakNumber.dataset.kind === "row";
+            dom.peakNumber.textContent = tenths === -Infinity ? (row ? "-∞" : "-inf") : row ? String(Math.round(tenths / 10)) : (tenths / 10).toFixed(1);
         }
     }
     for (let channel = 0; channel < 2; channel++) {
@@ -649,18 +651,28 @@ function syncWebMeters(conn: VoiceConnection) {
         }
     }
 
-    for (const userId of [...meters.keys()]) {
-        if (!outputs[userId]) dropMeter(userId);
+    // Someone who hasn't sent audio since you joined has no output yet; give them an empty bar like desktop does.
+    const members = channelMembers();
+    for (const userId of members) {
+        if (!meters.has(userId)) addMeter(userId, newMeter(true));
     }
+
+    for (const userId of [...meters.keys()]) {
+        if (!outputs[userId] && !members.has(userId)) dropMeter(userId);
+    }
+}
+
+function channelMembers() {
+    const channelId = SelectedChannelStore.getVoiceChannelId();
+    const members = new Set(channelId ? Object.keys(VoiceStateStore.getVoiceStatesForChannel(channelId) ?? {}) : []);
+    const me = UserStore.getCurrentUser()?.id;
+    if (me && !settings.store.showSelf) members.delete(me);
+    return members;
 }
 
 // Desktop: one meter for everyone in your voice channel, so silent users still get an empty bar.
 function syncDesktopMeters() {
-    const channelId = SelectedChannelStore.getVoiceChannelId();
-    const members = new Set(channelId ? Object.keys(VoiceStateStore.getVoiceStatesForChannel(channelId) ?? {}) : []);
-
-    const me = UserStore.getCurrentUser()?.id;
-    if (me && !settings.store.showSelf) members.delete(me);
+    const members = channelMembers();
 
     for (const userId of members) {
         const meter = meters.get(userId);
