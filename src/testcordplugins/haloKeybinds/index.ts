@@ -147,8 +147,8 @@ export default definePlugin({
                     replace: "($self.on||(0,$1)())"
                 },
                 {
-                    match: /\(0,(\i)\.isDesktop\)\(\)(?=&&\(\i\[\i\.\i\.NAVIGATE_BACK\])/,
-                    replace: "($self.on||(0,$1.isDesktop)())"
+                    match: /\(0,(\i\.\i)\)\(\)(?=&&\(\i\[\i\.\i\.NAVIGATE_BACK\])/,
+                    replace: "($self.on||(0,$1)())"
                 },
                 {
                     match: /(\i)=!(\i\.\i);(?=function \i\(\)\{return\(0,\i\.\i\)\(\[\i\.\i\],\(\)=>\i\.\i\.getMode\(\)===\i\.\i\.PUSH_TO_TALK\)\})/,
