@@ -28,22 +28,6 @@ export function sanitizeBadgeVisibility(value: unknown): BadgeVisibility {
     }
 }
 
-const maxInt32 = 2147483647;
-
-// VideoResolutionType is a string enum ("fixed" / "source"). A number here is dropped by the
-// voice gateway, which hides the badge for every viewer while the local tile keeps rendering.
-const sourceResolutionType = "source";
-const fixedResolutionType = (nativeType: unknown) =>
-    typeof nativeType === "string" && nativeType !== sourceResolutionType ? nativeType : "fixed";
-
-type BadgeStream = {
-    maxResolution?: { type?: unknown; };
-    maxFrameRate?: number;
-};
-
-const isBadgeStream = (stream: unknown): stream is BadgeStream =>
-    stream != null && typeof stream === "object" && ("maxResolution" in stream || "maxFrameRate" in stream);
-
 export function normalizeBadgeConfig(source: Partial<BadgeConfig> & { badgeVisible?: boolean; }): BadgeConfig {
     const bounded = (value: number | undefined, fallback: number, max: number) =>
         Number.isFinite(value) ? Math.min(max, Math.max(1, Math.round(value ?? fallback))) : fallback;
@@ -58,36 +42,9 @@ export function normalizeBadgeConfig(source: Partial<BadgeConfig> & { badgeVisib
     };
 }
 
-export function advertiseBadge(rtc: { context?: string; }, streams: unknown, config: BadgeConfig): unknown {
-    if (rtc.context !== "stream" || !Array.isArray(streams)) return streams;
-
-    // Hidden from everyone: drop the two fields the viewer badge reads, the same way Discord's
-    // own serializer sends entries that carry no resolution at all.
-    if (config.badgeVisibility === "all") {
-        return streams.map(stream => {
-            if (!isBadgeStream(stream)) return stream;
-            const rest: Record<string, unknown> = { ...stream };
-            delete rest.maxResolution;
-            delete rest.maxFrameRate;
-            return rest;
-        });
-    }
-
-    if (!config.spoofBadgeEnabled) return streams;
-
-    return streams.map(stream => {
-        if (!isBadgeStream(stream)) return stream;
-        return {
-            ...stream,
-            maxResolution: {
-                type: fixedResolutionType(stream.maxResolution?.type),
-                width: config.spoofBadgeWidth,
-                height: config.spoofBadgeHeight
-            },
-            maxPixelCount: Math.min(config.spoofBadgeWidth * config.spoofBadgeHeight, maxInt32),
-            maxFrameRate: config.spoofBadgeFps
-        };
-    });
+// Badge cosmetics must not change receiver capabilities or encoder negotiation.
+export function advertiseBadge(_rtc: { context?: string; }, streams: unknown, _config: BadgeConfig): unknown {
+    return streams;
 }
 
 export function badgeFps(fps: number, config: BadgeConfig): number {
@@ -101,6 +58,6 @@ export function badgeResolution<T extends { width: number; height: number; type:
         ...resolution,
         width: config.spoofBadgeWidth,
         height: config.spoofBadgeHeight,
-        type: fixedResolutionType(resolution.type)
+        type: typeof resolution.type === "string" ? resolution.type : "fixed"
     };
 }

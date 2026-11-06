@@ -603,7 +603,7 @@ export function StreamEnhancerControlPanel() {
                     serialize={option => option}
                 />
                 <FormSwitch value={normalized.spoofBadgeEnabled} onChange={value => set("spoofBadgeEnabled", value)} title="Show spoofed resolution and FPS" />
-                <div>Changes your screen-share badge for you and viewers. Actual capture quality, bitrate, and camera settings stay the same. Start a new screen share after changing these values to update viewers.</div>
+                <div>Changes the badge on this client. Viewers receive the actual stream resolution and FPS so cosmetic values cannot interfere with playback.</div>
                 <NumberEditor label="Badge resolution" value={normalized.spoofBadgeHeight} min={144} max={maxBadgeHeight} markers={badgeResolutionPresets} markerFormatter={next => `${next}p`} onChange={next => { streamEnhancerSettings.store.config = normalizeConfig({ ...normalized, ...badgeSize(next) }); }} />
                 <NumberEditor label="Badge FPS" value={normalized.spoofBadgeFps} min={1} max={maxBadgeFps} markers={badgeFpsPresets} onChange={next => set("spoofBadgeFps", next)} />
             </SettingsSection>

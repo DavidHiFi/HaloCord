@@ -869,3 +869,32 @@ html.hc-theming [data-mana-component="modal"]:has(.hc-window) {
         transform: none !important;
     }
 }
+
+/* Voice details needs room for full tab labels at the owner's font size. */
+html.hc-theming [class*="container_"]:has(> [class*="tabBar_"]):has([class*="graph_"]) {
+    min-width: 360px;
+    max-width: calc(100vw - 32px);
+}
+html.hc-theming [class*="tabBar_"] [role="tab"] {
+    flex-shrink: 0;
+    line-height: 1.5;
+    overflow: visible;
+}
+html.hc-theming [class*="streamQualityIndicator"],
+html.hc-theming [class*="liveIndicator"] {
+    background: rgba(24, 24, 37, 0.94) !important;
+    color: #cdd6f4 !important;
+    border: 1px solid #45475a;
+    border-radius: 8px;
+    padding: 3px 7px;
+    backdrop-filter: blur(24px);
+}
+html.hc-theming nav[class*="guilds_"] [class*="pill_"] [class*="item_"] {
+    background: linear-gradient(180deg, #89b4fa, #cba6f7) !important;
+}
+html.hc-theming [role="tooltip"] {
+    --background-floating: #1e1e2e;
+    background-color: rgba(30, 30, 46, 0.96) !important;
+    color: #cdd6f4 !important;
+    backdrop-filter: blur(24px);
+}

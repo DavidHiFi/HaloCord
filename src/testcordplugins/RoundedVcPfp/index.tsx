@@ -205,9 +205,12 @@ const settings = definePluginSettings({
     glowColor: {
         type: OptionType.STRING,
         description: "Hex color for the speaking ring when Override Glow is on, for example #3b82f6 for blue.",
-        placeholder: "#45475a",
-        default: "#45475a",
-        onChange: applyGlowOverride,
+        placeholder: "#89B4FA",
+        default: "#89B4FA",
+        onChange: () => {
+            if (HEX_COLOR.test(settings.store.glowColor.trim())) settings.store.overrideGlow = true;
+            applyGlowOverride();
+        },
         isValid(value: string) {
             return HEX_COLOR.test(value.trim()) ? true : "Enter a hex color like #45475a.";
         }
