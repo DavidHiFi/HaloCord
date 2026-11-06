@@ -32,7 +32,8 @@ export function DevBannerWidget() {
                 textAlign: (s.textAlign as React.CSSProperties["textAlign"]) || "center",
                 color: s.color || "var(--text-muted)",
                 backgroundColor: s.backgroundColor || "var(--bg-overlay-app-frame, rgb(0 0 0 / 20%))",
-                borderTop: "1px solid var(--hc-row-border, var(--border-faint))",
+                borderTop: "none",
+                borderRadius: "14px 14px 0 0",
                 lineHeight: "1.4",
                 userSelect: "text",
             }}
