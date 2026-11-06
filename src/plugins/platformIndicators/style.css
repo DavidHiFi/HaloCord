@@ -35,3 +35,14 @@
     width: 16px;
     height: 16px;
 }
+
+.vc-platform-voice-name {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    vertical-align: top;
+}
+
+.vc-platform-voice-name > :first-child {
+    min-width: 0;
+}

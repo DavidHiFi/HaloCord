@@ -231,7 +231,7 @@ html.hc-theming [class*="radioBarSelected__"] {
 
 /* Settings pages: every setting is a dark rounded row; card groups are thin-bordered panels holding rows.
    The setting wrapper sets its padding inline, hence !important. */
-html.hc-theming [class*="scroller__6131a"] :is([class*="baseControlItem_dbfbe0"], [class*="baseSettingWrapper__32428"]) {
+html.hc-theming [class*="scroller__6131a"] :is([class*="baseControlItem_dbfbe0"], [class*="baseSettingWrapper__32428"]:not(.vc-settings-tab-host)) {
     margin: 0;
     padding: 12px 14px !important;
     border: 1px solid var(--hc-row-border);
@@ -240,7 +240,7 @@ html.hc-theming [class*="scroller__6131a"] :is([class*="baseControlItem_dbfbe0"]
     transition: border-color 0.15s ease;
 }
 
-html.hc-theming [class*="scroller__6131a"] :is([class*="baseControlItem_dbfbe0"], [class*="baseSettingWrapper__32428"]):hover {
+html.hc-theming [class*="scroller__6131a"] :is([class*="baseControlItem_dbfbe0"], [class*="baseSettingWrapper__32428"]:not(.vc-settings-tab-host)):hover {
     border-color: rgb(var(--hc-accent-rgb) / 22%);
     background: var(--hc-row-bg);
 }
@@ -346,7 +346,7 @@ html.hc-theming .vc-link {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    html.hc-theming [class*="scroller__6131a"] :is([class*="baseControlItem_dbfbe0"], [class*="baseSettingWrapper__32428"], [class*="triggerButton__64c86"]),
+    html.hc-theming [class*="scroller__6131a"] :is([class*="baseControlItem_dbfbe0"], [class*="baseSettingWrapper__32428"]:not(.vc-settings-tab-host), [class*="triggerButton__64c86"]),
     html.hc-theming [data-mana-component="select-input-field"],
     html.hc-theming [class*="grabber_"],
     html.hc-theming :is(.vc-settings-tab, .vc-settings-modal-content, .hc-window) :is(.vc-form-switch-container, .vc-plugins-setting-section) {

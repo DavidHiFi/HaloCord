@@ -265,9 +265,20 @@ export default definePlugin({
         if (!settings.store.messages) return null;
         return <PlatformIndicator user={props.message?.author} isMessage />;
     },
-    renderVoiceIndicator(userId: string) {
-        if (!settings.store.voiceList) return null;
-        return <PlatformIndicator user={UserStore.getUser(userId)} isVoice />;
+    // The icons sit beside the name, not inside it, so a truncated name can't clip them; the guild tag follows.
+    wrapVoiceName(name: React.ReactNode, userId: string) {
+        if (!settings.store.voiceList) return name;
+        return (
+            <span className="vc-platform-voice-name">
+                {name}
+                <PlatformIndicator user={UserStore.getUser(userId)} isVoice />
+            </span>
+        );
+    },
+    // Discord's own Xbox, PlayStation and Quest icon after the guild tag would repeat ours, uncoloured.
+    hideNativeVoicePlatform(user?: User) {
+        if (!settings.store.voiceList || user == null || (user.bot && !settings.store.showBots)) return false;
+        return Object.keys(PresenceStore.getClientStatus(user.id) ?? {}).length > 0;
     },
     renderTileIndicator(userId?: string, nativePlatform?: number) {
         if (!settings.store.callTiles || !userId) return null;
@@ -278,8 +289,15 @@ export default definePlugin({
         {
             find: "#{intl::GUEST_NAME_SUFFIX})]",
             replacement: {
-                match: /#{intl::GUEST_NAME_SUFFIX}\)\]\}\):""(?=.*?userId:(\i\.\i))/,
-                replace: "$&,$self.renderVoiceIndicator($1)"
+                match: /(userId:(\i)\.id,contextGuildId:.{0,300}?\(0,\i\.jsxs?\)\(\i,\{\.\.\.\i,children:)(\i)\}/,
+                replace: "$1$self.wrapVoiceName($3,$2.id)}"
+            }
+        },
+        {
+            find: "#{intl::GUEST_NAME_SUFFIX})]",
+            replacement: {
+                match: /otherClientSessionType:(\i),voicePlatform:(\i),[^}]{0,200}?user:(\i),[^}]{0,200}\}=\i;/,
+                replace: "$&$self.hideNativeVoicePlatform($3)&&($1=$2=null);"
             }
         },
         {

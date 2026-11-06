@@ -22,9 +22,12 @@ import { onlyOnce } from "@utils/onlyOnce";
 import { Modal,openModal } from "@webpack/common";
 import type { ComponentType, PropsWithChildren } from "react";
 
+// Marks Discord's setting wrapper around a whole tab, so the rounded row card style (HaloControls.css) skips it.
+const markTabHost = (el: HTMLElement | null) => el?.parentElement?.classList.add("vc-settings-tab-host");
+
 export function SettingsTab({ children }: PropsWithChildren) {
     return (
-        <section className="vc-settings-tab">{children}</section>
+        <section className="vc-settings-tab" ref={markTabHost}>{children}</section>
     );
 }
 
