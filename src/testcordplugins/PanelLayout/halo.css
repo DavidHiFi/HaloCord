@@ -173,6 +173,31 @@ html.hc-theming [data-call-tile] [class*="overlayIconsContainer_"] > :is([class*
     border-radius: 8px;
 }
 
+/* The tile's Options (...) button wears the same pill as the name and activity tags. */
+html.hc-theming [data-call-tile] [class*="overlayButton_"] > button {
+    border: 1px solid var(--hc-panel-border) !important;
+    border-radius: 8px !important;
+    background: color-mix(in srgb, var(--hc-window-bg) 82%, transparent) !important;
+    backdrop-filter: blur(24px) saturate(140%);
+    color: var(--hc-text) !important;
+}
+
+html.hc-theming [data-call-tile] [class*="overlayButton_"] > button:hover {
+    border-color: rgb(var(--hc-accent-rgb) / 65%) !important;
+}
+
+/* Discord scales the voice-list speaking ring with live volume, down to half a pixel, which
+   shows as flickering green specks. Draw one steady ring while the user speaks instead. */
+html.hc-theming [class*="listDefault_"] [class*="avatar_"][style*="--status-speaking"] {
+    box-shadow: inset 0 0 0 2px var(--status-speaking) !important;
+    transition: none !important;
+}
+
+html.hc-theming [class*="listDefault_"] [class*="avatar_"][style*="--brand-500"] {
+    box-shadow: inset 0 0 0 2px var(--brand-500) !important;
+    transition: none !important;
+}
+
 /* Dock buttons glow on hover instead of growing or showing a box. */
 html.hc-theming [data-window-chrome] > [class*="trailing_"] :is([class*="clickable_"], [role="button"], a, button):is(:hover, :active) {
     transform: none !important;

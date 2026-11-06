@@ -20,6 +20,26 @@ html.hc-theming .vc-plugin-icon-button[aria-checked="true"]:hover {
     box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 65%), 0 0 10px rgb(var(--hc-accent-rgb) / 35%);
 }
 
+/* Mute and Deafen share the plugin toggles' on look while muted or deafened. */
+html.hc-theming button[class*="audioButtonWithMenu_"][aria-checked] {
+    transition: background-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+
+html.hc-theming button[class*="audioButtonWithMenu_"][aria-checked="true"] {
+    color: var(--hc-accent) !important;
+    background-color: rgb(var(--hc-accent-rgb) / 18%) !important;
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
+}
+
+html.hc-theming button[class*="audioButtonWithMenu_"][aria-checked="true"] svg {
+    color: var(--hc-accent) !important;
+}
+
+html.hc-theming button[class*="audioButtonWithMenu_"][aria-checked="true"]:hover {
+    background-color: rgb(var(--hc-accent-rgb) / 28%) !important;
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 65%), 0 0 10px rgb(var(--hc-accent-rgb) / 35%);
+}
+
 html.hc-theming .vc-plugin-icon-button[aria-checked="false"] {
     --vc-plugin-icon-color: var(--hc-text-muted) !important;
 }
