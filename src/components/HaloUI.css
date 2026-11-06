@@ -903,3 +903,18 @@ html.hc-theming [role="tooltip"] {
     color: #cdd6f4 !important;
     backdrop-filter: blur(24px);
 }
+
+html.hc-theming .container_TP1WMf.popover_81IzEA {
+    width: 380px;
+    max-width: calc(100vw - 32px);
+}
+
+html.hc-theming .tabs_TP1WMf [role="tab"] {
+    min-width: max-content;
+    padding-inline: 6px;
+    line-height: 1.5;
+}
+
+html.hc-theming nav[class*="guilds_"] .wrapper__o8_Xq > .item__o8_Xq {
+    background: linear-gradient(180deg, #89b4fa, #cba6f7) !important;
+}
