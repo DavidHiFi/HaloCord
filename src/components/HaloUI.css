@@ -47,6 +47,21 @@ html.hc-theming[data-hc-theme="mochacord"] {
     --hc-scroll-thumb: rgb(205 214 244 / 16%);
 }
 
+/* The voice panel (desktop/base/userscript.js) paints its surfaces with Discord's old background
+   variables, which current Discord no longer defines, so their grey fallbacks showed under MochaCord. */
+html.hc-theming[data-hc-theme="mochacord"] :is(#dvx-native-settings, .dvx-modal, [data-dvx-aux]) {
+    --background-secondary: var(--hc-panel-bg);
+    --background-tertiary: var(--hc-row-bg);
+    --background-primary: var(--hc-window-bg);
+    --background-floating: var(--hc-window-bg);
+    --header-primary: var(--hc-text);
+}
+
+html.hc-theming[data-hc-theme="mochacord"] #dvx-native-settings select option {
+    background: var(--hc-window-bg);
+    color: var(--hc-text);
+}
+
 /* The theme's 76% glass lets text behind dropdowns, pickers and popouts read; they share the menu acrylic. */
 html.hc-theming[data-hc-theme="mochacord"] body {
     --mochacord-acrylic-background: var(--hc-glass-bg);

@@ -33,9 +33,11 @@
     color: var(--text-feedback-positive);
 }
 
+/* A tint, not a fill: themes like MochaCord set a pastel brand-500, and light text on it was unreadable. */
 .vc-card-brand {
-    background-color: var(--brand-500);
-    border-color: var(--brand-500);
+    background-color: color-mix(in srgb, var(--brand-500) 16%, transparent);
+    border-color: color-mix(in srgb, var(--brand-500) 45%, transparent);
+    color: var(--text-default);
 }
 
 .vc-card-outline {

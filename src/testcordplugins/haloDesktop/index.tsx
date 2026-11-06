@@ -24,6 +24,7 @@ interface DesktopPrefs {
     openOnStartup: boolean;
     startMinimized: boolean;
     minimizeToTray: boolean;
+    startupMethod: "shortcut" | "task";
     build: "stable" | "ptb" | "canary";
     canAutostart: boolean;
 }
@@ -46,6 +47,11 @@ function useDesktopPrefs() {
     return [prefs, set] as const;
 }
 
+const STARTUP_METHODS = [
+    { label: "Shortcut", value: "shortcut" },
+    { label: "Scheduled task", value: "task" }
+];
+
 function WindowsSettings() {
     const [prefs, set] = useDesktopPrefs();
     if (!prefs) return null;
@@ -66,6 +72,21 @@ function WindowsSettings() {
                 disabled={!prefs.openOnStartup}
                 onChange={v => set("startMinimized", v)}
             />
+            <HaloRow
+                title="Startup method"
+                description="A shortcut in your Startup folder, or a scheduled task, which Windows runs sooner after you sign in."
+            >
+                <div style={{ width: 180 }}>
+                    <Select
+                        options={STARTUP_METHODS}
+                        closeOnSelect
+                        isDisabled={!prefs.openOnStartup}
+                        isSelected={v => v === prefs.startupMethod}
+                        serialize={String}
+                        select={v => v !== prefs.startupMethod && set("startupMethod", v)}
+                    />
+                </div>
+            </HaloRow>
             <HaloSwitchRow
                 title={discordString("dJ5MUh", "Minimise HaloCord to System Tray")}
                 description={discordString("nQavHr", "Clicking X minimises HaloCord instead of closing it completely.")}
