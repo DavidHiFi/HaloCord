@@ -200,7 +200,6 @@ export const defaultStreamEnhancerConfig = {
     previewFlipX: false,
     previewFlipY: false,
     viewerResizeSliderEnabled: false,
-    outgoingVideoFilterEnabled: true,
 };
 
 export type StreamEnhancerConfig = typeof defaultStreamEnhancerConfig;
@@ -373,8 +372,7 @@ export function normalizeConfig(input: Partial<StreamEnhancerConfig> | undefined
         previewStretchFill: source.previewStretchFill ?? defaultStreamEnhancerConfig.previewStretchFill,
         previewFlipX: source.previewFlipX ?? defaultStreamEnhancerConfig.previewFlipX,
         previewFlipY: source.previewFlipY ?? defaultStreamEnhancerConfig.previewFlipY,
-        viewerResizeSliderEnabled: source.viewerResizeSliderEnabled ?? false,
-        outgoingVideoFilterEnabled: source.outgoingVideoFilterEnabled ?? defaultStreamEnhancerConfig.outgoingVideoFilterEnabled
+        viewerResizeSliderEnabled: source.viewerResizeSliderEnabled ?? false
     };
 }
 
@@ -645,12 +643,6 @@ export function StreamEnhancerControlPanel() {
                     title="Show resize slider in stream menu"
                     description="Adds a video size slider to the in-viewer stream menu."
                 />
-                <FormSwitch
-                    value={normalized.outgoingVideoFilterEnabled}
-                    onChange={value => set("outgoingVideoFilterEnabled", value)}
-                    title="Apply video filters to your outgoing stream"
-                    description="Re-encodes your capture through a canvas so the viewer Video Filters (brightness, contrast, saturation, hue, tint) are baked into what viewers actually receive, instead of only being graded on your own screen. Adds a small amount of CPU per frame."
-                />
             </SettingsSection>
         </div>
     );
@@ -727,7 +719,6 @@ const makeScaledCanvas = (source: HTMLCanvasElement, width: number, height: numb
 
 export const shouldShowViewerResizeSlider = () => getConfig().viewerResizeSliderEnabled;
 
-export const getOutgoingVideoFilterEnabled = () => getConfig().outgoingVideoFilterEnabled;
 
 export const getConfiguredStreamFps = (fallback?: number) => {
     if (!shouldOverrideStreamResolution()) {

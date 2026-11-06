@@ -7,9 +7,18 @@
 /* Discord's hashed class names; prefix selectors here would catch unrelated menu_, bar_ and popover_ classes. */
 /* stylelint-disable selector-class-pattern */
 
-/* Menus and hover toolbars are opaque: theme glass made them see-through. */
+/* Menus, popouts and hover toolbars are acrylic: a 98% theme tint with a top sheen over a real blur.
+   HaloCord's transparent window shows the unblurred backdrop on screen (measured 2026-11-07),
+   so the tint alone must keep text behind from reading. */
 html.hc-theming {
     --hc-menu-bg: var(--background-surface-higher, var(--hc-window-bg));
+    --hc-glass-bg: linear-gradient(180deg, rgb(255 255 255 / 5%), transparent 45%), color-mix(in srgb, var(--hc-menu-bg) 98%, transparent);
+    --hc-glass-blur: blur(24px) saturate(140%);
+}
+
+/* Midnight resolves surface-higher to near black; MochaCord menus use its base colour. */
+html.hc-theming[data-hc-theme="mochacord"] {
+    --hc-menu-bg: var(--hc-window-bg);
 }
 
 html.hc-theming .menu_c1e9c4:not(#hc-menus) {
@@ -24,9 +33,9 @@ html.hc-theming .menu_c1e9c4:not(#hc-menus) {
 
     border: 1px solid var(--hc-panel-border);
     border-radius: 14px;
-    background: linear-gradient(var(--hc-panel-bg), var(--hc-panel-bg)), var(--hc-menu-bg) !important;
+    background: var(--hc-glass-bg) !important;
     box-shadow: 0 8px 24px rgb(0 0 0 / 40%);
-    backdrop-filter: none !important;
+    backdrop-filter: var(--hc-glass-blur) !important;
 }
 
 html.hc-theming .menu_c1e9c4:not(#hc-menus)::before {
@@ -96,8 +105,8 @@ html.hc-theming .menus_ce8328 {
 
 /* Message hover bar and the profile status bubble's react/reply bar. */
 html.hc-theming :is(.popover_f84418, .popover_c97e55):not(#hc-menus) {
-    background: var(--hc-menu-bg) !important;
-    backdrop-filter: none !important;
+    background: var(--hc-glass-bg) !important;
+    backdrop-filter: var(--hc-glass-blur) !important;
 }
 
 /* Call bar: a readable dock, plated buttons, split buttons as one piece. Red states keep Discord's colours. */

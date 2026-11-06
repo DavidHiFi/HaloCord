@@ -37,48 +37,101 @@ function mcFxParams(){
     makeupGain:1+mcFxNum('micFxBoost')/100*2
   };
 }
+// Self-contained (no outside names), because the audio worklet rebuilds it from its source text.
+// Every gain change ramps over a few milliseconds and every limit is a tanh curve, so the gate,
+// the dropouts and the clipper never step the waveform (steps are what crackle).
 function mcFxEngine(rate,seed){
-  var pw=mcFxClamp(Math.round(0.04*rate),64,4096),pb=new Float32Array(8192),pm=8191,pwr=0,pph=0;
+  var pw=Math.min(4096,Math.max(64,Math.round(0.05*rate))),pb=new Float32Array(8192),pm=8191,pwr=0,pph=0;
   var ed=Math.max(1,Math.round(0.28*rate)),es=1;while(es<ed+1)es*=2;var eb=new Float32Array(es),em=es-1,ew=0;
   var rs=2*Math.PI*55/rate,rp=0;
-  var rel=Math.exp(-1/(0.04*rate)),hold=Math.max(1,Math.round(640/48000*rate)),env=0,hc=0,drop=false,rnd=seed||1;
+  var rel=Math.exp(-1/(0.04*rate)),gUp=1-Math.exp(-1/(0.004*rate)),gDown=1-Math.exp(-1/(0.08*rate)),dRamp=1-Math.exp(-1/(0.003*rate));
+  var hold=Math.max(1,Math.round(640/48000*rate)),env=0,hc=0,drop=false,open=false,gg=0,dg=1,rnd=seed||1;
   function random(){rnd=(rnd*16807)%2147483647;return rnd/2147483647;}
   function readP(d){var p=pwr-d,i=Math.floor(p),f=p-i,a=pb[i&pm],b=pb[(i+1)&pm];return a+(b-a)*f;}
   function pitch(x,r){pb[pwr]=x;pph+=(1-r)/pw;if(pph<0)pph+=1;else if(pph>=1)pph-=1;var o=pph<0.5?pph+0.5:pph-0.5,g=Math.pow(Math.sin(Math.PI*pph),2),og=Math.pow(Math.sin(Math.PI*o),2),y=readP(pph*pw)*g+readP(o*pw)*og;pwr=(pwr+1)&pm;return y;}
   function echo(x,m,fb){var d=eb[(ew-ed)&em];eb[ew]=x+d*fb;ew=(ew+1)&em;return x+d*m;}
   function ring(x,m){var c=Math.sin(rp);rp+=rs;if(rp>=2*Math.PI)rp-=2*Math.PI;return x*(1-m+m*c);}
-  function finish(x,p){var mag=Math.abs(x);env=mag>env?mag:env*rel;if(hc<=0){hc=hold;drop=random()<p.dropoutChance;}hc--;var open=!drop&&env>=p.gateThreshold,v=open?x:0;if(open&&p.staticLevel>0)v+=(random()*2-1)*p.staticLevel;if(p.crushStep>0)v=Math.round(v/p.crushStep)*p.crushStep;return mcFxClamp(v*p.makeupGain,-p.clipLimit,p.clipLimit);}
-  return{process:function(inp,out,p){var pe=p.pitchRatio!==1,ee=p.echoMix>0,re=p.ringMix>0;for(var i=0;i<inp.length;i++){var s=inp[i];if(pe)s=pitch(s,p.pitchRatio);if(ee)s=echo(s,p.echoMix,p.echoFeedback);if(re)s=ring(s,p.ringMix);out[i]=finish(s,p);}}};
+  function finish(x,p){
+    var mag=Math.abs(x);env=mag>env?mag:env*rel;
+    // Hysteresis: opens at the threshold, closes at 60% of it, so a voice tail does not chatter.
+    if(open){if(env<p['gateThreshold']*0.6)open=false;}else if(env>=p['gateThreshold'])open=true;
+    if(hc<=0){hc=hold;drop=random()<p['dropoutChance'];}hc--;
+    gg+=((open?1:0)-gg)*(open?gUp:gDown);dg+=((drop?0:1)-dg)*dRamp;
+    var v=x*gg*dg;
+    if(p['staticLevel']>0)v+=(random()*2-1)*p['staticLevel']*gg*dg;
+    if(p['crushStep']>0)v=Math.round(v/p['crushStep'])*p['crushStep'];
+    var lim=p['clipLimit'];return lim*Math.tanh(v*p['makeupGain']/lim);
+  }
+  return{'process':function(inp,out,p){var pe=p['pitchRatio']!==1,ee=p['echoMix']>0,re=p['ringMix']>0;for(var i=0;i<inp.length;i++){var s=inp[i];if(pe)s=pitch(s,p['pitchRatio']);if(ee)s=echo(s,p['echoMix'],p['echoFeedback']);if(re)s=ring(s,p['ringMix']);out[i]=finish(s,p);}}};
 }
-// src -> dry -> out, and src -> band limit -> soft clip -> engine -> bass shelf -> limiter -> wet -> out.
+function mcFxWorkletSrc(){
+  return 'var mcFxEngine='+mcFxEngine.toString()+';\n'
+    +'registerProcessor("hc-micfx",class extends AudioWorkletProcessor{constructor(){super();var s=this;s.on=false;s.p=null;s.n=0;s.m=null;s.e=mcFxEngine(sampleRate,1);'
+    +'s.port.onmessage=function(ev){var d=ev.data||{};s.on=!!d.on;s.p=d.p||null;};}'
+    +'process(ins,outs){var o=outs[0]&&outs[0][0];if(!o)return true;var a=ins[0];if(!this.on||!a||!a.length){o.fill(0);return true;}'
+    +'var l=a[0],r=a.length>1?a[1]:l,m=this.m;if(!m||m.length!==o.length)m=this.m=new Float32Array(o.length);for(var i=0;i<o.length;i++)m[i]=(l[i]+r[i])*0.5;'
+    +'if(this.p)this.e.process(m,o,this.p);else o.set(m);if(++this.n%375===0)this.port.postMessage(this.n);return true;}});';
+}
+var mcFxWurl=null;
+// src -> dry -> out, and src -> band limit -> soft clip -> engine -> bass shelf -> compressor -> soft limiter -> wet -> out.
+// The engine runs in an audio worklet on the audio thread; a busy Discord main thread starved the old
+// ScriptProcessor and the gaps were heard as stutter. The ScriptProcessor stays only as a fallback.
 function mcFxAttach(ctx,src){
-  var out=ctx['createGain'](),dry=ctx['createGain'](),wet=ctx['createGain'](),hp=ctx['createBiquadFilter'](),lp=ctx['createBiquadFilter'](),sh=ctx['createWaveShaper'](),shelf=ctx['createBiquadFilter'](),lim=ctx['createDynamicsCompressor']();
-  var size=ctx['sampleRate']<16000?512:2048,proc=ctx['createScriptProcessor'](size,2,2),eng=mcFxEngine(ctx['sampleRate'],1),mono=new Float32Array(size),done=new Float32Array(size);
+  var out=ctx['createGain'](),dry=ctx['createGain'](),wet=ctx['createGain'](),hp=ctx['createBiquadFilter'](),lp=ctx['createBiquadFilter'](),sh=ctx['createWaveShaper'](),shelf=ctx['createBiquadFilter'](),lim=ctx['createDynamicsCompressor'](),pre=ctx['createGain'](),safe=ctx['createWaveShaper']();
   var curve=new Float32Array(1024);for(var i=0;i<1024;i++){var x=i/1023*2-1;curve[i]=Math.tanh(x)/Math.tanh(1);}
+  // The safety curve takes input up to +-2 (after the 0.5 pre gain): near unity below -6 dBFS, a smooth knee to 0.98 above.
+  var sc=new Float32Array(2048);for(var j=0;j<2048;j++){var y=j/2047*2-1;sc[j]=0.98*Math.tanh(2*y/0.98);}
   hp['type']='highpass';hp['Q']['value']=0.7;lp['type']='lowpass';lp['Q']['value']=0.7;sh['curve']=curve;sh['oversample']='2x';
   shelf['type']='lowshelf';shelf['frequency']['value']=180;
   lim['threshold']['value']=-12;lim['knee']['value']=6;lim['ratio']['value']=12;lim['attack']['value']=0.003;lim['release']['value']=0.15;
+  pre['gain']['value']=0.5;safe['curve']=sc;safe['oversample']='4x';
+  var last={},node=null,proc=null,engine=mcFxEngine(ctx['sampleRate'],1),lastKey='';
+  function ramp(param,key,v){if(last[key]===v)return;last[key]=v;try{param['setTargetAtTime'](v,ctx['currentTime'],0.015);}catch(e){param['value']=v;}}
   function sync(on){
-    dry['gain']['value']=on?0:1;wet['gain']['value']=on?1:0;
+    ramp(dry['gain'],'dry',on?0:1);ramp(wet['gain'],'wet',on?1:0);
     var muffle=mcFxNum('micFxMuffle');
     // Muffle 0 keeps the full band, so pitch or echo alone do not sound like a phone line.
-    hp['frequency']['value']=muffle>0?200:20;lp['frequency']['value']=muffle>0?3600-muffle*24:20000;
-    shelf['gain']['value']=on?mcFxNum('micFxBass')/4:0;shelf['Q']['value']=0.7+mcFxNum('micFxResonance')/20;
+    ramp(hp['frequency'],'hp',muffle>0?200:20);ramp(lp['frequency'],'lp',muffle>0?3600-muffle*24:20000);
+    // Capped at +12 dB with a gentle Q: the old +25 dB resonant shelf drove the compressor into crackle on Deep Voice.
+    ramp(shelf['gain'],'bass',on?mcFxNum('micFxBass')/100*12:0);ramp(shelf['Q'],'res',0.7+mcFxNum('micFxResonance')/100*1.3);
   }
-  proc['onaudioprocess']=function(ev){
-    var ib=ev['inputBuffer'],ob=ev['outputBuffer'],l=ib['getChannelData'](0),r=ib['numberOfChannels']>1?ib['getChannelData'](1):l,lo=ob['getChannelData'](0),ro=ob['numberOfChannels']>1?ob['getChannelData'](1):lo;
+  function push(){
     var on=mcFxActive();sync(on);
-    if(!on){lo.fill(0);ro.fill(0);return;}
-    if(mono.length!==l.length){mono=new Float32Array(l.length);done=new Float32Array(l.length);}
-    for(var i=0;i<l.length;i++)mono[i]=(l[i]+r[i])*0.5;
-    if(mcFxEngineActive())eng.process(mono,done,mcFxParams());else done.set(mono);
-    for(var j=0;j<lo.length;j++){lo[j]=done[j];ro[j]=done[j];}
-    out['mcFxProcessed']=(out['mcFxProcessed']||0)+1;
-  };
+    if(!node)return;
+    var p=on&&mcFxEngineActive()?mcFxParams():null,key=(on?'1':'0')+JSON['stringify'](p);
+    if(key===lastKey)return;lastKey=key;node['port']['postMessage']({'on':on,'p':p});
+  }
+  function useScript(){
+    if(proc||node)return;
+    var size=4096,mono=new Float32Array(size),done=new Float32Array(size);
+    proc=ctx['createScriptProcessor'](size,2,2);
+    proc['onaudioprocess']=function(ev){
+      var ib=ev['inputBuffer'],ob=ev['outputBuffer'],l=ib['getChannelData'](0),r=ib['numberOfChannels']>1?ib['getChannelData'](1):l,lo=ob['getChannelData'](0),ro=ob['numberOfChannels']>1?ob['getChannelData'](1):lo;
+      var on=mcFxActive();sync(on);
+      if(!on){lo.fill(0);ro.fill(0);return;}
+      if(mono.length!==l.length){mono=new Float32Array(l.length);done=new Float32Array(l.length);}
+      for(var i=0;i<l.length;i++)mono[i]=(l[i]+r[i])*0.5;
+      if(mcFxEngineActive())engine['process'](mono,done,mcFxParams());else done.set(mono);
+      for(var j=0;j<lo.length;j++){lo[j]=done[j];ro[j]=done[j];}
+      out['mcFxProcessed']=(out['mcFxProcessed']||0)+1;
+    };
+    sh['connect'](proc);proc['connect'](shelf);out['mcFxProc']=proc;out['mcFxMode']='script';
+  }
   src['connect'](dry);dry['connect'](out);
-  src['connect'](hp);hp['connect'](lp);lp['connect'](sh);sh['connect'](proc);proc['connect'](shelf);shelf['connect'](lim);lim['connect'](wet);wet['connect'](out);
+  src['connect'](hp);hp['connect'](lp);lp['connect'](sh);shelf['connect'](lim);lim['connect'](pre);pre['connect'](safe);safe['connect'](wet);wet['connect'](out);
   sync(mcFxActive());
-  out['mcFxProc']=proc;
+  try{
+    if(!ctx['audioWorklet'])throw new Error('no worklet');
+    if(!mcFxWurl)mcFxWurl=URL['createObjectURL'](new Blob([mcFxWorkletSrc()],{'type':'application/javascript'}));
+    ctx['audioWorklet']['addModule'](mcFxWurl)['then'](function(){
+      if(proc||ctx['state']==='closed')return;
+      node=new AudioWorkletNode(ctx,'hc-micfx',{'numberOfInputs':1,'numberOfOutputs':1,'outputChannelCount':[1]});
+      node['port']['onmessage']=function(ev){out['mcFxProcessed']=ev['data'];};
+      sh['connect'](node);node['connect'](shelf);out['mcFxProc']=node;out['mcFxMode']='worklet';
+      push();
+      var t=setInterval(function(){if(ctx['state']==='closed'){clearInterval(t);return;}push();},50);
+    })['catch'](function(){useScript();});
+  }catch(e){useScript();}
   return out;
 }
 function mcFxPanel(QP,Qr){

@@ -47,9 +47,9 @@ html.hc-theming[data-hc-theme="mochacord"] {
     --hc-scroll-thumb: rgb(205 214 244 / 16%);
 }
 
-/* Menus blur a see-through window, so the theme's 76% glass reads near black. */
+/* The theme's 76% glass lets text behind dropdowns, pickers and popouts read; they share the menu acrylic. */
 html.hc-theming[data-hc-theme="mochacord"] body {
-    --mochacord-acrylic-background: color-mix(in srgb, var(--bg-floating, #1e1e2e) 92%, transparent);
+    --mochacord-acrylic-background: var(--hc-glass-bg);
 }
 
 .hc-ui {

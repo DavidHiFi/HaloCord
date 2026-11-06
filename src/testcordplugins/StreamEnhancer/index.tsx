@@ -30,7 +30,6 @@ import { installShareCapture, uninstallShareCapture } from "./shareCapture";
 import * as streamState from "./state";
 import managedStyle from "./styles.css?managed";
 import type { StreamParticipant } from "./types";
-import { installOutgoingVideoFilterInterceptor, uninstallOutgoingVideoFilterInterceptor } from "./videoFilters";
 
 export function StreamEnhancerButton({ iconForeground, hideTooltips, nameplate }: UserAreaRenderProps) {
     const { showPanelButton } = streamEnhancerSettings.use(["showPanelButton"]);
@@ -69,7 +68,6 @@ const streamEnhancer = definePlugin({
             delete equiTweaks.noMirroredCamera;
             SettingsStore.markAsChanged();
         }
-        installOutgoingVideoFilterInterceptor();
         installShareCapture();
         addGlobalContextMenuPatch(mediaButtonMenuPatch);
         setLocalPreviewChangeListener(refreshCustomPreview);
@@ -84,7 +82,6 @@ const streamEnhancer = definePlugin({
     stop() {
         uninstallShareCapture();
         removeGlobalContextMenuPatch(mediaButtonMenuPatch);
-        uninstallOutgoingVideoFilterInterceptor();
         stopCustomPreviewLoader();
         stopPreviewSender();
         streamState.stopStreamEnhancerState();

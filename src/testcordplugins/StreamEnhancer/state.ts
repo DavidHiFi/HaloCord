@@ -1261,11 +1261,6 @@ export const getStreamVideoFilterString = (streamKey: string | null | undefined)
     return filters.length > 0 ? filters.join(" ") : null;
 };
 
-export const getOutgoingStreamFilterString = () => {
-    const currentUserId = UserStore.getCurrentUser()?.id;
-    return getStreamVideoFilterString(currentUserId);
-};
-
 export const getRenderedStreamVideoStyle = (streamKey: string | null | undefined) => {
     if (!hasStreamKey(streamKey)) return undefined;
 
