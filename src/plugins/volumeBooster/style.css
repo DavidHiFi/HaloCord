@@ -10,9 +10,13 @@
 }
 
 .vc-volume-reset {
+    position: relative;
+    top: -4px; /* the slider sits 4px above its row box; centre the icon on its track */
     display: flex;
     padding: 4px;
+    border: 0;
     border-radius: 4px;
+    background: none;
     cursor: pointer;
     color: var(--interactive-normal);
 }

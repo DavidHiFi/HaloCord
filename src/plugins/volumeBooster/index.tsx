@@ -24,12 +24,13 @@ import { Devs, TestcordDevs } from "@utils/constants";
 import definePlugin from "@utils/types";
 import { Stream, User } from "@vencord/discord-types";
 import { findByPropsLazy } from "@webpack";
-import { Clickable, Menu, React } from "@webpack/common";
+import { Menu, React } from "@webpack/common";
 import type { ComponentProps, ReactElement } from "react";
 
 const DEFAULT_VOLUME = { default: 100, stream: 18 } as const;
 
-const { setLocalVolume } = findByPropsLazy("setLocalVolume", "toggleLocalMute");
+// Not destructured: a destructured lazy export is cached on first call and goes stale if the module is swapped.
+const VoiceActions = findByPropsLazy("setLocalVolume", "toggleLocalMute");
 
 function addVolumeReset(children: Parameters<NavContextMenuPatchCallback>[0], userId: string, context: keyof typeof DEFAULT_VOLUME) {
     const group = findGroupChildrenByChildId("user-volume", children);
@@ -37,16 +38,21 @@ function addVolumeReset(children: Parameters<NavContextMenuPatchCallback>[0], us
 
     const index = group.findIndex(child => child?.props?.id === "user-volume");
     const item = group[index] as ReactElement<ComponentProps<typeof Menu.MenuControlItem>>;
-    const reset = () => setLocalVolume(userId, DEFAULT_VOLUME[context], context);
+    const reset = () => VoiceActions.setLocalVolume(userId, DEFAULT_VOLUME[context], context);
 
     group.splice(index, 1,
         React.cloneElement(item, {
             control: (props, ref) => (
                 <div className="vc-volume-row">
                     {item.props.control(props, ref)}
-                    <Clickable className="vc-volume-reset" aria-label="Reset volume" onClick={reset}>
+                    <button
+                        type="button"
+                        className="vc-volume-reset"
+                        aria-label="Reset volume"
+                        onClick={e => { e.stopPropagation(); reset(); }}
+                    >
                         <ResetIcon />
-                    </Clickable>
+                    </button>
                 </div>
             )
         }),
