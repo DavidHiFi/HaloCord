@@ -50,14 +50,6 @@ export default definePlugin({
                 replace: "$2,$1"
             }
         },
-        // Catch IndexedDB if it fails to open
-        {
-            find: "discarding speculative database",
-            replacement: {
-                match: /await \i\(\i\)(?=;.{0,15}this\.databases)/,
-                replace: "$&.catch(()=>null)"
-            }
-        },
         {
             find: ".USE_OSX_NATIVE_TRAFFIC_LIGHTS",
             replacement: {

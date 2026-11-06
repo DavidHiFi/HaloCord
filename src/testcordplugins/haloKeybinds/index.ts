@@ -113,8 +113,8 @@ export default definePlugin({
             replacement: [
                 {
                     // Ignore left clicks, as the Windows desktop app does.
-                    match: /let (\i)=\+!\(0,(\i)\.isWindows\)\(\);/,
-                    replace: "let $1=+!((0,$2.isWindows)()||$self.on);"
+                    match: /let (\i)=\+!\(0,(\i\.\i)\)\(\);/,
+                    replace: "let $1=+!((0,$2)()||$self.on);"
                 },
                 {
                     match: /(\i\.isPlatformEmbedded)(&&!\i&&\(this\.gs=new)/,
@@ -143,8 +143,8 @@ export default definePlugin({
                     replace: "useHeaderDecoration:()=>($1||$self.on)?"
                 },
                 {
-                    match: /\(0,(\i)\.isDesktop\)\(\)(?=&&\(\i\.push\(\{id:"navigate-back")/,
-                    replace: "($self.on||(0,$1.isDesktop)())"
+                    match: /\(0,(\i\.\i)\)\(\)(?=&&\(\i\.push\(\{id:"navigate-back")/,
+                    replace: "($self.on||(0,$1)())"
                 },
                 {
                     match: /\(0,(\i)\.isDesktop\)\(\)(?=&&\(\i\[\i\.\i\.NAVIGATE_BACK\])/,

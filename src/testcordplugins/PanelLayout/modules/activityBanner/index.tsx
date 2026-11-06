@@ -101,7 +101,7 @@ export const activityBannerPatches = [
         find: "isForceShowSharingPopout",
         replacement: [
             {
-                match: /children:\[null!=(\i)\?\(0,(\i)\.jsx\)\((\i),{name:\1,applicationId:(\i)\?\.id}\):null,\(0,\2\.jsx\)\((\i),({isCurrentlyRunningGame:(\i),(?:gamePid:\i\?\.pid,)?onClickNotSharing:(\i)})\)\]/,
+                match: /children:\[null!=(\i)\?\(0,(\i)\.jsx\)\((\i),{name:\1,applicationId:(\i)\?\.id}\):null,\(0,\2\.jsx\)\((\i),({isCurrentlyRunningGame:(\i),(?:gamePid:\i\?\.pid,)?onClickNotSharing:(\i)(?:,isSharingPopoutOpen:\i)?})\)\]/,
                 replace: "children:$self.renderActivityInfo({name:$1,application:$4,isCurrentlyRunningGame:$7,onClickNotSharing:$8,TitleComponent:$3,defaultTitle:null!=$1?(0,$2.jsx)($3,{name:$1,applicationId:$4?.id}):null,defaultStatus:(0,$2.jsx)($5,$6)})"
             },
             {
@@ -117,17 +117,12 @@ export const activityBannerPatches = [
                 replace: "($self.saveRenderer($2),$1)?($self.markRenderedInEI(),$2($3,$4,{isGameRunning:!0}))"
             },
             {
-                match: /children:\[(\i),\(0,(\i)\.jsx\)\((\i),{stream:(\i),canGoLive:(\i),((?:canGoLiveActivity:\i,)?)guildId:(\i),isStreaming:(\i),channel:(\i),canStream:(\i),runningGame:(\i),activity:(\i),application:(\i),/,
-                replace: "children:[$1,($8&&null!=$11?$self.renderStreamingGame($13,$11):null),(0,$2.jsx)($3,{stream:$4,canGoLive:$5,$6guildId:$7,isStreaming:$8,channel:$9,canStream:$10,runningGame:$11,activity:$12,application:$13,"
+                match: /children:\[(\i),\(0,(\i)\.jsx\)\((\i),{stream:(\i),canGoLive:(\i),((?:canGoLiveActivity:\i,)?)(guildId:\i,)?isStreaming:(\i),channel:(\i),canStream:(\i),runningGame:(\i),activity:(\i),application:(\i),/,
+                replace: "children:[$1,($8&&null!=$11?$self.renderStreamingGame($13,$11):null),(0,$2.jsx)($3,{stream:$4,canGoLive:$5,$6$7isStreaming:$8,channel:$9,canStream:$10,runningGame:$11,activity:$12,application:$13,"
             }
         ]
     }
 ];
-// NOTE: activity banner patches expired against Discord v1.0.2334+.
-// The module structure changed (children:()=> arrow fn instead of children:[...] array),
-// so the regex matches in activityBanner/index.tsx no longer apply.
-// The activity-banner module will simply not render until patches are re-derived.
-
 export const activityBannerModule: Omit<UserAreaModule, "order" | "enabled"> = {
     id: "activity-banner",
     name: "Activity Banner",

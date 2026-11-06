@@ -17,7 +17,7 @@ export default definePlugin({
         {
             find: "ApplicationLauncherCommand=3",
             replacement: {
-                match: /(let \i=)\i\(\d+\)\.CS1\+500/,
+                match: /(\(\i=\i\)\.length>)4500/,
                 replace: "$1Number.MAX_SAFE_INTEGER"
             }
         }

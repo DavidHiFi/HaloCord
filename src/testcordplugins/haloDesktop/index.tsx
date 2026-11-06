@@ -206,7 +206,7 @@ export default definePlugin({
         {
             find: 'key:"download",iconUrl:',
             replacement: {
-                match: /\(0,\i\.isWeb\)\(\)(?=&&\i\.push\(\{key:"download")/,
+                match: /\(0,\i\.\i\)\(\)(?=&&\i\.push\(\{key:"download")/,
                 replace: "!1"
             }
         },

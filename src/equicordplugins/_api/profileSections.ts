@@ -25,7 +25,7 @@ export default definePlugin({
         {
             find: "MODAL_V2,onClose:",
             replacement: {
-                match: /(a6XYD9\),children:\(0,\i\.jsx\)\(\i\.\i,\{userId:(\i\.id),guildId:\i\?\.guildId,tooltipDelay:\i\.\i\}\)\})/,
+                match: /(a6XYD9\),children:\(0,\i\.jsx\)\(\i\.\i,\{userId:(\i\.id),guildId:\i\?\.guildId,tooltipDelay:(?:\i\.\i|\d+)\}\)\})/,
                 replace: "$1,Vencord.Api.ProfileSections.renderProfileSections({userId:$2,isSideBar:false})"
             }
         }

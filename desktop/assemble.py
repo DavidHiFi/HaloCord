@@ -24,8 +24,11 @@ shutil.rmtree(asrc / "equicord")
 for f in ("main.js", "preload.js", "renderer.js", "renderer.css", "main.js.LEGAL.txt", "renderer.js.LEGAL.txt"):
     shutil.copy2(BUNDLE / f, asrc / "equicord" / f)
 # The MochaCord theme ships with every build; src/main/mochacordTheme.ts installs it and keeps it current.
-with urllib.request.urlopen("https://raw.githubusercontent.com/DavidHiFi/MochaCord-Theme/main/MochaCord.css", timeout=30) as r:
-    css = r.read().decode("utf-8")
+if os.environ.get("HALOCORD_THEME_SOURCE"):
+    css = Path(os.environ["HALOCORD_THEME_SOURCE"]).read_text(encoding="utf-8")
+else:
+    with urllib.request.urlopen("https://raw.githubusercontent.com/DavidHiFi/MochaCord-Theme/main/MochaCord.css", timeout=30) as r:
+        css = r.read().decode("utf-8")
 if "@name MochaCord" not in css:
     sys.exit("MochaCord theme download did not look like the theme")
 (asrc / "equicord" / "MochaCord.css").write_text(css, encoding="utf-8", newline="")

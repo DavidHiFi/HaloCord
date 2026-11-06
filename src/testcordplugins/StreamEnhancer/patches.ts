@@ -413,7 +413,7 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         find: "REMOTE_VIDEO,paused:",
         replacement: [
             {
-                match: /function \i\(\i\)\{let\{participant:(\i),channel:\i,inCall:\i,width:\i,selected:\i,popoutType:\i,fit:(\i),onVideoResize:\i,blocked:\i,ignored:\i,noVideoRender:\i=!1.{0,120}\}=\i,/,
+                match: /function(?: \i)?\(\i\)\{let\{participant:(\i),channel:\i,inCall:\i,width:\i,selected:\i,popoutType:\i,fit:(\i),onVideoResize:\i,blocked:\i,ignored:\i,noVideoRender:\i=!1.{0,120}\}=\i,/,
                 replace: "$&vcState=$self.useRenderedStreamVideoState($1?.id,$2),"
             },
             {

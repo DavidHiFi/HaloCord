@@ -13,20 +13,27 @@ export let iconsModule: IconsDef;
 export default definePlugin({
     id: "ConcatenatedModules",
     name: "ConcatenatedModules",
+    required: true,
     description: "Extract modules that have been concatenated by the bundler",
     authors: [Devs.thororen],
-    required: true,
-
     patches: [
         {
-            find: "AngleBracketsIcon",
+            find: ".web.tsx`",
             replacement: {
-                match: /\i\.\i\((\i),\s*\{[\s\S]*?["']?AngleBracketsIcon["']?\s*:/,
-                replace: "$self.iconsModule($1),$&"
+                match: /function \i\(\i\)\{let \i,\{badgeIcon:(?=.{0,400}\?\?=(\i\(\d+\));let \i=`\.\/\$\{\i\}\.web\.tsx`)/,
+                replace: "$self.loadIcons($1);$&"
             }
         }
     ],
-    iconsModule(value: IconsDef) {
+    async loadIcons(load: ((path: string) => Promise<IconsDef>) & { keys(): string[]; }) {
+        const icons = await Promise.all(load.keys().map(load));
+        this.setIconsModule(Object.assign({}, ...icons));
+    },
+    setIconsModule(value: IconsDef) {
         iconsModule = value;
+
+        // incase you dont want to use iconviewer you can do
+        // Vencord.Plugins.plugins.ConcatenatedModules.iconsModule instead for icons and viewing paths
+        this.iconsModule = value;
     },
 });

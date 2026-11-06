@@ -146,6 +146,14 @@ export default definePlugin({
 
     patches: [
         {
+            find: "BV6xDm",
+            predicate: () => "HaloCordNative" in window,
+            replacement: {
+                match: /(\i)&&(\i\.push\(\i\.intl\.string\(\i\.t\.BV6xDm\)\))/,
+                replace: "$1&&!$self.canAutoCompleteQuest(arguments[0])&&$2"
+            }
+        },
+        {
             // Prevent color picker modal and dummy Quest button context menu modal
             // from force scrolling back up to the top of the settings when closed.
             find: ",NodeFilter.SHOW_ELEMENT,{acceptNode:function(",
