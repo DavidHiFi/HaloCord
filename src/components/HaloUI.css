@@ -904,17 +904,17 @@ html.hc-theming [role="tooltip"] {
     backdrop-filter: blur(24px);
 }
 
-html.hc-theming .container_TP1WMf.popover_81IzEA {
+html.hc-theming [class~="container_TP1WMf"][class~="popover_81IzEA"] {
     width: 380px;
     max-width: calc(100vw - 32px);
 }
 
-html.hc-theming .tabs_TP1WMf [role="tab"] {
+html.hc-theming [class~="tabs_TP1WMf"] [role="tab"] {
     min-width: max-content;
     padding-inline: 6px;
     line-height: 1.5;
 }
 
-html.hc-theming nav[class*="guilds_"] .wrapper__o8_Xq > .item__o8_Xq {
+html.hc-theming nav[class*="guilds_"] [class~="wrapper__o8_Xq"] > [class~="item__o8_Xq"] {
     background: linear-gradient(180deg, #89b4fa, #cba6f7) !important;
 }
