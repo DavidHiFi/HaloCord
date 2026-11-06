@@ -54,6 +54,8 @@ const HEX_COLOR = /^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 
 // Discord paints every voice speaking ring with --status-speaking, so the
 // override recolors it on the root and on each nested theme container.
+let glowObserver: MutationObserver | undefined;
+
 function applyGlowOverride() {
     const root = document.documentElement;
     const color = settings.store.glowColor.trim();
@@ -231,9 +233,19 @@ export default definePlugin({
     start() {
         window.addEventListener("testcord-vu-audio-change", onAudioActivityChange);
         applyGlowOverride();
+        glowObserver = new MutationObserver(() => {
+            const root = document.documentElement;
+            const color = settings.store.glowColor.trim();
+            const on = settings.store.overrideGlow && HEX_COLOR.test(color);
+            if (root.classList.contains("vc-rvcpfp-override-glow") !== on
+                || (on && root.style.getPropertyValue("--vc-rvcpfp-glow-color") !== color)) applyGlowOverride();
+        });
+        glowObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "style"] });
     },
 
     stop() {
+        glowObserver?.disconnect();
+        glowObserver = undefined;
         window.removeEventListener("testcord-vu-audio-change", onAudioActivityChange);
         document.documentElement.classList.remove("vc-rvcpfp-override-glow");
         document.documentElement.style.removeProperty("--vc-rvcpfp-glow-color");
