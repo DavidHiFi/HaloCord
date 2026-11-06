@@ -277,7 +277,7 @@ export default definePlugin({
         useStateFromStores([audioActivityStore], audioActivityStore.getVersion, []);
         // the glow hides while deafened unless VoiceVUMeters' option keeps it
         useStateFromStores([MediaEngineStore], () => MediaEngineStore.isDeaf(), []);
-        useSettings(["plugins.VoiceVUMeters.showWhileDeafened"]);
+        useSettings(["plugins.VoiceVUMeters.showWhileDeafened", "plugins.RoundedVCPFP.overrideGlow", "plugins.RoundedVCPFP.glowColor"]);
     },
 
     getVoiceBackgroundStyles({ className, participantUserId, children }: { className?: string; participantUserId?: string; children?: unknown; }) {
@@ -324,7 +324,9 @@ export default definePlugin({
         }
         const ringPic = settings.store.speakingIndicator === "picture";
         // Picture mode puts the speaking ring in the filter, other tiles get a box from the stylesheet
-        const glowFilter = ringPic && speakingGlow ? "drop-shadow(0 0 2px var(--status-speaking, #23a55a)) drop-shadow(0 0 8px var(--status-speaking, #23a55a))" : "";
+        const glowColor = settings.store.overrideGlow && HEX_COLOR.test(settings.store.glowColor.trim())
+            ? settings.store.glowColor.trim() : "var(--status-speaking, #23a55a)";
+        const glowFilter = ringPic && speakingGlow ? `drop-shadow(0 0 2px ${glowColor}) drop-shadow(0 0 8px ${glowColor})` : "";
         return {
             "--full-res-avatar": `url("${avatarUrl}")`,
             "--vc-pfp-radius": `${Math.round(settings.store.cornerRadius)}px`,
@@ -359,7 +361,8 @@ export default definePlugin({
             // fallback glow when the slot is present. The filter string carries the
             // configured color; themes and any other stylesheet consume it.
             "--vc-pfp-glow-slot": "1",
-            "--vc-pfp-glow-filter": glowFilter
+            "--vc-pfp-glow-filter": glowFilter,
+            "--vc-pfp-custom-glow": glowColor
         };
     },
 });
