@@ -657,15 +657,15 @@ html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.
 }
 
 /* Discord sliders, text boxes and dropdowns inside these pages. */
-html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="wrapper__"]:has(> input),
-html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="selectField__"] {
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="wrapper_"]:has(> input),
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="selectField_"] {
     border: 1px solid var(--hc-row-border);
     border-radius: 10px;
     background: var(--hc-row-bg);
 }
 
-html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="wrapper__"]:has(> input):focus-within,
-html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="selectField__"]:focus-within {
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="wrapper_"]:has(> input):focus-within,
+html.hc-theming :is(.vc-settings-tab, :where([data-mana-component="modal"]:has(.hc-window))) [class*="selectField_"]:focus-within {
     border-color: rgb(var(--hc-accent-rgb) / 55%);
 }
 
@@ -748,8 +748,8 @@ html.hc-theming [class*="sectionList_"] [class*="itemContainer_"] > [class*="ite
 
 /* Discord's own settings and HaloCord plugin windows: Discord's brand tokens turned green.
    Theme wrappers inside re-declare the tokens, so they get the same values. */
-html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)),
-html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) [class*="theme-"]:not(.custom-user-profile-theme) {
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar_"]), [data-mana-component="modal"]:has(.hc-window)),
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar_"]), [data-mana-component="modal"]:has(.hc-window)) [class*="theme-"]:not(.custom-user-profile-theme) {
     --control-primary-background-default: var(--hc-accent);
     --control-primary-background-hover: color-mix(in srgb, var(--hc-accent) 85%, #fff);
     --control-primary-background-active: color-mix(in srgb, var(--hc-accent) 80%, #000);
@@ -802,29 +802,29 @@ html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [dat
 }
 
 /* Discord's switch paints its colors inline, so only !important reaches it. */
-html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) label:has(input:checked) > [data-mana-component="switch"] {
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar_"]), [data-mana-component="modal"]:has(.hc-window)) label:has(input:checked) > [data-mana-component="switch"] {
     border-color: var(--hc-accent) !important;
     background-color: var(--hc-accent) !important;
 }
 
-html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) label:has(input:checked) > [data-mana-component="switch"] rect {
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar_"]), [data-mana-component="modal"]:has(.hc-window)) label:has(input:checked) > [data-mana-component="switch"] rect {
     fill: var(--hc-accent-ink) !important;
 }
 
-html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) label:has(input:checked) > [data-mana-component="switch"] path {
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar_"]), [data-mana-component="modal"]:has(.hc-window)) label:has(input:checked) > [data-mana-component="switch"] path {
     fill: var(--hc-accent) !important;
 }
 
-html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) [class*="grabber_"] {
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar_"]), [data-mana-component="modal"]:has(.hc-window)) [class*="grabber_"] {
     border-color: var(--hc-accent);
 }
 
-html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) :is([class*="thin_"], [class*="auto_"], [class*="scroller_"], [class*="Scroller_"]):not([class*="none_"]) {
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar_"]), [data-mana-component="modal"]:has(.hc-window)) :is([class*="thin_"], [class*="auto_"], [class*="scroller_"], [class*="Scroller_"]):not([class*="none_"]) {
     scrollbar-color: var(--hc-scroll-thumb) transparent;
     scrollbar-width: thin;
 }
 
-html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar__"]), [data-mana-component="modal"]:has(.hc-window)) ::-webkit-scrollbar-track {
+html.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar_"]), [data-mana-component="modal"]:has(.hc-window)) ::-webkit-scrollbar-track {
     background: transparent;
 }
 

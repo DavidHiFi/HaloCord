@@ -15,7 +15,8 @@ NW = dict(creationflags=subprocess.CREATE_NO_WINDOW, shell=True, check=True)
 for p in (app, asrc):
     shutil.rmtree(p, ignore_errors=True)
 shutil.copytree(SRC_APP, app)
-subprocess.run(f'npx -y @electron/asar extract "{app/"resources"/"app.asar"}" "{asrc}"', **NW)
+ASAR = D.parent / "node_modules" / "@electron" / "asar" / "bin" / "asar.mjs"
+subprocess.run(["node", str(ASAR), "extract", str(app / "resources" / "app.asar"), str(asrc)], creationflags=subprocess.CREATE_NO_WINDOW, check=True)
 # The equibop build carries every plugin, desktop-only ones included. Its main.js runs in the shell's
 # main process, its preload in the shell's preload, and renderer.js in the page.
 shutil.rmtree(asrc / "equicord")
@@ -278,7 +279,7 @@ pkg = json.loads((asrc / "package.json").read_text())
 pkg.update(name="halocord", productName="HaloCord", version=VERSION, description="HaloCord", author="DavidHiFi")
 (asrc / "package.json").write_text(json.dumps(pkg, indent=2))
 (app / "resources" / "app.asar").unlink()
-subprocess.run(f'npx -y @electron/asar pack "{asrc}" "{app/"resources"/"app.asar"}" --unpack "*.node"', **NW)
+subprocess.run(["node", str(ASAR), "pack", str(asrc), str(app / "resources" / "app.asar"), "--unpack", "*.node"], creationflags=subprocess.CREATE_NO_WINDOW, check=True)
 exe = app / "HaloCord.exe"
 (app / "Kurtcord.exe").rename(exe)
 rc = [str(OUT / "tools" / "rcedit" / "rcedit-x64.exe"), str(exe), "--set-icon", str(D / "brand" / "halocord.ico"),

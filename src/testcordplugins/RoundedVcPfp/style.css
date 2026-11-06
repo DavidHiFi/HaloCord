@@ -74,7 +74,7 @@ div[data-selenium-video-tile][style*="--vc-pfp-speaking"]:not([style*="--vc-pfp-
 }
 
 /* Camera tiles have no picture, so they keep Discord's own tile border */
-div[data-selenium-video-tile][style*="--vc-pfp-ring-pic"]:not([style*="--vc-pfp-camera"]) [class*="border__"] {
+div[data-selenium-video-tile][style*="--vc-pfp-ring-pic"]:not([style*="--vc-pfp-camera"]) [class*="border_"] {
     display: none !important;
 }
 
@@ -88,6 +88,6 @@ div[data-selenium-video-tile][style*="--vc-pfp-hide-bg"] [class*="content"] {
 }
 
 /* Deafened: no speaking ring on any tile, Discord's own border included */
-div[data-selenium-video-tile][style*="--vc-pfp-deaf"] [class*="border__"] {
+div[data-selenium-video-tile][style*="--vc-pfp-deaf"] [class*="border_"] {
     display: none !important;
 }

@@ -330,7 +330,7 @@ function isBtnActive(label: string): boolean | null {
     if (ariaPressed === "true") return true;
     if (ariaPressed === "false") return false;
 
-    if (el.classList.contains("plateMuted__67645") || scope.classList.contains("plateMuted__67645")) return true;
+    if (el.classList.contains("plateMuted_Y-8oZW") || scope.classList.contains("plateMuted_Y-8oZW")) return true;
 
     return null;
 }
@@ -430,7 +430,7 @@ function markPanelEdges() {
     if (!section) return;
     const items: { el: HTMLElement; order: number; index: number; }[] = [];
     const add = (el: HTMLElement) => {
-        const target = el.matches('[class*="mask__"]') ? el.querySelector<HTMLElement>(':scope > [class*="wrapper__"]') : el;
+        const target = el.matches('[class*="mask_"]') ? el.querySelector<HTMLElement>(':scope > [class*="wrapper_"]') : el;
         if (!target || target.offsetHeight === 0) return;
         items.push({ el: target, order: Number(getComputedStyle(el).order) || 0, index: items.length });
     };
@@ -449,8 +449,16 @@ function markPanelEdges() {
     }
 }
 
+function updateRailHover(event: PointerEvent) {
+    const target = event.type === "pointerout" ? event.relatedTarget : event.target;
+    const overRail = target instanceof Element && target.closest('nav[class*="guilds_"], [data-window-chrome] > [class*="leading_"]');
+    document.documentElement.toggleAttribute("data-hc-rail-hover", Boolean(overRail));
+}
+
 function startObserver() {
     if (observer) return;
+    document.addEventListener("pointerover", updateRailHover, { passive: true });
+    document.addEventListener("pointerout", updateRailHover, { passive: true });
     observer = setInterval(() => {
         if (updateQueued) return;
         updateQueued = true;
@@ -466,6 +474,9 @@ function startObserver() {
 }
 
 function stopObserver() {
+    document.removeEventListener("pointerover", updateRailHover);
+    document.removeEventListener("pointerout", updateRailHover);
+    document.documentElement.removeAttribute("data-hc-rail-hover");
     if (observer) {
         clearInterval(observer);
         observer = null;
@@ -497,7 +508,7 @@ function gridCSS(selector: string, cols: number, gap: number) {
             justify-content: start !important;
             flex-shrink: 0 !important;
         }
-        ${selector} .audioButtonParent__5e764 {
+        ${selector} .audioButtonParent_gKpIZP {
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
@@ -735,7 +746,7 @@ function buildCSS(): string {
             `;
         })() : ""}
 
-        .panel__5dec7 {
+        .panel_8eCwJY {
             border-radius: 0;
         }
 
@@ -855,7 +866,7 @@ function buildCSS(): string {
     }
 
     if (st.iconSize !== 20) {
-        lines.push(`${S.panelButtons} ${S.panelButton} svg, ${S.panelButtons} ${S.panelButton} .lottieIcon__5eb9b { width: ${st.iconSize}px !important; height: ${st.iconSize}px !important; }`);
+        lines.push(`${S.panelButtons} ${S.panelButton} svg, ${S.panelButtons} ${S.panelButton} .lottieIcon_69Onuk { width: ${st.iconSize}px !important; height: ${st.iconSize}px !important; }`);
     }
     if (st.buttonContainerSize !== 32) {
         lines.push(`
@@ -864,7 +875,7 @@ function buildCSS(): string {
                 min-width: unset !important; min-height: unset !important; padding: 0 !important;
                 display: flex !important; align-items: center !important; justify-content: center !important;
             }
-            ${S.panelButtons} ${S.panelButton} .contents__201d5 { display: flex !important; align-items: center !important; justify-content: center !important; }
+            ${S.panelButtons} ${S.panelButton} .contents_9OQtot { display: flex !important; align-items: center !important; justify-content: center !important; }
         `);
     }
 
@@ -910,7 +921,7 @@ function buildCSS(): string {
         const bgColor = applyColorAlpha(st.panelBackgroundColor, 100 - st.panelBackgroundOpacity);
         lines.push(`
             section[class*="panels_"],
-            .panels__5e434 {
+            .panels_pog62O {
                 background: ${bgColor} !important;
                 background-color: ${bgColor} !important;
             }
@@ -928,7 +939,7 @@ function buildCSS(): string {
     }
 
     if ((st.buttonStyle === "outlineold" || st.buttonStyle === "outlined") && st.hoverEffect === "glow") {
-        lines.push(`${S.panelButtons} ${S.panelButton}.plated__67645:not(.plateMuted__67645) { background: transparent !important }`);
+        lines.push(`${S.panelButtons} ${S.panelButton}.plated_Y-8oZW:not(.plateMuted_Y-8oZW) { background: transparent !important }`);
     }
 
     if (st.buttonStyle === "outlineold" || st.buttonStyle === "outlined") {
@@ -941,7 +952,7 @@ function buildCSS(): string {
     if (st.hidePingIcon) lines.push(`${S.pingIcon} { display: none !important; }`);
     if (st.callCompact) {
         lines.push(`${S.callControls} ${S.callButton}[type="button"] { min-width: unset !important; padding: 4px 8px !important; flex: unset !important; }`);
-        lines.push(`${S.callControls} ${S.callButton}[type="button"] .lottieIcon__5eb9b, ${S.callControls} ${S.callButton} svg { width: 18px !important; height: 18px !important; }`);
+        lines.push(`${S.callControls} ${S.callButton}[type="button"] .lottieIcon_69Onuk, ${S.callControls} ${S.callButton} svg { width: 18px !important; height: 18px !important; }`);
     }
     if (st.hideUserPanelButton) lines.push(`${getBtnSelector("Panel Layout")} { display: none !important; }`);
 
@@ -961,9 +972,9 @@ function buildCSS(): string {
 
     if (st.fixProfileNameplate) {
         lines.push(`
-            ${S.panelContainer} .container_df39b2 { border-radius: 0px !important; }
+            ${S.panelContainer} .container_AFi54G { border-radius: 0px !important; }
             ${S.panelContainer} { border-radius: 0px !important; }
-            .panels__5e434 { overflow: visible !important; clip-path: none !important; }
+            .panels_pog62O { overflow: visible !important; clip-path: none !important; }
         `);
     }
 
@@ -979,8 +990,8 @@ function buildCSS(): string {
                 font-family: var(--font-code) !important;
             }
 
-            .container__37e49 .hovered__0263c,
-            .hoverRoll__0263c.forceHover__0263c:not(.disabled__0263c) .default__0263c {
+            .container_g6VwXp .hovered_Dq3ch1,
+            .hoverRoll_Dq3ch1.forceHover_Dq3ch1:not(.disabled_Dq3ch1) .default_Dq3ch1 {
                 opacity: 1 !important;
                 transform: none;
             }
@@ -1013,7 +1024,7 @@ function buildCustomCSS(): string {
 
     lines.push(`
         section[class*="panels_"],
-        .panels__5e434 {
+        .panels_pog62O {
             display: flex !important;
             flex-direction: column !important;
         }
@@ -1022,15 +1033,15 @@ function buildCustomCSS(): string {
     const edgeRadius = "calc(var(--radius-lg, 16px) - 2px)";
     lines.push(`
         /* Discord's empty quest overlay sits above the hovered card's buttons and swallows their clicks */
-        section[class*="panels_"] > [class*="mask__"] [class*="overlay__"] { pointer-events: none !important; }
-        section[class*="panels_"] > [class*="mask__"] > [data-hc-edge~="top"],
-        section[class*="panels_"] > [class*="mask__"] > [data-hc-edge~="top"] [class*="contentWrapper__"],
-        section[class*="panels_"] > [class*="mask__"] > [data-hc-edge~="top"] [class*="contentWrapper__"]::after,
-        section[class*="panels_"] > [class*="mask__"] > [data-hc-edge~="top"] [class*="overlay__"] {
+        section[class*="panels_"] > [class*="mask_"] [class*="overlay_"] { pointer-events: none !important; }
+        section[class*="panels_"] > [class*="mask_"] > [data-hc-edge~="top"],
+        section[class*="panels_"] > [class*="mask_"] > [data-hc-edge~="top"] [class*="contentWrapper_"],
+        section[class*="panels_"] > [class*="mask_"] > [data-hc-edge~="top"] [class*="contentWrapper_"]::after,
+        section[class*="panels_"] > [class*="mask_"] > [data-hc-edge~="top"] [class*="overlay_"] {
             border-top-left-radius: ${edgeRadius} !important;
             border-top-right-radius: ${edgeRadius} !important;
         }
-        section[class*="panels_"] > [class*="mask__"] > [data-hc-edge~="top"] [class*="overlay__"] { overflow: hidden; }
+        section[class*="panels_"] > [class*="mask_"] > [data-hc-edge~="top"] [class*="overlay_"] { overflow: hidden; }
         section[class*="panels_"] > [data-hc-edge="top"],
         section[class*="panels_"] > .vc-panel-layout-modules-container > [data-hc-edge="top"] { clip-path: inset(0 0 -100vh 0 round ${edgeRadius} ${edgeRadius} 0 0); }
         section[class*="panels_"] > [data-hc-edge="bottom"],
@@ -1044,7 +1055,7 @@ function buildCustomCSS(): string {
         const bannerModuleOn = userAreaOrder.some(it => (it.id === "activity-banner" || it.moduleId === "activity-banner") && it.enabled);
         // The quest card has no reorder item; keep it just above the first Discord panel so top modules stay above it
         const nativeIdx = userAreaOrder.findIndex(it => it.type === "voice-connected" || it.type === "account-panel" || it.type === "native-activity-banner");
-        if (nativeIdx >= 0) lines.push(`section[class*="panels_"] > [class*="mask__"] { order: ${(nativeIdx + 1) * 10 - 5} !important; }`);
+        if (nativeIdx >= 0) lines.push(`section[class*="panels_"] > [class*="mask_"] { order: ${(nativeIdx + 1) * 10 - 5} !important; }`);
         userAreaOrder.forEach((item, idx) => {
             const orderVal = (idx + 1) * 10;
             const hiddenStyle = !item.enabled ? "display: none !important;" : "";
@@ -1074,7 +1085,7 @@ function buildCustomCSS(): string {
             } else if (item.type === "account-panel") {
                 lines.push(`
                     section[class*="panels_"] > ${S.panelContainer},
-                    section[class*="panels_"] > [class*="container__37e49"] {
+                    section[class*="panels_"] > [class*="container_g6VwXp"] {
                         order: ${orderVal} !important;
                         ${hiddenStyle}
                     }
@@ -3001,7 +3012,7 @@ function SettingModalItem({
     const isTogglePluginPanel = canonical === "Toggle Plugin Panel";
     const isMute = canonical === "Mute";
     const isDeafen = canonical === "Deafen";
-    const defaultPreviewOnClasses = "buttonPreview previewButtonOn icon-color-fix button__201d5 lookBlank__201d5";
+    const defaultPreviewOnClasses = "buttonPreview previewButtonOn icon-color-fix button_9OQtot lookBlank_9OQtot";
     const defaultPreviewOffClasses = "buttonPreview previewButtonOff icon-color-fix";
 
     const [targetSize, setTargetSize] = React.useState(() => {
@@ -3216,7 +3227,7 @@ function SettingModalItem({
                             <Flex flexDirection="column" alignItems="center" gap={8}>
                                 <BaseText size="xs" color="text-muted">OFF State</BaseText>
                                 <button
-                                    className={!isTogglePluginPanel && !isMute && !isDeafen && !isCamera && !isScreenShare ? `${defaultPreviewOffClasses} plateMuted__67645` : ((isCamera && !callButtonStylingCamera) || (isScreenShare && !callButtonStylingScreenShare) || (isSoundboard && !callButtonStylingSoundboard) || (isActivity && !callButtonStylingActivity)) ? `${defaultPreviewOffClasses} call-button-style` : defaultPreviewOffClasses}
+                                    className={!isTogglePluginPanel && !isMute && !isDeafen && !isCamera && !isScreenShare ? `${defaultPreviewOffClasses} plateMuted_Y-8oZW` : ((isCamera && !callButtonStylingCamera) || (isScreenShare && !callButtonStylingScreenShare) || (isSoundboard && !callButtonStylingSoundboard) || (isActivity && !callButtonStylingActivity)) ? `${defaultPreviewOffClasses} call-button-style` : defaultPreviewOffClasses}
                                     data-deracul-label={cfg.label}
                                     style={{
                                         "--custom-nameplate-neutral-hovered": customNameplateNeutralHovered,
@@ -3269,7 +3280,7 @@ function SettingModalItem({
                                 <BaseText size="xs" color="text-muted">ON State</BaseText>
                             )}
                             <button
-                                className={(isMute || isDeafen) ? `${defaultPreviewOnClasses} plateMuted__67645` : (isScreenShare || isCamera) ? `${defaultPreviewOnClasses} background-color-green${((isCamera && !callButtonStylingCamera) || (isScreenShare && !callButtonStylingScreenShare) || (isSoundboard && !callButtonStylingSoundboard) || (isActivity && !callButtonStylingActivity)) ? " call-button-style" : " "}` : defaultPreviewOnClasses}
+                                className={(isMute || isDeafen) ? `${defaultPreviewOnClasses} plateMuted_Y-8oZW` : (isScreenShare || isCamera) ? `${defaultPreviewOnClasses} background-color-green${((isCamera && !callButtonStylingCamera) || (isScreenShare && !callButtonStylingScreenShare) || (isSoundboard && !callButtonStylingSoundboard) || (isActivity && !callButtonStylingActivity)) ? " call-button-style" : " "}` : defaultPreviewOnClasses}
                                 data-deracul-label={cfg.label}
                                 style={{
                                     "--custom-nameplate-neutral-hovered": customNameplateNeutralHovered,

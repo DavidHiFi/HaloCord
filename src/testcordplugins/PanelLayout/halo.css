@@ -130,8 +130,8 @@ html.hc-theming [data-window-chrome] > [class*="leading_"] > [class*="backForwar
 }
 
 html.hc-theming [data-window-chrome] > [class*="leading_"]:hover,
-html.hc-theming:has(nav[class*="guilds_"]:hover) [data-window-chrome] > [class*="leading_"],
-html.hc-theming:has([data-window-chrome] > [class*="leading_"]:hover) nav[class*="guilds_"] {
+html.hc-theming[data-hc-rail-hover] [data-window-chrome] > [class*="leading_"],
+html.hc-theming[data-hc-rail-hover] nav[class*="guilds_"] {
     border-color: var(--border-hover, var(--hc-accent));
 }
 

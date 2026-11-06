@@ -297,7 +297,7 @@ export function UserAreaReorderTab({
                 <SectionHeading>User Area Preview</SectionHeading>
 
                 <div
-                    className="panels__5e434 vc-user-area-preview-panel"
+                    className="panels_pog62O vc-user-area-preview-panel"
                     style={{
                         width: "270px",
                         backgroundColor: "var(--background-secondary-alt, #111214)",
@@ -682,7 +682,7 @@ function LivePreviewBlock({
 function LiveActivityBannerPreview() {
     return (
         <div
-            className="activityPanel__37e49 vc-actbanner-preview"
+            className="activityPanel_pog62O vc-actbanner-preview"
             style={{
                 backgroundColor: "var(--background-secondary-alt, #1e1f22)",
                 padding: "8px 12px",
@@ -990,15 +990,15 @@ function ActionButtonsRow({ pluginSettings }: { pluginSettings?: any; }) {
 function getActiveNameplate(user: any): { src?: string; video?: string; poster?: string; bg?: string; neutral?: string; neutralHovered?: string; } | null {
     try {
         const realPanels = document.querySelectorAll(
-            'section[class*="panels_"]:not(.vc-panels-preview), .panels__5e434:not(.vc-panels-preview), [class*="sidebar_"] [class*="panels_"]'
+            'section[class*="panels_"]:not(.vc-panels-preview), .panels_pog62O:not(.vc-panels-preview), [class*="sidebar_"] [class*="panels_"]'
         );
 
         for (const p of Array.from(realPanels)) {
             const video = p.querySelector<HTMLVideoElement>(
-                '.container_df39b2 video, [class*="container_df39b2"] video, [class*="nameplate"] video'
+                '.container_AFi54G video, [class*="container_AFi54G"] video, [class*="nameplate"] video'
             );
             if (video?.poster || video?.currentSrc || video?.src) {
-                const parent = video.closest('.container_df39b2, [class*="container_df39b2"], .container__37e49') || video.parentElement;
+                const parent = video.closest('.container_AFi54G, [class*="container_AFi54G"], .container_g6VwXp') || video.parentElement;
                 const computed = parent ? window.getComputedStyle(parent) : null;
                 return {
                     video: video.currentSrc || video.src || undefined,
@@ -1008,7 +1008,7 @@ function getActiveNameplate(user: any): { src?: string; video?: string; poster?:
                 };
             }
 
-            const nameplateContainer = p.querySelector<HTMLElement>('.container_df39b2, [class*="container_df39b2"], [class*="nameplate"]');
+            const nameplateContainer = p.querySelector<HTMLElement>('.container_AFi54G, [class*="container_AFi54G"], [class*="nameplate"]');
             if (nameplateContainer) {
                 const computed = window.getComputedStyle(nameplateContainer);
                 const bg = computed.backgroundImage;
@@ -1021,7 +1021,7 @@ function getActiveNameplate(user: any): { src?: string; video?: string; poster?:
                 }
             }
 
-            const userArea = p.querySelector<HTMLElement>('.container__37e49, [class*="container__37e49"]');
+            const userArea = p.querySelector<HTMLElement>('.container_g6VwXp, [class*="container_g6VwXp"]');
             if (userArea) {
                 const computed = window.getComputedStyle(userArea);
                 const bg = computed.backgroundImage;
@@ -1038,7 +1038,7 @@ function getActiveNameplate(user: any): { src?: string; video?: string; poster?:
 
         // Also check document-wide for any active user area nameplate video
         const anyNameplateVideo = document.querySelector<HTMLVideoElement>(
-            '.container_df39b2 video, [class*="container_df39b2"] video, .container__37e49 [class*="nameplate"] video'
+            '.container_AFi54G video, [class*="container_AFi54G"] video, .container_g6VwXp [class*="nameplate"] video'
         );
         if (anyNameplateVideo?.poster || anyNameplateVideo?.currentSrc || anyNameplateVideo?.src) {
             return {
@@ -1078,7 +1078,7 @@ function getActiveNameplate(user: any): { src?: string; video?: string; poster?:
 function getActiveNameplateBackground(user: any): string | null {
     try {
         const realPanels = document.querySelectorAll(
-            'section[class*="panels_"]:not(.vc-panels-preview), .panels__5e434:not(.vc-panels-preview), [class*="sidebar_"] [class*="panels_"]'
+            'section[class*="panels_"]:not(.vc-panels-preview), .panels_pog62O:not(.vc-panels-preview), [class*="sidebar_"] [class*="panels_"]'
         );
 
         const readBackground = (container: HTMLElement | null): string | null => {
@@ -1101,11 +1101,11 @@ function getActiveNameplateBackground(user: any): string | null {
 
         for (const p of Array.from(realPanels)) {
             const video = p.querySelector<HTMLVideoElement>(
-                '.container_df39b2 video, [class*="container_df39b2"] video, [class*="nameplate"] video'
+                '.container_AFi54G video, [class*="container_AFi54G"] video, [class*="nameplate"] video'
             );
             const container = video
-                ? (video.closest('.container_df39b2, [class*="container_df39b2"], .container__37e49') as HTMLElement | null)
-                : p.querySelector<HTMLElement>('.container_df39b2, [class*="container_df39b2"], [class*="nameplate"]');
+                ? (video.closest('.container_AFi54G, [class*="container_AFi54G"], .container_g6VwXp') as HTMLElement | null)
+                : p.querySelector<HTMLElement>('.container_AFi54G, [class*="container_AFi54G"], [class*="nameplate"]');
 
             const bg = readBackground(container);
             if (bg) return bg;
@@ -1113,7 +1113,7 @@ function getActiveNameplateBackground(user: any): string | null {
 
         // Document-wide fallback, mirroring getActiveNameplate's fallback search.
         const anyContainer = document.querySelector<HTMLElement>(
-            '.container_df39b2, [class*="container_df39b2"]'
+            '.container_AFi54G, [class*="container_AFi54G"]'
         );
         const bg = readBackground(anyContainer);
         if (bg) return bg;
@@ -1184,7 +1184,7 @@ function LiveAccountProfilePreview({ pluginSettings }: { pluginSettings?: any; }
         >
             {nameplate && (
                 <div
-                    className="container_df39b2 vc-preview-nameplate"
+                    className="container_AFi54G vc-preview-nameplate"
                     style={{
                         position: "absolute",
                         inset: 0,
@@ -1196,7 +1196,7 @@ function LiveAccountProfilePreview({ pluginSettings }: { pluginSettings?: any; }
                 >
                     {nameplate.video ? (
                         <video
-                            className="img_df39b2 account_df39b2"
+                            className="img_AFi54G account_AFi54G"
                             src={nameplate.video}
                             poster={nameplate.poster}
                             autoPlay
@@ -1395,7 +1395,7 @@ function LiveVoiceConnectedPreview({ pluginSettings }: { pluginSettings?: any; }
 
     return (
         <div
-            className="container_e131a9 vc-call-bar-preview"
+            className="container_9U6LUN vc-call-bar-preview"
             style={{
                 padding: compact ? "6px 8px" : "8px 10px",
                 display: "flex",
