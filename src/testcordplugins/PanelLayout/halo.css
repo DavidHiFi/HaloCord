@@ -172,3 +172,24 @@ html.hc-theming [data-call-tile] [class*="overlayIconsContainer_"] > :is([class*
     padding: 4px 8px;
     border-radius: 8px;
 }
+
+/* Dock buttons glow on hover instead of growing or showing a box. */
+html.hc-theming [data-window-chrome] > [class*="trailing_"] :is([class*="clickable_"], [role="button"], a, button):is(:hover, :active) {
+    transform: none !important;
+    scale: none !important;
+    background: transparent !important;
+}
+
+html.hc-theming [data-window-chrome] > [class*="trailing_"] :is([class*="clickable_"], [role="button"], a, button) svg {
+    transition: filter 0.2s ease, color 0.2s ease;
+}
+
+html.hc-theming [data-window-chrome] > [class*="trailing_"] :is([class*="clickable_"], [role="button"], a, button):hover svg {
+    color: var(--border-hover, var(--hc-accent));
+    filter: drop-shadow(0 0 4px var(--border-hover, var(--hc-accent)));
+}
+
+/* Server list starts right under the arrow cap. */
+html.hc-theming nav[class*="guilds_"] [class*="scroller_"] {
+    padding-top: 4px !important;
+}
