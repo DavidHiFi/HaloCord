@@ -467,7 +467,7 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
                 replace: "className:$self.getActionRowClassName($1()($2)),style:{bottom:$3.value},children:"
             },
             {
-                match: /className:(\i)\.Vx,style:\{([^{}]{0,180}?)\}(?=,children:\(0,\i\.jsx\)\(\i\.Ay)/,
+                match: /className:(\i)\.Vx,style:\{([^{}]{0,180}?)\}(?=,children:\(0,\i\.jsx\)\(\i\.\i,\{channel:)/,
                 replace: "className:$self.getParticipantsWrapperClassName($1.Vx),style:$self.getParticipantsWrapperStyle({$2})"
             }
         ]
