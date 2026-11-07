@@ -1305,9 +1305,9 @@ html.hc-theming[data-hc-theme="mochacord"] [class~="panels_pog62O"] :is(button[c
     color: var(--hc-accent);
 }
 
-/* User area docks: the version banner on top and the ping, memory and uptime bar below are lighter strips with a hairline, and a hairline splits the name row from the buttons. */
+/* User area docks: the version banner on top and the ping, memory and uptime bar below are dark strips with a hairline, and a full width hairline splits the name row from the buttons. */
 html.hc-theming [class~="panels_pog62O"] {
-    --hc-dock-strip: rgb(var(--hc-accent-rgb) / 7%);
+    --hc-dock-strip: rgb(17 17 27 / 55%);
     --hc-dock-line: rgb(205 214 244 / 12%);
 }
 
@@ -1325,10 +1325,65 @@ html.hc-theming [class~="panels_pog62O"] .vc-panel-sysmonitor-widget {
 }
 
 html.hc-theming [class~="panels_pog62O"] .vc-panel-sysmonitor-widget:hover {
-    background-color: rgb(var(--hc-accent-rgb) / 12%);
+    background-color: rgb(var(--hc-accent-rgb) / 8%);
 }
 
 html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"] {
+    position: relative;
     margin-top: 4px;
-    border-top: 1px solid var(--hc-dock-line);
+    transition: background-color 0.16s ease-out, box-shadow 0.16s ease-out;
+}
+
+html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]::before {
+    content: "";
+    position: absolute;
+    top: -3px;
+    right: -8px;
+    left: -8px;
+    height: 1px;
+    background: var(--hc-dock-line);
+    pointer-events: none;
+}
+
+html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]:hover {
+    background-color: var(--hc-flyout-bg) !important;
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
+}
+
+/* Voice channel rows in the sidebar: the Mocha plate and accent ring instead of the grey tint. */
+html.hc-theming [class~="voiceUser_YUoOxm"]:hover [class~="content_YUoOxm"] {
+    background-color: var(--hc-flyout-bg) !important;
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
+}
+
+/* Discord tints hovers, selected rows, tabs, search fields and secondary buttons with a light grey; under MochaCord they take crust fills and the accent instead. */
+html.hc-theming[data-hc-theme="mochacord"],
+html.hc-theming[data-hc-theme="mochacord"] :is(.theme-dark, .theme-darker, .theme-midnight) {
+    --interactive-background-hover: rgb(var(--hc-accent-rgb) / 8%) !important;
+    --interactive-background-active: rgb(var(--hc-accent-rgb) / 12%) !important;
+    --interactive-background-selected: rgb(var(--hc-accent-rgb) / 16%) !important;
+    --background-mod-muted: rgb(17 17 27 / 30%) !important;
+    --background-mod-subtle: rgb(17 17 27 / 45%) !important;
+    --background-mod-normal: rgb(17 17 27 / 60%) !important;
+    --background-mod-strong: rgb(var(--hc-accent-rgb) / 16%) !important;
+    --message-background-hover: rgb(17 17 27 / 35%) !important;
+    --control-secondary-background-default: rgb(17 17 27 / 55%) !important;
+    --control-secondary-background-hover: rgb(var(--hc-accent-rgb) / 14%) !important;
+    --control-secondary-background-active: rgb(var(--hc-accent-rgb) / 20%) !important;
+    --control-icon-only-background-hover: rgb(var(--hc-accent-rgb) / 14%) !important;
+    --control-icon-only-background-active: rgb(var(--hc-accent-rgb) / 20%) !important;
+    --control-icon-only-border-hover: rgb(var(--hc-accent-rgb) / 35%) !important;
+}
+
+/* Friends list row buttons (message, more): a Mocha ring at rest, a blue to mauve ring on hover. */
+html.hc-theming[data-hc-theme="mochacord"] [class~="peopleListItem_y75PxA"] [class*="actionButton_"] {
+    border: 1px solid #45475a;
+    background: var(--hc-flyout-bg) !important;
+    transition: border-color 0.16s ease-out, color 0.16s ease-out;
+}
+
+html.hc-theming[data-hc-theme="mochacord"] [class~="peopleListItem_y75PxA"] [class*="actionButton_"]:hover {
+    border-color: transparent;
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, linear-gradient(135deg, #89b4fa, #cba6f7) border-box !important;
+    color: var(--hc-text);
 }

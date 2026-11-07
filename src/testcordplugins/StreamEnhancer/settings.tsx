@@ -751,7 +751,9 @@ export const getConfiguredStreamPixelCount = (fallback?: number) => {
 
 export const getConfiguredStreamBitrateTarget = () => getConfig().streamVideoBitrateKbps * 1000;
 
-export const getConfiguredStreamBitrateMin = () => getConfig().streamMinVideoBitrateKbps * 1000;
+const maxStreamBitrateFloorKbps = 2500;
+
+export const getConfiguredStreamBitrateMin = () => Math.min(getConfig().streamMinVideoBitrateKbps, maxStreamBitrateFloorKbps) * 1000;
 
 export const getConfiguredStreamBitrateMax = getConfiguredStreamBitrateTarget;
 

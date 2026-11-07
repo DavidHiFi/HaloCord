@@ -547,4 +547,11 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
             replace: "$1return!1"
         }
     },
+    {
+        find: 'location:"VideoStream",videoSpinnerContext',
+        replacement: {
+            match: /(\i)===(\i\.\i)\.SELF_STREAM\|\|\1===\2\.REMOTE_STREAM\?(\i\.\i\.STREAM:\i\.\i\.DEFAULT;return \i\.useEffect\(\(\)=>\{if\()/,
+            replace: "$&$1===$2.SELF_STREAM||"
+        }
+    },
 ];

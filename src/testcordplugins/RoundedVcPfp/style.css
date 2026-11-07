@@ -70,7 +70,15 @@ div[data-selenium-video-tile][style*="--vc-pfp-hide-bg"] [class*="background"] {
    tiles never carry the speaking marker; the stream exclusion is a backstop. No transition: fading a blurred shadow repaints it every
    frame. */
 div[data-selenium-video-tile][style*="--vc-pfp-speaking"]:not([style*="--vc-pfp-ring-pic"], [style*="--vc-pfp-stream"]) {
-    box-shadow: 0 0 0 2px var(--vc-pfp-custom-glow, var(--status-speaking, #23a55a)), 0 0 16px 3px color-mix(in srgb, var(--vc-pfp-custom-glow, var(--status-speaking, #23a55a)) 50%, transparent) !important;
+    box-shadow: 0 0 0 2px var(--vc-pfp-custom-glow, var(--status-speaking, #23a55a)), -6px 0 16px 3px color-mix(in srgb, var(--vc-pfp-custom-glow, var(--status-speaking, #23a55a)) 50%, transparent), 6px 0 16px 3px color-mix(in srgb, var(--vc-pfp-custom-glow-2, var(--vc-pfp-custom-glow, var(--status-speaking, #23a55a))) 50%, transparent) !important;
+}
+
+html.vc-rvcpfp-hover-glow div[data-selenium-video-tile]:not([style*="--vc-pfp-ring-pic"], [style*="--vc-pfp-stream"]):hover {
+    box-shadow: 0 0 0 1px var(--vc-rvcpfp-glow-1), -6px 0 14px 2px color-mix(in srgb, var(--vc-rvcpfp-glow-1) 40%, transparent), 6px 0 14px 2px color-mix(in srgb, var(--vc-rvcpfp-glow-2) 40%, transparent) !important;
+}
+
+html.vc-rvcpfp-hover-glow div[data-selenium-video-tile][style*="--vc-pfp-ring-pic"]:not([style*="--vc-pfp-speaking"], [style*="--vc-pfp-stream"]):hover div[role="img"] {
+    filter: drop-shadow(-1px -1px 2px var(--vc-rvcpfp-glow-1)) drop-shadow(1px 1px 2px var(--vc-rvcpfp-glow-2)) drop-shadow(-3px 0 6px var(--vc-rvcpfp-glow-1)) drop-shadow(3px 0 6px var(--vc-rvcpfp-glow-2)) !important;
 }
 
 /* Camera tiles have no picture, so they keep Discord's own tile border */

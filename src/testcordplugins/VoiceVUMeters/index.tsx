@@ -1293,7 +1293,7 @@ function stopEvent(event: React.SyntheticEvent) {
 }
 
 // List rows center the meter, so this margin moves it down by half its value to make room for the number above it
-const ROW_PEAK_NUMBER_ROOM = 6;
+const ROW_PEAK_NUMBER_ROOM = 9;
 
 const VoiceMeter = ErrorBoundary.wrap(({ userId, kind, height = BAR_HEIGHT, width = BAR_WIDTH, style }: { userId: string; kind: "row" | "tile"; height?: number | string; width?: number; style?: React.CSSProperties; }) => {
     const { showWhileDeafened } = settings.use(["showPeak", "showWhileDeafened", "showPeakNumbers", "peakNumberUsers", "peakNumberSurfaces"]);
@@ -1400,7 +1400,7 @@ const VoiceMeter = ErrorBoundary.wrap(({ userId, kind, height = BAR_HEIGHT, widt
             : "Left | Right after your local pan. Discord Desktop reports one level per participant, so both bars carry it.";
 
     const rootStyle: React.CSSProperties = { position: "relative", display: "flex", alignItems: "stretch", height, ...style };
-    if (peakNumberShown && kind === "row") rootStyle.marginTop = ROW_PEAK_NUMBER_ROOM;
+    if (peakNumberShown && kind === "row") Object.assign(rootStyle, { marginTop: ROW_PEAK_NUMBER_ROOM, transform: "none" });
 
     return (
         <div ref={attachRoot} style={rootStyle} data-vu-meter={measured ? "lr" : "level"} title={title}>

@@ -56,6 +56,13 @@ const HEX_COLOR = /^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 // override recolors it on the root and on each nested theme container.
 let glowObserver: MutationObserver | undefined;
 
+function getGlowColors(): [string, string] {
+    const color = settings.store.glowColor.trim();
+    const first = settings.store.overrideGlow && HEX_COLOR.test(color) ? color : "var(--status-speaking, #23a55a)";
+    const second = settings.store.glowColor2.trim();
+    return [first, HEX_COLOR.test(second) ? second : first];
+}
+
 function applyGlowOverride() {
     const root = document.documentElement;
     const color = settings.store.glowColor.trim();
@@ -63,6 +70,10 @@ function applyGlowOverride() {
     root.classList.toggle("vc-rvcpfp-override-glow", on);
     if (on) root.style.setProperty("--vc-rvcpfp-glow-color", color);
     else root.style.removeProperty("--vc-rvcpfp-glow-color");
+    const [first, second] = getGlowColors();
+    root.classList.toggle("vc-rvcpfp-hover-glow", settings.store.hoverGlow);
+    root.style.setProperty("--vc-rvcpfp-glow-1", first);
+    root.style.setProperty("--vc-rvcpfp-glow-2", second);
 }
 
 // Profile fetches run one at a time. A full channel used to fire every
@@ -216,6 +227,22 @@ const settings = definePluginSettings({
         isValid(value: string) {
             return HEX_COLOR.test(value.trim()) ? true : "Enter a hex color like #45475a.";
         }
+    },
+    glowColor2: {
+        type: OptionType.STRING,
+        description: "Second hex color for a gradient glow, for example #cba6f7 for mauve. Leave empty for a single color.",
+        placeholder: "#CBA6F7",
+        default: "",
+        onChange: applyGlowOverride,
+        isValid(value: string) {
+            return !value.trim() || HEX_COLOR.test(value.trim()) ? true : "Enter a hex color like #cba6f7, or leave it empty.";
+        }
+    },
+    hoverGlow: {
+        type: OptionType.BOOLEAN,
+        description: "Light the glow on a call tile while you hover over it.",
+        default: false,
+        onChange: applyGlowOverride
     }
 });
 
@@ -238,6 +265,8 @@ export default definePlugin({
             const color = settings.store.glowColor.trim();
             const on = settings.store.overrideGlow && HEX_COLOR.test(color);
             if (root.classList.contains("vc-rvcpfp-override-glow") !== on
+                || root.classList.contains("vc-rvcpfp-hover-glow") !== settings.store.hoverGlow
+                || root.style.getPropertyValue("--vc-rvcpfp-glow-2") !== getGlowColors()[1]
                 || (on && root.style.getPropertyValue("--vc-rvcpfp-glow-color") !== color)) applyGlowOverride();
         });
         glowObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "style"] });
@@ -248,7 +277,8 @@ export default definePlugin({
         glowObserver = undefined;
         window.removeEventListener("testcord-vu-audio-change", onAudioActivityChange);
         document.documentElement.classList.remove("vc-rvcpfp-override-glow");
-        document.documentElement.style.removeProperty("--vc-rvcpfp-glow-color");
+        document.documentElement.classList.remove("vc-rvcpfp-hover-glow");
+        for (const prop of ["--vc-rvcpfp-glow-color", "--vc-rvcpfp-glow-1", "--vc-rvcpfp-glow-2"]) document.documentElement.style.removeProperty(prop);
         for (const timer of bannerRetryTimers) clearTimeout(timer);
         bannerRetryTimers.clear();
         bannerFetchQueue.length = 0;
@@ -289,7 +319,7 @@ export default definePlugin({
         useStateFromStores([audioActivityStore], audioActivityStore.getVersion, []);
         // the glow hides while deafened unless VoiceVUMeters' option keeps it
         useStateFromStores([MediaEngineStore], () => MediaEngineStore.isDeaf(), []);
-        useSettings(["plugins.VoiceVUMeters.showWhileDeafened", "plugins.RoundedVCPFP.overrideGlow", "plugins.RoundedVCPFP.glowColor"]);
+        useSettings(["plugins.VoiceVUMeters.showWhileDeafened", "plugins.RoundedVCPFP.overrideGlow", "plugins.RoundedVCPFP.glowColor", "plugins.RoundedVCPFP.glowColor2"]);
     },
 
     getVoiceBackgroundStyles({ className, participantUserId, children }: { className?: string; participantUserId?: string; children?: unknown; }) {
@@ -336,9 +366,8 @@ export default definePlugin({
         }
         const ringPic = settings.store.speakingIndicator === "picture";
         // Picture mode puts the speaking ring in the filter, other tiles get a box from the stylesheet
-        const glowColor = settings.store.overrideGlow && HEX_COLOR.test(settings.store.glowColor.trim())
-            ? settings.store.glowColor.trim() : "var(--status-speaking, #23a55a)";
-        const glowFilter = ringPic && speakingGlow ? `drop-shadow(0 0 2px ${glowColor}) drop-shadow(0 0 8px ${glowColor})` : "";
+        const [glowColor, glowColor2] = getGlowColors();
+        const glowFilter = ringPic && speakingGlow ? `drop-shadow(-1px -1px 2px ${glowColor}) drop-shadow(1px 1px 2px ${glowColor2}) drop-shadow(-3px 0 8px ${glowColor}) drop-shadow(3px 0 8px ${glowColor2})` : "";
         return {
             "--full-res-avatar": `url("${avatarUrl}")`,
             "--vc-pfp-radius": `${Math.round(settings.store.cornerRadius)}px`,
@@ -374,7 +403,8 @@ export default definePlugin({
             // configured color; themes and any other stylesheet consume it.
             "--vc-pfp-glow-slot": "1",
             "--vc-pfp-glow-filter": glowFilter,
-            "--vc-pfp-custom-glow": glowColor
+            "--vc-pfp-custom-glow": glowColor,
+            "--vc-pfp-custom-glow-2": glowColor2
         };
     },
 });
