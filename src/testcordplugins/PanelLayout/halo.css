@@ -98,6 +98,7 @@ html.hc-theming [data-call-tile] :is([class*="experimentOverlayTitle_"], [class*
     background: color-mix(in srgb, var(--hc-window-bg) 82%, transparent);
     backdrop-filter: blur(24px) saturate(140%);
     color: var(--hc-text);
+    transition: border-color 0.16s ease-out, background 0.16s ease-out;
 }
 
 html.hc-theming [data-list-item-id="guildsnav___home"] :is(img, svg) {
@@ -129,12 +130,6 @@ html.hc-theming [data-window-chrome] > [class*="leading_"] > [class*="backForwar
     padding: 0;
 }
 
-html.hc-theming [data-window-chrome] > [class*="leading_"]:hover,
-html.hc-theming[data-hc-rail-hover] [data-window-chrome] > [class*="leading_"],
-html.hc-theming[data-hc-rail-hover] nav[class*="guilds_"] {
-    border-color: var(--border-hover, var(--hc-accent));
-}
-
 html.hc-theming nav[class*="guilds_"] {
     border-top: 0;
     border-top-left-radius: 0;
@@ -158,10 +153,6 @@ html.hc-theming [data-window-chrome] > [class*="trailing_"] {
     transition: border-color var(--border-hover-transition, 0.2s ease);
 }
 
-html.hc-theming [data-window-chrome] > [class*="trailing_"]:hover {
-    border-color: var(--border-hover, var(--hc-accent));
-}
-
 html.hc-theming [data-window-chrome] > [class*="trailing_"] > * {
     display: flex;
     height: 20px;
@@ -180,10 +171,6 @@ html.hc-theming [data-call-tile] [class*="overlayButton_"] > button {
     background: color-mix(in srgb, var(--hc-window-bg) 82%, transparent) !important;
     backdrop-filter: blur(24px) saturate(140%);
     color: var(--hc-text) !important;
-}
-
-html.hc-theming [data-call-tile] [class*="overlayButton_"] > button:hover {
-    border-color: rgb(var(--hc-accent-rgb) / 65%) !important;
 }
 
 /* Discord scales the voice-list speaking ring with live volume, down to half a pixel, which

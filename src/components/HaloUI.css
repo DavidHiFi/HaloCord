@@ -28,9 +28,22 @@ html.hc-theming {
     --hc-text: var(--text-strong, #f2f3f5);
     --hc-text-muted: var(--text-muted, #949ba4);
     --hc-scroll-thumb: rgb(255 255 255 / 14%);
+
+    /* Hover rings, selection pills and flyouts. Every themed hover border reads these. */
+    --hc-grad-a: #afe37f;
+    --hc-grad-b: #63c98f;
+    --hc-gradient: linear-gradient(135deg, var(--hc-grad-a), var(--hc-grad-b));
+    --hc-flyout-bg: var(--background-surface-higher, #232428);
+    --hc-chip-bg: color-mix(in srgb, var(--hc-flyout-bg) 88%, transparent);
+    --hc-live: var(--status-danger, #f23f43);
+    --hc-ring-w: 2px;
 }
 
 html.hc-theming[data-hc-theme="mochacord"] {
+    --hc-grad-a: #89b4fa;
+    --hc-grad-b: #cba6f7;
+    --hc-flyout-bg: #181825;
+    --hc-live: #f38ba8;
     --hc-accent: #89b4fa;
     --hc-accent-2: #b4befe;
     --hc-accent-ink: #11111b;
@@ -882,28 +895,6 @@ html.hc-theming [class*="tabBar_"] [role="tab"] {
     overflow: visible;
 }
 
-html.hc-theming [class*="streamQualityIndicator"],
-html.hc-theming [class*="liveIndicator"] {
-    background: rgb(24 24 37 / 94%) !important;
-    color: #cdd6f4 !important;
-    border: 1px solid #45475a;
-    border-radius: 8px;
-    padding: 3px 7px;
-    backdrop-filter: blur(24px);
-}
-
-html.hc-theming nav[class*="guilds_"] [class*="pill_"] [class*="item_"] {
-    background: linear-gradient(180deg, #89b4fa, #cba6f7) !important;
-}
-
-html.hc-theming [role="tooltip"] {
-    --background-floating: #1e1e2e;
-
-    background-color: rgb(30 30 46 / 96%) !important;
-    color: #cdd6f4 !important;
-    backdrop-filter: blur(24px);
-}
-
 html.hc-theming [class~="container_TP1WMf"][class~="popover_81IzEA"] {
     width: 380px;
     max-width: calc(100vw - 32px);
@@ -915,6 +906,251 @@ html.hc-theming [class~="tabs_TP1WMf"] [role="tab"] {
     line-height: 1.5;
 }
 
-html.hc-theming nav[class*="guilds_"] [class~="wrapper__o8_Xq"] > [class~="item__o8_Xq"] {
-    background: linear-gradient(180deg, #89b4fa, #cba6f7) !important;
+/* Gradient hover ring. A masked pseudo-element draws the ring over the host's own border, so it
+   keeps the host's radius and works on translucent glass where a border-box background cannot.
+   :where keeps it low specificity so the rail and cap overrides below win. */
+html.hc-theming :where(
+    nav[class*="guilds_"],
+    [data-window-chrome] > [class*="leading_"],
+    [data-window-chrome] > [class*="trailing_"],
+    [class~="sidebarList_pog62O"],
+    [class~="panels_pog62O"],
+    [class~="chatContent_z_gUBg"],
+    [class~="chat_z_gUBg"] > [class~="subtitleContainer_z_gUBg"],
+    [class~="container_86es0b"],
+    [class~="peopleColumn_zrUwGA"],
+    [class~="nowPlayingColumn_zrUwGA"],
+    [class~="callContainer_hbKzX7"],
+    [class~="messagesWrapper_8AE1Qq"],
+    [class~="channelTextArea_z_gUBg"],
+    [class~="wrapper_ST_Y69"],
+    [class~="outer_P1YEjQ"],
+    [class~="container_dvN-MP"]
+)::after {
+    position: absolute;
+    z-index: 1;
+    padding: var(--hc-ring-w);
+    border-radius: inherit;
+    background: var(--hc-gradient);
+    content: "";
+    inset: calc(-1 * var(--hc-ring-w));
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease-out;
+}
+
+html.hc-theming :is(
+    [data-window-chrome] > [class*="trailing_"],
+    [class~="sidebarList_pog62O"],
+    [class~="panels_pog62O"],
+    [class~="chatContent_z_gUBg"],
+    [class~="chat_z_gUBg"] > [class~="subtitleContainer_z_gUBg"],
+    [class~="container_86es0b"],
+    [class~="peopleColumn_zrUwGA"],
+    [class~="nowPlayingColumn_zrUwGA"],
+    [class~="callContainer_hbKzX7"],
+    [class~="messagesWrapper_8AE1Qq"],
+    [class~="channelTextArea_z_gUBg"],
+    [class~="wrapper_ST_Y69"],
+    [class~="outer_P1YEjQ"],
+    [class~="container_dvN-MP"]
+):hover::after {
+    opacity: 1;
+}
+
+html.hc-theming :is(
+    [class~="sidebarList_pog62O"],
+    [class~="chat_z_gUBg"] > [class~="subtitleContainer_z_gUBg"],
+    [class~="container_86es0b"],
+    [class~="peopleColumn_zrUwGA"],
+    [class~="nowPlayingColumn_zrUwGA"]
+) {
+    position: relative;
+}
+
+/* These clip their content; clip keeps that but lets the ring paint over the border. */
+html.hc-theming :is(
+    nav[class*="guilds_"],
+    [class~="sidebarList_pog62O"],
+    [class~="container_86es0b"],
+    [class~="peopleColumn_zrUwGA"],
+    [class~="nowPlayingColumn_zrUwGA"],
+    [class~="callContainer_hbKzX7"],
+    [class~="messagesWrapper_8AE1Qq"],
+    [class~="outer_P1YEjQ"]
+) {
+    overflow: clip !important;
+    overflow-clip-margin: var(--hc-ring-w);
+}
+
+html.hc-theming [class~="outer_P1YEjQ"] {
+    --hc-ring-w: 1px;
+}
+
+/* With a separated chat bar the chat column has no border; its message box and composer carry the ring. */
+@container body style(--custom-chatbar: separated) {
+    html.hc-theming [class~="chatContent_z_gUBg"]::after {
+        display: none;
+    }
+}
+
+/* Rail and cap read as one panel: the cap ring has no bottom edge, the rail ring no top edge. */
+html.hc-theming [data-window-chrome] > [class*="leading_"]::after {
+    padding-bottom: 0;
+    background: var(--hc-grad-a);
+}
+
+html.hc-theming nav[class*="guilds_"]::after {
+    padding-top: 0;
+    background: linear-gradient(180deg, var(--hc-grad-a), var(--hc-grad-b));
+}
+
+html.hc-theming[data-hc-rail-hover] :is([data-window-chrome] > [class*="leading_"], nav[class*="guilds_"])::after {
+    opacity: 1;
+}
+
+/* Profiles: the inner card's corners must follow the outer border, or they cover it and the ring thins there. */
+html.hc-theming [class~="outer_P1YEjQ"]:not(.custom-theme-background) [class~="inner_P1YEjQ"] {
+    border-radius: calc(var(--radius-lg, 16px) - 1px);
+}
+
+html.hc-theming [class~="outer_P1YEjQ"].custom-theme-background [class~="inner_P1YEjQ"] {
+    border-radius: calc(var(--radius-lg, 16px) - 1px - var(--custom-user-profile-theme-padding, 4px));
+}
+
+/* Server rail: Discord draws folders as a fixed 48 px SVG; scale it onto the 40 px icon column. */
+html.hc-theming nav[class*="guilds_"] [class*="folderHeader_"] {
+    margin-block: -4px;
+    scale: calc(40 / 48);
+}
+
+html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"],
+html.hc-theming #vc-indicators-indicator-items {
+    position: relative;
+}
+
+/* stylelint-disable-next-line no-descending-specificity -- rail icons are never panel hosts */
+html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"]::after,
+html.hc-theming #vc-indicators-indicator-items::after {
+    position: absolute;
+    z-index: 1;
+    padding: 2px;
+    border-radius: 15px;
+    background: var(--hc-gradient);
+    content: "";
+    inset: -3px;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease-out;
+}
+
+html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"]:hover::after,
+html.hc-theming #vc-indicators-indicator-items:hover::after {
+    opacity: 1;
+}
+
+/* The folder ring is drawn inside the scaled header, so it is sized to land on the same 2 px ring. */
+html.hc-theming nav[class*="guilds_"] [class*="folderButton_"] > [class~="wrapper_hqZPsU"]::after {
+    padding: 2.4px;
+    border-radius: 18px;
+    inset: -3.6px;
+}
+
+html.hc-theming nav[class*="guilds_"] [class*="circleIconButton_"],
+html.hc-theming #vc-indicators-indicator-items {
+    border-radius: 12px;
+    background-color: rgb(var(--hc-accent-rgb) / 10%);
+    color: var(--hc-text);
+    transition: background-color 0.16s ease-out, color 0.16s ease-out;
+}
+
+html.hc-theming nav[class*="guilds_"] [class*="circleIconButton_"]:is(:hover, [class*="selected_"]),
+html.hc-theming #vc-indicators-indicator-items:hover {
+    background-color: var(--hc-flyout-bg) !important;
+    color: var(--hc-accent) !important;
+}
+
+/* Selection and unread pills, including the counter's hover pill. */
+html.hc-theming nav[class*="guilds_"] :is([class*="pill_"] [class*="item_"], [class~="wrapper__o8_Xq"] > [class~="item__o8_Xq"]),
+html.hc-theming #vc-indicators-indicator-items::before {
+    background: linear-gradient(180deg, var(--hc-grad-a), var(--hc-grad-b)) !important;
+}
+
+/* Tooltips: body and arrow share one opaque flyout colour. */
+html.hc-theming :is([role="tooltip"], [class*="tooltip_"][class*="tooltipPrimary_"]) {
+    --background-floating: var(--hc-flyout-bg);
+    --background-surface-high: var(--hc-flyout-bg);
+    --bg-floating: var(--hc-flyout-bg);
+    --tooltip-pointer-bg: var(--hc-flyout-bg);
+
+    background-color: var(--hc-flyout-bg) !important;
+    color: var(--hc-text) !important;
+    backdrop-filter: none;
+}
+
+html.hc-theming [class*="tooltipPrimary_"] [class*="tooltipPointer_"] {
+    border-top-color: var(--hc-flyout-bg) !important;
+}
+
+/* Guild header: as tall as the rail's first row, with an inset hover pill that never touches the clipped edge. */
+html.hc-theming #app-mount {
+    --custom-channel-header-height: 56px;
+}
+
+html.hc-theming [class~="header_XH4OpX"] {
+    isolation: isolate;
+}
+
+html.hc-theming [class~="header_XH4OpX"]::after {
+    position: absolute;
+    z-index: -1;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box;
+    content: "";
+    inset: 6px 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease-out;
+}
+
+html.hc-theming [class~="header_XH4OpX"]:hover::after {
+    opacity: 1;
+}
+
+/* Stream badge (LIVE, resolution, FPS): one chip like the tile's name tag. */
+html.hc-theming [data-call-tile] [class*="streamQualityIndicator_"] {
+    gap: 6px;
+    padding: 3px 8px;
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 8px;
+    background: var(--hc-chip-bg);
+    backdrop-filter: blur(24px) saturate(140%);
+    color: var(--hc-text);
+    transition: border-color 0.16s ease-out;
+}
+
+html.hc-theming [data-call-tile] [class*="streamQualityIndicator_"] * {
+    border-radius: 0 !important;
+    background: none !important;
+    color: inherit;
+}
+
+html.hc-theming [data-call-tile] [class*="streamQualityIndicator_"] [class*="liveIndicator__"] {
+    color: var(--hc-live);
+    font-weight: 700;
+}
+
+html.hc-theming [data-call-tile] [class*="streamQualityIndicator_"] [class*="qualityIndicator__"] {
+    padding-inline-start: 6px;
+    border-inline-start: 1px solid var(--hc-panel-border);
+}
+
+html.hc-theming [data-call-tile] :is([class*="streamQualityIndicator_"], [class*="overlayTitle_"], [class*="experimentOverlayTitle_"], [class*="activityContainer_"], [class*="overlayButton_"] > button):hover {
+    border-color: transparent !important;
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
 }
