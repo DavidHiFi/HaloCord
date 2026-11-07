@@ -970,9 +970,14 @@ html.hc-theming :is(
     position: relative;
 }
 
-/* These clip their content; clip keeps that but lets the ring paint over the border. */
+/* Hosts that clip their content keep overflow: hidden. Letting the ring paint outside the padding box
+   (overflow: clip with a clip margin) also let tiles and banners paint over the border at the
+   rounded corners, which thinned and cut them. Their ring sits just inside the edge instead, and the
+   border turns transparent on hover so only one line shows. */
+/* stylelint-disable-next-line no-descending-specificity -- refines the ring rule above for these hosts */
 html.hc-theming :is(
     nav[class*="guilds_"],
+    [data-window-chrome] > [class*="leading_"],
     [class~="sidebarList_pog62O"],
     [class~="container_86es0b"],
     [class~="peopleColumn_zrUwGA"],
@@ -980,9 +985,22 @@ html.hc-theming :is(
     [class~="callContainer_hbKzX7"],
     [class~="messagesWrapper_8AE1Qq"],
     [class~="outer_P1YEjQ"]
-) {
-    overflow: clip !important;
-    overflow-clip-margin: var(--hc-ring-w);
+)::after {
+    z-index: 3;
+    inset: 0;
+}
+
+html.hc-theming :is(
+    [class~="sidebarList_pog62O"],
+    [class~="container_86es0b"],
+    [class~="peopleColumn_zrUwGA"],
+    [class~="nowPlayingColumn_zrUwGA"],
+    [class~="callContainer_hbKzX7"],
+    [class~="messagesWrapper_8AE1Qq"],
+    [class~="outer_P1YEjQ"]
+):hover,
+html.hc-theming[data-hc-rail-hover] :is([data-window-chrome] > [class*="leading_"], nav[class*="guilds_"]) {
+    border-color: transparent !important;
 }
 
 html.hc-theming [class~="outer_P1YEjQ"] {
@@ -1099,6 +1117,17 @@ html.hc-theming [class*="tooltipPrimary_"] [class*="tooltipPointer_"] {
 /* Guild header: as tall as the rail's first row, with an inset hover pill that never touches the clipped edge. */
 html.hc-theming #app-mount {
     --custom-channel-header-height: 56px;
+}
+
+/* The channel panel starts level with the rail's top cap, not below it. The sidebar clips only
+   sideways so the panel can rise into the title bar row; it opts out of window dragging there. */
+html.hc-theming [class~="sidebar_pog62O"] {
+    overflow: clip visible;
+}
+
+html.hc-theming [class~="sidebarList_pog62O"] {
+    margin-top: -28px; /* the title bar row, as tall as the cap */
+    app-region: no-drag;
 }
 
 html.hc-theming [class~="header_XH4OpX"] {
