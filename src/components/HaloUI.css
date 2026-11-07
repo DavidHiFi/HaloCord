@@ -75,9 +75,13 @@ html.hc-theming[data-hc-theme="mochacord"] #dvx-native-settings select option {
     color: var(--hc-text);
 }
 
-/* The theme's 76% glass lets text behind dropdowns, pickers and popouts read; they share the menu acrylic. */
+/* The theme's 76% glass lets text behind dropdowns, pickers and popouts read; they share the menu acrylic.
+   Tooltips, hover toolbars and notices take the opaque dark Mocha flyout colour instead of the theme's light surface1 pill. */
 html.hc-theming[data-hc-theme="mochacord"] body {
     --mochacord-acrylic-background: var(--hc-glass-bg);
+    --mochacord-acrylic-tooltip: var(--hc-flyout-bg);
+    --mochacord-acrylic-flyout: var(--hc-flyout-bg);
+    --mochacord-acrylic-notification: var(--hc-flyout-bg);
 }
 
 .hc-ui {
@@ -1126,6 +1130,7 @@ html.hc-theming [class~="sidebar_pog62O"] {
 }
 
 html.hc-theming [class~="sidebarList_pog62O"] {
+    grid-row: 1 / -1; /* covers the notice row too, so a notice never pushes the panel down */
     margin-top: -28px; /* the title bar row, as tall as the cap */
     app-region: no-drag;
 }
@@ -1192,4 +1197,23 @@ html.hc-theming [class~="callContainer_hbKzX7"] [class*="gradientContainer_"] {
 /* App notices (reconnect, updates) sit over the page column only, so they never cover the raised channel panel. */
 html.hc-theming [class~="base_pog62O"] > [class*="notice_"] {
     grid-column: channelsEnd / end;
+}
+
+/* Guild header buttons (invite, add): sit inside the header's hover pill, with the rail button hover. */
+html.hc-theming [class~="header_XH4OpX"] :is([class~="inviteButton_XH4OpX"], [class~="addActionButton_XH4OpX"]) {
+    width: 30px;
+    height: 30px;
+    margin-inline-end: 4px;
+    border-radius: 8px;
+    transition: background-color 0.16s ease-out, color 0.16s ease-out;
+}
+
+html.hc-theming [class~="header_XH4OpX"] :is([class~="inviteButton_XH4OpX"], [class~="addActionButton_XH4OpX"]):hover {
+    background-color: rgb(var(--hc-accent-rgb) / 16%) !important;
+    color: var(--hc-accent) !important;
+}
+
+/* MochaCord flyouts: menus, popouts and listboxes take the dark Mocha flyout colour. */
+html.hc-theming[data-hc-theme="mochacord"] :is([class*="layerContainer_"], [role="menu"], [role="tooltip"], [role="listbox"], [data-mana-component="popover"], [data-mana-component="tooltip"]) {
+    --bg-floating: var(--hc-flyout-bg);
 }
