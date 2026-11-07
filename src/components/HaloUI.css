@@ -1195,7 +1195,7 @@ html.hc-theming [data-call-tile] [class*="streamQualityIndicator_"] [class*="qua
     border-inline-start: 1px solid var(--hc-panel-border);
 }
 
-html.hc-theming [data-call-tile] :is([class*="streamQualityIndicator_"], [class*="overlayTitle_"], [class*="experimentOverlayTitle_"], [class*="activityContainer_"], [class*="overlayButton_"] > button):hover {
+html.hc-theming [data-call-tile] :is([class*="streamQualityIndicator_"], [class*="overlayTitle_"], [class*="experimentOverlayTitle_"], [class*="activityContainer_"], [class*="overlayButton_"] > button, [class*="controlsRow_"] > button):hover {
     border-color: transparent !important;
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
 }

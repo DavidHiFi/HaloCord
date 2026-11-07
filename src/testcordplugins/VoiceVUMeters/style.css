@@ -1,5 +1,6 @@
-/* Tile meters are centered vertically (set inline by the component), which
-   keeps them clear of the hover controls strip and the nameplate row, so no
+/* Right-side tile meters sit centred above the options button and left-side ones are centred
+   vertically (set inline by the component); both
+   stay clear of the hover controls and the nameplate row, so no
    hover repositioning is needed. */
 
 #hc-guard-options .hc-vu-select,

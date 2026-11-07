@@ -1526,6 +1526,8 @@ function pictureMeterStyle(picture: PictureGeometry, heightPercent: number, from
     return style;
 }
 
+const OPTIONS_BUTTON = 32;
+
 function TileMeter({ userId }: { userId?: string; }) {
     settings.use(["tilePlacement", "tileMeterSide", "tileMeterHeight", "tileSurfaces"]);
     const onPicture = settings.store.tilePlacement === "avatar";
@@ -1574,6 +1576,31 @@ function TileMeter({ userId }: { userId?: string; }) {
         };
     }, []);
 
+    // Discord insets the hover controls 4px on compact tiles and 12px on larger ones, so the
+    // seat over the options button is read from the controls box, which is laid out while hidden.
+    const [seat, setSeat] = React.useState({ right: 10, bottom: 40 });
+    React.useLayoutEffect(() => {
+        const box = boxRef.current;
+        const tile = box?.closest<HTMLElement>("div[data-selenium-video-tile]");
+        if (!box || !tile) return;
+        const measure = () => {
+            const frame = box.offsetParent as HTMLElement | null;
+            const controls = tile.querySelector<HTMLElement>('[class*="overlayContainer_"]');
+            if (!frame || !controls) return;
+            const f = frame.getBoundingClientRect(), c = controls.getBoundingClientRect();
+            if (!c.width) return;
+            const next = {
+                right: Math.round(f.right - c.right + (OPTIONS_BUTTON - TILE_METER_WIDTH) / 2),
+                bottom: Math.round(f.bottom - c.bottom + OPTIONS_BUTTON + 4)
+            };
+            setSeat(prev => prev.right === next.right && prev.bottom === next.bottom ? prev : next);
+        };
+        measure();
+        const observer = new ResizeObserver(measure);
+        observer.observe(tile);
+        return () => observer.disconnect();
+    }, []);
+
     const pictureWanted = onPicture && !isStreamTile;
     React.useLayoutEffect(() => {
         const tile = boxRef.current?.closest<HTMLElement>("div[data-selenium-video-tile]");
@@ -1603,16 +1630,21 @@ function TileMeter({ userId }: { userId?: string; }) {
     if (isStreamTile && surfaces === "voice") return null;
     if (!isStreamTile && surfaces === "streams") return null;
 
-    // 18px is the native seat (bars centered in the background strip), mirrored for the left side.
-    // Centered vertically, which clears the strip and the labels. Tiles without a picture
-    // (streams, cameras) keep this seat in profile picture mode too.
+    // Right side: the meter box is centred on the tile's options button and ends 4px above it.
+    // Left side keeps the vertically centred 18px seat.
+    // Tiles without a picture (streams, cameras) use this in profile picture mode too.
+    const heightPercent = Math.round(settings.store.tileMeterHeight);
     const style: React.CSSProperties = picture
         ? pictureMeterStyle(picture, settings.store.tileMeterHeight, fromLeft)
-        : {
-            position: "absolute", zIndex: 3, pointerEvents: "none", top: "50%", transform: "translateY(-50%)",
-            height: `calc(${Math.round(settings.store.tileMeterHeight)}% - 10px)`,
-            [fromLeft ? "left" : "right"]: 18
-        };
+        : fromLeft
+            ? {
+                position: "absolute", zIndex: 3, pointerEvents: "none", top: "50%", transform: "translateY(-50%)",
+                height: `calc(${heightPercent}% - 10px)`, left: 18
+            }
+            : {
+                position: "absolute", zIndex: 3, pointerEvents: "none", right: seat.right, bottom: seat.bottom,
+                height: `min(calc(${heightPercent}% - 10px), calc(100% - ${seat.bottom + 22}px))`
+            };
 
     return (
         <div ref={boxRef} style={style}>

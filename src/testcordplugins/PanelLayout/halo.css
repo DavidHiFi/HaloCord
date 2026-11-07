@@ -164,8 +164,8 @@ html.hc-theming [data-call-tile] [class*="overlayIconsContainer_"] > :is([class*
     border-radius: 8px;
 }
 
-/* The tile's Options (...) button wears the same pill as the name and activity tags. */
-html.hc-theming [data-call-tile] [class*="overlayButton_"] > button {
+/* The tile's Options (...) and stream Zoom buttons wear the same pill as the name and activity tags. */
+html.hc-theming [data-call-tile] :is([class*="overlayButton_"], [class*="controlsRow_"]) > button {
     border: 1px solid var(--hc-panel-border) !important;
     border-radius: 8px !important;
     background: color-mix(in srgb, var(--hc-window-bg) 82%, transparent) !important;
