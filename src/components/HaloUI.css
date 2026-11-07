@@ -1391,3 +1391,7 @@ html.hc-theming[data-hc-theme="mochacord"] [class~="peopleListItem_y75PxA"] [cla
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, linear-gradient(135deg, #89b4fa, #cba6f7) border-box !important;
     color: var(--hc-text);
 }
+
+html.hc-theming [role="dialog"]:has([class*="copyInput_"]) :is([class*="bodyList_"], [class*="bodyList_"] > [class*="content_"]) {
+    background: transparent !important;
+}
