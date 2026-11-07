@@ -560,11 +560,11 @@ function ensureButtonStyles(): void {
     if (document.getElementById(BUTTONS_STYLE_ID)) return;
     const style = document.createElement("style");
     style.id = BUTTONS_STYLE_ID;
-    style.textContent = `#${BUTTONS_ID}{display:flex;align-items:center;margin-left:auto;padding-right:8px;gap:4px;pointer-events:all;}`
-        + `#${BUTTONS_ID} [data-gif-transfer="true"]{background:none;border:1px solid var(--interactive-normal,#b9bbbe);border-radius:4px;`
-        + "color:var(--interactive-normal,#b9bbbe);cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font-primary,Whitney);"
-        + "padding:2px 8px;margin:0 2px;height:24px;line-height:1;transition:background 0.15s,color 0.15s,border-color 0.15s;white-space:nowrap;flex-shrink:0;}"
-        + `#${BUTTONS_ID} [data-gif-transfer="true"]:hover{background:var(--brand-500,#5865f2);color:#fff;border-color:var(--brand-500,#5865f2);}`;
+    style.textContent = `#${BUTTONS_ID}{display:flex;align-items:center;flex-basis:100%;margin-top:6px;gap:6px;pointer-events:all;}`
+        + `#${BUTTONS_ID} [data-gif-transfer="true"]{background:var(--hc-flyout-bg,none);border:1px solid var(--hc-panel-border,var(--interactive-normal,#b9bbbe));border-radius:8px;`
+        + "color:var(--hc-text,var(--interactive-normal,#b9bbbe));cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font-primary,Whitney);"
+        + "padding:2px 10px;margin:0;height:24px;line-height:1;transition:background 0.16s ease-out,color 0.16s ease-out,border-color 0.16s ease-out;white-space:nowrap;flex-shrink:0;}"
+        + `#${BUTTONS_ID} [data-gif-transfer="true"]:hover{background:rgb(var(--hc-accent-rgb,88 101 242) / 16%);color:var(--hc-accent,#fff);border-color:rgb(var(--hc-accent-rgb,88 101 242) / 55%);}`;
     document.head.appendChild(style);
 }
 
@@ -605,6 +605,7 @@ function injectButtons(navList: Element): void {
 
     (navList as HTMLElement).style.display = "flex";
     (navList as HTMLElement).style.alignItems = "center";
+    (navList as HTMLElement).style.flexWrap = "wrap";
 
     navList.appendChild(wrapper);
 }

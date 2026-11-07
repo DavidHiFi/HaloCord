@@ -16,7 +16,7 @@ html.hc-theming {
     --hc-glass-blur: blur(24px) saturate(140%);
 }
 
-html.hc-theming .menu_c1e9c4:not(#hc-menus) {
+html.hc-theming .menu_M3qk4j:not(#hc-menus) {
     --control-brand-foreground: var(--hc-accent);
     --control-brand-foreground-new: var(--hc-accent);
     --background-brand: var(--hc-accent);
@@ -33,68 +33,68 @@ html.hc-theming .menu_c1e9c4:not(#hc-menus) {
     backdrop-filter: var(--hc-glass-blur) !important;
 }
 
-html.hc-theming .menu_c1e9c4:not(#hc-menus)::before {
+html.hc-theming .menu_M3qk4j:not(#hc-menus)::before {
     display: none !important;
 }
 
-html.hc-theming .menu_c1e9c4 .item_c1e9c4 {
+html.hc-theming .menu_M3qk4j .item_M3qk4j {
     border-radius: 8px;
     transition: background-color 0.12s ease, color 0.12s ease;
 }
 
-html.hc-theming .menu_c1e9c4 .colorDefault_c1e9c4.focused_c1e9c4:not(.colorDanger_c1e9c4) {
+html.hc-theming .menu_M3qk4j .colorDefault_M3qk4j.focused_M3qk4j:not(.colorDanger_M3qk4j) {
     background: rgb(var(--hc-accent-rgb) / 14%);
     color: var(--hc-text);
 }
 
-html.hc-theming .menu_c1e9c4 .focused_c1e9c4 :is(.checkbox_c1e9c4, .radioSelection_c1e9c4) {
+html.hc-theming .menu_M3qk4j .focused_M3qk4j :is(.checkbox_M3qk4j, .radioSelection_M3qk4j) {
     color: var(--hc-accent);
 }
 
-html.hc-theming .menu_c1e9c4 .check_c1e9c4 {
+html.hc-theming .menu_M3qk4j .check_M3qk4j {
     color: var(--hc-accent-ink);
 }
 
-html.hc-theming .menu_c1e9c4 .colorDanger_c1e9c4 {
+html.hc-theming .menu_M3qk4j .colorDanger_M3qk4j {
     color: var(--text-feedback-critical);
 }
 
-html.hc-theming .menu_c1e9c4 .colorDanger_c1e9c4.focused_c1e9c4 {
+html.hc-theming .menu_M3qk4j .colorDanger_M3qk4j.focused_M3qk4j {
     background: color-mix(in srgb, var(--text-feedback-critical) 16%, transparent);
     color: var(--text-feedback-critical);
 }
 
-html.hc-theming .menu_c1e9c4 .colorDanger_c1e9c4.focused_c1e9c4 :is(.subtext_c1e9c4, .caret_c1e9c4) {
+html.hc-theming .menu_M3qk4j .colorDanger_M3qk4j.focused_M3qk4j :is(.subtext_M3qk4j, .caret_M3qk4j) {
     color: var(--text-feedback-critical);
 }
 
-html.hc-theming .menu_c1e9c4 .separator_c1e9c4 {
+html.hc-theming .menu_M3qk4j .separator_M3qk4j {
     border-bottom-color: var(--hc-row-border);
 }
 
-html.hc-theming .menu_c1e9c4 .caret_c1e9c4 {
+html.hc-theming .menu_M3qk4j .caret_M3qk4j {
     color: var(--hc-text-muted);
 }
 
-html.hc-theming .menu_c1e9c4 .focused_c1e9c4 .caret_c1e9c4 {
+html.hc-theming .menu_M3qk4j .focused_M3qk4j .caret_M3qk4j {
     color: var(--hc-text);
 }
 
-html.hc-theming .menu_c1e9c4 :is(.bar_ec237e, .bar_d061ce) {
+html.hc-theming .menu_M3qk4j :is(.bar_ec237e, .bar_d061ce) {
     background: var(--hc-scroll-thumb) !important;
 }
 
-html.hc-theming .menu_c1e9c4 :is(.barFill_ec237e, .barFill_d061ce) {
+html.hc-theming .menu_M3qk4j :is(.barFill_ec237e, .barFill_d061ce) {
     background: var(--hc-accent) !important;
 }
 
-html.hc-theming .menu_c1e9c4 :is(.grabber_ec237e, .grabber_d061ce) {
+html.hc-theming .menu_M3qk4j :is(.grabber_ec237e, .grabber_d061ce) {
     border-color: var(--hc-accent) !important;
     background: var(--hc-accent-ink) !important;
 }
 
 /* Account popout rows (status, switch accounts) beside the status submenu. */
-html.hc-theming .menus_ce8328 {
+html.hc-theming .menus_nitlyF {
     --user-profile-overlay-background-hover: rgb(var(--hc-accent-rgb) / 14%);
 }
 
@@ -105,31 +105,32 @@ html.hc-theming :is(.popover_f84418, .popover_c97e55):not(#hc-menus) {
 }
 
 /* Call bar: a readable dock, plated buttons, split buttons as one piece. Red states keep Discord's colours. */
-html.hc-theming .buttonSection_fcb27c {
+html.hc-theming [class~="callContainer_hbKzX7"] [class*="buttonSection_"] {
     border-color: var(--hc-panel-border);
     border-radius: 14px;
     background: linear-gradient(var(--hc-panel-bg), var(--hc-panel-bg)), color-mix(in srgb, var(--hc-menu-bg) 88%, transparent);
     box-shadow: 0 6px 20px rgb(0 0 0 / 35%);
 }
 
-html.hc-theming .buttonSection_fcb27c .colorable_f1ceac {
+html.hc-theming [class~="callContainer_hbKzX7"] .colorable_K9Xq13 {
     transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
-html.hc-theming .buttonSection_fcb27c .primaryDark_f1ceac:not(#hc-menus) {
-    background: var(--hc-row-bg);
+html.hc-theming [class~="callContainer_hbKzX7"] .primaryDark_K9Xq13:not(#hc-menus) {
+    background: var(--hc-flyout-bg);
+    color: var(--hc-text);
 }
 
-html.hc-theming .buttonSection_fcb27c .centerButton_f1ceac:not(.attachedButton_f1ceac) {
+html.hc-theming [class~="callContainer_hbKzX7"] .centerButton_K9Xq13:not(.attachedButton_K9Xq13) {
     box-shadow: inset 0 0 0 1px var(--hc-row-border);
 }
 
-html.hc-theming .buttonSection_fcb27c .attachedCaretButtonContainer_f1ceac {
+html.hc-theming [class~="callContainer_hbKzX7"] .attachedCaretButtonContainer_K9Xq13 {
     position: relative;
     border-radius: 8px;
 }
 
-html.hc-theming .buttonSection_fcb27c .attachedCaretButtonContainer_f1ceac::after {
+html.hc-theming [class~="callContainer_hbKzX7"] .attachedCaretButtonContainer_K9Xq13::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -139,30 +140,30 @@ html.hc-theming .buttonSection_fcb27c .attachedCaretButtonContainer_f1ceac::afte
     transition: box-shadow 0.15s ease;
 }
 
-html.hc-theming .buttonSection_fcb27c :is(.primaryDark_f1ceac:hover, .attachedCaretButtonContainer_f1ceac:hover .primaryDark_f1ceac):not(.disabled_f1ceac, #hc-menus) {
+html.hc-theming [class~="callContainer_hbKzX7"] :is(.primaryDark_K9Xq13:hover, .attachedCaretButtonContainer_K9Xq13:hover .primaryDark_K9Xq13):not(.disabled_K9Xq13, #hc-menus) {
     background: rgb(var(--hc-accent-rgb) / 12%);
 }
 
-html.hc-theming .buttonSection_fcb27c .centerButton_f1ceac.primaryDark_f1ceac:not(.attachedButton_f1ceac, .disabled_f1ceac):hover,
-html.hc-theming .buttonSection_fcb27c .attachedCaretButtonContainer_f1ceac:not(.disabled_f1ceac):hover::after {
+html.hc-theming [class~="callContainer_hbKzX7"] .centerButton_K9Xq13.primaryDark_K9Xq13:not(.attachedButton_K9Xq13, .disabled_K9Xq13):hover,
+html.hc-theming [class~="callContainer_hbKzX7"] .attachedCaretButtonContainer_K9Xq13:not(.disabled_K9Xq13):hover::after {
     box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 55%), 0 0 10px rgb(var(--hc-accent-rgb) / 30%);
 }
 
-html.hc-theming .buttonSection_fcb27c :is(.white_f1ceac, .activeLight_f1ceac, .green_f1ceac, .greenGlow_f1ceac):not(#hc-menus) {
+html.hc-theming [class~="callContainer_hbKzX7"] :is(.white_K9Xq13, .activeLight_K9Xq13, .green_K9Xq13, .greenGlow_K9Xq13):not(#hc-menus) {
     background: var(--hc-accent);
     color: var(--hc-accent-ink);
 }
 
-html.hc-theming .buttonSection_fcb27c :is(.white_f1ceac, .activeLight_f1ceac, .green_f1ceac, .greenGlow_f1ceac):not(.disabled_f1ceac, #hc-menus):hover {
+html.hc-theming [class~="callContainer_hbKzX7"] :is(.white_K9Xq13, .activeLight_K9Xq13, .green_K9Xq13, .greenGlow_K9Xq13):not(.disabled_K9Xq13, #hc-menus):hover {
     background: var(--hc-accent-2);
 }
 
-html.hc-theming .buttonSection_fcb27c :is(.white_f1ceac, .activeLight_f1ceac, .green_f1ceac, .greenGlow_f1ceac) .centerIcon_f1ceac {
+html.hc-theming [class~="callContainer_hbKzX7"] :is(.white_K9Xq13, .activeLight_K9Xq13, .green_K9Xq13, .greenGlow_K9Xq13) .centerIcon_K9Xq13 {
     color: var(--hc-accent-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
-    html.hc-theming :is(.menu_c1e9c4 .item_c1e9c4, .buttonSection_fcb27c .colorable_f1ceac, .buttonSection_fcb27c .attachedCaretButtonContainer_f1ceac::after) {
+    html.hc-theming :is(.menu_M3qk4j .item_M3qk4j, [class~="callContainer_hbKzX7"] .colorable_K9Xq13, [class~="callContainer_hbKzX7"] .attachedCaretButtonContainer_K9Xq13::after) {
         transition: none;
     }
 }

@@ -1228,3 +1228,79 @@ html.hc-theming [class~="header_XH4OpX"] :is([class~="inviteButton_XH4OpX"], [cl
 html.hc-theming[data-hc-theme="mochacord"] :is([class*="layerContainer_"], [role="menu"], [role="tooltip"], [role="listbox"], [data-mana-component="popover"], [data-mana-component="tooltip"]) {
     --bg-floating: var(--hc-flyout-bg);
 }
+
+/* MochaCord floating layers paint their base on the opaque flyout colour; the theme's 46% base let picker footers and the app launcher show through. */
+html.hc-theming[data-hc-theme="mochacord"] [class*="layerContainer_"] {
+    --background-base-lower: var(--hc-flyout-bg);
+    --background-base-low: var(--hc-flyout-bg);
+    --background-base-lower-alt: var(--hc-flyout-bg);
+}
+
+/* Expression picker footer (the inspected emoji or sticker name): glass over the grid scrolling beneath it. */
+html.hc-theming :is([class~="inspector_1bDrGE"], .vc-more-stickers-picker-content-inspector) {
+    border-top-color: var(--hc-panel-border);
+    background: var(--hc-glass-bg) !important;
+    backdrop-filter: var(--hc-glass-blur);
+}
+
+/* Back and forward: one dock inside the rounded cap, one hover plate for both arrows. */
+html.hc-theming [class~="backForwardButtons_nS9Yqn"] {
+    min-width: 0;
+    margin: 0 auto !important;
+    padding: 0 2px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    transition: background-color 0.16s ease-out, border-color 0.16s ease-out;
+}
+
+html.hc-theming [class~="backForwardButtons_nS9Yqn"]:has(> :not([class~="disabled_nS9Yqn"]):hover) {
+    border-color: rgb(var(--hc-accent-rgb) / 35%);
+    background-color: var(--hc-flyout-bg);
+}
+
+html.hc-theming [class~="backForwardButtons_nS9Yqn"] [class~="button_nS9Yqn"] {
+    width: 24px;
+    padding-inline: 0;
+    border-radius: 6px;
+    background: none !important;
+    transition: color 0.16s ease-out;
+}
+
+html.hc-theming [class~="backForwardButtons_nS9Yqn"] [class~="button_nS9Yqn"]:not([class~="disabled_nS9Yqn"]):hover {
+    color: var(--hc-accent);
+}
+
+/* Call tile name tags take the hover like the activity tags; Discord's overlay row ignores the pointer, so the tag opts back in (clicks still reach the tile). */
+html.hc-theming [data-call-tile] :is([class~="overlayTitle_7NOr2f"], [class~="experimentOverlayTitle_7NOr2f"]):not([class~="idle_7NOr2f"]) {
+    pointer-events: auto;
+}
+
+/* Call bar side buttons (participants on the left, pop out and full screen on the right): a plate on hover, accent when on. */
+html.hc-theming [class~="callContainer_hbKzX7"] :is([class~="leftTrayIcon_hbKzX7"], [class~="rightTrayIcon_hbKzX7"]) {
+    border-radius: 8px;
+    transition: background-color 0.16s ease-out, color 0.16s ease-out, box-shadow 0.16s ease-out;
+}
+
+html.hc-theming [class~="callContainer_hbKzX7"] :is([class~="leftTrayIcon_hbKzX7"], [class~="rightTrayIcon_hbKzX7"]):hover {
+    background-color: var(--hc-flyout-bg);
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 55%);
+    color: var(--hc-accent);
+}
+
+html.hc-theming [class~="callContainer_hbKzX7"] :is([class~="leftTrayIcon_hbKzX7"], [class~="rightTrayIcon_hbKzX7"]):is([aria-checked="true"], [aria-pressed="true"], [aria-expanded="true"]) {
+    background-color: rgb(var(--hc-accent-rgb) / 18%);
+    color: var(--hc-accent);
+}
+
+/* User panel voice buttons (camera, screen share, activities, soundboard) and plugin icon buttons: Mocha mantle instead of surface0. */
+html.hc-theming[data-hc-theme="mochacord"] [class~="panels_pog62O"] :is([class~="button_9U6LUN"][class~="buttonColor_9U6LUN"], .vc-plugin-icon-button):not([aria-checked="true"]) {
+    background-color: var(--hc-flyout-bg);
+    box-shadow: inset 0 0 0 1px var(--hc-row-border);
+    transition: background-color 0.16s ease-out, color 0.16s ease-out, box-shadow 0.16s ease-out;
+}
+
+html.hc-theming[data-hc-theme="mochacord"] [class~="panels_pog62O"] :is([class~="button_9U6LUN"][class~="buttonColor_9U6LUN"], .vc-plugin-icon-button):not([aria-checked="true"]):hover {
+    background-color: rgb(var(--hc-accent-rgb) / 14%);
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
+    color: var(--hc-accent);
+}
