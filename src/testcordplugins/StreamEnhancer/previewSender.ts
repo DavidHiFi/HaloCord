@@ -24,16 +24,16 @@ const logger = new Logger("StreamEnhancer");
 
 const FIRST_POST_DELAY_MS = 1000;
 const THUMBNAIL_RETRY_MS = 2000;
-const COVER_CHANGE_MIN_GAP_MS = 5000;
-const RATE_LIMIT_FALLBACK_MS = 15000;
-// Discord has not been shown to accept faster preview updates than this.
-const MIN_POST_INTERVAL_MS = 30000;
+const RATE_LIMIT_FALLBACK_MS = 61000;
+// Discord rate limits preview posts to one per 60 s per stream.
+const MIN_POST_INTERVAL_MS = 61000;
 
 let hooks: PreviewSenderHooks | null = null;
 let ownStreamKey: string | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
 let lastPostedAt = 0;
 let blockedUntil = 0;
+let posting = false;
 
 // Stream keys are "call:<channel>:<user>" or "guild:<guild>:<channel>:<user>".
 const isOwnStreamKey = (streamKey: string) => {
@@ -48,7 +48,7 @@ const clearTimer = () => {
 
 const schedule = (delayMs: number) => {
     clearTimer();
-    const wait = Math.max(delayMs, blockedUntil - Date.now(), 0);
+    const wait = Math.max(delayMs, blockedUntil - Date.now(), lastPostedAt + MIN_POST_INTERVAL_MS - Date.now(), 0);
     timer = setTimeout(() => {
         timer = null;
         void postPreview();
@@ -61,7 +61,7 @@ const getRetryAfterMs = (error: unknown) => {
 };
 
 const postPreview = async () => {
-    if (ownStreamKey == null || hooks == null) return;
+    if (ownStreamKey == null || hooks == null || posting) return;
 
     if (!hooks.isEnabled()) return;
 
@@ -73,6 +73,7 @@ const postPreview = async () => {
     }
 
     const streamKey = ownStreamKey;
+    posting = true;
     try {
         await RestAPI.post({
             url: `/streams/${encodeURIComponent(streamKey)}/preview`,
@@ -83,6 +84,8 @@ const postPreview = async () => {
     } catch (error) {
         blockedUntil = Date.now() + getRetryAfterMs(error);
         logger.warn("Stream preview post failed; backing off.", error);
+    } finally {
+        posting = false;
     }
 
     if (ownStreamKey === streamKey) schedule(Math.max(hooks.getIntervalMs(), MIN_POST_INTERVAL_MS));
@@ -105,8 +108,7 @@ const handleStreamDelete = ({ streamKey }: StreamEvent) => {
 export const previewCoverChanged = () => {
     if (ownStreamKey == null || hooks == null || !hooks.isEnabled()) return;
 
-    const wait = Math.max(lastPostedAt + COVER_CHANGE_MIN_GAP_MS - Date.now(), 0);
-    schedule(wait);
+    schedule(0);
 };
 
 export const startPreviewSender = (next: PreviewSenderHooks) => {

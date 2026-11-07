@@ -208,9 +208,22 @@ export default definePlugin({
     patches: [
         {
             find: '"suspended"!==this.input.getAudioState()',
+            replacement: [
+                {
+                    match: /(\.InteractionRequired:this\.interacted\|\|"suspended"!==this\.input\.getAudioState\(\)\|\|setImmediate\(\(\)=>)this\.emit\(\i,!0\)/,
+                    replace: "$1this.interact()"
+                },
+                {
+                    match: /async playAudio\((\i)\)\{try\{await \1\.play\(\)\}catch\{this\.emit\("interactionrequired",!0\)\}\}/,
+                    replace: "async playAudio($1){for(let i=0;i<6;i++){try{await $1.play();return}catch{await new Promise(r=>setTimeout(r,500))}}}"
+                }
+            ]
+        },
+        {
+            find: "MEDIA_ENGINE_INTERACTION_REQUIRED:function",
             replacement: {
-                match: /(\.InteractionRequired:this\.interacted\|\|"suspended"!==this\.input\.getAudioState\(\)\|\|setImmediate\(\(\)=>)this\.emit\(\i,!0\)/,
-                replace: "$1this.interact()"
+                match: /MEDIA_ENGINE_INTERACTION_REQUIRED:function\(\i\)\{return (\i)!==\i\.required&&\(\1=\i\.required,\i\.required\|\|(\i)\.interact\(\),!0\)\}/,
+                replace: "MEDIA_ENGINE_INTERACTION_REQUIRED:function(){return $2.interact(),$1&&($1=!1,!0)}"
             }
         },
         // "Download Apps" button at the bottom of the server list (same patch as Vesktop's, so it

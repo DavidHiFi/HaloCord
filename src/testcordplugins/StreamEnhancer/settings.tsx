@@ -719,7 +719,6 @@ const makeScaledCanvas = (source: HTMLCanvasElement, width: number, height: numb
 
 export const shouldShowViewerResizeSlider = () => getConfig().viewerResizeSliderEnabled;
 
-
 export const getConfiguredStreamFps = (fallback?: number) => {
     if (!shouldOverrideStreamResolution()) {
         return fallback != null && fallback > 0 ? fallback : defaultStreamEnhancerConfig.streamMaxFps;
@@ -887,11 +886,12 @@ export const getPreviewUploadHeight = () => clamp(Math.round(getConfig().preview
 
 export const getPreviewJpegQuality = () => clamp(getConfig().previewJpegQualityPercent / 100, 0.1, 1);
 
-// Floor of 30 s: Discord has not been shown to accept faster preview updates, and the stock
-// uploader uses this value too.
-export const getPreviewRefreshIntervalMs = () => clamp(Math.round(getConfig().previewRefreshIntervalSec), 30, 300) * 1000;
+// Discord answers a preview post sooner than 60 s after the last one with 429 (retry after 60000 ms).
+export const PREVIEW_POST_MIN_MS = 61000;
 
-export const getPreviewRetryIntervalMs = () => clamp(Math.round(getConfig().previewRetryIntervalSec), 3, 120) * 1000;
+export const getPreviewRefreshIntervalMs = () => Math.max(clamp(Math.round(getConfig().previewRefreshIntervalSec), 30, 300) * 1000, PREVIEW_POST_MIN_MS);
+
+export const getPreviewRetryIntervalMs = () => Math.max(clamp(Math.round(getConfig().previewRetryIntervalSec), 3, 120) * 1000, PREVIEW_POST_MIN_MS);
 
 export const applyPreviewUploadFilter = (ctx: CanvasRenderingContext2D | null) => {
     if (!ctx) return;

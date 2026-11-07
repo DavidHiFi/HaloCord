@@ -136,6 +136,15 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
             replace: "let $1=$self.getPreviewUploadDataUrl($2);"
         }
     },
+    // With a custom cover, previewSender posts it; Discord's own upload of the same cover in the
+    // same minute got 429 every cycle. Discord's cycle keeps running but skips the post.
+    {
+        find: "Failed to post stream preview",
+        replacement: {
+            match: /if\(!(\i)\)try\{(?=var \i,\i;let \i,\i,\i,\i,\i,\i,\i,\i;)/,
+            replace: "if(!$1&&!$self.shouldSpoofStreamPanelPreview())try{"
+        }
+    },
     {
         find: "Failed to post stream preview",
         replacement: {
@@ -199,14 +208,6 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         replacement: {
             match: /\((\i)\?\[(\i)\.UK\.H265,\2\.UK\.H264,\2\.UK\.VP8,\2\.UK\.VP9\]:\[\2\.UK\.H264,\2\.UK\.VP8,\2\.UK\.VP9\]\)\.forEach/,
             replace: "$self.getPreferredVideoCodecOrder($2.UK,$1).forEach"
-        }
-    },
-    {
-        // Chromium skips NVIDIA hardware H.264 for constrained baseline, so cameras and streams encoded in software.
-        find: "profile-level-id=42e01f",
-        replacement: {
-            match: "profile-level-id=42e01f",
-            replace: "profile-level-id=42001f"
         }
     },
     {

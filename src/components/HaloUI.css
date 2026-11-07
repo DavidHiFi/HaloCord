@@ -1375,6 +1375,10 @@ html.hc-theming[data-hc-theme="mochacord"] :is(.theme-dark, .theme-darker, .them
     --control-icon-only-border-hover: rgb(var(--hc-accent-rgb) / 35%) !important;
 }
 
+html.hc-theming [class~="content_YUoOxm"] > :is([class~="icons_YUoOxm"], [data-vu-meter]) {
+    transform: none !important;
+}
+
 /* Friends list row buttons (message, more): a Mocha ring at rest, a blue to mauve ring on hover. */
 html.hc-theming[data-hc-theme="mochacord"] [class~="peopleListItem_y75PxA"] [class*="actionButton_"] {
     border: 1px solid #45475a;
