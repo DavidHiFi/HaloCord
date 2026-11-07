@@ -206,6 +206,13 @@ export default definePlugin({
     hidden: true,
 
     patches: [
+        {
+            find: '"suspended"!==this.input.getAudioState()',
+            replacement: {
+                match: /(\.InteractionRequired:this\.interacted\|\|"suspended"!==this\.input\.getAudioState\(\)\|\|setImmediate\(\(\)=>)this\.emit\(\i,!0\)/,
+                replace: "$1this.interact()"
+            }
+        },
         // "Download Apps" button at the bottom of the server list (same patch as Vesktop's, so it
         // stacks with JunkCleanup's copy).
         {
