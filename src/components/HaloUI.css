@@ -1183,3 +1183,8 @@ html.hc-theming [data-call-tile] :is([class*="streamQualityIndicator_"], [class*
     border-color: transparent !important;
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
 }
+
+/* The voice area keeps a flat surface on hover: no top-down or bottom-up scrim behind the call controls. */
+html.hc-theming [class~="callContainer_hbKzX7"] [class*="gradientContainer_"] {
+    display: none;
+}
