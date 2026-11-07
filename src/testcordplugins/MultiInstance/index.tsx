@@ -916,7 +916,7 @@ export default definePlugin({
     authors: [{ name: "irritably", id: 928787166916640838n }],
     tags: ["Utility"],
     dependencies: ["HeaderBarAPI"],
-    enabledByDefault: true,
+    enabledByDefault: false,
     settings,
     headerBarButton: {
         icon: MultiInstanceIcon,

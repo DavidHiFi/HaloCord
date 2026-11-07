@@ -60,6 +60,7 @@ export default definePlugin({
             replacement: {
                 match: /"(?:username|dot)"===\i(?!\.\i)/g,
                 replace: "true",
+                noWarn: true, // overlaps another plugin
             },
         },
 
@@ -69,7 +70,8 @@ export default definePlugin({
             predicate: () => settings.store.copyRoleColorInProfilePopout && !settings.store.bothStyles,
             replacement: {
                 match: /"dot"===\i/,
-                replace: "true"
+                replace: "true",
+                noWarn: true // overlaps the bothStyles patch
             }
         },
         {
@@ -78,7 +80,8 @@ export default definePlugin({
             predicate: () => settings.store.copyRoleColorInProfilePopout && !settings.store.bothStyles,
             replacement: {
                 match: /"dot"===\i/,
-                replace: "true"
+                replace: "true",
+                noWarn: true // overlaps the bothStyles patch
             }
         }
     ],

@@ -69,12 +69,12 @@ export default definePlugin({
     tags: ["Appearance", "Customisation"],
     patches: [
         {
-            find: ".Messages.DISCODO_DISABLED",
+            find: '"guild-list-unread-dms"',
             predicate() {
                 return settings.store.onHomeClick;
             },
             replacement: {
-                match: /onClick:\(\)=>{/,
+                match: /onClick:function\(\)\{(?=(?:.{0,60}?;)?if\(!__OVERLAY__)/,
                 replace: "$&$self.startIdle();"
             }
         }

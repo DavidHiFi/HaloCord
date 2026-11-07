@@ -21,7 +21,7 @@ import { TestcordDevs } from "@utils/constants";
 import { localStorage } from "@utils/localStorage";
 import { closeAllModals, openModal } from "@utils/modal";
 import definePlugin from "@utils/types";
-import { findByPropsLazy } from "@webpack";
+import { findByPropsLazy, findCssClassesLazy } from "@webpack";
 import { Button, FluxDispatcher, Forms, React, showToast, Toasts } from "@webpack/common";
 
 import AppIconModal from "./AppIconModal";
@@ -41,7 +41,7 @@ interface AppIconData {
 const AppIconData = findByPropsLazy("UZ", "QA") as AppIconData;
 
 const AppIconStore = findByPropsLazy("getCurrentDesktopIcon");
-const EditorFooterClasses = findByPropsLazy("editorFooter");
+const EditorFooterClasses = findCssClassesLazy("editorFooter");
 
 function removeAppIcon() {
     const current_icon = AppIconStore.getCurrentDesktopIcon();

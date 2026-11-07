@@ -225,7 +225,7 @@ export default definePlugin({
                     predicate: () => settings.store.removeNameplate,
                 },
                 {
-                    match: /let\{ref:\i,speaking:\i,voiceDb:/,
+                    match: /let\{ref:\i,speaking:\i,(?:playingSoundboard:\i,)?voiceDb:/,
                     replace: "arguments[0].nameplate=null;$&",
                     predicate: () => settings.store.removeNameplate,
                 },
@@ -254,8 +254,8 @@ export default definePlugin({
             // Clan tag
             find: ".GuildFeatures.GUILD_TAGS)",
             replacement: {
-                match: /(?<=\.profile\?\.badge.{0,50}\i\)\{)/,
-                replace: "return false;",
+                match: /return null!=\i&&null!=\i&&!\i\}/,
+                replace: "return false}",
             },
             predicate: () => settings.store.removeClanTag,
         },

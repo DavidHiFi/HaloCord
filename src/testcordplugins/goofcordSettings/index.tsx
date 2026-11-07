@@ -13,7 +13,8 @@ import { Forms } from "@webpack/common";
 
 import style from "./style.css?managed";
 
-const classes = findCssClassesLazy("membersWrap", "messagesWrapper");
+const memberClasses = findCssClassesLazy("membersWrap");
+const chatClasses = findCssClassesLazy("messagesWrapper", "chat");
 
 const settings = definePluginSettings({
     renderingOptimizations: {
@@ -49,7 +50,7 @@ export default definePlugin({
             predicate: () => settings.store.keybinds,
             replacement: [
                 { match: /\i\.isPlatformEmbedded\b/g, replace: "true" },
-                { match: /\(0,\i\.isDesktop\)\(\)/g, replace: "true" },
+                { match: /\(0,\i\.isDesktop\)\(\)/g, replace: "true", noWarn: true }, // overlaps HaloKeybinds
                 {
                     match: /(CUSTOM_KEYBINDS_SETTING.{0,120}?Component:\s*(?:function\(\)\{|\(\)=>)\s*(?:return\s*)?)\i\.\i(\s*\?)/,
                     replace: "$1true$2",
@@ -72,8 +73,8 @@ export default definePlugin({
 
     installRenderingCSS() {
         setStyleClassNames(style, {
-            membersWrap: classes.membersWrap,
-            messagesWrapper: classes.messagesWrapper,
+            membersWrap: memberClasses.membersWrap,
+            messagesWrapper: chatClasses.messagesWrapper,
         });
         enableStyle(style);
     },

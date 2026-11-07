@@ -12,11 +12,10 @@ import { TestcordDevs } from "@utils/constants";
 import { sleep } from "@utils/misc";
 import definePlugin, { OptionType } from "@utils/types";
 import { findByCodeLazy,findByPropsLazy } from "@webpack";
-import { Menu, SelectedChannelStore,showToast, Toasts } from "@webpack/common";
+import { Menu, SelectedChannelStore, showToast, Toasts, UserSettingsActionCreators } from "@webpack/common";
 
 const TokenStore = findByPropsLazy("getToken");
 const addFavoriteGif = findByCodeLazy("favoriteGifs", "order", "updateAsync");
-const favoriteGifsStore = findByPropsLazy("bW", "getCurrentValue");
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -155,11 +154,8 @@ function getAddGifFn(): ((gif: any) => void) | null {
 
 function getCurrentFavoriteUrls(): Set<string> {
     try {
-        const store = favoriteGifsStore?.bW;
-        if (store && typeof store.getCurrentValue === "function") {
-            const gifs = store.getCurrentValue()?.favoriteGifs?.gifs ?? {};
-            return new Set(Object.keys(gifs));
-        }
+        const gifs = UserSettingsActionCreators.FrecencyUserSettingsActionCreators.getCurrentValue()?.favoriteGifs?.gifs ?? {};
+        return new Set(Object.keys(gifs));
     } catch { }
     return new Set();
 }

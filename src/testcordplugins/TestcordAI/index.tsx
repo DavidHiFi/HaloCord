@@ -92,9 +92,8 @@ const DS_KEY = "nightcord-ai-history";
 
 const VoiceActions = findByPropsLazy("selectVoiceChannel", "disconnect");
 const ChannelActions = findByPropsLazy("openPrivateChannel");
-const PrivateChannelStore = findByPropsLazy("getPrivateChannelIds", "getSortedPrivateChannels");
 const GuildStore = findByPropsLazy("getGuildIds", "getGuilds");
-const CallActionsLazy = findByPropsLazy("startCall");
+const CallActionsLazy = findByPropsLazy("call", "ring", "stopRinging");
 let navClickHandler: (() => void) | null = null;
 
 interface DiscordAction {
@@ -123,7 +122,7 @@ function findFriend(name: string): { id: string; username: string; } | null {
 async function getDMChannelId(userId: string): Promise<string> {
     // Method 1: search in already-open private channels
     try {
-        const privateIds: string[] = PrivateChannelStore.getPrivateChannelIds?.() ?? [];
+        const privateIds: string[] = ChannelStore.getSortedPrivateChannels().map(c => c.id);
         for (const id of privateIds) {
             const c = ChannelStore.getChannel(id);
             if (c?.type === 1 && c?.recipients?.some?.((r: any) => r?.id === userId || r === userId)) {
@@ -144,7 +143,7 @@ async function getDMChannelId(userId: string): Promise<string> {
     // Method 3: openPrivateChannel then search again
     await ChannelActions.openPrivateChannel(userId);
     await sleep(500);
-    const privateIds2: string[] = PrivateChannelStore.getPrivateChannelIds?.() ?? [];
+    const privateIds2: string[] = ChannelStore.getSortedPrivateChannels().map(c => c.id);
     for (const id of privateIds2) {
         const c = ChannelStore.getChannel(id);
         if (c?.type === 1 && c?.recipients?.some?.((r: any) => r?.id === userId || r === userId)) {
@@ -166,10 +165,10 @@ async function callUser(userId: string): Promise<void> {
     await sleep(400);
     const channelId = await getDMChannelId(userId);
 
-    // Method 1: startCall via CallActionsLazy
+    // Method 1: call and ring through CallActionsLazy
     try {
-        if (typeof CallActionsLazy?.startCall === "function") {
-            CallActionsLazy.startCall({ channelId });
+        if (typeof CallActionsLazy?.call === "function") {
+            CallActionsLazy.call(channelId, false, true);
             return;
         }
     } catch (_) { /* */ }
@@ -769,10 +768,10 @@ export default definePlugin({
     patches: [
         {
             // Patch 1: Replace the Shop page with our TestcordAI panel
-            find: ".COLLECTIBLES_SHOP]:()=>",
+            find: /COLLECTION_DETAIL\(":collectionId"\),\i\.\i\.COLLECTIBLES_SHOP\],render:/,
             replacement: {
-                match: /\[(\i)\.zgK\.COLLECTIBLES_SHOP\]:\(\)=>\(0,\i\.jsx\)\(\i,\{\}\)/,
-                replace: "[$1.zgK.COLLECTIBLES_SHOP]:()=>$self.renderPanel()",
+                match: /(path:\[\i\.\i\.COLLECTIBLES_SHOP_COLLECTION_DETAIL\(":collectionId"\),\i\.\i\.COLLECTIBLES_SHOP\],render:)\i/,
+                replace: "$1()=>$self.renderPanel()",
             }
         },
         {

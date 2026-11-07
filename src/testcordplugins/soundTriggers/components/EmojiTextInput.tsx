@@ -5,16 +5,17 @@
  */
 
 import { Flex } from "@components/Flex";
-import { findByPropsLazy, findComponentByCodeLazy } from "@webpack";
+import { findByCodeLazy, findByPropsLazy, findComponentByCodeLazy } from "@webpack";
 import { Button, useRef } from "@webpack/common";
 import React from "react";
 
 import { classFactory } from "../index";
 
-const { Editor, Transforms } = findByPropsLazy("Editor", "Transforms");
-const { ChatInputTypes } = findByPropsLazy("ChatInputTypes");
-const InputComponent = findComponentByCodeLazy("default.CHANNEL_TEXT_AREA", "input");
-const { createChannelRecordFromServer } = findByPropsLazy("createChannelRecordFromServer");
+const Transforms = findByPropsLazy("insertNodes", "textToText");
+const Editor = findByPropsLazy("start", "end", "toSlateRange");
+const ChatInputTypes = findByPropsLazy("FORM", "USER_PROFILE");
+const InputComponent = findComponentByCodeLazy("editorClassName", "CHANNEL_TEXT_AREA");
+const createChannelRecordFromServer = findByCodeLazy(".GUILD_TEXT]", "fromServer)");
 
 interface EmojiTextInputProps {
     value: string;

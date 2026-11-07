@@ -46,10 +46,10 @@ export default definePlugin({
             }
         },
         {
-            find: ".gatedContent,",
+            find: /disagreementButtonVariant:\i="secondary",onAgree:/,
             replacement: {
-                match: /this.props/,
-                replace: "$self.patchProps($&)"
+                match: /function\((\i)\)\{(?=let\{title:\i,subtitle:\i,description:\i,agreement:\i,agreementButtonVariant)/,
+                replace: "$&$1=$self.patchProps($1);"
             }
         }
     ],
@@ -58,6 +58,7 @@ export default definePlugin({
         const channel = getCurrentChannel();
         if (!channel) return props;
         if (!isPasswordProtected(channel.id)) return props;
+        props = { ...props };
         props.title = "This channel is password protected";
         props.description = "This channel is password protected. Please enter the password to view the content.";
         props.agreement = "Enter password";

@@ -74,7 +74,8 @@ export default definePlugin({
             predicate: () => settings.store.bypassLengthLimit && !isPluginEnabled("SplitLargeMessages"),
             replacement: {
                 match: /if\(\i\.length>\i/,
-                replace: "if(false"
+                replace: "if(false",
+                noWarn: true // overlaps another plugin
             }
         },
         {
@@ -82,7 +83,8 @@ export default definePlugin({
             predicate: () => settings.store.overrideDiscordConversion && !isPluginEnabled("SplitLargeMessages"),
             replacement: {
                 match: /(?<=getData\(\i\.type\);)if\(\i\.length>\i\)/,
-                replace: "if(false)"
+                replace: "if(false)",
+                noWarn: true // overlaps another plugin
             }
         }
     ]

@@ -20,12 +20,12 @@ import { resolveLang } from "@plugins/shikiCodeblocks.desktop/api/languages";
 import { HighlighterProps } from "@plugins/shikiCodeblocks.desktop/components/Highlighter";
 import { HljsSetting } from "@plugins/shikiCodeblocks.desktop/types";
 import { classNameFactory } from "@utils/css";
-import { DefaultExtractAndLoadChunksRegex, extractAndLoadChunksLazy, findByPropsLazy } from "@webpack";
 
 export const cl = classNameFactory("vc-shiki-");
 
-export const hljs: typeof import("highlight.js").default = findByPropsLazy("highlight", "registerLanguage");
-export const requireHljs = extractAndLoadChunksLazy(["codeBlock:{react("], new RegExp(`"hljs".+?${DefaultExtractAndLoadChunksRegex.source}`));
+// Discord removed highlight.js, so the hljs fallback is a no-op.
+export const hljs: any = null;
+export const requireHljs = async () => { };
 
 export const shouldUseHljs = ({
     lang,
@@ -40,7 +40,7 @@ export const shouldUseHljs = ({
 
     switch (tryHljs) {
         case HljsSetting.Always:
-            return true;
+            return hljs != null;
         case HljsSetting.Primary:
             return !!hljsLang || lang === "";
         case HljsSetting.Secondary:

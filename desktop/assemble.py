@@ -44,6 +44,7 @@ shutil.copy2(D / "shell" / "shareaudio.js", asrc / "shareaudio.js")
 shutil.copy2(D / "shell" / "hc-desktop.js", asrc / "hc-desktop.js")  # hc-desktop: startup, tray, build choice, app icon
 shutil.copy2(D / "shell" / "hc-icon.js", asrc / "hc-icon.js")  # hc-icon: applies the green or Mocha blue app icon
 shutil.copy2(D / "shell" / "hc-update.js", asrc / "hc-update.js")  # hc-update: the in-app updater
+shutil.copy2(D / "shell" / "hc-watchdog.js", asrc / "hc-watchdog.js")  # hc-watchdog: reloads a hung, crashed or blank main window
 # build.json tells hc-update.js which commit this build is, for the list of changes in the next update.
 git = lambda *a: subprocess.run(["git", *a], cwd=D.parent, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW).stdout.strip()
 base = lambda f: (D.parent / ".github" / f).read_text().strip() if (D.parent / ".github" / f).exists() else ""
@@ -91,7 +92,7 @@ m = m.replace('path.join(__dirname,"icon.png")', 'require("./hc-desktop.js").ico
 # Load the bundle's main side first, with its settings in %APPDATA%\HaloCord\TestCord (Stable keeps %APPDATA%\Testcord).
 a = 'Menu:Menu}=require("electron");'
 assert m.count(a) == 1
-m = m.replace(a, a + 'process.env.DVX_NO_UPDATE_CHECK="1";process.env.TESTCORD_USER_DATA_DIR=require("path").join(app.getPath("appData"),"HaloCord","TestCord");require("./equicord/main.js");')
+m = m.replace(a, a + 'process.env.DVX_NO_UPDATE_CHECK="1";process.env.TESTCORD_USER_DATA_DIR=require("path").join(app.getPath("userData"),"TestCord");require("./equicord/main.js");')
 # Screen share: the page's share picker (StreamEnhancer SharePicker) preselects the source, so the
 # old "Choose what to share" window only opens when nothing was picked. Chromium gets video only;
 # the sound comes from shell/shareaudio.js, which leaves HaloCord's own playback out.
@@ -124,7 +125,8 @@ m += ('\nfunction mcWinFile(){return require("path").join(app.getPath("userData"
       'p.transparent&&(o.transparent=!0,o.backgroundColor="#00000000");'
       '"win32"===process.platform&&["mica","tabbed"].includes(p.windowsMaterial)&&(o.backgroundMaterial=p.windowsMaterial,o.backgroundColor="#00000000");'
       '"win32"===process.platform&&"acrylic"===p.windowsMaterial&&(o.backgroundColor="#00000000");return o}'
-      'function mcAcrylic(w){if("win32"===process.platform&&"acrylic"===mcWinPrefs().windowsMaterial)try{require("./mcblur.js").apply(w,!0)}catch(e){console.error("[HaloCord] acrylic failed",e)}}'
+      'function mcAcrylic(w,again){if("win32"===process.platform&&"acrylic"===mcWinPrefs().windowsMaterial)try{require("./mcblur.js").apply(w,!0);'
+      'again||[794,798].forEach(m=>w.hookWindowMessage(m,()=>setTimeout(()=>w.isDestroyed()||mcAcrylic(w,!0),400)))}catch(e){console.error("[HaloCord] acrylic failed",e)}}'
       'ipcMain.handle("halocord:show-item",(e,t)=>shell.showItemInFolder(String(t)));'
       'ipcMain.handle("halocord:relaunch",()=>{hcUpdate.install()||(app.relaunch(),app.exit(0))});'
       'ipcMain.handle("halocord:open-settings-folder",()=>shell.openPath(app.getPath("userData")));'
@@ -256,7 +258,7 @@ for f in ("preload.js", "userscript.js"):
         for a, b in [
             ("var Q={", "var Q={'micFxOn':![],'micFxPreset':'none','micFxPitch':0,'micFxBoost':0,'micFxEcho':0,'micFxRing':0,'micFxCrush':0,"
                         "'micFxMuffle':0,'micFxBass':0,'micFxResonance':0,'micFxStatic':0,'micFxDropout':0,'micFxClip':0,"),
-            ("dvxSrc['connect'](dvxNode);", "var mcFxOut=dvxSrc;try{mcFxOut=mcFxAttach(dvxCtx,dvxSrc)||dvxSrc;window['HaloCordFx']=mcFxOut;}catch(mcFxErr){mcFxOut=dvxSrc;}mcFxOut['connect'](dvxNode);"),
+            ("dvxSrc['connect'](dvxNode);", "var mcFxOut=dvxSrc;try{mcFxOut=mcFxAttach(dvxCtx,dvxSrc)||dvxSrc;window['HaloCordFx']=mcFxOut;}catch(mcFxErr){mcFxOut=dvxSrc;}mcFxOut['connect'](dvxMono),dvxMono['connect'](dvxNode);"),
             ("Gz['appendChild'](dvxEQcard);\ndvxEQpaint();\n}catch(dvxEQuiErr){}",
              "Gz['appendChild'](dvxEQcard);\ndvxEQpaint();\n}catch(dvxEQuiErr){}try{Gz['appendChild'](mcFxPanel(QP,Qr));}catch(mcFxUiErr){}"),
         ]:

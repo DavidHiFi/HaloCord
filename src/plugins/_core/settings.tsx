@@ -734,7 +734,7 @@ export default definePlugin({
         },
         {
             // Settings sidebar sections: make the title a collapse toggle and let the list hide its items.
-            find: ".hideTitle?",
+            find: ".hideTitle?(0,",
             group: true,
             replacement: [
                 {

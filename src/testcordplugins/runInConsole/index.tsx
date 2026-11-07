@@ -151,12 +151,12 @@ export default definePlugin({
     authors: [TestcordDevs.x2b],
     patches: [
         {
-            find: /\i\(\)\(\i\.scrollbarGhostHairline,"hljs"\)/,
+            find: "codeBlock:{react:(",
             replacement: [
                 {
-                    // this shit is hot garbage, but it works. :pray:
-                    match: /(className:\i.codeActions,children:)(\(0,(\i).jsx\)\(\i,{text:(\i).content}\))(}\):null)/,
-                    replace: "$1[$2,(0,$3.jsx)($self.RunIcon,{text:$4.content})]$5"
+                    // also matches when QuickSnippet already wrapped the copy button
+                    match: /\(0,(\i)\.jsx\)\(\i,\{text:(\i)\.content\}\)(?=\}\):null|,\i\.Plugins\.plugins\["QuickSnippet"\]\.AppendButton)/,
+                    replace: "[$&,(0,$1.jsx)($self.RunIcon,{text:$2.content})]"
                 }
             ]
         }

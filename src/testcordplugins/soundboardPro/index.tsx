@@ -739,7 +739,7 @@ export function openSoundboardPro() {
 }
 
 // Button component for the voice panel (like fakeDeafen)
-const PanelButton = findComponentByCodeLazy(".NONE,disabled:", ".PANEL_BUTTON");
+const PanelButton = findComponentByCodeLazy("tooltipPositionKey", "positionKeyStemOverride");
 
 function SoundboardIcon() {
     return (

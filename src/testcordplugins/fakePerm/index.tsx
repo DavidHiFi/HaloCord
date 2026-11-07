@@ -555,6 +555,7 @@ export default definePlugin({
             replacement: {
                 match: /&&\i\.\i\.canManageUser\(\i\.\i\.MODERATE_MEMBERS,\i\.author,\i\)/,
                 replace: "",
+                noWarn: true, // overlaps another plugin
             },
         },
         {
@@ -563,6 +564,7 @@ export default definePlugin({
             replacement: {
                 match: /\i\.\i\.can\(\i\.\i.MANAGE_GUILD,\i\)/,
                 replace: "true",
+                noWarn: true, // overlaps another plugin
             },
         },
         {
@@ -571,6 +573,7 @@ export default definePlugin({
             replacement: {
                 match: /return \i\.\i\(\i\.\i\(\{user:\i,context:\i,checkElevated:!1\}\),\i\.\i\)/,
                 replace: "return true",
+                noWarn: true // overlaps another plugin
             }
         },
         // fixes a bug where Members page must be loaded to see highest role

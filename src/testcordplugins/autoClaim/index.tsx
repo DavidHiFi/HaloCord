@@ -5,6 +5,7 @@
  */
 
 import { NavContextMenuPatchCallback } from "@api/ContextMenu";
+import { HeaderBarButton } from "@api/HeaderBar";
 import { definePluginSettings } from "@api/Settings";
 import { classNameFactory } from "@api/Styles";
 import { TestcordDevs } from "@utils/constants";
@@ -12,7 +13,7 @@ import { classes } from "@utils/misc";
 import definePlugin, { OptionType } from "@utils/types";
 import { User } from "@vencord/discord-types";
 import { findByCodeLazy, findByPropsLazy,findStoreLazy } from "@webpack";
-import { Button, ChannelStore, Menu, React, RestAPI, Toasts, Tooltip, UserStore } from "@webpack/common";
+import { ChannelStore, Menu, React, RestAPI, Toasts, UserStore } from "@webpack/common";
 
 export const cl = classNameFactory("vc-voice-channel-log-");
 const createBotMessage = findByCodeLazy('username:"Clyde"');
@@ -333,12 +334,41 @@ function ToolBarClaimIcon() {
 
 let clientOldChannelId: string | undefined;
 
+function ClaimToolbarButton() {
+    if (settings.store.autoClaimEnabled) return null;
+
+    return (
+        <HeaderBarButton
+            className="vc-manual-claim-btn"
+            tooltip="Claim Voice Channel"
+            icon={ToolBarClaimIcon}
+            onClick={() => {
+                const currentChannelId = VoiceStateStore.getVoiceStateForUser(UserStore.getCurrentUser().id)?.channelId;
+                if (currentChannelId) {
+                    updateVcOwnerTracking(currentChannelId);
+                    attemptClaim(currentChannelId, "Manual claim from toolbar", true);
+                } else {
+                    Toasts.show({
+                        message: "You're not in a voice channel",
+                        id: "not-in-vc-toolbar",
+                        type: Toasts.Type.FAILURE,
+                        options: {
+                            position: Toasts.Position.BOTTOM
+                        }
+                    });
+                }
+            }}
+        />
+    );
+}
+
 export default definePlugin({
     id: "AutoClaim",
     name: "AutoClaim",
     description: "Automatically claims a vc after the owner of it leaves or when joining unowned VCs (custom VCs only)",
     tags: ["Utility", "Servers"],
     authors: [TestcordDevs.dot],
+    dependencies: ["HeaderBarAPI"],
     settings,
 
     start() {
@@ -367,49 +397,9 @@ export default definePlugin({
         "user-context": makeContextMenuPatch()
     },
 
-    patches: [
-        {
-            find: "\"invite-button\"",
-            replacement: {
-                match: /(\i\.Fragment,{children:)(\i\i)/,
-                replace: "$1[$self.renderClaimButton(),...$2]"
-            }
-        },
-    ],
-
-    renderClaimButton() {
-        if (settings.store.autoClaimEnabled) return null;
-
-        return (
-            <Tooltip text="Claim Voice Channel">
-                {tooltipProps => (
-                    <Button
-                        style={{ backgroundColor: "transparent" }}
-                        {...tooltipProps}
-                        size={"25"}
-                        className={"vc-manual-claim-btn"}
-                        onClick={() => {
-                            const currentChannelId = VoiceStateStore.getVoiceStateForUser(UserStore.getCurrentUser().id)?.channelId;
-                            if (currentChannelId) {
-                                updateVcOwnerTracking(currentChannelId);
-                                attemptClaim(currentChannelId, "Manual claim from toolbar", true);
-                            } else {
-                                Toasts.show({
-                                    message: "You're not in a voice channel",
-                                    id: "not-in-vc-toolbar",
-                                    type: Toasts.Type.FAILURE,
-                                    options: {
-                                        position: Toasts.Position.BOTTOM
-                                    }
-                                });
-                            }
-                        }}
-                    >
-                        <ToolBarClaimIcon />
-                    </Button>
-                )}
-            </Tooltip>
-        );
+    headerBarButton: {
+        icon: ToolBarClaimIcon,
+        render: ClaimToolbarButton
     },
 
     flux: {

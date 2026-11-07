@@ -77,7 +77,7 @@ export default definePlugin({
             predicate: () => settings.store.frequentEmojis
         },
         {
-            find: "#{intl::ADD_REACTION_NAMED}",
+            find: "id:`quickreact-",
             group: true,
             replacement: [
                 {
@@ -86,8 +86,8 @@ export default definePlugin({
                 },
                 // Override limit of emojis to display with offset hook.
                 {
-                    match: /"MessageContextMenu"\},\{autoTrackExposure.{0,5}\}\),/,
-                    replace: "$&[moreQuickReactionsScrollValue,setMoreQuickReactionsScrollValue]=Vencord.Webpack.Common.React.useState(0),"
+                    match: /\i=\(\(\i=\(0,\i\.\i\)\(\i\.guild_id\)\.filter\(/,
+                    replace: "[moreQuickReactionsScrollValue,setMoreQuickReactionsScrollValue]=Vencord.Webpack.Common.React.useState(0),$&"
                 },
                 {
                     match: /\.length>4&&\(\i\.length=4\)/,
@@ -100,7 +100,7 @@ export default definePlugin({
                 },
                 // Scroll handler + Apply the emoji count limit from earlier with custom logic
                 {
-                    match: /children:(\i)\.map\(/,
+                    match: /children:(\i)\.map\((?=\(\i,\i\)=>\(0,\i\.jsx\)\(\i\.\i,\{id:`quickreact-)/,
                     replace: "onWheel:$self.onWheelWrapper(moreQuickReactionsScrollValue,setMoreQuickReactionsScrollValue,$1.length),children:$self.applyScroll($1,moreQuickReactionsScrollValue).map("
                 }
             ]
@@ -116,7 +116,7 @@ export default definePlugin({
         {
             find: '"--custom-menu-viewport-padding"',
             replacement: {
-                match: /className:\i\(\)\(\i\.menu/,
+                match: /className:\i\(\)\(\i\.menu(?=,\i\[\i\])/,
                 replace: '$&,"vc-better-quick-react-padding"'
             }
         }

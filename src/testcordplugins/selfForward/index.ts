@@ -17,7 +17,8 @@ export default definePlugin({
             find: ".getChannelHistory(),",
             replacement: [{
                 match: /\i.id\]/,
-                replace: "]"
+                replace: "]",
+                noWarn: true // overlaps another plugin
             }]
         }
     ]

@@ -391,6 +391,16 @@ page.on("console", async e => {
                             profileStopRequested = true;
                             await saveProfile("-final");
                         }
+                        // REPORTER_DUMP=<file>: save every Discord module's unpatched source as JSON, for fixing patches offline.
+                        if (process.env.REPORTER_DUMP) {
+                            const dump = await page.evaluate(() => {
+                                const { Webpack, WebpackPatcher } = (window as any).Vencord, out: Record<string, string> = {};
+                                const m = Webpack.wreq.m[WebpackPatcher.SYM_ORIGINAL_MODULE_FACTORIES] ?? Webpack.wreq.m;
+                                for (const id in m) out[id] = String(m[id]);
+                                return JSON.stringify(out);
+                            });
+                            writeFileSync(process.env.REPORTER_DUMP, dump);
+                        }
                         await browser.close();
                         await printReport();
                         process.exit();

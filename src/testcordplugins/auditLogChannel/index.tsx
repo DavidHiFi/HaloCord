@@ -10,6 +10,7 @@ import definePlugin from "@utils/types";
 import AuditLogChannelRow from "./components/AuditLogChannelRow";
 import AuditLogPage from "./components/AuditLogPage";
 import AuditLogPageWrapper from "./components/AuditLogPageWrapper";
+import { setAuditLogComponent } from "./state";
 
 export default definePlugin({
     id: "AuditLogChannel",
@@ -31,15 +32,15 @@ export default definePlugin({
         },
         {
             // Render button
-            find: 'this,"updateChannelListScroll",',
+            find: "this.updateChannelListScroll.cancel()",
             replacement: {
-                match: /case \i\.\i\.GUILD_MOD_DASH_MEMBER_SAFETY(:.{0,30}?jsx\)\()\i\.\i(,.{0,30}?)\i\.\i\.MEMBER_SAFETY},\i\.\i\.GUILD_MOD_DASH_MEMBER_SAFETY\);/,
+                match: /case \i\.\i\.GUILD_MOD_DASH_MEMBER_SAFETY(:.{0,30}?jsx\)\()\i(,.{0,30}?)\i\.\i\.MEMBER_SAFETY},\i\.\i\.GUILD_MOD_DASH_MEMBER_SAFETY\);/,
                 replace: '$&case "audit-log"$1$self.AuditLogChannelRow$2"audit-log"},"audit-log");'
             }
         },
         {
             // Render page
-            find: "app view user trigger debugging",
+            find: /MEMBER_SAFETY:return\(0,\i\.jsx\)\(\i,\{guildId:\i\}\)/,
             replacement: {
                 match: /case \i\.\i\.MEMBER_SAFETY(:.{0,20}?jsx\)\()\i(,.{0,20}?;)/,
                 replace: '$&case "audit-log"$1$self.AuditLogPageWrapper$2'
@@ -56,12 +57,13 @@ export default definePlugin({
         {
             find: "!this.props.showLoadMore&&this.props.logs.length",
             replacement: {
-                match: /(\i)\.\i=\i\.\i\.connectStores\(.{0,600}?}}\)\((\i)/,
-                replace: "$1.vcAuditLogComponent=$2;$&"
+                match: /let \i=\i\.\i\.connectStores\(.{0,600}?}}\)\((\i)\)/,
+                replace: "$self.setAuditLogComponent($1);$&"
             }
         }
     ],
 
+    setAuditLogComponent,
     AuditLogChannelRow,
     AuditLogPage,
     AuditLogPageWrapper,

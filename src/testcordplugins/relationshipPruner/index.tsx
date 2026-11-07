@@ -29,18 +29,18 @@ export default definePlugin({
     },
     patches: [
         {
-            find: ".DISCODO_DISABLED",
+            find: '"guild-list-unread-dms"',
             replacement: {
-                match: /.NavItem,{/,
-                replace: "$&onContextMenu:() => $self.onContextMenu(\"guild\"),"
+                match: /(onMouseEnter:\(\)=>\i\(!0\),onMouseLeave:\(\)=>\i\(!1\),)(?=onClick:function\(\)\{)/,
+                replace: "$1onContextMenu:() => $self.onContextMenu(\"guild\"),"
             }
         },
         {
-            find: "friends_tab_no_track",
+            find: /showHoverGradient:\i,onClick:\i,selected:\i,route:\i\.\i\.FRIENDS/,
             replacement:
             {
-                match: /text:\i.\i.Messages.FRIENDS,onClick:/,
-                replace: "onContextMenu:() => $self.onContextMenu(\"friend\"), $&"
+                match: /(showHoverGradient:\i,)(onClick:\i,selected:\i,route:\i\.\i\.FRIENDS)/,
+                replace: "$1onContextMenu:() => $self.onContextMenu(\"friend\"),$2"
             }
         }
     ],

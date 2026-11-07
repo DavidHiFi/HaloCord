@@ -5,14 +5,14 @@
  */
 
 import { useAwaiter } from "@utils/react";
-import { extractAndLoadChunksLazy, findByPropsLazy } from "@webpack";
+import { extractAndLoadChunksLazy, findByCodeLazy, findCssClassesLazy } from "@webpack";
 
 import AuditLogPage from "./AuditLogPage";
 
 const loadClassesRegex = /(?:(?:Promise\.all\(\[)?([A-Za-z_$][\w$]*\.e\("?[^)]+?"?\)[^\]]*?)(?:\]\))?|Promise\.resolve\(\))\.then\([A-Za-z_$][\w$]*\.bind\([A-Za-z_$][\w$]*,"?([^)]+?)"?\)\)(?=.{0,30}"ChannelsAndRolesPage")/;
 const loadClasses = extractAndLoadChunksLazy(['"ChannelsAndRolesPage"'], loadClassesRegex);
-const loaderClasses = findByPropsLazy("loader", "fullWidth");
-const { Spinner } = findByPropsLazy("Spinner");
+const loaderClasses = findCssClassesLazy("loader", "fullWidth");
+const Spinner = findByCodeLazy('"pulsingEllipsis"') as any;
 
 export default function AuditLogPageWrapper(props: any) {
     const [success, , pending] = useAwaiter<any>(async () => {

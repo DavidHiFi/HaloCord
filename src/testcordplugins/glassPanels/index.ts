@@ -10,7 +10,8 @@ import { findCssClassesLazy } from "@webpack";
 
 import style from "./style.css?managed";
 
-const classes = findCssClassesLazy("sidebar", "membersWrap", "members");
+const layoutClasses = findCssClassesLazy("sidebar", "guilds", "base");
+const memberClasses = findCssClassesLazy("membersWrap", "members");
 
 export default definePlugin({
     id: "GlassPanels",
@@ -19,9 +20,9 @@ export default definePlugin({
     authors: [{ name: "Sharp", id: 0n }],
     start() {
         setStyleClassNames(style, {
-            sidebar: classes.sidebar,
-            membersWrap: classes.membersWrap,
-            members: classes.members,
+            sidebar: layoutClasses.sidebar,
+            membersWrap: memberClasses.membersWrap,
+            members: memberClasses.members,
         });
         enableStyle(style);
     },

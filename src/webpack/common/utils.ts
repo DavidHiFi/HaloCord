@@ -18,7 +18,7 @@
 
 import { Logger } from "@utils/Logger";
 import type * as t from "@vencord/discord-types";
-import { _resolveReady, filters, find, findByCodeLazy, findByProps, findByPropsLazy, findLazy, mapMangledModule, mapMangledModuleLazy, proxyLazyWebpack, waitFor } from "@webpack";
+import { _resolveReady, filters, find, findByCodeLazy, findByProps, findByPropsLazy, findLazy, mapMangledModule, mapMangledModuleLazy, waitFor } from "@webpack";
 import type * as TSPattern from "ts-pattern";
 
 const logger = new Logger("WebpackCommon");
@@ -360,13 +360,7 @@ export const VoiceActions = findByPropsLazy("toggleSelfMute");
 export const GuildActions = findByPropsLazy("setServerMute", "setServerDeaf");
 export const ChannelActions = findByPropsLazy("selectChannel", "selectVoiceChannel");
 export const DraftActions = findByPropsLazy("saveDraft", "changeDraft");
-export const PinActions: { pinMessage: (...args: any[]) => any; unpinMessage: (...args: any[]) => any; } = proxyLazyWebpack(() => {
-    try {
-        return findLazy(m => m?.pinMessage && m?.unpinMessage) as any;
-    } catch {
-        return { pinMessage() { }, unpinMessage() { } } as any;
-    }
-});
+export const PinActions: { pinMessage: (...args: any[]) => any; unpinMessage: (...args: any[]) => any; } = findByPropsLazy("pinMessage", "unpinMessage");
 
 export const IconUtils: t.IconUtils = findByPropsLazy("getGuildBannerURL", "getUserAvatarURL");
 

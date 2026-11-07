@@ -11,7 +11,7 @@
  */
 
 import { NavContextMenuPatchCallback } from "@api/ContextMenu";
-import { definePluginSettings, Settings } from "@api/Settings";
+import { definePluginSettings } from "@api/Settings";
 import { UserAreaButton, UserAreaRenderProps } from "@api/UserArea";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { TestcordDevs } from "@utils/constants";
@@ -295,7 +295,7 @@ const settings = definePluginSettings({
     showMeters: {
         type: OptionType.BOOLEAN,
         description: "Draws left and right level meters next to everyone in your voice channel and on call tiles.",
-        default: true,
+        default: false,
         onChange(value: boolean) {
             if (value) startMeters();
             else stopMeters();
@@ -425,7 +425,7 @@ const settings = definePluginSettings({
         description: "Show screen share audio on VU meters while you have the stream muted.",
         default: false
     }
-}).withPrivateSettings<{ peakHoldEnabled?: boolean; metersMigrated?: boolean; }>();
+}).withPrivateSettings<{ peakHoldEnabled?: boolean; metersMigrated?: boolean; metersOptIn?: boolean; }>();
 
 function getConnection(): VoiceConnection | null {
     const engine = MediaEngineStore.getMediaEngine();
@@ -1994,9 +1994,11 @@ export default definePlugin({
             settings.store.peakHoldEnabled = true;
         }
         // The plugin is always on now; its old on/off switch becomes the Show VU meters option.
-        if (!settings.store.metersMigrated) {
-            settings.store.showMeters = Settings.plugins.VoiceVUMeters.enabled !== false;
+        // Meters cost CPU in every call, so they are opt-in: switched off once for everyone (2.12.3), then left to the user.
+        if (!settings.store.metersOptIn) {
+            settings.store.showMeters = false;
             settings.store.metersMigrated = true;
+            settings.store.metersOptIn = true;
         }
         if (settings.store.showMeters) startMeters();
         optionsTimer = setInterval(mountOptions, 500);

@@ -36,7 +36,10 @@ export default definePlugin({
     authors: [TestcordDevs.x2b],
     patches: [
         {
+            // The hover-bar reaction suggestion experiment is gone from Discord, nothing left to patch
             find: ".MESSAGE_HOVER_BAR_REACTION_SUGGESTION_ADD_ALLY",
+            all: true,
+            noWarn: true,
             replacement: {
                 match: /(\.length>=3?.{0,40}\.slice\(0),3\)/,
                 replace: "$1,$self.settings.store.Max)"

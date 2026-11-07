@@ -16,15 +16,19 @@ export default definePlugin({
     tags: ["Servers", "Utility"],
     patches: [
         {
-            find: "DISCOVERY_SIDEBAR_CATEGORIES.",
+            // The store now filters the list through a fixed id list; use every category instead
+            find: '"GuildDiscoveryCategoryStore"',
             replacement: {
-                match: /\i\.DISCOVERY_SIDEBAR_CATEGORIES(\.slice\(1\)|\.map\(\i=>\i\.find\(\i=>\i\.categoryId===\i\)\))/g,
-                replace: "this.getAllCategories()",
+                match: /(getDiscoveryCategories\(\)\{let \i=)\i\.\i\.map\(\i=>(\i)\.find\(\i=>\i\.categoryId===\i\)\)/,
+                replace: "$1[...$2]",
             },
         },
         // Use the "Discover" icon for only the home page
         {
+            // The sidebar icon switch no longer exists in Discord
             find: "CategoryIcons.Discover:",
+            all: true,
+            noWarn: true,
             replacement: [
                 {
                     match: /(switch\()(\i)(\).{0,100}case\s\i\.CategoryIcons\.Discover:.{0,20})(\i\.default),/,

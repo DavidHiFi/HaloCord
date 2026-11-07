@@ -35,17 +35,28 @@ export default definePlugin({
     tags: ["Notifications", "Utility"],
     patches: [
         {
-            find: "SimpleMessageAccessories:",
-            replacement: [
-                {
-                    match: /function \i\((\i),\i\){return/,
-                    replace: "$& $self.shouldSpoiler($1.originalItem.filename) || "
-                },
-                {
-                    match: /(\i)=\(0,\i\.getOb.{27,35}\);(?=if\((\i).type)/,
-                    replace: "$&$1=$self.spoilerLink($1,$2.url,$2.type);"
-                }
-            ]
+            // message attachments
+            find: /if\(0===\i\.length\)return null;let \i=1===\i\.length;function/,
+            replacement: {
+                match: /(function \i\((\i),\i\)\{let \i=)(?=\(0,\i\.\i\)\(\2\.originalItem\.flags\?\?0,\i\.\i\.IS_SPOILER\))/,
+                replace: "$1$self.shouldSpoiler($2.originalItem.filename)||"
+            }
+        },
+        {
+            // message attachments in the media mosaic
+            find: /IS_SPOILER\)\|\|\(0,\i\.\i\)\(\i\);return\(0,\i\.\i\)\(\i\.originalItem,/,
+            replacement: {
+                match: /(function \i\((\i),\i\)\{let \i=)(?=\(0,\i\.\i\)\(\2\.originalItem\.flags\?\?0,\i\.\i\.IS_SPOILER\))/,
+                replace: "$1$self.shouldSpoiler($2.originalItem.filename)||"
+            }
+        },
+        {
+            // embed media (gifs, images from links)
+            find: /\.media,\i,\i\.spoiler,\i\?\.author\.bot/,
+            replacement: {
+                match: /(\{let (\i)=\i\.originalItem;return\(0,\i\.\i\)\(\i\.media,\i,)\i\.spoiler/,
+                replace: "$1$self.spoilerLink($2.spoiler,$2.media.url,$2.media.originalContentType??$2.media.contentType)"
+            }
         }
     ],
     settings,
@@ -73,7 +84,7 @@ export default definePlugin({
         if (!strings.length) return null;
         return strings.some(s => filename.includes(s)) ? "spoiler" : null;
     },
-    spoilerLink(alreadySpoilered: string, link: string, type: string): string | null {
+    spoilerLink(alreadySpoilered: any, link: string, type?: string): any {
         if (alreadySpoilered) return alreadySpoilered;
         if (!link) return null;
         const strings = this._getSpoilerLinks();
@@ -81,7 +92,7 @@ export default definePlugin({
         const isLinkSpoiler = strings.some(s => link.includes(s));
 
         if (settings.store.gifSpoilersOnly) {
-            return type === "gifv" && isLinkSpoiler ? "spoiler" : null;
+            return (type === "gifv" || type === "image/gif") && isLinkSpoiler ? "spoiler" : null;
         } else {
             return isLinkSpoiler ? "spoiler" : null;
         }

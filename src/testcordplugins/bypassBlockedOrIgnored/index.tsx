@@ -42,7 +42,10 @@ export default definePlugin({
             }
         },
         {
+            // Discord removed the modal for blocked users joining a call; kept for older builds.
             find: "handleBlockedOrIgnoredUserVoiceChannelJoin",
+            all: true,
+            noWarn: true,
             replacement: {
                 match: /handleBlockedOrIgnoredUserVoiceChannelJoin\(\i,\i\)\{/,
                 replace: "$&if($self.handleBlockedOrIgnoredUserVoiceChannelJoin(arguments[0],arguments[1]))return;"

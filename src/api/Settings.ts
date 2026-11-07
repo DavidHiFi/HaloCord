@@ -146,6 +146,8 @@ export interface Settings {
     useTestcordIcon: boolean;
     haloInAppIcon: "green" | "mocha";
     experimentalDataStoreExport: boolean;
+    /** Set once the 2.12.3 performance defaults were applied to an existing install. */
+    hcPerfDefaults?: number;
 }
 
 const DefaultSettings: Settings = {
@@ -174,7 +176,8 @@ const DefaultSettings: Settings = {
         animations: false,
         windowControls: true,
         transparency: true,
-        panelBlur: true,
+        // Blur behind every panel costs the GPU on each frame, so it is opt-in.
+        panelBlur: false,
         separatedChatBar: true,
         smallUserPanel: true,
         hideVoiceMenus: true,
@@ -235,6 +238,11 @@ const DefaultSettings: Settings = {
 
 const settings = !IS_REPORTER ? VencordNative.settings.get() : {} as Settings;
 mergeDefaults(settings, DefaultSettings);
+// Older installs stored panel blur as on; it is switched off once for everyone, then left to the user.
+if (!IS_REPORTER && !settings.hcPerfDefaults) {
+    settings.mochacord.panelBlur = false;
+    settings.hcPerfDefaults = 1;
+}
 
 export const SettingsStore = new SettingsStoreClass(settings, {
     readOnly: true,

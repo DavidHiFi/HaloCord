@@ -5,19 +5,15 @@
  */
 
 import { definePluginSettings } from "@api/Settings";
+import { Heading } from "@components/Heading";
 import { TestcordDevs } from "@utils/constants";
-import { getIntlMessage } from "@utils/discord";
 import definePlugin, { OptionType } from "@utils/types";
 import { User } from "@vencord/discord-types";
-import { extractAndLoadChunksLazy, findByCodeLazy, findByPropsLazy, findComponentByCodeLazy } from "@webpack";
-import { useEffect, useState } from "@webpack/common";
+import { findByCodeLazy, findByPropsLazy } from "@webpack";
+import { TextArea, useState } from "@webpack/common";
 
-const useNote = findByCodeLazy(".getNote(");
-const NoteEditor = findComponentByCodeLazy("hideNote:", ".userId);return");
-const Section = findComponentByCodeLazy("section", '"header-secondary"', "requestAnimationFrame");
-
-const classes = findByPropsLazy("note", "appsConnections");
-const requireClasses = extractAndLoadChunksLazy(['"handleOpenUserProfileModal"']);
+const useNote = findByCodeLazy("USER_NOTE_LOAD_START");
+const NoteApi = findByPropsLazy("updateNote");
 
 const settings = definePluginSettings({
     hideWhenEmpty: {
@@ -27,51 +23,29 @@ const settings = definePluginSettings({
     }
 });
 
-type NoteHook = {
-    visible: boolean;
-    autoFocus: boolean;
-    note: string;
-    activate: () => void;
-};
+function NotesSection({ user }: { user: User; }) {
+    const { note, loading } = useNote(user.id) as { note?: string | null; loading?: boolean; };
+    const [draft, setDraft] = useState<string | null>(null);
+    if (settings.store.hideWhenEmpty && !loading && !note && draft == null) return null;
 
-type NotesSectionProps = {
-    user: User;
-    headingColor?: string;
-};
-
-function useNoteBox(userId: string): NoteHook {
-    const { note, loading } = useNote(userId);
-    const [forced, setForced] = useState(!settings.store.hideWhenEmpty);
-    const [autoFocus, setAutoFocus] = useState(false);
-    return {
-        visible: forced || (!loading && note !== undefined),
-        autoFocus,
-        note,
-        activate() {
-            setForced(true);
-            setAutoFocus(true);
-        }
-    };
-}
-
-function NotesSection(props: NoteHook & NotesSectionProps) {
-    const [loaded, setLoaded] = useState(false);
-    useEffect(() => {
-        requireClasses().then(() => setLoaded(true)).catch(() => { });
-    }, []);
-    if (!props.visible || !loaded) return null;
-    return <Section
-        title={getIntlMessage("NOTE")}
-        scrollIntoView={props.autoFocus}
-        headingColor={props.headingColor}
-    >
-        <NoteEditor
-            userId={props.user.id}
-            className={classes.note}
-            autoFocus={props.autoFocus}
-            onUpdate={() => { }}
-        />
-    </Section>;
+    const value = draft ?? note ?? "";
+    return (
+        <div className="vc-simplified-notes" style={{ padding: "8px 12px" }}>
+            <Heading tag="h3">Note</Heading>
+            <TextArea
+                value={value}
+                disabled={loading}
+                maxLength={256}
+                rows={2}
+                placeholder="Click to add a note"
+                onChange={(v: string) => setDraft(v)}
+                onBlur={() => {
+                    if (draft != null && draft !== (note ?? "")) NoteApi.updateNote(user.id, draft);
+                    setDraft(null);
+                }}
+            />
+        </div>
+    );
 }
 
 export default definePlugin({
@@ -83,28 +57,22 @@ export default definePlugin({
     settings,
     patches: [
         {
-            // DM Sidebar
-            find: /getRelationshipType.{0,800}\.Overlay.{0,200}Messages\.USER_POPOUT_ABOUT_ME/,
+            // Profile popout
+            find: "\"UserProfilePopout\"",
             replacement: {
-                match: /(\(0,.{0,50}Messages\.USER_PROFILE_MEMBER_SINCE.{0,100}userId:(\i)\.id}\)\}\))]/,
-                replace: "$1,$self.NotesSection({ headingColor: 'header-primary', user: $2, ...vencordNotesHook })]"
+                match: /(\(0,\i\.jsx\)\(\i\.A,\{user:(\i),currentUser:\i,guildId:\i\?\.id,onOpenUserProfileModal:\i,onClose:\i\}\),)/,
+                replace: "$1$self.renderNotes($2),"
+            }
+        },
+        {
+            // DM sidebar
+            find: /\(0,\i\.jsx\)\(\i\.A,\{user:\i,currentUser:\i,onOpenUserProfileModal:\i\}\),\i\?\(0,\i\.jsxs\)\(\i\.Fragment/,
+            replacement: {
+                match: /(\(0,\i\.jsx\)\(\i\.A,\{user:(\i),currentUser:\i,onOpenUserProfileModal:\i\}\),)(?=\i\?\(0,\i\.jsxs\)\(\i\.Fragment)/,
+                replace: "$1$self.renderNotes($2),"
             }
         }
-    ].map(p => ({
-        ...p,
-        group: true,
-        replacement: [
-            {
-                match: /getRelationshipType\((\i.id)\)\)/,
-                replace: "$&,vencordNotesHook=$self.useNoteBox($1)"
-            },
-            {
-                match: /(!\i)(&&\(0,\i\.jsx\)\(\i\.\i,{user:\i,isHovering:\i,onOpenProfile:\(\)=>).{1,20}?\({subsection:\i\.\i\.NOTE}\)/,
-                replace: "($1&&!vencordNotesHook.visible)$2vencordNotesHook.activate()"
-            },
-            p.replacement
-        ]
-    })),
-    useNoteBox,
+    ],
+    renderNotes: (user: User) => <NotesSection user={user} />,
     NotesSection
 });

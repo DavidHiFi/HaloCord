@@ -14,9 +14,9 @@ export default definePlugin({
     authors: [Devs.thororen],
     patches: [
         {
-            find: "n?.widgets!=null&&n.widgets.length>0",
+            find: /\.widgets\.length>0[\s\S]{0,1500}?currentUser:\i,guildId/,
             replacement: {
-                match: /user:\i,widgets:\i\?\.\i+,onOpenUserProfileModal:\i\}\)/,
+                match: /user:\i,widgets:\i\?\.\i+,onOpenUserProfileModal:\i\}\)(?=,\(0,\i\.jsx\)\(\i\.\i,\{user:\i,currentUser:\i,guildId)/,
                 replace: "$&,Vencord.Api.ProfileCollections.renderProfileCollections(arguments[0])",
             },
         },

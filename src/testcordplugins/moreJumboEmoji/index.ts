@@ -36,7 +36,7 @@ export default definePlugin({
     patches: [{
         find: ".jumboable=",
         replacement: {
-            match: /(\i)>\i\.MAX_EMOJI_TO_BE_JUMBO\|\|/g,
+            match: /(\i)>30\|\|(?=\i\.forEach\(\i=>\{\i\.jumboable=!0)/,
             replace: "$self.calculate($1)||"
         }
     }],

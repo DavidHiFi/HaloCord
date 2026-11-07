@@ -17,7 +17,7 @@ import { insertTextIntoChatInputBox, sendMessage } from "@utils/discord";
 import { Margins } from "@utils/margins";
 import { parseUrl } from "@utils/misc";
 import definePlugin, { OptionType, PluginNative } from "@utils/types";
-import { findByPropsLazy } from "@webpack";
+import { findCssClassesLazy } from "@webpack";
 import { Alerts, Button, DraftType, Menu, PermissionsBits, PermissionStore, React, Select, SelectedChannelStore, showToast, TextInput, Toasts, UploadManager, useEffect, useState } from "@webpack/common";
 
 import { LoggingLevel, pluginLogger as log, setLoggingLevelProvider } from "./logging";
@@ -41,7 +41,7 @@ interface UploadResult {
     error?: string;
 }
 
-const OptionClasses = findByPropsLazy("optionName", "optionIcon", "optionLabel");
+const OptionClasses = findCssClassesLazy("optionName", "optionIcon");
 
 // Progress tracking - use centralized module
 function generateUploadId(): string {
@@ -1459,7 +1459,7 @@ const ctxMenuPatch: NavContextMenuPatchCallback = (children, props) => {
         <Menu.MenuItem
             id="upload-big-file"
             label={
-                <div className={OptionClasses.optionLabel}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <OpenExternalIcon className={OptionClasses.optionIcon} height={24} width={24} />
                     <div className={OptionClasses.optionName}>Upload a Big File</div>
                 </div>

@@ -169,7 +169,7 @@ export default definePlugin({
             replacement: [
                 // Voice channel rows (guild sidebar)
                 {
-                    match: /(?<=this.getTooltipText\(\),.{0,100})iconClassName:/,
+                    match: /(?<=disableOverflowTooltip:null!=\i,)iconClassName:/g,
                     replace: "draggable:!0,onDragStart:e=>$self.onChannelDragStart(e,{id:this?.props?.channel?.id,guild_id:this?.props?.channel?.guild_id}),$&"
                 },
                 // Voice channel rows (guild sidebar fallback - li wrapper)
@@ -233,7 +233,7 @@ export default definePlugin({
         {
             find: "PrivateChannel.renderAvatar: Invalid prop configuration - no user or channel",
             replacement: {
-                match: /\.CHANNEL\(\i\.\i,\i\.\i\),(?=.{0,150}\.isMultiUserDM\(\))/,
+                match: /\.CHANNEL\(\i\.\i,\i\.\i\),(?=className:.{0,250}?\.isMultiUserDM\(\))/,
                 replace: "$&draggable:!0,onDragStart:e=>$self.onDmDragStart(e,arguments[0].channel),"
             }
         },

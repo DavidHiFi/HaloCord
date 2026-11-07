@@ -42,14 +42,6 @@ export default definePlugin({
                 }
             ]
         },
-        // Fix a race condition
-        {
-            find: ".completeOperation(",
-            replacement: {
-                match: /(?<=this\.nextId\(\);)(\i\(\i\)),(.{0,200}reject:\i\}\))/,
-                replace: "$2,$1"
-            }
-        },
         {
             find: ".USE_OSX_NATIVE_TRAFFIC_LIGHTS",
             replacement: {

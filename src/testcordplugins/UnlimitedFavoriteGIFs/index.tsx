@@ -148,6 +148,7 @@ export default definePlugin({
             replacement: {
                 match: /\.toBinary\((\i)\)\.length>\d+/,
                 replace: ".toBinary($1).length>Number.MAX_SAFE_INTEGER",
+                noWarn: true // overlaps GifTransfer
             }
         },
     ],

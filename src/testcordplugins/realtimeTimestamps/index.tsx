@@ -180,12 +180,14 @@ export default definePlugin({
                     replace: "$self.useGlobalTick();",
                 },
                 {
-                    // Message timestamps (both compact & cozy modes)
+                    // Message timestamps (both compact & cozy modes). CustomTimestamps patches the same code, so skip the warning when both are on.
+                    noWarn: true,
                     match: /\i\.useMemo\(\(\)=>null!=\i\?.{0,80}?"LT".{0,40}\]\)/,
                     replace: "$self.renderTimestamp(arguments[0].timestamp,arguments[0].compact?'compact':'cozy')",
                 },
                 {
-                    // Tooltip shown when hovering a message timestamp
+                    // Tooltip shown when hovering a message timestamp (same overlap with CustomTimestamps)
+                    noWarn: true,
                     match: /(__unsupportedReactNodeAsText:).{0,100}?"LLLL"\)/,
                     replace: "$1$self.renderTimestamp(arguments[0].timestamp,'tooltip')",
                 },
@@ -194,14 +196,15 @@ export default definePlugin({
 
         // ─── Timestamp markdown <t:unix:t> — hover tooltip ────────────────────
         {
-            find: ".MINUTE],[45*",
+            find: ".full,ariaHidden:!0",
             predicate: () => !isPluginEnabled("CustomTimestamps"),
             replacement: [
                 {
-                    match: /(?<=function \i\(\i\)\{)(?=let\{node:\i)/,
+                    match: /(?<=function\(\i\)\{)(?=let\{node:\i)/,
                     replace: "$self.useGlobalTick();",
                 },
                 {
+                    noWarn: true, // overlaps CustomTimestamps
                     match: /(__unsupportedReactNodeAsText:).{0,50}?\.full/,
                     replace: "$1$self.renderTimestamp(new Date(arguments[0].node.timestamp*1000),'tooltip')",
                 },

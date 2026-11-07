@@ -136,11 +136,13 @@ export default definePlugin({
             replacement: [
                 {
                     match: /return (\i\.\i)(\?\(0,\i\.jsx\)\(\i,\{\}\):\(0,\i\.jsx\)\(\i\.\i,\{type:"info",message:\i\.intl\.format\(\i\.t\.mPi3F3)/,
-                    replace: "return($1||$self.on)$2"
+                    replace: "return($1||$self.on)$2",
+                    noWarn: true // overlaps GoofcordSettings
                 },
                 {
                     match: /useHeaderDecoration:\(\)=>(\i\.\i)\?(?=\{type:\i\.\i\.BUTTON_GROUP,buttons:\[\{id:"add-keybind")/,
-                    replace: "useHeaderDecoration:()=>($1||$self.on)?"
+                    replace: "useHeaderDecoration:()=>($1||$self.on)?",
+                    noWarn: true // overlaps GoofcordSettings
                 },
                 {
                     match: /\(0,(\i\.\i)\)\(\)(?=&&\(\i\.push\(\{id:"navigate-back")/,

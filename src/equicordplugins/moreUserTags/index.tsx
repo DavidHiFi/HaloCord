@@ -75,6 +75,7 @@ export default definePlugin({
             replacement: {
                 match: /(#{intl::APP_TAG::hash}":\[").{0,30}("\])/,
                 replace: "$1BOT$2",
+                noWarn: true // some locale bundles already say BOT
             }
         }
     ],

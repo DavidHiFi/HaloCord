@@ -116,7 +116,7 @@ export default definePlugin({
     authors: [TestcordDevs.x2b],
     patches: [
         {
-            find: ".SETTINGS_NOTICE_MESSAGE",
+            find: /onSaveButtonColor:\i,disabled:\i,saveButtonTooltip:\i\}=/,
             replacement: {
                 match: /onSave:(\i).*?children:\[/,
                 replace: "$&$self.KeyListener($1),"

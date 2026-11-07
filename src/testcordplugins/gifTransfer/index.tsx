@@ -703,6 +703,7 @@ export default definePlugin({
             replacement: {
                 match: /\.toBinary\(\i\)\.length>\d+/,
                 replace: ".toBinary(t).length>Number.MAX_SAFE_INTEGER",
+                noWarn: true, // overlaps another plugin
             }
         },
     ],

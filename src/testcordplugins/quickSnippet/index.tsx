@@ -85,10 +85,10 @@ export default definePlugin({
     settings: settings,
     patches: [
         {
-            find: "codeBlock:{react(",
+            find: "codeBlock:{react:(",
             replacement: {
-                match: /(codeBlock:\{react\((\i),(\i),(\i)\)\{.+?),children:(\(0,(\i)\.jsx\)\((\i),\{text:(\i)\.content\}\))/,
-                replace: "$1,children:[$5, $self.AppendButton($2, $4)]"
+                match: /(codeBlock:\{react:\((\i),(\i),(\i)\)=>.{0,400}?children:)(\(0,\i\.jsx\)\(\i,\{text:\2\.content\}\))/,
+                replace: "$1[$5,$self.AppendButton($2,$4)]"
             }
         }
     ],

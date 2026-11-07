@@ -112,6 +112,7 @@ exports.init = ({ win, tray, show }) => {
         if (w.isDestroyed()) return;
         w.setIcon(exports.icon());
         if (w !== win()) return;
+        require("./hc-watchdog.js").watch(w);
         w.on("session-end", () => { quitting = true; });
         w.on("close", e => {
             if (quitting || !prefs.minimizeToTray) return;

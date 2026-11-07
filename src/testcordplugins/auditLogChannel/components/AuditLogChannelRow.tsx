@@ -10,7 +10,7 @@ import { Guild } from "@vencord/discord-types";
 import { findByPropsLazy, findComponentByCodeLazy } from "@webpack";
 import { GuildStore, NavigationRouter, PermissionsBits, PermissionStore, UserStore,useStateFromStores } from "@webpack/common";
 
-const ChannelRow = findComponentByCodeLazy(".basicChannelRowLink,");
+const ChannelRow = findComponentByCodeLazy("showUnread:", "data-list-item-id", "renderIcon:");
 const Routes = findByPropsLazy("INDEX", "FRIENDS", "ME");
 
 export default function AuditLogChannelRow(props: { guild: Guild, selected: boolean; }) {

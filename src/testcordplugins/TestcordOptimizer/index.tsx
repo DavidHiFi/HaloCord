@@ -1096,10 +1096,10 @@ export default definePlugin({
             }
         },
         {
-            find: "\"SpriteCanvas-module_spriteCanvasHidden",
+            find: /confettiCanvas:\i,spriteCanvas:\i,baseConfig:\i\.\i,/,
             predicate: () => settings.store.killConfettiCanvas,
             replacement: {
-                match: /,\i\.createElement\("canvas",\{.+?\)\}\)/,
+                match: /,\(0,\i\.jsx\)\(\i\.\i,\{ref:\i,className:\i\.\i,environment:\i\.\i,onClick:\i\?\i:void 0,onBeforeRender:\i,onAfterRender:\i\}\),\(0,\i\.jsx\)\(\i\.\i,\{ref:\i,colors:\i\.\i,sprites:\i\.\i,spriteWidth:28,spriteHeight:28\}\)/,
                 replace: ""
             }
         },

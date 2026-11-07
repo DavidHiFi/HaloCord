@@ -10,7 +10,7 @@ import { definePluginSettings, Settings } from "@api/Settings";
 import { TestcordDevs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
 import type { Channel, Message, User } from "@vencord/discord-types";
-import { findByPropsLazy, findStoreLazy } from "@webpack";
+import { filters, findStoreLazy, mapMangledModuleLazy } from "@webpack";
 import { ChannelStore, GuildStore, Menu, NavigationRouter, PresenceStore, React, SelectedChannelStore, Tooltip, UserStore } from "@webpack/common";
 import { CSSProperties } from "react";
 
@@ -68,7 +68,9 @@ function shouldBeNative() {
 
 const SessionsStore = findStoreLazy("SessionsStore");
 
-const StatusUtils = findByPropsLazy("useStatusFillColor", "StatusTypes");
+const { useStatusFillColor } = mapMangledModuleLazy([".5625*", "translate"], {
+    useStatusFillColor: filters.byCode(".hex")
+});
 
 function Icon(path: string, opts?: { viewBox?: string; width?: number; height?: number; }) {
     return ({ color, tooltip, small }: { color: string; tooltip: string; small: boolean; }) => (
@@ -100,7 +102,7 @@ const PlatformIcon = ({ platform, status, small }: { platform: Platform, status:
     const tooltip = platform[0].toUpperCase() + platform.slice(1);
     const Icon = Icons[platform] ?? Icons.desktop;
 
-    return <Icon color={StatusUtils.useStatusFillColor(status)} tooltip={tooltip} small={small} />;
+    return <Icon color={useStatusFillColor(status)} tooltip={tooltip} small={small} />;
 };
 
 interface PlatformIndicatorProps {

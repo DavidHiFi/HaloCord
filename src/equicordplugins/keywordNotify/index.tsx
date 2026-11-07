@@ -189,7 +189,7 @@ export default definePlugin({
             group: true,
             replacement: [
                 {
-                    match: /#{intl::Fn6Odn::raw}\)\}\)\}\):null/,
+                    match: /#{intl::Fn6Odn::raw}\)\}\)\}\)(?::null)?/,
                     replace: "$&,$self.keywordTabBar()"
                 },
                 {

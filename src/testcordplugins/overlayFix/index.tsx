@@ -89,10 +89,10 @@ export default definePlugin({
     patches: [
         {
             // Patch to force overlay module installation if Discord hesitates
-            find: "window.DiscordNative.nativeModules.install",
+            find: "Loading Out of Process Overlay Module",
             replacement: {
-                match: /"discord_desktop_overlay"/,
-                replace: "\"discord_desktop_overlay\", {force: true}"
+                match: /ensureModule\("discord_desktop_overlay"\)/,
+                replace: "ensureModule(\"discord_desktop_overlay\", {force: true})"
             }
         }
     ]

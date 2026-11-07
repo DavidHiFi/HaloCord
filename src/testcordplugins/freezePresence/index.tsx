@@ -103,7 +103,8 @@ export default definePlugin({
                 {
                     // Patch getClientStatus too so the dot color matches
                     match: /getClientStatus\((\i)\)\{return (\i)\[(\i)\]\}/,
-                    replace: 'getClientStatus($1){if($self.fakeOnlineStatus($1))return{desktop:"online"};return $2[$3]}'
+                    replace: 'getClientStatus($1){if($self.fakeOnlineStatus($1))return{desktop:"online"};return $2[$3]}',
+                    noWarn: true // overlaps another presence patch
                 }
             ]
         }

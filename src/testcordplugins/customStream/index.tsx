@@ -2170,6 +2170,8 @@ function getCustomThumbnail(originalThumbnail: string): string {
     return cachedDataUris[currentSlideIndex];
 }
 
+const PluginPanelButton = ErrorBoundary.wrap(StreamPreviewPanelButton, { noop: true });
+
 export default definePlugin({
     id: "CustomStreamTopQ",
     name: "CustomStreamTopQ",
@@ -2188,11 +2190,11 @@ export default definePlugin({
     patches: [
         {
             // Патч для добавления кнопки в панель (рядом с микрофоном/наушниками)
-            find: ".DISPLAY_NAME_STYLES_COACHMARK),",
+            find: "accountContainerRef:this.containerRef",
             replacement: {
-                // Матчим начало массива children после чего угодно, главное чтобы был accountContainerRef дальше
-                match: /(children:\[)(.{0,150}?)(accountContainerRef)/,
-                replace: "$1$self.StreamPreviewPanelButton(arguments[0]),$2$3"
+                // The account panel is a class component now, so render the button as an element
+                match: /(children:\[)(?=.{0,150}?accountContainerRef:this\.containerRef)/,
+                replace: "$1$self.renderPanelButton(this.props.nameplate),"
             }
         },
         {
@@ -2220,6 +2222,7 @@ export default definePlugin({
 
     // Кнопка в панели аккаунта
     StreamPreviewPanelButton: ErrorBoundary.wrap(StreamPreviewPanelButton, { noop: true }),
+    renderPanelButton: (nameplate?: any) => <PluginPanelButton nameplate={nameplate} />,
 
     // Функция для замены thumbnail (вызывается из webpack patch)
     getCustomThumbnail,

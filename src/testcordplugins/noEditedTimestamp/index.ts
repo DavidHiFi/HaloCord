@@ -18,7 +18,7 @@ export default definePlugin({
         {
             find: "#{intl::MESSAGE_EDITED}",
             replacement: {
-                match: /(?<=function \i\(\i\)\{)(?=let\{message:)/,
+                match: /(?<=function\(\i\)\{)(?=let\{message:)/,
                 replace: "return null;",
             },
         },

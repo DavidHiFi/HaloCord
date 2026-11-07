@@ -362,7 +362,7 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
     {
         find: "type:\"set_source_type\",sourceType:",
         replacement: {
-            match: /return ((\i)\|\|(\i)\.splice\(1,0,\{name:.{0,160}?value:\i\.fS\.SCREEN,icon:\i\.k\}\)),\3\},\[\2\]\)/,
+            match: /return ((\i)\|\|(\i)\.splice\(1,0,\{name:.{0,160}?value:\i\.fS\.SCREEN,icon:\i\.ScreenIcon\}\)),\3\},\[\2\]\)/,
             replace: "return $1,$3.some(option=>option.value===$self.getGoLiveStreamEnhanceSourceType())?$3:[...$3,$self.getGoLiveStreamEnhanceSourceOption()]},[$2])"
         }
     },
@@ -474,10 +474,10 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
         ]
     },
     {
-        find: "Q=D<=2*b+144,J=M&&!Q",
+        find: /\i=\i<=384,\i=\i&&!\i,/,
         replacement: {
-            match: /J=(\i)&&!(\i)/,
-            replace: "J=(globalThis.vcShowParticipants??$1)&&!$2"
+            match: /(\i=\i<=384,\i)=(\i)&&!(\i),/,
+            replace: "$1=(globalThis.vcShowParticipants??$2)&&!$3,"
         }
     },
     {

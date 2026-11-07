@@ -20,7 +20,8 @@ import type {
 export const applicationStreamingStore = findStoreLazy("ApplicationStreamingStore") as ApplicationStreamingStoreLike | undefined;
 export const channelRtcStore = findStoreLazy("ChannelRTCStore") as ChannelRTCStoreLike | undefined;
 export const watchStream = findByCodeLazy('type:"STREAM_WATCH"') as ((stream: StreamDescriptor, options?: WatchStreamOptions) => void) | undefined;
-export const popoutActions = findByPropsLazy("openChannelCallPopout", "openCallTilePopout") as PopoutActionsLike | undefined;
+const openChannelCallPopout = findByCodeLazy('type:"CHANNEL_CALL_POPOUT_WINDOW_OPEN"') as PopoutActionsLike["openChannelCallPopout"];
+export const popoutActions: PopoutActionsLike = { openChannelCallPopout: channel => openChannelCallPopout(channel) };
 export const channelRtcActions = findByPropsLazy("selectParticipant", "updateLayout", "popoutParticipant") as ChannelRtcActionsLike | undefined;
 export const streamUiConstants = findByPropsLazy("BRT", "DUB", "MLl") as StreamUiConstantsLike | undefined;
 export const popoutWindowStore = findStoreLazy("PopoutWindowStore") as PopoutWindowStoreLike | undefined;

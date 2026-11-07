@@ -560,12 +560,87 @@ const styleModule = readFileSync(
     "utf-8",
 );
 
+// Plain CSS imported from a plugin folder used to land in the always-on core sheet, so every
+// plugin's CSS styled the page (and slowed every style pass) even while the plugin was off.
+// It now loads as a managed style that PluginManager turns on and off with its plugin.
+const PLUGIN_STYLE_DIRS = [
+    "plugins/_api", "plugins/_core", "plugins", "userplugins", "equicordplugins/_api",
+    "equicordplugins/_core", "equicordplugins", "testcordplugins", "Betterdiscordplugins/generated",
+].map(d => `src/${d}/`);
+const pluginFolderOf = file => {
+    const rel = relative(process.cwd(), file).replaceAll("\\", "/");
+    for (const dir of PLUGIN_STYLE_DIRS) {
+        if (!rel.startsWith(dir)) continue;
+        const name = rel.slice(dir.length).split("/")[0];
+        // A loose file such as plugins/foo.tsx is its own plugin; its folder key matches PluginMeta.
+        if (name && !name.startsWith("_")) return dir + name;
+    }
+    return null;
+};
+
+// Plugin folders whose code other plugins or core code import. Their CSS may style a component
+// rendered while the owning plugin is off, so it stays in the always-on sheet.
+let sharedPluginFolders = null;
+async function findSharedPluginFolders() {
+    const shared = new Set();
+    const aliases = { "@plugins/": "src/plugins/", "@equicordplugins/": "src/equicordplugins/", "@testcordplugins/": "src/testcordplugins/" };
+    const walk = async dir => {
+        for (const e of await readdir(dir, { withFileTypes: true })) {
+            const p = join(dir, e.name);
+            if (e.isDirectory()) { if (e.name !== "node_modules") await walk(p); continue; }
+            if (!/\.tsx?$/.test(e.name)) continue;
+            const me = pluginFolderOf(p);
+            const code = await readFile(p, "utf-8");
+            for (const [, spec] of code.matchAll(/(?:from|import)\s*\(?\s*"([^"]+)"/g)) {
+                let target = null;
+                const alias = Object.keys(aliases).find(a => spec.startsWith(a));
+                if (alias) target = aliases[alias] + spec.slice(alias.length);
+                else if (spec.startsWith(".")) target = join(dirname(p), spec);
+                if (!target) continue;
+                const folder = pluginFolderOf(resolve(target)) ?? pluginFolderOf(resolve(target, "x"));
+                if (folder && folder !== me) shared.add(folder);
+            }
+        }
+    };
+    await walk("src");
+    return shared;
+}
+
 /**
  * @type {import("esbuild").Plugin}
  */
 export const stylePlugin = {
     name: "style-plugin",
     setup: ({ onResolve, onLoad }) => {
+        onResolve(
+            { filter: /\.css$/, namespace: "file" },
+            async ({ path, resolveDir, importer, kind }) => {
+                if (kind !== "import-statement" || !importer || !path.startsWith(".") || path.includes("?")) return;
+                const file = join(resolveDir, path);
+                const folder = pluginFolderOf(file);
+                if (!folder || pluginFolderOf(importer) !== folder) return;
+                sharedPluginFolders ??= findSharedPluginFolders();
+                if ((await sharedPluginFolders).has(folder)) return;
+                const css = relative(process.cwd(), file).replaceAll("\\", "/");
+                return { path: `${css}|${folder}`, namespace: "plugin-style", pluginData: { css, folder } };
+            },
+        );
+        onLoad(
+            { filter: /.*/, namespace: "plugin-style" },
+            async ({ pluginData: { css, folder } }) => {
+                const source = await readFile(css, "utf-8");
+                return {
+                    loader: "js",
+                    watchFiles: [resolve(css)],
+                    contents: styleModule
+                        .replaceAll("STYLE_SOURCE", JSON.stringify(source))
+                        .replaceAll("STYLE_NAME", JSON.stringify(css))
+                        + `
+((window.HcPluginStyles ??= {})[${JSON.stringify(folder)}] ??= new Set()).add(${JSON.stringify(css)});
+`,
+                };
+            },
+        );
         onResolve(
             { filter: /\.css\?managed$/, namespace: "file" },
             ({ path, resolveDir }) => ({

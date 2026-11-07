@@ -5,21 +5,15 @@
  */
 
 import { LogIcon } from "@components/Icons";
-import { findByCodeLazy, findByPropsLazy, findComponentByCodeLazy, findLazy, findStoreLazy } from "@webpack";
+import { findByCodeLazy, findComponentByCodeLazy, findCssClassesLazy, findLazy, findStoreLazy } from "@webpack";
 import { GuildStore, UserStore, useStateFromStores } from "@webpack/common";
 import React from "react";
 
-const PageWrapper = findComponentByCodeLazy("forumOrHome]:null");
-const mainClasses = findByPropsLazy("chat", "threadSidebarOpen");
-const headerClasses = findByPropsLazy("header", "innerHeader", "tabBar");
+import { getAuditLogComponent } from "../state";
 
-const { selectFilterPopout } = findByPropsLazy("selectFilterPopout");
-const { elevationBorderHigh } = findByPropsLazy("elevationBorderHigh");
-
-const { SearchableQuickSelect } = findByPropsLazy("SearchableQuickSelect");
-
-const AuditLogModule = findByPropsLazy("vcAuditLogComponent");
-const getAuditLog = (): any => AuditLogModule?.vcAuditLogComponent;
+const PageWrapper = findComponentByCodeLazy("isAuthenticated:", ".HEADER_BAR");
+const mainClasses = findCssClassesLazy("chat", "threadSidebarOpen");
+const headerClasses = findCssClassesLazy("header", "innerHeader", "tabBar");
 
 const GuildSettingsAuditLogStore = findStoreLazy("GuildSettingsAuditLogStore");
 const ThemeStore = findStoreLazy("ThemeStore");
@@ -46,14 +40,14 @@ export default function AuditLogPage({ guildId }: { guildId: string; }) {
         moderators: GuildSettingsAuditLogStore.userIds.map(e => UserStore.getUser(e)).filter(i => i !== null),
         userIdFilter: GuildSettingsAuditLogStore.userIdFilter,
     }));
-    const AuditLogComponent = getAuditLog();
+    const AuditLogComponent = getAuditLogComponent();
 
     if (!AuditLogComponent) return null;
 
     return <div className={mainClasses.chat}>
         <PageWrapper
             className={headerClasses.header}
-            innerClassName={headerClasses.innerHeader}
+            innerClassname={headerClasses.innerHeader}
             hideSearch={true}
             channelId="audit-log"
             guildId={guildId}

@@ -342,6 +342,9 @@ export default definePlugin({
     patches: [
         {
             find: ".usernameSpeaking",
+            // Discord now minifies the class names, so this find no longer hits a module
+            all: true,
+            noWarn: true,
             replacement: {
                 match: /(className:)([^,}]+)(username[^,}]*)/,
                 replace: "$1$self.addOwnerClass($2$3)"

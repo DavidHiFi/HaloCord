@@ -50,6 +50,8 @@ declare global {
     export var VencordNative: typeof import("./VencordNative").default;
     export var Vencord: typeof import("./Vencord");
     export var VencordStyles: Map<string, Style>;
+    /** Managed style names per plugin folder, filled by the build (scripts/build/common.mjs). */
+    export var HcPluginStyles: Record<string, Set<string>> | undefined;
     export var appSettings: {
         set(setting: string, v: any): void;
     };

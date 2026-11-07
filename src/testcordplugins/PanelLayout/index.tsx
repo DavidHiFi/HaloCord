@@ -425,9 +425,22 @@ function updateDomAttributes() {
 }
 
 // Square children paint over the panel's rounded border, so the first and last visible ones get rounded corners.
-function markPanelEdges() {
+// Reading order and size forces a style and layout pass, so it only runs when the panel's children change.
+let lastEdgeKey = "";
+function panelKey(section: HTMLElement) {
+    let key = "";
+    for (const child of section.children) {
+        key += child.className + "|" + child.childElementCount + ";";
+        for (const sub of child.children) key += sub.className + ",";
+    }
+    return key;
+}
+function markPanelEdges(force = false) {
     const section = document.querySelector<HTMLElement>('section[class*="panels_"]');
     if (!section) return;
+    const key = panelKey(section);
+    if (!force && key === lastEdgeKey) return;
+    lastEdgeKey = key;
     const items: { el: HTMLElement; order: number; index: number; }[] = [];
     const add = (el: HTMLElement) => {
         const target = el.matches('[class*="mask_"]') ? el.querySelector<HTMLElement>(':scope > [class*="wrapper_"]') : el;
@@ -460,7 +473,7 @@ function startObserver() {
     document.addEventListener("pointerover", updateRailHover, { passive: true });
     document.addEventListener("pointerout", updateRailHover, { passive: true });
     observer = setInterval(() => {
-        if (updateQueued) return;
+        if (updateQueued || document.hidden) return;
         updateQueued = true;
         updateFrame = requestAnimationFrame(() => {
             updateQueued = false;
@@ -470,7 +483,7 @@ function startObserver() {
         });
     }, 1000);
     updateDomAttributes();
-    markPanelEdges();
+    markPanelEdges(true);
 }
 
 function stopObserver() {

@@ -207,7 +207,7 @@ export default definePlugin({
             // Search autocomplete popout: enable autoInvert so the popout flips
             // above the search bar when the tile is near the viewport bottom,
             // preventing it from covering the bar in small bottom-corner tiles.
-            find: "searchPopout",
+            find: /renderPopout:\i,position:"bottom",animation:\i\.\i\.Animation\.NONE,shouldShow:\i,autoInvert:!1/,
             replacement: {
                 match: /shouldShow:(\i),autoInvert:!1/,
                 replace: "shouldShow:$1,autoInvert:!0"

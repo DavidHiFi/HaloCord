@@ -2,10 +2,10 @@
 
 import { TestcordDevs } from "@utils/constants";
 import definePlugin from "@utils/types";
-import { findByPropsLazy, findComponentByCodeLazy } from "@webpack";
+import { findComponentByCodeLazy, findCssClassesLazy } from "@webpack";
 
-const MemberSince = findComponentByCodeLazy(".memberSinceWrapper,");
-const classes = findByPropsLazy("interactiveNormal");
+const MemberSince = findComponentByCodeLazy("textClassName:", "tooltipDelay:", ".joinedAt");
+const classes = findCssClassesLazy("interactiveNormal");
 
 export default definePlugin({
     id: "BetterBios",

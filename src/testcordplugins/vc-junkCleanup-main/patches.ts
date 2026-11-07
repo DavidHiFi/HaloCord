@@ -34,8 +34,8 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
         patches: {
             find: '"sticker")',
             replacement: {
-                match: /=\i\.gifs?/g,
-                replace: "=null"
+                match: /\i\.gifs\?\.button!=null/g,
+                replace: "false"
             }
         },
         default: false
@@ -45,8 +45,8 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
         patches: {
             find: '"sticker")',
             replacement: {
-                match: /=\i\.stickers?/g,
-                replace: "=null"
+                match: /\i\.stickers\?\.button!=null/g,
+                replace: "false"
             }
         },
         default: false
@@ -70,6 +70,8 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
             },
             {
                 find: "#{intl::PRIVATE_CHANNELS_A11Y_LABEL}",
+                // Declutter patches the same code first, so the reporter sees this as a no-op
+                noWarn: true,
                 replacement: [
                     {
                         match: /\(0,\i\.\i\)\(.{0,250}?\},"discord-shop"\),/,
@@ -94,10 +96,10 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
     updateReadyButton: {
         description: "Hide the Update Ready! button",
         patches: {
-            find: 'case"UPDATE_DOWNLOADED":',
+            find: '"UPDATE_DOWNLOADED"===this.props.mode',
             replacement: {
-                match: /switch\(this\.props\.mode\)/,
-                replace: "return null;$&"
+                match: /(?<=render\(\)\{)(?=let \i="UPDATE_AVAILABLE"===this\.props\.mode)/,
+                replace: "return null;"
             }
         },
         default: false
@@ -108,6 +110,9 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
         patches: [
             {
                 find: ".USER_SETTINGS_MERCH_LINK_CONFIRMED)",
+                // Discord removed this settings entry; nothing left to hide
+                noWarn: true,
+                all: true,
                 replacement: {
                     match: /\[\i\.\i\.PRIVACY_FAMILY_CENTER\]:\{/,
                     replace: "$&predicate:()=>false,"
@@ -119,6 +124,9 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
         description: "Hide the Merch button inside settings",
         patches: {
             find: ".USER_SETTINGS_MERCH_LINK_CONFIRMED)",
+            // Discord removed the merch entry
+            noWarn: true,
+            all: true,
             replacement: {
                 match: /\[\i\.\i\.MERCHANDISE\]:\{/,
                 replace: "$&predicate:()=>false,"
@@ -129,6 +137,9 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
         description: "Hide the links to Discord's Social Media profiles",
         patches: {
             find: ".USER_SETTINGS_MERCH_LINK_CONFIRMED)",
+            // Discord removed the social links entry
+            noWarn: true,
+            all: true,
             replacement: {
                 match: /\[\i\.\i\.SOCIAL_LINKS\]:\{/,
                 replace: "$&predicate:()=>false,"
@@ -140,6 +151,9 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
         patches: [
             {
                 find: "#{intl::BILLING_SETTINGS}",
+                // Billing header string now exists only in locale files; the section is gone
+                noWarn: true,
+                all: true,
                 replacement: {
                     match: /\{header:.{0,30}?#{intl::BILLING_SETTINGS}.?,.+?\},/,
                     replace: ""
@@ -163,10 +177,10 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
     contentInventory: {
         description: "Hide the Activity Feed in the members list",
         patches: {
-            find: /hasFeature\(\i\.\i\.ACTIVITY_FEED_ENABLED_BY_USER\)/,
+            find: "ACTIVITY_FEED_DISABLED_BY_USER);return",
             replacement: {
-                match: /(?=let.{0,50}?hasFeature\(\i\.\i\.ACTIVITY_FEED_ENABLED_BY_USER\))/,
-                replace: "return false;"
+                match: /\i\|\|\i\?\i:null!=\i&&\i<1e4/,
+                replace: "false"
             }
         },
         default: false
@@ -175,10 +189,10 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
     activeNow: {
         description: "Hide the Active Now sidebar in the Friends page",
         patches: {
-            find: ".nowPlayingColumn,",
+            find: ".ADD_FRIEND?(0,",
             replacement: {
-                match: /,\(0,\i\.jsx\)\("div",{className:\i\.nowPlayingColumn,children:\(0,\i.jsx\)\(\i\.\i,{}\)}\)/,
-                replace: ""
+                match: /(?<=let \i=null,\i=)\(0,\i\.jsx\)\("div",{className:\i\.\i,children:\(0,\i\.jsx\)\(\i,{}\)}\)(?=;return \i=\i===\i\.\i\.ADD_FRIEND)/,
+                replace: "null"
             }
         },
         default: false
@@ -187,9 +201,9 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
     transferToConsole: {
         description: "Hide the transfer to console button",
         patches: {
-            find: '"transfer-".concat',
+            find: '"Console Transfer Item"',
             replacement: {
-                match: /(?<=function \i\(\i\){)(?=let.{0,500}?"Console Transfer Item")/,
+                match: /(?<=function \i\(\i\)\{)(?=let.{0,2500}?"Console Transfer Item")/,
                 replace: "return null;"
             }
         }
@@ -198,9 +212,9 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
     textChannelActivityNameHeader: {
         description: "Hide the activity name above expanded activities in text channels",
         patches: {
-            find: ".activityPanelContainer,",
+            find: /"embedded-activity",applicationId:\i\.id\}\),\(0,\i\.jsxs\)\("div",\{className:\i\.\i,children:\[\i\?null:/,
             replacement: {
-                match: /\i\?null:\(0,\i\.jsx\)\("div",{className:\i\.header,.{0,150}\i\.name}\)}\),/,
+                match: /\i\?null:\(0,\i\.jsx\)\("div",{className:\i\.\i,children:\(0,\i\.jsx\)\(\i\.\i,{color:"text-strong",variant:"body-md\/semibold",className:\i\.\i,children:\i\?\.name}\)}\),/,
                 replace: ""
             }
         }
@@ -243,7 +257,7 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
         patches: {
             find: 'tutorialId:"instant-invite",',
             replacement: {
-                match: /(?<=return)(?=.{0,50}?#{intl::EDIT_CHANNEL})/,
+                match: /(?<=disableManageChannels:\i,.{0,80}\}=\i;return)/,
                 replace: ";"
             }
         },
@@ -264,7 +278,7 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
     newMemberBadge: {
         description: "Hide the new member badge",
         patches: {
-            find: ".newMemberBadge},",
+            find: "NEW_MEMBER_MENTION_CTA_CLICKED,{target_user_id",
             replacement: {
                 match: /(?<=return)\(0,\i\.\i\)\(\i\.id,\i\.author\.id\)\?/,
                 replace: " false?"
@@ -311,6 +325,8 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
         description: "Hide the Find or start a new conversation button",
         patches: {
             find: 'tutorialId:"direct-messages",',
+            // SearchUtility applies the same patch first
+            noWarn: true,
             replacement: {
                 match: /\(0,\i\.jsx\)\(\i\.\i,{.{0,50}?tutorialId:"direct-messages",.{0,600}?\}\)\}\)\}\),/,
                 replace: ""
@@ -323,6 +339,9 @@ const Patches: Record<string, ConfigurablePatchDefinition> = {
         description: "Hide the AKA nicknames in DMs",
         patches: {
             find: "this.generateNicknameGuildPairs(this.user)",
+            // Discord removed the AKA nicknames feature
+            noWarn: true,
+            all: true,
             replacement: {
                 match: /this\.generateNicknameGuildPairs\(this\.user\)/,
                 replace: "[];$&"

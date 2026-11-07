@@ -8,7 +8,7 @@ import definePlugin from "@utils/types";
 import { findByPropsLazy } from "@webpack";
 import { RelationshipStore, Toasts } from "@webpack/common";
 
-const RelationshipActions = findByPropsLazy("removeFriend", "sendFriendRequest");
+const RelationshipActions = findByPropsLazy("removeFriend", "cancelFriendRequest", "unblockUser");
 
 // RelationshipType 4 = OUTGOING_REQUEST
 const OUTGOING_REQUEST = 4;

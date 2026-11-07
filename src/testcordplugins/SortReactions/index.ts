@@ -19,11 +19,11 @@ export default definePlugin({
     authors: [TestcordDevs.x2b],
     patches: [
         {
-            find: 'location:"message_reactions"',
+            find: "showImmediate:",
             replacement: [
                 {
-                    match: /{reactions:(\i),/,
-                    replace: "{reactions:$1.sort((a,b)=>b.count-a.count),",
+                    match: /(\i)\.map\((?=\i=>\(0,\i\.jsx\)\(\i,\{\.\.\.\i,\.\.\.\i,emojiSize:"reaction")/,
+                    replace: "[...$1].sort((a,b)=>b.count-a.count).map(",
                 },
             ],
         },

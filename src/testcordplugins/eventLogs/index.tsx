@@ -43,7 +43,6 @@ const navigateTo = (path: string) => {
 };
 
 const VoiceStateActionCreators = findByPropsLazy("selectVoiceChannel") || findByPropsLazy("connectToVoiceChannel");
-const ClipboardModule = findByPropsLazy("copy", "copyLink");
 
 type LogType =
     | "message_delete" | "message_edit"

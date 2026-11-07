@@ -15,12 +15,9 @@ import { Avatar, Button, ChannelStore, FluxDispatcher, Forms, GuildStore, IconUt
 
 const ShieldIcon = (props: any) => <VSafetyIcon width={props.width || 24} height={props.height || 24} {...props} />;
 
-const GuildMemberActions = findByPropsLazy("setCommunicationDisabledUntil", "kickUser", "banUser", "setNickname");
 const VoiceActions = findByPropsLazy("setChannel", "setServerMute");
 const MemberRoleActions = findByPropsLazy("updateMemberRoles");
-const MessageActions = findByPropsLazy("deleteMessages", "sendMessage");
 const MessageStore = findByPropsLazy("getMessages");
-const UserProfileActions = findByPropsLazy("openUserProfileModal", "closeUserProfileModal");
 const InviteActions = findByPropsLazy("resolveInvite");
 const PrivateChannelActions = findByPropsLazy("ensurePrivateChannel");
 const VoiceStateStore = findByPropsLazy("getVoiceState");
@@ -678,10 +675,8 @@ export default definePlugin({
                     success = true;
                 } catch (apiErr: any) {
                     console.error("Rename API Error:", apiErr);
-                    // Fallback to internal action if API fails
-                    await GuildMemberActions.setNickname(guildId, targetId, newName, "SharePerms: Remote Rename");
-                    sendBotMessage(channelId, { content: `✅ User <@${targetId}> renamed to ${newName}.` });
-                    success = true;
+                    // Discord removed the internal nickname action, so there is no fallback.
+                    sendBotMessage(channelId, { content: `❌ Could not rename <@${targetId}>.` });
                 }
             }
             else if (command === "addrole") {

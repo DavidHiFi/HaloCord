@@ -237,10 +237,10 @@ export default definePlugin({
         },
         // 2026-03-wysiwyg-user-profile-editing
         {
-            find: '("UserProfileModalV2EditingPanel")',
+            find: "UserProfileModalV2EditingPanel",
             replacement: [
                 {
-                    match: /disabled:\i\|\|\i\}\)/,
+                    match: /disabled:\i\|\|\i,avatarErrorMessage:\i,avatarDecorationErrorMessage:\i\}\)/,
                     replace: "$&,$self.addCopy3y3Button()"
                 }
             ]

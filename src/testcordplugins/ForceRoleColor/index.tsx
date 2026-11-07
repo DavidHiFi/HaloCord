@@ -89,27 +89,31 @@ export default definePlugin({
     settings,
     patches: [
         {
-            find: ".tertiaryColor,roleStyle:\"username\",includeConvenienceGlow:!0",
+            find: "\"data-username-has-gradient\"",
             replacement: [
                 // Override message author role color
                 {
-                    match: /(?<=let{author:\i,message:)(\i)(.*?)(?<=colorStrings:\i,colorRoleName:\i}=)(\i)/,
+                    match: /(?<=let{author:\i,message:)(\i)(.*?)(?<=colorStrings:\i,colorRoleName:\i,displayNameStyles:\i}=)(\i)/,
                     replace: "$1$2$self.getColorsForMessages($1,$3)"
                 },
                 // Always enable gradient roles
                 {
-                    match: /\(0,\i\.\i\)\(null!=\i\?\i:\i,"BaseUsername"\)/,
+                    match: /(?<=,\i=)\(0,\i\.\i\)\(\i\?\?\i,\i\)(?=,\i=\(0,\i\.\i\)\(\i\),)/,
                     replace: "true"
                 }
             ]
         },
         {
-            find: ".name,roleColors:",
+            find: "hideSubtext:",
             replacement: [
                 // Override member list role color
                 {
-                    match: /(?<=let{colorRoleName.*?colorString:(\i).*?roleColorStrings:(\i).*?user:(\i).*?}=\i;)/,
-                    replace: "let{colorString:_$1,roleColorStrings:_$2}=$self.getColorsForMemberList($3,$1,$2);$1=_$1;$2=_$2;"
+                    match: /(?<=colorString:(\i),colorStrings:\i,.{0,500}?user:(\i),.{0,1500}?)(\i)=(\(0,\i\.\i\)\(\i,\i,\i\?\?null\))(?=,)/,
+                    replace: "$3=$self.getColorsForMemberList($2,$1,$4).roleColorStrings"
+                },
+                {
+                    match: /colorString:(\i)\?\?null(?=,name:\i\?\?\i,colorStrings:\i,hideClanTag:\i,user:(\i))/g,
+                    replace: "colorString:$self.getColorsForMemberList($2,$1,null).colorString??null"
                 }
             ]
         },
@@ -119,18 +123,18 @@ export default definePlugin({
             replacement: [
                 // Override reply role color, uses getColorsForMessage since the keys are the same
                 {
-                    match: /(?<=message:(\i).*?colorString:(\i).*?,(\i)=\(0,\i\.\i\)\(\i,\i\)),/,
+                    match: /(?<=message:(\i).*?colorString:(\i).*?,(\i)=\(0,\i\.\i\)\(\i,\i,\i\)),/,
                     replace: ";let{colorString:_$2,colorStrings:_$3}=$self.getColorsForMessages($1,{colorString:$2,colorStrings:$3});$2=_$2;$3=_$3;let "
                 }
             ]
         },
         {
-            find: "memberNameText}),(0,",
+            find: "?.colorStrings??null);return null==",
             replacement: [
                 // Override color in guild member search
                 {
-                    match: /(?<=let{member:(\i),user:(\i).*(\i)=\(0,.*?colorStrings\);)/,
-                    replace: "$1=$self.getColorsForMemberSearch($2,$1);$3=$1.colorStrings;"
+                    match: /(?<=let{member:(\i),user:(\i)}=\i,(\i)=\(0,\i\.\i\)\(\i\?\.guildId,\i\?\.userId,\i\?\.colorStrings\?\?null\);)/,
+                    replace: "$1&&($1=$self.getColorsForMemberSearch($2,$1),$3=$1.colorStrings);"
                 }
             ]
         }

@@ -41,7 +41,7 @@ import { FluxEvents } from "@vencord/discord-types";
 import { FluxDispatcher } from "@webpack/common";
 import { patches, removePatchesByPlugin } from "@webpack/patcher";
 
-import Plugins from "~plugins";
+import Plugins, { PluginMeta } from "~plugins";
 export { Plugins as plugins };
 
 import { getPluginId } from "@utils/pluginIds";
@@ -416,6 +416,13 @@ export function subscribeAllPluginsFluxEvents(fluxDispatcher: typeof FluxDispatc
     }
 }
 
+// CSS a plugin folder imports, registered by the build's style plugin; it follows the plugin on and off.
+function pluginStyles(name: string): string[] {
+    const folder = PluginMeta[name]?.folderName;
+    const set = folder ? window.HcPluginStyles?.[folder] : undefined;
+    return set ? [...set] : [];
+}
+
 export const startPlugin = traceFunction("startPlugin", function startPlugin(p: Plugin) {
     const startedAt = performance.now();
     const finish = (success: boolean) => {
@@ -481,6 +488,7 @@ export const startPlugin = traceFunction("startPlugin", function startPlugin(p: 
     }
 
     if (managedStyle) enableStyle(managedStyle);
+    for (const style of pluginStyles(name)) enableStyle(style);
 
     if (userProfileBadges) userProfileBadges.forEach(e => addProfileBadge(e));
 
@@ -544,6 +552,7 @@ export const stopPlugin = traceFunction("stopPlugin", function stopPlugin(p: Plu
     removePatchesByPlugin(name);
 
     if (managedStyle) removeStyle(managedStyle);
+    for (const style of pluginStyles(name)) disableStyle(style);
 
     if (commands?.length) {
         logger.debug("Unregistering commands of plugin", name);
@@ -567,6 +576,7 @@ export const stopPlugin = traceFunction("stopPlugin", function stopPlugin(p: Plu
     }
 
     if (managedStyle) disableStyle(managedStyle);
+    for (const style of pluginStyles(name)) disableStyle(style);
 
     if (userProfileBadges) userProfileBadges.forEach(e => removeProfileBadge(e));
 
