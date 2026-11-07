@@ -1294,13 +1294,13 @@ html.hc-theming [class~="callContainer_hbKzX7"] :is([class~="leftTrayIcon_hbKzX7
 
 /* User panel voice buttons (camera, screen share, activities, soundboard) and plugin icon buttons: Mocha mantle instead of surface0. */
 html.hc-theming[data-hc-theme="mochacord"] [class~="panels_pog62O"] :is([class~="button_9U6LUN"][class~="buttonColor_9U6LUN"], .vc-plugin-icon-button):not([aria-checked="true"]) {
-    background-color: var(--hc-flyout-bg);
+    background-color: var(--hc-flyout-bg) !important;
     box-shadow: inset 0 0 0 1px var(--hc-row-border);
     transition: background-color 0.16s ease-out, color 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
 html.hc-theming[data-hc-theme="mochacord"] [class~="panels_pog62O"] :is([class~="button_9U6LUN"][class~="buttonColor_9U6LUN"], .vc-plugin-icon-button):not([aria-checked="true"]):hover {
-    background-color: rgb(var(--hc-accent-rgb) / 14%);
+    background-color: rgb(var(--hc-accent-rgb) / 14%) !important;
     box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
     color: var(--hc-accent);
 }
