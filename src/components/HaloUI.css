@@ -60,28 +60,26 @@ html.hc-theming[data-hc-theme="mochacord"] {
     --hc-scroll-thumb: rgb(205 214 244 / 16%);
 }
 
-/* The voice panel (desktop/base/userscript.js) paints its surfaces with Discord's old background
-   variables, which current Discord no longer defines, so their grey fallbacks showed under MochaCord. */
-html.hc-theming[data-hc-theme="mochacord"] :is(#dvx-native-settings, .dvx-modal, [data-dvx-aux]) {
+/* The voice panel, the voice settings card and many plugins paint with Discord's retired background
+   variables, which current Discord no longer defines, so their Discord-grey fallbacks showed under MochaCord.
+   Popups share the menu acrylic; tooltips, hover toolbars and notices take the opaque dark flyout colour
+   instead of the theme's light surface1 pill. */
+html.hc-theming[data-hc-theme="mochacord"] body {
     --background-secondary: var(--hc-panel-bg);
     --background-tertiary: var(--hc-row-bg);
     --background-primary: var(--hc-window-bg);
-    --background-floating: var(--hc-window-bg);
+    --background-floating: var(--hc-flyout-bg);
+    --background-modifier-accent: var(--hc-row-border);
     --header-primary: var(--hc-text);
+    --mochacord-acrylic-background: var(--hc-glass-bg);
+    --mochacord-acrylic-tooltip: var(--hc-flyout-bg);
+    --mochacord-acrylic-flyout: var(--hc-flyout-bg);
+    --mochacord-acrylic-notification: var(--hc-flyout-bg);
 }
 
 html.hc-theming[data-hc-theme="mochacord"] #dvx-native-settings select option {
     background: var(--hc-window-bg);
     color: var(--hc-text);
-}
-
-/* The theme's 76% glass lets text behind dropdowns, pickers and popouts read; they share the menu acrylic.
-   Tooltips, hover toolbars and notices take the opaque dark Mocha flyout colour instead of the theme's light surface1 pill. */
-html.hc-theming[data-hc-theme="mochacord"] body {
-    --mochacord-acrylic-background: var(--hc-glass-bg);
-    --mochacord-acrylic-tooltip: var(--hc-flyout-bg);
-    --mochacord-acrylic-flyout: var(--hc-flyout-bg);
-    --mochacord-acrylic-notification: var(--hc-flyout-bg);
 }
 
 .hc-ui {
@@ -1100,6 +1098,19 @@ html.hc-theming #vc-indicators-indicator-items:hover {
 html.hc-theming nav[class*="guilds_"] :is([class*="pill_"] [class*="item_"], [class~="wrapper__o8_Xq"] > [class~="item__o8_Xq"]),
 html.hc-theming #vc-indicators-indicator-items::before {
     background: linear-gradient(180deg, var(--hc-grad-a), var(--hc-grad-b)) !important;
+}
+
+/* The counter's hover pill sits in the rail's pill column, left of the tile, like every other server pill. */
+html.hc-theming #vc-indicators-indicator-items::before {
+    top: 50%;
+    left: -8.5px;
+    border-radius: 4px;
+    translate: 0 -50%;
+}
+
+html.hc-theming #vc-indicators-indicator-items:hover::before {
+    width: 4px;
+    height: 20px;
 }
 
 /* Tooltips: body and arrow share one opaque flyout colour. */
