@@ -1188,3 +1188,8 @@ html.hc-theming [data-call-tile] :is([class*="streamQualityIndicator_"], [class*
 html.hc-theming [class~="callContainer_hbKzX7"] [class*="gradientContainer_"] {
     display: none;
 }
+
+/* App notices (reconnect, updates) sit over the page column only, so they never cover the raised channel panel. */
+html.hc-theming [class~="base_pog62O"] > [class*="notice_"] {
+    grid-column: channelsEnd / end;
+}
