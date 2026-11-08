@@ -118,20 +118,25 @@ WIN = "spellcheck:!0}});const e=win.webContents.session;"
 assert m.count(WIN) == 1
 m = m.replace(WIN, 'spellcheck:!0},...mcWinOpts()});mcWinPrefs().winCtrlQ&&win.webContents.on("before-input-event",(e,t)=>{'
                    '"keyDown"===t.type&&t.control&&!t.alt&&!t.shift&&"q"===String(t.key).toLowerCase()&&app.quit()});'
-                   'mcAcrylic(win);const e=win.webContents.session;')
+                   'mcAcrylic(win);mcTransparentMax(win);const e=win.webContents.session;')
 m += ('\nfunction mcWinFile(){return require("path").join(app.getPath("userData"),"halocord-window.json")}'
       'function mcWinPrefs(){const fs=require("fs"),f=mcWinFile(),old=require("path").join(app.getPath("userData"),"mochacord-window.json");try{fs.existsSync(f)||!fs.existsSync(old)||fs.copyFileSync(old,f)}catch(e){}try{return JSON.parse(fs.readFileSync(f,"utf8"))||{}}catch(e){return{}}}'
       'function mcWinOpts(){const p=mcWinPrefs(),o={};p.disableMinSize&&(o.minWidth=0,o.minHeight=0);'
       'p.transparent&&(o.transparent=!0,o.backgroundColor="#00000000");'
       '"win32"===process.platform&&["mica","tabbed"].includes(p.windowsMaterial)&&(o.backgroundMaterial=p.windowsMaterial,o.backgroundColor="#00000000");'
-      '"win32"===process.platform&&"acrylic"===p.windowsMaterial&&(o.backgroundColor="#00000000");return o}'
+      '"win32"===process.platform&&"acrylic"===p.windowsMaterial&&(o.backgroundColor="#00000000");'
+      # nativeTitleBar false: no Windows frame; Windows still draws the caption buttons over the page's top bar.
+      '"win32"===process.platform&&!1===p.nativeTitleBar&&(o.titleBarStyle="hidden",o.titleBarOverlay={color:"#00000000",symbolColor:"#cdd6f4",height:28});return o}'
+      # A transparent window has no resizable frame, so Windows ignores its maximise button: maximise it ourselves.
+      'function mcTransparentMax(w){"win32"===process.platform&&mcWinPrefs().transparent&&w.hookWindowMessage(274,a=>{const c=65520&a.readUInt32LE(0);'
+      '61488===c?setImmediate(()=>w.isDestroyed()||(w.isMaximized()?w.unmaximize():w.maximize())):61728===c&&w.isMaximized()&&setImmediate(()=>w.isDestroyed()||w.unmaximize())})}'
       'function mcAcrylic(w,again){if("win32"===process.platform&&"acrylic"===mcWinPrefs().windowsMaterial)try{require("./mcblur.js").apply(w,!0);'
       'again||[794,798].forEach(m=>w.hookWindowMessage(m,()=>setTimeout(()=>w.isDestroyed()||mcAcrylic(w,!0),400)))}catch(e){console.error("[HaloCord] acrylic failed",e)}}'
       'ipcMain.handle("halocord:show-item",(e,t)=>shell.showItemInFolder(String(t)));'
       'ipcMain.handle("halocord:relaunch",()=>{hcUpdate.install()||(app.relaunch(),app.exit(0))});'
       'ipcMain.handle("halocord:open-settings-folder",()=>shell.openPath(app.getPath("userData")));'
       'ipcMain.handle("halocord:set-window-prefs",(e,t)=>{const p={};for(const k of["disableMinSize","transparent","winCtrlQ"])p[k]=!!(t&&t[k]);'
-      'p.windowsMaterial=t&&"string"==typeof t.windowsMaterial?t.windowsMaterial:"none";require("fs").writeFileSync(mcWinFile(),JSON.stringify(p))});\n')
+      'p.windowsMaterial=t&&"string"==typeof t.windowsMaterial?t.windowsMaterial:"none";p.nativeTitleBar=!t||!1!==t.nativeTitleBar;require("fs").writeFileSync(mcWinFile(),JSON.stringify(p))});\n')
 # hc-desktop: shell/hc-desktop.js owns Windows startup, start minimised, minimise to tray and the
 # Stable / PTB / Canary choice. The window stays hidden when launched with --start-minimized, and
 # the app page skips the HTTP cache so every launch gets Discord's newest web build.

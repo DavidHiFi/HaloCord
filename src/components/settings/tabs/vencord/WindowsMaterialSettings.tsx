@@ -15,8 +15,8 @@ import { Select } from "@webpack/common";
 
 // The HaloCord shell reads these when it creates the window, so mirror them over after every change.
 export function syncShellWindowPrefs() {
-    const { disableMinSize, transparent, winCtrlQ, windowsMaterial } = Settings;
-    window.HaloCordNative?.setWindowPrefs({ disableMinSize, transparent, winCtrlQ, windowsMaterial });
+    const { disableMinSize, transparent, winCtrlQ, windowsMaterial, hcNativeTitleBar } = Settings;
+    window.HaloCordNative?.setWindowPrefs({ disableMinSize, transparent, winCtrlQ, windowsMaterial, nativeTitleBar: hcNativeTitleBar });
 }
 
 export function WindowsMaterialSettings() {

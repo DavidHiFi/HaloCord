@@ -32,6 +32,22 @@ body {
     -webkit-app-region: no-drag;
 }
 
+/* HaloCord's own title bar (Windows' native title bar switched off): Windows draws the minimise, maximise and
+   close buttons over the right end of Discord's top bar, so keep the bar's own buttons clear of them. */
+[data-mc-titlebar="own"] {
+    --hc-caption-width: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, calc(100vw - 138px)));
+}
+
+[data-mc-titlebar="own"] [class*="bar_"]:has(> [class*="trailing_"]) {
+    -webkit-app-region: drag;
+}
+
+/* Discord pins these icons 15px from the right edge. */
+[data-mc-titlebar="own"] [class*="bar_"] > [class*="trailing_"] {
+    -webkit-app-region: no-drag;
+    inset-inline-end: calc(var(--hc-caption-width) + 8px) !important;
+}
+
 /* Modern Discord Visual Refresh Close Button styles */
 .vc-modal-close-btn,
 button[class*="closeButton"],

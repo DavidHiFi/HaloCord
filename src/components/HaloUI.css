@@ -1350,6 +1350,17 @@ html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6V
     box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
 }
 
+/* The user area keeps the avatar's full width when the buttons beside it need more room than the panel has:
+   the buttons shrink a little instead of sliding over the avatar (Discord sets min-width: 0 inline). */
+html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"] {
+    min-width: 40px !important;
+}
+
+html.hc-theming [class~="panels_pog62O"] [class~="buttons_g6VwXp"],
+html.hc-theming [class~="panels_pog62O"] [class~="buttons_g6VwXp"] > * {
+    min-width: 0 !important;
+}
+
 /* Voice channel rows in the sidebar: the Mocha plate and accent ring instead of the grey tint. */
 html.hc-theming [class~="voiceUser_YUoOxm"]:hover [class~="content_YUoOxm"] {
     background-color: var(--hc-flyout-bg) !important;

@@ -111,6 +111,8 @@ export interface Settings {
     windowsMaterial: "none" | "mica" | "tabbed" | "acrylic";
     disableMinSize: boolean;
     nativeTitleBar: boolean;
+    /** HaloCord shell on Windows: the Windows frame (true) or HaloCord's own title bar with the window buttons over Discord's top bar. */
+    hcNativeTitleBar: boolean;
     plugins: {
         [plugin: string]: {
             enabled: boolean;
@@ -209,6 +211,7 @@ const DefaultSettings: Settings = {
     windowsMaterial: "none",
     disableMinSize: false,
     nativeTitleBar: false,
+    hcNativeTitleBar: true,
     plugins: {},
 
     uiElements: {

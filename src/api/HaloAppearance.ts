@@ -139,6 +139,8 @@ function fontCss() {
 }
 
 let mainWindowBlur: boolean | undefined;
+// Like the material, the shell picks the frame when it creates the window, so read the choice once.
+let ownTitleBar: boolean | undefined;
 
 // The window material is picked once, when the window is created, and popouts never get one.
 function hasWindowBlur(root: HTMLElement) {
@@ -154,6 +156,8 @@ export function applyHaloAppearance(root: HTMLElement) {
         if (attr.name.startsWith("data-mc-")) root.removeAttribute(attr.name);
     }
     if (!hasWindowBlur(root)) root.setAttribute("data-mc-window-blur", "off");
+    if (root === document.documentElement && (ownTitleBar ??= IS_WINDOWS && !!window.HaloCordNative && !Settings.hcNativeTitleBar))
+        root.setAttribute("data-mc-titlebar", "own");
     for (const [key, name, fallback, value] of flags) {
         if (mc[key] !== fallback) root.setAttribute(`data-mc-${name}`, value);
     }

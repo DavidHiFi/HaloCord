@@ -50,7 +50,7 @@ type KeysOfType<Object, Type> = {
 }[keyof Object];
 
 function Switches() {
-    const settings = useSettings(["useQuickCss", "enableReactDevtools", "mainWindowFrameless", "frameless", "nativeTitleBar", "transparent", "winCtrlQ", "disableMinSize", "useTestcordIcon"]);
+    const settings = useSettings(["useQuickCss", "enableReactDevtools", "mainWindowFrameless", "frameless", "nativeTitleBar", "hcNativeTitleBar", "transparent", "winCtrlQ", "disableMinSize", "useTestcordIcon"]);
 
     const Switches = [
         {
@@ -83,13 +83,19 @@ function Switches() {
                 restartRequired: true,
             }
         ),
+        HAS_SHELL && IS_WINDOWS && {
+            key: "hcNativeTitleBar",
+            title: "Use Windows' native title bar",
+            description: "Show the standard Windows title bar. Turn off to hide it and put the minimise, maximise and close buttons in Discord's top bar instead.",
+            restartRequired: true,
+        },
         (!IS_WEB || HAS_SHELL) && {
             key: "transparent",
             title: "Enable Window Transparency",
             description: "Make the HaloCord window transparent. A theme that supports transparency is required or this will do nothing.",
             restartRequired: true,
             warning: IS_WINDOWS
-                ? "This will stop the window from being resizable and prevents you from snapping the window to screen edges."
+                ? "The window can no longer be resized by dragging its edges or snapped to screen edges. The maximise button still works."
                 : "This will stop the window from being resizable.",
         },
         (IS_DISCORD_DESKTOP || HAS_SHELL) && {
