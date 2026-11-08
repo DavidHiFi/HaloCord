@@ -1264,6 +1264,8 @@ function buildCustomCSS(): string {
 
 function apply() {
     updateDomAttributes();
+    // HaloUI.css draws the line above the name row only when the buttons sit on their own row.
+    document.documentElement.toggleAttribute("data-hc-buttons-top", settings.store.userPanelLayout === "all_top");
 
     document.getElementById(STYLE_ID)?.remove();
     document.getElementById(CUSTOM_STYLE_ID)?.remove();
@@ -3821,6 +3823,7 @@ export default definePlugin({
         stopModuleManager();
         stopObserver();
         SettingsStore.removeChangeListener("plugins.TestcordHelper.userAreaButtonIconColor", apply);
+        document.documentElement.removeAttribute("data-hc-buttons-top");
         document.getElementById(STYLE_ID)?.remove();
         document.getElementById(CUSTOM_STYLE_ID)?.remove();
         document.removeEventListener("keydown", onGlobalKeydown, true);

@@ -1334,7 +1334,9 @@ html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6V
     transition: background-color 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
-html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]::before {
+/* Only with Panel Layout's "All Buttons Top": beside the buttons the wrapper is just the avatar, and the line
+   would be a short stub over it. */
+html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]::before {
     content: "";
     position: absolute;
     top: -3px;
