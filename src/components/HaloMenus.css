@@ -7,13 +7,14 @@
 /* Discord's hashed class names; prefix selectors here would catch unrelated menu_, bar_ and popover_ classes. */
 /* stylelint-disable selector-class-pattern */
 
-/* Menus, popouts and hover toolbars are acrylic: a 98% theme tint with a top sheen over a real blur.
-   HaloCord's transparent window shows the unblurred backdrop on screen (measured 2026-11-07),
-   so the tint alone must keep text behind from reading. */
+/* Menus, popouts and hover toolbars are acrylic: an 86% theme tint with a top sheen over a real blur.
+   The panels behind are see-through, and Chromium lays a blurred copy of a see-through backdrop over the
+   sharp original, so text behind still reads. --hc-backdrop-solid makes the blurred copy opaque first. */
 html.hc-theming {
+    --hc-backdrop-solid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='s' color-interpolation-filters='sRGB'%3E%3CfeColorMatrix values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 1'/%3E%3C/filter%3E%3C/svg%3E#s");
     --hc-menu-bg: var(--hc-flyout-bg);
-    --hc-glass-bg: linear-gradient(180deg, rgb(255 255 255 / 5%), transparent 45%), color-mix(in srgb, var(--hc-menu-bg) 98%, transparent);
-    --hc-glass-blur: blur(24px) saturate(140%);
+    --hc-glass-bg: linear-gradient(180deg, rgb(255 255 255 / 5%), transparent 45%), color-mix(in srgb, var(--hc-menu-bg) 86%, transparent);
+    --hc-glass-blur: blur(32px) saturate(160%) var(--hc-backdrop-solid);
 }
 
 html.hc-theming .menu_M3qk4j:not(#hc-menus) {
@@ -26,7 +27,8 @@ html.hc-theming .menu_M3qk4j:not(#hc-menus) {
     --scrollbar-thin-thumb: var(--hc-scroll-thumb);
     --scrollbar-thin-track: transparent;
 
-    border: 1px solid var(--hc-panel-border);
+    position: relative;
+    border: 1px solid transparent;
     border-radius: 14px;
     background: var(--hc-glass-bg) !important;
     box-shadow: 0 8px 24px rgb(0 0 0 / 40%);
@@ -35,6 +37,34 @@ html.hc-theming .menu_M3qk4j:not(#hc-menus) {
 
 html.hc-theming .menu_M3qk4j:not(#hc-menus)::before {
     display: none !important;
+}
+
+/* The theme's gradient ring over the transparent border; 1.5px so the rounded corners stay smooth. */
+html.hc-theming .menu_M3qk4j:not(#hc-menus)::after {
+    position: absolute;
+    z-index: 2;
+    padding: 1.5px;
+    border-radius: inherit;
+    background: var(--hc-gradient);
+    content: "";
+    inset: -1px;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0.75;
+    pointer-events: none;
+}
+
+/* The scroll bar only appears when the menu overflows, stays inside the rounded corners, and no
+   empty gutter is held open, so separators can run edge to edge. */
+html.hc-theming .menu_M3qk4j .scroller_M3qk4j {
+    padding-inline-end: 8px;
+    border-radius: 13px;
+    overflow-y: auto !important;
+    scrollbar-gutter: auto;
+}
+
+html.hc-theming .menu_M3qk4j .scroller_M3qk4j::-webkit-scrollbar-track {
+    margin-block: 12px;
 }
 
 html.hc-theming .menu_M3qk4j .item_M3qk4j {
@@ -69,7 +99,8 @@ html.hc-theming .menu_M3qk4j .colorDanger_M3qk4j.focused_M3qk4j :is(.subtext_M3q
 }
 
 html.hc-theming .menu_M3qk4j .separator_M3qk4j {
-    border-bottom-color: var(--hc-row-border);
+    margin-inline: -8px;
+    border-bottom-color: var(--hc-panel-border);
 }
 
 html.hc-theming .menu_M3qk4j .caret_M3qk4j {

@@ -1322,7 +1322,7 @@ html.hc-theming [class*="tooltipPrimary_"] [class*="tooltipPointer_"] {
 html.hc-theming :is([class~="popover_yDAPhH"], [class~="popover_oWBF11"]) {
     border: 1px solid rgb(var(--hc-accent-rgb) / 28%) !important;
     background: var(--hc-chip-bg) !important;
-    backdrop-filter: blur(24px) saturate(140%) !important;
+    backdrop-filter: blur(24px) saturate(140%) var(--hc-backdrop-solid) !important;
     box-shadow: 0 4px 14px rgb(0 0 0 / 35%) !important;
 }
 
@@ -1470,7 +1470,7 @@ html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [data
 /* The "new unreads" pill at the top and bottom of the channel list: dark glass, gradient border and accent text on hover. */
 html.hc-theming [class~="unreadMentionsBar_5dqHTG"] {
     border: 1px solid var(--hc-panel-border) !important; background: var(--hc-chip-bg) !important;
-    backdrop-filter: blur(24px) saturate(140%); color: var(--hc-text);
+    backdrop-filter: blur(24px) saturate(140%) var(--hc-backdrop-solid); color: var(--hc-text);
     transition: border-color 0.16s ease-out, color 0.16s ease-out;
 }
 html.hc-theming [class~="unreadMentionsBar_5dqHTG"]:hover {
@@ -1682,7 +1682,7 @@ html.hc-theming [class~="panels_pog62O"] :is(
     border-radius: 0 !important;
 }
 
-/* Who's Watching: the gradient replaces the grey border on hover, like the name box. */
+/* Who's Watching is a bordered card of its own; the gradient replaces its grey border on hover. */
 html.hc-theming [class~="panels_pog62O"] .vc-whos-watching-screenshare-panel {
     transition: background 0.16s ease-out, border-color 0.16s ease-out;
 }
@@ -1709,28 +1709,8 @@ html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-pa
     background-color: rgb(var(--hc-accent-rgb) / 8%) !important; /* the banner's strip colour is !important */
 }
 
-/* The strips run edge to edge, so their hover ring is drawn inset, like the name box ring between them. */
 html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-panel-sysmonitor-widget) {
-    position: relative;
     transition: background-color 0.16s ease-out;
-}
-
-html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-panel-sysmonitor-widget)::after {
-    content: "";
-    position: absolute;
-    inset: 2px 6px;
-    padding: 1px;
-    border-radius: 10px;
-    background: var(--hc-gradient) border-box;
-    mask: linear-gradient(#fff, #fff) content-box, linear-gradient(#fff, #fff);
-    mask-composite: exclude;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.16s ease-out;
-}
-
-html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-panel-sysmonitor-widget):hover::after {
-    opacity: 1;
 }
 
 html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"] {
@@ -1741,16 +1721,15 @@ html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6V
     min-width: 40px !important;
     box-sizing: border-box;
     margin-top: 4px;
-    padding: 2px;
-    border: 1px solid transparent;
+    padding: 3px;
     border-radius: 12px;
-    transition: background-color 0.16s ease-out, border-color 0.16s ease-out;
+    transition: background-color 0.16s ease-out;
 }
 
-/* With the buttons on top the name row has the whole width, so the ring gets room around the avatar. */
+/* With the buttons on top the name row has the whole width, so the hover tint gets room around the avatar. */
 html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"] {
     margin-top: 12px;
-    padding: 3px 6px;
+    padding: 4px 7px;
 }
 
 /* The flex gap and stretched rows left about 23 px between the button grid and the name row. */
@@ -1773,8 +1752,9 @@ html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="accountPo
     pointer-events: none;
 }
 
+/* Every user area widget shows hover as a tint only; the panel's own border is the one dock. */
 html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]:hover {
-    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
+    background: rgb(var(--hc-accent-rgb) / 8%) !important;
 }
 
 html.hc-theming [class~="panels_pog62O"] [class~="buttons_g6VwXp"],
