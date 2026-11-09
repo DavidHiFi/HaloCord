@@ -1431,19 +1431,25 @@ html.hc-theming [data-call-tile] :is([class*="streamQualityIndicator_"], [class*
    little taller than Discord's, so the grid ends 16 px higher and the bottom row never touches it. */
 html.hc-theming [class~="videoGridWrapper_QKgWuD"] > [class~="videoGrid_QKgWuD"] { height: calc(100% - 16px); margin-bottom: 16px; }
 
-/* Channel rows: hover and the open channel (the voice call you are viewing) get the gradient border
-   over their tint. A masked ::after draws it inside the row, so nothing shifts. */
-html.hc-theming [class~="wrapper_TNyK-N"] [class~="link_TNyK-N"]::after {
+/* One hover look for every sidebar row (channels, voice users, DMs): the Mocha plate with the gradient
+   border. The open channel or DM keeps its accent tint and a softer border. A masked ::after draws the
+   border inside the row, so nothing shifts. */
+html.hc-theming :is([class~="wrapper_TNyK-N"] [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"] [class~="content_YUoOxm"], [class~="interactive_zln_tS"]) {
+    position: relative;
+    border-radius: 8px;
+    transition: background-color 0.16s ease-out;
+}
+html.hc-theming :is([class~="wrapper_TNyK-N"] [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"] [class~="content_YUoOxm"], [class~="interactive_zln_tS"])::after {
     content: ""; position: absolute; inset: 0; padding: 1px; border-radius: inherit; pointer-events: none;
     background: var(--hc-gradient) border-box;
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
     opacity: 0; transition: opacity 0.16s ease-out;
 }
-html.hc-theming [class~="wrapper_TNyK-N"] [class~="link_TNyK-N"] { transition: background-color 0.16s ease-out; }
-html.hc-theming [class~="wrapper_TNyK-N"]:hover [class~="link_TNyK-N"]::after { opacity: 1; }
-html.hc-theming [class~="modeSelected_TNyK-N"] [class~="link_TNyK-N"]::after { opacity: 0.55; }
-html.hc-theming [class~="modeSelected_TNyK-N"]:hover [class~="link_TNyK-N"]::after { opacity: 1; }
-html.hc-theming [class~="modeSelected_TNyK-N"]:hover [class~="link_TNyK-N"] { background: rgb(var(--hc-accent-rgb) / 20%) !important; }
+html.hc-theming :is([class~="wrapper_TNyK-N"]:hover [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"]:hover [class~="content_YUoOxm"], [class~="interactive_zln_tS"]:hover) {
+    background: var(--hc-flyout-bg) !important;
+}
+html.hc-theming :is([class~="modeSelected_TNyK-N"] [class~="link_TNyK-N"], [class~="interactiveSelected_zln_tS"])::after { opacity: 0.5; }
+html.hc-theming :is([class~="wrapper_TNyK-N"]:hover [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"]:hover [class~="content_YUoOxm"], [class~="interactive_zln_tS"]:hover)::after { opacity: 1; }
 
 /* The "new unreads" pill at the top and bottom of the channel list: dark glass, gradient border and accent text on hover. */
 html.hc-theming [class~="unreadMentionsBar_5dqHTG"] {
@@ -1760,11 +1766,6 @@ html.hc-theming [class~="panels_pog62O"] [class~="buttons_g6VwXp"] > * {
     min-width: 0 !important;
 }
 
-/* Voice channel rows in the sidebar: the Mocha plate and accent ring instead of the grey tint. */
-html.hc-theming [class~="voiceUser_YUoOxm"]:hover [class~="content_YUoOxm"] {
-    background-color: var(--hc-flyout-bg) !important;
-    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
-}
 
 /* Discord tints hovers, selected rows, tabs, search fields and secondary buttons with a light grey; under MochaCord they take crust fills and the accent instead. */
 html.hc-theming[data-hc-theme="mochacord"],
