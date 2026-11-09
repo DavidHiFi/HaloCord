@@ -1523,8 +1523,32 @@ html.hc-theming [class~="panels_pog62O"] .vc-panel-sysmonitor-widget {
     background-color: var(--hc-dock-strip);
 }
 
-html.hc-theming [class~="panels_pog62O"] .vc-panel-sysmonitor-widget:hover {
-    background-color: rgb(var(--hc-accent-rgb) / 8%);
+html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-panel-sysmonitor-widget):hover {
+    background-color: rgb(var(--hc-accent-rgb) / 8%) !important; /* the banner's strip colour is !important */
+}
+
+/* The strips run edge to edge, so their hover ring is drawn inset, like the name box ring between them. */
+html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-panel-sysmonitor-widget) {
+    position: relative;
+    transition: background-color 0.16s ease-out;
+}
+
+html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-panel-sysmonitor-widget)::after {
+    content: "";
+    position: absolute;
+    inset: 2px 6px;
+    padding: 1px;
+    border-radius: 10px;
+    background: var(--hc-gradient) border-box;
+    mask: linear-gradient(#fff, #fff) content-box, linear-gradient(#fff, #fff);
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease-out;
+}
+
+html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-panel-sysmonitor-widget):hover::after {
+    opacity: 1;
 }
 
 html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"] {
