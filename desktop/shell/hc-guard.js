@@ -89,6 +89,34 @@ app.whenReady().then(() => {
     }).catch(() => { });
 }).catch(() => { });
 
+// The page keeps crashing or hanging (a watchdog reload loop): the next start is a safe start. Returns false when
+// this run already is one, so the caller keeps reloading instead.
+exports.enterSafe = why => {
+    if (safe || !state) return false;
+    save({ safe: true });
+    line(`safe start from the next launch: ${why}`);
+    exports.clean();
+    app.relaunch();
+    app.exit(0);
+    return true;
+};
+
+// Page errors and warnings, Discord's connection and voice lines, so a page that keeps reloading or a call that
+// will not connect shows why. Repeats are counted instead of written again.
+const PAGE_MAX = 600;
+const WORTH = /GatewaySocket.*(clos|reconnect|invalid|resum|error|fail)|RTCConnection|RTCControlSocket|MediaEngine.*(fail|error)|Connection.*(fail|disconnect)/i;
+let pageLines = 0, lastPage = "", repeats = 0;
+app.on("web-contents-created", (_, wc) => {
+    wc.on("console-message", e => {
+        const level = e.level ?? "info", msg = String(e.message ?? "").replace(/%c|font-weight: bold; color: \w+;|background: [^;]+;|color: [^;]+;|border-radius: \d+px;/g, "").replace(/\s+/g, " ").trim();
+        if (!(level === "error" || level === "warning" || WORTH.test(msg)) || pageLines >= PAGE_MAX) return;
+        if (msg === lastPage) { repeats++; return; }
+        if (repeats) line(`page: (last line repeated ${repeats} more times)`);
+        lastPage = msg; repeats = 0; pageLines++;
+        line(`page ${level}: ${msg.slice(0, 600)}`);
+    });
+});
+
 app.on("child-process-gone", (_, d) => line(`process gone: ${d.type} ${d.reason} code ${d.exitCode}${d.name ? " " + d.name : ""}`));
 app.on("render-process-gone", (_, wc, d) => line(`page process gone: ${d.reason} code ${d.exitCode} ${wc?.getURL?.().slice(0, 80) ?? ""}`));
 app.on("session-end", exports.clean);

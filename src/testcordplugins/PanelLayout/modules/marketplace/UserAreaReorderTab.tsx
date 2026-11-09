@@ -861,7 +861,7 @@ function ActionButtonsRow({ pluginSettings }: { pluginSettings?: any; }) {
     const gap = pluginSettings?.buttonGap ?? 4;
     const size = Math.min(32, Math.max(24, pluginSettings?.buttonContainerSize ?? 28));
     const btnConfigs = pluginSettings?.buttonConfigs || getPanelLayoutPlainSettings()?.buttonConfigs || {};
-    const userPanelLayout = pluginSettings?.userPanelLayout ?? "split_row";
+    const userPanelLayout = pluginSettings?.userPanelLayout ?? "all_top";
 
     if (userPanelLayout === "hidden") return null;
 

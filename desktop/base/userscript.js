@@ -929,7 +929,7 @@ function dvxMtMainStream(){
   return eI(c)['catch'](function(){delete c['audio']['deviceId'];return eI(c);});
 }
 // The voice panel's Mic Test Loopback button (BetterUserTools) runs the same test without the settings page.
-try{window['__hcMicTest']={
+try{window['__hcLimiter']={'on':function(){return !!Q['limOn'];},'set':function(nx){Q['limOn']=!!nx;e4();try{var c=document['getElementById']('dvx-lim-card'),sw=c&&c['querySelector']('[role="switch"]');if(sw&&sw['_render'])sw['_render']();var bd=c&&c['children'][1];if(bd){bd['style']['opacity']=nx?'1':'.45';bd['style']['pointerEvents']=nx?'':'none';}}catch(dvxLMs2){}try{window['dispatchEvent'](new Event('hc-limiter'));}catch(dvxLMev2){}}};}catch(dvxLMapi){}try{window['__hcMicTest']={
   'sources':function(){return dvxMtSources['map'](function(x){var S=dvxAuxSpecs['filter'](function(a){return a['p']===x[0];})[0];return{'id':x[0],'label':x[1],'on':S?dvxAuxOn(S):true,'dev':S?dvxAuxDevice(S):''};});},
   'selected':function(){return Q['micTestSource']==='sec'||Q['micTestSource']==='thr'?Q['micTestSource']:'main';},
   'active':function(){return dvxMt?dvxMt['src']:null;},
@@ -1390,7 +1390,7 @@ dvxLMs['className']='dvx-sub';dvxLMs['textContent']='A brickwall limiter like th
 dvxLMhl['appendChild'](dvxLMt);dvxLMhl['appendChild'](dvxLMs);dvxLMhead['appendChild'](dvxLMhl);
 var dvxLMbody=document['createElement']('div');
 function dvxLMpaint(){dvxLMbody['style']['opacity']=Q['limOn']?'1':'.45';dvxLMbody['style']['pointerEvents']=Q['limOn']?'':'none';}
-dvxLMhead['appendChild'](QP(function(){return !!Q['limOn'];},function(nx,nU){Q['limOn']=!!nx,e4(),nU['_render'](),dvxLMpaint();}));
+dvxLMhead['appendChild'](QP(function(){return !!Q['limOn'];},function(nx,nU){Q['limOn']=!!nx,e4(),nU['_render'](),dvxLMpaint();try{window['dispatchEvent'](new Event('hc-limiter'));}catch(dvxLMev){}}));
 dvxLMcard['appendChild'](dvxLMhead);
 dvxLMbody['appendChild'](Qr('Limit','Which audio goes through the limiter.',Qp([['both','Microphone and Speakers'],['mic','Microphone only'],['spk','Speakers only']],function(){var t=Q['limTarget'];return t==='mic'||t==='spk'?t:'both';},function(nx){Q['limTarget']=nx==='mic'||nx==='spk'?nx:'both',e4();})));
 dvxLMbody['appendChild'](Qr('Mode','Clean pulls peaks down smoothly first. Hard Clip only cuts them off at the ceiling, which is louder but can crackle.',(function(el){el['style']['minWidth']='130px';el['style']['flexShrink']='0';return el;})(Qp([['clean','Clean'],['clip','Hard Clip']],function(){return Q['limMode']==='clip'?'clip':'clean';},function(nx){Q['limMode']=nx==='clip'?'clip':'clean',e4();}))));

@@ -7,7 +7,7 @@
 import * as DataStore from "@api/DataStore";
 import { Logger } from "@utils/Logger";
 import { VoiceState } from "@vencord/discord-types";
-import { ChannelStore, FluxDispatcher, UserStore, VoiceStateStore } from "@webpack/common";
+import { ChannelStore, FluxDispatcher, SelectedChannelStore, UserStore, VoiceStateStore } from "@webpack/common";
 
 import { settings } from "./settings";
 
@@ -36,11 +36,47 @@ let rejoinTimer: ReturnType<typeof setTimeout> | undefined;
 // hours old in a quiet call, so a restart skipped the rejoin; this keeps it fresh while in a call.
 let heartbeat: ReturnType<typeof setInterval> | undefined;
 
+// A page reload drops the call: HaloCord's watchdog reloads a page that hung or crashed, and Ctrl+R does
+// too. The call is kept in this window's session storage, which a reload keeps and a restart clears, so
+// the reloaded page goes straight back in, whatever the rejoin setting says. 2 minutes covers a hang
+// (30 s) plus a slow reload.
+const RELOAD_KEY = "hc-call-before-reload";
+const RELOAD_FRESH_MS = 120_000;
+let reloadBeat: ReturnType<typeof setInterval> | undefined;
+
+function keepForReload(call: { guildId: string | null; channelId: string; } | null) {
+    clearInterval(reloadBeat);
+    reloadBeat = undefined;
+    const write = () => { try { sessionStorage.setItem(RELOAD_KEY, JSON.stringify({ ...call, timestamp: Date.now() })); } catch { } };
+    if (!call) { try { sessionStorage.removeItem(RELOAD_KEY); } catch { } return; }
+    write();
+    reloadBeat = setInterval(write, 10_000);
+}
+
+let reloadChecked = false;
+async function rejoinAfterReload() {
+    if (reloadChecked) return;
+    reloadChecked = true;
+    let saved: SavedCall | null = null;
+    try { saved = JSON.parse(sessionStorage.getItem(RELOAD_KEY) ?? "null"); } catch { }
+    try { sessionStorage.removeItem(RELOAD_KEY); } catch { }
+    if (!saved?.channelId || Date.now() - saved.timestamp > RELOAD_FRESH_MS) return;
+    for (let i = 0; i < 40 && !ChannelStore.getChannel(saved.channelId); i++) await new Promise(resolve => setTimeout(resolve, 250));
+    // The server can still list the old voice session for a moment, so ask the client whether it is in a call.
+    if (!ChannelStore.getChannel(saved.channelId) || SelectedChannelStore.getVoiceChannelId()) return;
+    logger.info("Back in the call after a page reload");
+    FluxDispatcher.dispatch({ type: "VOICE_CHANNEL_SELECT", guildId: saved.guildId, channelId: saved.channelId });
+}
+
 export function rememberCall({ voiceStates }: { voiceStates: VoiceState[]; }) {
-    if (!settings.store.rejoin) return;
     const me = UserStore.getCurrentUser()?.id;
     const mine = me && voiceStates.find(s => s.userId === me);
     if (!mine) return;
+    // Only a call this window is in: Discord selects the channel here before the server confirms it.
+    const selected = SelectedChannelStore.getVoiceChannelId();
+    if (mine.channelId && mine.channelId === selected) keepForReload({ guildId: mine.guildId ?? null, channelId: mine.channelId });
+    else if (!selected) keepForReload(null);
+    if (!settings.store.rejoin) return;
 
     clearInterval(heartbeat);
     heartbeat = undefined;
@@ -57,12 +93,15 @@ export function rememberCall({ voiceStates }: { voiceStates: VoiceState[]; }) {
 
 export function cancelRejoin() {
     generation++;
+    clearInterval(reloadBeat);
+    reloadBeat = undefined;
     clearTimeout(rejoinTimer);
     clearInterval(heartbeat);
     rejoinTimer = heartbeat = undefined;
 }
 
 export async function rejoinAfterRestart() {
+    await rejoinAfterReload();
     if (!settings.store.rejoin) return;
     const run = generation;
     if (await DataStore.get(IN_CALL_KEY) === false) {

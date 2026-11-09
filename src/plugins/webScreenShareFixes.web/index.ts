@@ -24,8 +24,9 @@ export default definePlugin({
                     replace: '"x-google-max-bitrate=80000"'
                 },
                 {
-                    match: /;usedtx=\$\{(\i)\?"0":"1"\}/,
-                    replace: '$&${$1?";stereo=1;sprop-stereo=1":""}'
+                    // Discord adds stereo itself only when its own flag is on; keep stereo whenever DTX is off.
+                    match: /;usedtx=\$\{!1===(\i)\?"0":"1"\}(?=\$\{(\i)\?";stereo=1)/,
+                    replace: '$&${!1===$1&&!$2?";stereo=1;sprop-stereo=1":""}'
                 },
             ]
         },

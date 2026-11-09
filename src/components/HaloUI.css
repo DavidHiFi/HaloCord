@@ -44,6 +44,22 @@ html.hc-theming {
     --hc-chip-bg: color-mix(in srgb, var(--hc-flyout-bg) 88%, transparent);
     --hc-live: var(--status-danger, #f23f43);
     --hc-ring-w: 2px;
+    /* Thin rings drawn with a mask must cover whole screen pixels, or one side renders a pixel
+       thinner than the other. These are 1.5 px and 2.5 px rounded to the display's pixel grid. */
+    --hc-ring-thin: 1.5px;
+    --hc-ring-rail: 2.5px;
+}
+
+@media (resolution < 1.2dppx) {
+    html.hc-theming { --hc-ring-thin: 2px; --hc-ring-rail: 3px; }
+}
+
+@media (1.2dppx <= resolution < 1.4dppx) {
+    html.hc-theming { --hc-ring-thin: 1.6px; --hc-ring-rail: 2.4px; }
+}
+
+@media (1.4dppx <= resolution < 1.9dppx) {
+    html.hc-theming { --hc-ring-thin: 1.3334px; --hc-ring-rail: 2px; }
 }
 
 /* HaloCord and MochaCord share one layout sheet; these are HaloCord's dark green counterparts of the Mocha colours below. */
@@ -1257,8 +1273,8 @@ html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"]::after,
 html.hc-theming #vc-indicators-indicator-items::after {
     position: absolute;
     z-index: 1;
-    /* Flush on the 12 px tile, overlapping its edge by half a pixel, so no background shows between the ring and the icon. */
-    padding: 2.5px;
+    /* Flush on the 12 px tile, overlapping its edge slightly, so no background shows between the ring and the icon. */
+    padding: var(--hc-ring-rail);
     border-radius: 14px;
     background: var(--hc-gradient);
     content: "";
@@ -1466,7 +1482,7 @@ html.hc-theming :is([class~="wrapper_TNyK-N"] [class~="link_TNyK-N"], [class~="v
     transition: background-color 0.16s ease-out;
 }
 html.hc-theming :is([class~="wrapper_TNyK-N"] [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"] [class~="content_YUoOxm"], [class~="interactive_zln_tS"])::after {
-    content: ""; position: absolute; inset: 0; padding: 1.5px; border-radius: inherit; pointer-events: none;
+    content: ""; position: absolute; inset: 0; padding: var(--hc-ring-thin); border-radius: inherit; pointer-events: none;
     background: var(--hc-gradient) border-box;
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
     opacity: 0; transition: opacity 0.16s ease-out;
@@ -1724,11 +1740,28 @@ html.hc-theming [class~="panels_pog62O"] .vc-panel-sysmonitor-widget {
     background-color: var(--hc-dock-strip);
 }
 
-html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-panel-sysmonitor-widget):hover {
+/* The date and time strip matches the stats strip under it: a line above, the same strip colour and hover. */
+html.hc-theming [class~="panels_pog62O"] .vc-panel-clock-widget {
+    border-top: 1px solid var(--hc-dock-line);
+    border-bottom: 0;
+    background-color: var(--hc-dock-strip);
+}
+
+/* Right under the banner, the banner's own bottom line is the separator, so the clock's would make it two. */
+html.hc-theming [class~="panels_pog62O"] .vc-panel-module-item:has(> .vc-devbanner-module-widget) + .vc-panel-module-item > .vc-panel-clock-widget,
+html.hc-theming [class~="panels_pog62O"] .vc-panel-modules-above:has(> .vc-panel-module-item > .vc-panel-layout-music-controls:empty) .vc-panel-module-item:has(> .vc-devbanner-module-widget) + .vc-panel-module-item + .vc-panel-module-item > .vc-panel-clock-widget {
+    border-top-color: transparent;
+}
+
+html.hc-theming [class~="panels_pog62O"] .vc-panel-module-item:last-child > .vc-panel-clock-widget {
+    border-radius: 0 0 14px 14px;
+}
+
+html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-panel-clock-widget, .vc-panel-sysmonitor-widget):hover {
     background-color: rgb(var(--hc-accent-rgb) / 8%) !important; /* the banner's strip colour is !important */
 }
 
-html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-panel-sysmonitor-widget) {
+html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-panel-clock-widget, .vc-panel-sysmonitor-widget) {
     transition: background-color 0.16s ease-out;
 }
 
@@ -1827,4 +1860,35 @@ html.hc-theming[data-hc-theme] [class~="peopleListItem_y75PxA"] [class*="actionB
 /* PanelLayout can carry a literal Mocha fill from its saved colour picker. Built-in themes own the panel surface. */
 html.hc-theming[data-hc-theme] section[class*="panels_"] {
     background: color-mix(in srgb, var(--hc-window-bg) 25%, transparent) !important;
+}
+
+/* Settings categories fold to their title with the chevron HaloDesktop adds (Voice & Video). */
+.hc-fold {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 30px;
+    height: 30px;
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background-color 0.16s ease-out, color 0.16s ease-out;
+}
+.hc-fold:hover { background: rgb(var(--hc-accent-rgb, 137 180 250) / 12%); color: var(--text-default, var(--text-normal)); }
+.hc-fold:focus-visible { outline: 2px solid var(--hc-accent, var(--brand-500)); outline-offset: 1px; }
+.hc-fold svg { transition: transform 0.2s ease-out; }
+[data-hc-folded] .hc-fold svg { transform: rotate(-90deg); }
+[data-hc-folded] > :not(:first-child) { display: none !important; }
+[data-hc-folded] > :first-child { padding-bottom: 0 !important; }
+@media (prefers-reduced-motion: reduce) { .hc-fold svg { transition: none; } }
+
+/* Reply previews: keep "(edited)" clear of the ellipsis that clamps the text before it. */
+[class*="repliedTextPreview_"] [class*="edited_"],
+[class*="repliedTextPreview_"] .messagelogger-edited .edited {
+    margin-inline-start: 0.35em;
+    white-space: nowrap;
 }

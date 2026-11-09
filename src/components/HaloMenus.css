@@ -39,11 +39,11 @@ html.hc-theming .menu_M3qk4j:not(#hc-menus)::before {
     display: none !important;
 }
 
-/* The theme's gradient ring over the transparent border; 1.5px so the rounded corners stay smooth. */
+/* The theme's gradient ring over the transparent border, about 1.5 px snapped to whole screen pixels. */
 html.hc-theming .menu_M3qk4j:not(#hc-menus)::after {
     position: absolute;
     z-index: 2;
-    padding: 1.5px;
+    padding: var(--hc-ring-thin, 1.5px);
     border-radius: inherit;
     background: var(--hc-gradient);
     content: "";

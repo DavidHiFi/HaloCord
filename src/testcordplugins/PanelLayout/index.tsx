@@ -18,13 +18,15 @@ import { Heading } from "@components/Heading";
 import { AppsIcon, ScreenshareIcon, VideoIcon } from "@components/Icons";
 import { Paragraph } from "@components/Paragraph";
 import { getTestcordIconColor, ICON_COLOR_FALLBACK } from "@testcordplugins/TestcordHelper/iconColors";
+import { openSettingsCategory } from "@testcordplugins/VoiceVUMeters";
 import { TestcordDevs } from "@utils/constants";
 import { classNameToSelector } from "@utils/css";
 import definePlugin, { makeRange, OptionType } from "@utils/types";
 import type { RenderModalProps } from "@vencord/discord-types";
 import { findCssClassesLazy, findStoreLazy } from "@webpack";
-import { FluxDispatcher, Modal, openModalLazy, React, Select, Slider, useStateFromStores } from "@webpack/common";
+import { ContextMenuApi, FluxDispatcher, Menu, Modal, openModalLazy, React, Select, Slider, useStateFromStores } from "@webpack/common";
 
+import { type ButtonLayout, startLayoutDrag, stopLayoutDrag, syncLayout } from "./layoutDrag";
 import {
     activityBannerPatches,
     applyColorAlpha,
@@ -91,7 +93,7 @@ export const settings = definePluginSettings({
         type: OptionType.SELECT,
         description: "Layout for user panel buttons",
         options: [
-            { label: "Default", value: "default", default: true },
+            { label: "Default", value: "default" },
             { label: "2-column grid", value: "grid2" },
             { label: "3-column grid", value: "grid3" },
             { label: "Vertical stack", value: "vertical" },
@@ -99,7 +101,7 @@ export const settings = definePluginSettings({
             { label: "Plugins Top (2-col Grid)", value: "split_grid2" },
             { label: "Plugins Top (3-col Grid)", value: "split_grid3" },
             { label: "Plugins Top (4-col Grid)", value: "split_grid4" },
-            { label: "All Buttons Top", value: "all_top" },
+            { label: "All Buttons Top", value: "all_top", default: true },
             { label: "Hidden", value: "hidden" },
         ],
         onChange: () => apply()
@@ -115,16 +117,16 @@ export const settings = definePluginSettings({
         ],
         onChange: () => apply()
     },
-    iconSize: { type: OptionType.SLIDER, description: "Icon size (px)", default: 20, markers: makeRange(12, 28, 2), stickToMarkers: false, onChange: () => apply() },
-    buttonContainerSize: { type: OptionType.SLIDER, description: "Button overall size (px)", default: 36, markers: makeRange(24, 48, 4), stickToMarkers: false, onChange: () => apply() },
-    buttonGap: { type: OptionType.SLIDER, description: "Gap between buttons (px)", default: 6, markers: makeRange(0, 12, 2), stickToMarkers: true, onChange: () => apply() },
+    iconSize: { type: OptionType.SLIDER, description: "Icon size (px)", default: 24, markers: makeRange(12, 28, 2), stickToMarkers: false, onChange: () => apply() },
+    buttonContainerSize: { type: OptionType.SLIDER, description: "Button overall size (px)", default: 48, markers: makeRange(24, 48, 4), stickToMarkers: false, onChange: () => apply() },
+    buttonGap: { type: OptionType.SLIDER, description: "Gap between buttons (px)", default: 10, markers: makeRange(0, 12, 2), stickToMarkers: true, onChange: () => apply() },
     panelOpacity: { type: OptionType.SLIDER, description: "Panel buttons opacity (0-100)", default: 100, markers: makeRange(10, 100, 10), stickToMarkers: false, onChange: () => apply() },
     buttonStyle: {
         type: OptionType.SELECT,
         description: "Visual style of panel buttons",
         options: [
-            { label: "Default (no background)", value: "default", default: true },
-            { label: "Rounded filled", value: "filled" },
+            { label: "Default (no background)", value: "default" },
+            { label: "Rounded filled", value: "filled", default: true },
             { label: "Outlined", value: "outlined" },
             { label: "Outlined (old)", value: "outlineold" },
             { label: "Pill", value: "pill" },
@@ -138,8 +140,8 @@ export const settings = definePluginSettings({
         type: OptionType.SELECT,
         description: "Hover effect on panel buttons",
         options: [
-            { label: "Default", value: "default", default: true },
-            { label: "Scale up", value: "scale" },
+            { label: "Default", value: "default" },
+            { label: "Scale up", value: "scale", default: true },
             { label: "Glow", value: "glow" },
             { label: "Bright", value: "bright" },
             { label: "None", value: "none" },
@@ -150,24 +152,40 @@ export const settings = definePluginSettings({
     panelBackgroundOpacity: { type: OptionType.SLIDER, description: "Panel background color opacity", default: 100, markers: makeRange(0, 100, 10), stickToMarkers: false, onChange: () => apply() },
     glowColor: { type: OptionType.STRING, description: "Glow hover color", default: "#ffffff", onChange: () => apply() },
     forceNativeButtonColor: { type: OptionType.BOOLEAN, default: false, description: "Force the icon color on Discord's native buttons (Mute, Deafen, Settings) even when no custom icon color is set", onChange: () => apply() },
-    hideChevrons: { type: OptionType.BOOLEAN, default: false, description: "Hide dropdown chevrons next to Mute and Deafen", onChange: () => apply() },
-    lockButtonPosition: { type: OptionType.BOOLEAN, default: false, description: "Lock Button Position (prevents buttons dropping down on long status)", onChange: () => apply() },
+    hideChevrons: { type: OptionType.BOOLEAN, default: true, description: "Hide dropdown chevrons next to Mute and Deafen", onChange: () => apply() },
+    lockButtonPosition: { type: OptionType.BOOLEAN, default: true, description: "Lock Button Position (prevents buttons dropping down on long status)", onChange: () => apply() },
     callCompact: { type: OptionType.BOOLEAN, default: false, description: "Compact mode for call control buttons", onChange: () => apply() },
-    callButtonStylingCamera: { type: OptionType.BOOLEAN, default: false, description: "Style the camera button", onChange: () => apply() },
-    callButtonStylingScreenShare: { type: OptionType.BOOLEAN, default: false, description: "Style the screen share button", onChange: () => apply() },
-    callButtonStylingActivity: { type: OptionType.BOOLEAN, default: false, description: "Style the activity button", onChange: () => apply() },
-    callButtonStylingSoundboard: { type: OptionType.BOOLEAN, default: false, description: "Style the soundboard button", onChange: () => apply() },
+    callButtonStylingCamera: { type: OptionType.BOOLEAN, default: true, description: "Style the camera button", onChange: () => apply() },
+    callButtonStylingScreenShare: { type: OptionType.BOOLEAN, default: true, description: "Style the screen share button", onChange: () => apply() },
+    callButtonStylingActivity: { type: OptionType.BOOLEAN, default: true, description: "Style the activity button", onChange: () => apply() },
+    callButtonStylingSoundboard: { type: OptionType.BOOLEAN, default: true, description: "Style the soundboard button", onChange: () => apply() },
     hideDisconnect: { type: OptionType.BOOLEAN, default: false, description: "Hide the disconnect button", onChange: () => apply() },
     hideVoiceStatus: { type: OptionType.BOOLEAN, default: false, description: "Hide the 'Voice Connected' status text and channel name", onChange: () => apply() },
     hidePingIcon: { type: OptionType.BOOLEAN, default: false, description: "Hide the ping/connection quality icon", onChange: () => apply() },
     hideUserPanelButton: { type: OptionType.BOOLEAN, default: false, description: "Hide the user panel button from the user area", onChange: () => apply() },
     hideUserAccountArea: { type: OptionType.BOOLEAN, default: false, description: "Hide the user account & buttons area", onChange: () => { apply(); void setUserAccountAreaEnabled(settings.store, settings.store.hideUserAccountArea); } },
     hideLine: { type: OptionType.BOOLEAN, default: true, description: "Hide the line between user and buttons", onChange: () => apply() },
-    fixProfileNameplate: { type: OptionType.BOOLEAN, default: false, description: "Fixes the rounding of the profile nameplate", onChange: () => apply() },
-    showUserAndStatus: { type: OptionType.BOOLEAN, default: false, description: "Show the user and the status at the same time", onChange: () => apply() },
+    fixProfileNameplate: { type: OptionType.BOOLEAN, default: true, description: "Fixes the rounding of the profile nameplate", onChange: () => apply() },
+    showUserAndStatus: { type: OptionType.BOOLEAN, default: true, description: "Show the user and the status at the same time", onChange: () => apply() },
     showDrawerLabel: { type: OptionType.BOOLEAN, default: false, description: "Show a 'P' label next to the plugin drawer toggle so it's clear what the arrow opens", onChange: () => apply() },
     streamInfoButton: { type: OptionType.BOOLEAN, default: false, description: "Show a user area button that turns the stream info overlay on and off" },
+    showLimiterButton: { type: OptionType.BOOLEAN, default: true, description: "Limiter button: show a user area button that turns the Hard Limiter on and off. Right click it for the limiter settings." },
+    layoutLocked: { type: OptionType.BOOLEAN, default: true, description: "Lock the user area button layout. Unlock it to hold and drag any button to another spot or section.", onChange: () => syncLayout() },
+    userAreaLayout: { type: OptionType.CUSTOM, description: "Saved user area button positions.", default: {} as ButtonLayout, hidden: true },
 });
+
+const layoutApi = {
+    getLayout: (): ButtonLayout => settings.store.userAreaLayout,
+    setLayout: (layout: ButtonLayout) => { settings.store.userAreaLayout = layout; },
+    isLocked: () => settings.store.layoutLocked,
+    getOrderBase: () => settings.store.userPanelLayout.startsWith("split_") ? 40000 : 0,
+    getGap: () => settings.store.buttonGap ?? 6,
+};
+
+function resetButtonLayout() {
+    settings.store.userAreaLayout = {};
+    syncLayout();
+}
 
 // ─── Selectors & Constants ────────────────────────────────────────────────────
 
@@ -925,6 +943,23 @@ function buildCSS(): string {
             break;
     }
 
+    // Discord squares off the right side of Mute and Deafen so the chevron can sit against it. With the
+    // chevron hidden the button keeps all four corners; with it shown the chevron carries the same plate,
+    // so the pair reads as one rounded button instead of a plate cut flat on one side.
+    const pairRadius = { pill: 20, square: 2, default: 8 }[st.buttonStyle] ?? radius;
+    const muteButton = `${S.panelButtons} .audioButtonParent_gKpIZP .audioButtonWithMenu_gKpIZP`;
+    const muteChevron = `${S.panelButtons} .audioButtonParent_gKpIZP ${S.chevron}`;
+    if (st.hideChevrons) {
+        lines.push(`${muteButton} { border-start-end-radius: ${pairRadius}px !important; border-end-end-radius: ${pairRadius}px !important; }`);
+    } else if (st.buttonStyle !== "default") {
+        const plate = {
+            outlined: "border: 1.5px solid var(--background-modifier-accent, var(--border-muted)) !important; border-inline-start: none !important;",
+            outlineold: "border: 1.5px solid var(--background-modifier-accent) !important; border-inline-start: none !important;",
+            halo: "background: var(--hc-row-bg) !important; box-shadow: inset 0 0 0 1px var(--hc-row-border);",
+        }[st.buttonStyle] ?? "background: var(--background-modifier-hover, var(--background-mod-normal)) !important;";
+        lines.push(`${muteChevron} { ${plate} height: ${st.buttonContainerSize}px !important; margin-inline-start: 0 !important; border-start-end-radius: ${pairRadius}px !important; border-end-end-radius: ${pairRadius}px !important; }`);
+    }
+
     // Opacity
     if (st.panelOpacity !== 100) {
         lines.push(`${S.panelButtons} { opacity: ${st.panelOpacity / 100} !important; transition: opacity 0.2s !important; }`);
@@ -1286,6 +1321,8 @@ function apply() {
         cEl.textContent = custom;
         document.head.appendChild(cEl);
     }
+
+    syncLayout();
 }
 
 // ─── Modal Constants ───────────────────────────────────────────────────────
@@ -3740,6 +3777,103 @@ function StreamInfoButton({ iconForeground, hideTooltips, nameplate }: UserAreaR
     );
 }
 
+interface HardLimiter {
+    on(): boolean;
+    set(value: boolean): void;
+}
+
+function getLimiter() {
+    return (window as Window & { __hcLimiter?: HardLimiter; }).__hcLimiter;
+}
+
+function useLimiter() {
+    const [, bump] = React.useReducer((n: number) => n + 1, 0);
+    React.useEffect(() => {
+        window.addEventListener("hc-limiter", bump);
+        return () => window.removeEventListener("hc-limiter", bump);
+    }, []);
+    return getLimiter();
+}
+
+function LimiterIcon({ style }: { style?: React.CSSProperties; }) {
+    return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>
+            <path d="M3 5h18" />
+            <path d="M3 17l3-5 2 4 2.5-11h3L16 16l2-4 3 5" />
+        </svg>
+    );
+}
+
+function LimiterMenu() {
+    const limiter = useLimiter();
+    return (
+        <Menu.Menu navId="hc-limiter-button" onClose={ContextMenuApi.closeContextMenu} aria-label="Limiter">
+            <Menu.MenuCheckboxItem id="hc-limiter-on" label="Limiter on" checked={limiter?.on() ?? false} action={() => limiter?.set(!limiter.on())} />
+            <Menu.MenuSeparator />
+            <Menu.MenuItem id="hc-limiter-settings" label="Advanced limiter settings" action={() => openSettingsCategory("voice_and_video_panel", "#dvx-lim-card")} />
+        </Menu.Menu>
+    );
+}
+
+function LimiterButton({ iconForeground, hideTooltips, nameplate }: UserAreaRenderProps) {
+    const { showLimiterButton } = settings.use(["showLimiterButton"]);
+    const limiter = useLimiter();
+    if (!showLimiterButton || !limiter) return null;
+
+    const on = limiter.on();
+
+    return (
+        <UserAreaButton
+            tooltipText={hideTooltips ? void 0 : "Turn limiter on/off"}
+            aria-label="Limiter"
+            aria-checked={on}
+            role="switch"
+            className="icon-color-fix"
+            icon={<LimiterIcon style={{ color: iconForeground }} />}
+            plated={nameplate != null}
+            onClick={() => limiter.set(!limiter.on())}
+            onContextMenu={e => ContextMenuApi.openContextMenu(e, () => <LimiterMenu />)}
+        />
+    );
+}
+
+function LockIcon({ open, style }: { open: boolean; style?: React.CSSProperties; }) {
+    return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>
+            <rect x="5" y="11" width="14" height="10" rx="2" />
+            <path d={open ? "M8 11V7a4 4 0 0 1 7.5-2" : "M8 11V7a4 4 0 0 1 8 0v4"} />
+        </svg>
+    );
+}
+
+function LayoutLockMenu() {
+    const { layoutLocked } = settings.use(["layoutLocked"]);
+    return (
+        <Menu.Menu navId="hc-layout-lock-button" onClose={ContextMenuApi.closeContextMenu} aria-label="Button layout">
+            <Menu.MenuCheckboxItem id="hc-layout-locked" label="Layout locked" checked={layoutLocked} action={() => settings.store.layoutLocked = !layoutLocked} />
+            <Menu.MenuSeparator />
+            <Menu.MenuItem id="hc-layout-reset" label="Reset layout" action={resetButtonLayout} />
+        </Menu.Menu>
+    );
+}
+
+function LayoutLockButton({ iconForeground, hideTooltips, nameplate }: UserAreaRenderProps) {
+    const { layoutLocked } = settings.use(["layoutLocked"]);
+    return (
+        <UserAreaButton
+            tooltipText={hideTooltips ? void 0 : layoutLocked ? "Unlock button layout" : "Lock button layout"}
+            aria-label="Button layout lock"
+            aria-checked={!layoutLocked}
+            role="switch"
+            className="icon-color-fix"
+            icon={<LockIcon open={!layoutLocked} style={{ color: iconForeground }} />}
+            plated={nameplate != null}
+            onClick={() => settings.store.layoutLocked = !layoutLocked}
+            onContextMenu={e => ContextMenuApi.openContextMenu(e, () => <LayoutLockMenu />)}
+        />
+    );
+}
+
 // ─── Plugin ───────────────────────────────────────────────────────────────────
 
 export default definePlugin({
@@ -3750,13 +3884,17 @@ export default definePlugin({
     dependencies: ["UserSettingsAPI", "UserAreaAPI"],
     settings,
     settingsAboutComponent: () => (
-        <Button
-            onClick={() => openModalLazy(async () => modalProps => <PanelLayoutModal modalProps={modalProps} />)}
-            size="small"
-            style={{ marginBottom: "16px" }}
-        >
-            Open Panel Layout Editor
-        </Button>
+        <Flex style={{ gap: "8px", marginBottom: "16px" }}>
+            <Button
+                onClick={() => openModalLazy(async () => modalProps => <PanelLayoutModal modalProps={modalProps} />)}
+                size="small"
+            >
+                Open Panel Layout Editor
+            </Button>
+            <Button onClick={resetButtonLayout} size="small" variant="secondary">
+                Reset button layout
+            </Button>
+        </Flex>
     ),
 
     patches: [
@@ -3812,6 +3950,9 @@ export default definePlugin({
         if (!running) return;
         addUserAreaButton("panel-collapse-toggle", CollapseToggleButton, 50);
         addUserAreaButton("panel-stream-info", StreamInfoButton, 40);
+        addUserAreaButton("panel-limiter", LimiterButton, 45);
+        addUserAreaButton("panel-layout-lock", LayoutLockButton, 60);
+        startLayoutDrag(layoutApi);
         apply();
         startObserver();
         unsubscribeModules = subscribeModules(() => apply());
@@ -3823,6 +3964,9 @@ export default definePlugin({
         running = false;
         removeUserAreaButton("panel-collapse-toggle");
         removeUserAreaButton("panel-stream-info");
+        removeUserAreaButton("panel-limiter");
+        removeUserAreaButton("panel-layout-lock");
+        stopLayoutDrag();
         unsubscribeModules?.();
         unsubscribeModules = null;
         stopModuleManager();

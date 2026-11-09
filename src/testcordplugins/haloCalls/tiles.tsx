@@ -218,6 +218,16 @@ export function useTileBanner({ participantUserId }: { participantUserId?: strin
     useSettings(["plugins.VoiceVUMeters.showWhileDeafened", "plugins.HaloCalls.*"]);
 }
 
+// Off the center the picture keeps 12px from the tile edge and zooms toward that edge.
+function picturePlace(position: string) {
+    if (!position || position === "center") return {};
+    const [a, b] = position.split("-");
+    const y = a === "top" ? "0%" : a === "bottom" ? "100%" : "50%";
+    const side = b ?? a;
+    const x = side === "left" ? "0%" : side === "right" ? "100%" : "50%";
+    return { "--vc-pfp-pos": `${x} ${y}`, "--vc-pfp-inset": "12px" };
+}
+
 export function getVoiceBackgroundStyles({ className, participantUserId, children }: { className?: string; participantUserId?: string; children?: unknown; }) {
     if (!settings.store.tiles || !className?.includes("tile") || !participantUserId) return;
 
@@ -272,6 +282,7 @@ export function getVoiceBackgroundStyles({ className, participantUserId, childre
         "--vc-pfp-avatar-mask": avatarMask(Math.round(settings.store.avatarRadius)),
         "--vc-pfp-avatar-radius": `${Math.round(settings.store.avatarRadius)}%`,
         "--vc-pfp-zoom": `${Math.round(settings.store.zoom) / 100}`,
+        ...picturePlace(settings.store.picturePosition),
         // The background shorthand resets every background key in the merged
         // style object and erased USRBG's inline banner with Discord's own
         // paint (measured live, work/rvcpfp-usrbg-toggle-20261008). The color

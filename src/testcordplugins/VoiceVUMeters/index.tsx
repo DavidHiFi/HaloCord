@@ -14,12 +14,37 @@ import { NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { definePluginSettings } from "@api/Settings";
 import { UserAreaButton, UserAreaRenderProps } from "@api/UserArea";
 import ErrorBoundary from "@components/ErrorBoundary";
+import { settings as callSettings } from "@testcordplugins/haloCalls/settings";
 import { TestcordDevs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import definePlugin, { makeRange, OptionType } from "@utils/types";
-import { createRoot, MediaEngineStore, React, SelectedChannelStore, UserStore, useStateFromStores, VoiceStateStore } from "@webpack/common";
+import { ContextMenuApi, MediaEngineStore, Menu, React, SelectedChannelStore, SettingsRouter, UserStore, useStateFromStores, VoiceStateStore } from "@webpack/common";
 
 import meterStyle from "./style.css?managed";
+
+// Nine spots on a tile or a picture, named by row and column ("right" is the middle of the right edge)
+export const TILE_SPOTS = [
+    { label: "Top left", value: "top-left" },
+    { label: "Top middle", value: "top" },
+    { label: "Top right", value: "top-right" },
+    { label: "Middle left", value: "left" },
+    { label: "Center", value: "center" },
+    { label: "Middle right", value: "right" },
+    { label: "Bottom left", value: "bottom-left" },
+    { label: "Bottom middle", value: "bottom" },
+    { label: "Bottom right", value: "bottom-right" }
+] as const;
+type SpotRow = "top" | "middle" | "bottom";
+type SpotCol = "left" | "center" | "right";
+type Spot = [SpotRow, SpotCol];
+
+function spotOf(value: string): Spot {
+    const [a, b] = value.split("-");
+    const row: SpotRow = a === "top" || a === "bottom" ? a : "middle";
+    const side = b ?? a;
+    const col: SpotCol = side === "left" || side === "right" ? side : "center";
+    return [row, col];
+}
 
 const logger = new Logger("VoiceVUMeters");
 
@@ -395,6 +420,7 @@ const settings = definePluginSettings({
     },
     tileMeterSide: {
         type: OptionType.SELECT,
+        hidden: true,
         description: "Which side of the tile anchors the meter, for both the background position and the profile picture. The meter always sits centered vertically so it clears the strip and the labels.",
         options: [
             {
@@ -407,6 +433,11 @@ const settings = definePluginSettings({
                 value: "left"
             }
         ]
+    },
+    tileMeterPosition: {
+        type: OptionType.SELECT,
+        description: "Where the meter sits on call tiles, or on the profile picture in profile picture mode.",
+        options: TILE_SPOTS.map(spot => ({ ...spot, default: spot.value === "right" }))
     },
     tileMeterHeight: {
         type: OptionType.SLIDER,
@@ -425,7 +456,7 @@ const settings = definePluginSettings({
         description: "Show screen share audio on VU meters while you have the stream muted.",
         default: false
     }
-}).withPrivateSettings<{ peakHoldEnabled?: boolean; metersMigrated?: boolean; metersOptIn?: boolean; }>();
+}).withPrivateSettings<{ peakHoldEnabled?: boolean; metersMigrated?: boolean; metersOptIn?: boolean; positionMigrated?: boolean; }>();
 
 function getConnection(): VoiceConnection | null {
     const engine = MediaEngineStore.getMediaEngine();
@@ -1488,8 +1519,23 @@ function measurePicture(tile: HTMLElement): PictureGeometry | null {
     const tileScale = tileBox.width / tile.offsetWidth || 1;
     const elementScale = pictureBox.height / tileScale / picture.clientHeight || 1;
     const before = getComputedStyle(picture, "::before");
-    const beforeScale = before.content !== "none" && before.transform !== "none" ? scaleOf(before.transform) : 1;
-    const side = Math.min(picture.clientWidth, picture.clientHeight) * elementScale * beforeScale;
+    const painted = before.content !== "none";
+    const beforeScale = painted && before.transform !== "none" ? scaleOf(before.transform) : 1;
+    // The square HaloCalls paints sits where its picture position puts it inside the ::before box, and
+    // the zoom scales it about the same point.
+    let boxSide = Math.min(picture.clientWidth, picture.clientHeight);
+    let squareX = picture.clientWidth / 2, squareY = picture.clientHeight / 2;
+    if (painted) {
+        const left = parseFloat(before.left) || 0, top = parseFloat(before.top) || 0;
+        const width = parseFloat(before.width) || picture.clientWidth, height = parseFloat(before.height) || picture.clientHeight;
+        const [posX = 50, posY = 50] = before.backgroundPosition.split(" ").map(v => v.endsWith("%") ? parseFloat(v) : 50);
+        const [originX = width / 2, originY = height / 2] = before.transformOrigin.split(" ").map(parseFloat);
+        boxSide = Math.min(width, height);
+        const preX = left + (width - boxSide) * posX / 100 + boxSide / 2, preY = top + (height - boxSide) * posY / 100 + boxSide / 2;
+        squareX = left + originX + (preX - left - originX) * beforeScale;
+        squareY = top + originY + (preY - top - originY) * beforeScale;
+    }
+    const side = boxSide * elementScale * beforeScale;
     if (!(side > 0)) return null;
 
     const rawRadius = getComputedStyle(picture).borderTopRightRadius;
@@ -1497,8 +1543,8 @@ function measurePicture(tile: HTMLElement): PictureGeometry | null {
     const radius = Math.min(side / 2, rawRadius.endsWith("%") ? side * radiusValue / 100 : radiusValue * elementScale);
 
     return {
-        centerX: (pictureBox.left + pictureBox.width / 2 - tileBox.left) / tileScale - tile.clientLeft,
-        centerY: (pictureBox.top + pictureBox.height / 2 - tileBox.top) / tileScale - tile.clientTop,
+        centerX: (pictureBox.left - tileBox.left) / tileScale + squareX * elementScale - tile.clientLeft,
+        centerY: (pictureBox.top - tileBox.top) / tileScale + squareY * elementScale - tile.clientTop,
         side,
         radius,
         tileWidth: tile.clientWidth
@@ -1511,27 +1557,51 @@ function samePicture(a: PictureGeometry | null, b: PictureGeometry | null) {
         && Math.abs(a.side - b.side) < 0.5 && Math.abs(a.radius - b.radius) < 0.5 && a.tileWidth === b.tileWidth;
 }
 
-// On the picture the meter is sized from the picture, centered on it and kept inside its rounded edge
-function pictureMeterStyle(picture: PictureGeometry, heightPercent: number, fromLeft: boolean): React.CSSProperties {
+// On the picture the meter is sized from the picture and kept inside its rounded edge
+function pictureMeterStyle(picture: PictureGeometry, heightPercent: number, [row, col]: Spot): React.CSSProperties {
     const { side, radius } = picture;
-    const height = Math.max(12, side * heightPercent / 100 - 10);
+    // Off the middle row on a side column, the meter's outer end sits in a corner, so it starts lower
+    const fromTopEdge = PICTURE_MARGIN + (col !== "center" ? radius * (1 - Math.SQRT1_2) : 0);
+    const height = Math.max(12, Math.min(side * heightPercent / 100 - 10, row === "middle" ? side : side - 2 * fromTopEdge));
+    const start = row === "top" ? fromTopEdge : row === "bottom" ? side - fromTopEdge - height : (side - height) / 2;
     // how far the rounded corner pulls the edge in at the meter's top and bottom ends
-    const intoCorner = Math.min(radius, Math.max(0, height / 2 - (side / 2 - radius)));
-    const cornerInset = radius - Math.sqrt(radius * radius - intoCorner * intoCorner);
-    const fromEdge = Math.min(cornerInset + PICTURE_MARGIN, Math.max(0, side - TILE_METER_WIDTH) / 2);
+    const pull = (y: number) => {
+        const into = Math.min(radius, Math.max(0, radius - y, y - (side - radius)));
+        return radius - Math.sqrt(radius * radius - into * into);
+    };
+    const fromEdge = Math.min(Math.max(pull(start), pull(start + height)) + PICTURE_MARGIN, Math.max(0, side - TILE_METER_WIDTH) / 2);
 
-    const style: React.CSSProperties = { position: "absolute", zIndex: 3, pointerEvents: "none", height, top: picture.centerY - height / 2 };
-    if (fromLeft) style.left = picture.centerX - side / 2 + fromEdge;
-    else style.right = picture.tileWidth - picture.centerX - side / 2 + fromEdge;
+    const style: React.CSSProperties = { position: "absolute", zIndex: 3, pointerEvents: "none", height, top: picture.centerY - side / 2 + start };
+    if (col === "left") style.left = picture.centerX - side / 2 + fromEdge;
+    else if (col === "right") style.right = picture.tileWidth - picture.centerX - side / 2 + fromEdge;
+    else style.left = picture.centerX - TILE_METER_WIDTH / 2;
+    return style;
+}
+
+// Without a picture the meter keeps clear of the name label and the hover controls at the bottom:
+// a right column lines up over the options button.
+function tileMeterStyle(heightPercent: number, [row, col]: Spot, seat: { right: number; bottom: number; }): React.CSSProperties {
+    const style: React.CSSProperties = {
+        position: "absolute", zIndex: 3, pointerEvents: "none",
+        height: row === "middle" ? `calc(${heightPercent}% - 10px)` : `min(calc(${heightPercent}% - 10px), calc(100% - ${seat.bottom + 22}px))`
+    };
+    const shift: string[] = [];
+    if (col === "left") style.left = 18;
+    else if (col === "right") style.right = seat.right;
+    else { style.left = "50%"; shift.push("translateX(-50%)"); }
+    if (row === "top") style.top = 12;
+    else if (row === "bottom") style.bottom = seat.bottom;
+    else { style.top = "50%"; shift.push("translateY(-50%)"); }
+    if (shift.length) style.transform = shift.join(" ");
     return style;
 }
 
 const OPTIONS_BUTTON = 32;
 
 function TileMeter({ userId }: { userId?: string; }) {
-    settings.use(["tilePlacement", "tileMeterSide", "tileMeterHeight", "tileSurfaces"]);
+    settings.use(["tilePlacement", "tileMeterPosition", "tileMeterHeight", "tileSurfaces"]);
     const onPicture = settings.store.tilePlacement === "avatar";
-    const fromLeft = settings.store.tileMeterSide === "left";
+    const spot = spotOf(settings.store.tileMeterPosition);
     const surfaces = settings.store.tileSurfaces;
     const boxRef = React.useRef<HTMLDivElement | null>(null);
     const measureRef = React.useRef<(() => void) | null>(null);
@@ -1630,21 +1700,9 @@ function TileMeter({ userId }: { userId?: string; }) {
     if (isStreamTile && surfaces === "voice") return null;
     if (!isStreamTile && surfaces === "streams") return null;
 
-    // Right side: the meter box is centred on the tile's options button and ends 4px above it.
-    // Left side keeps the vertically centred 18px seat.
-    // Tiles without a picture (streams, cameras) use this in profile picture mode too.
+    // Tiles without a picture (streams, cameras) use the tile spot in profile picture mode too.
     const heightPercent = Math.round(settings.store.tileMeterHeight);
-    const style: React.CSSProperties = picture
-        ? pictureMeterStyle(picture, settings.store.tileMeterHeight, fromLeft)
-        : fromLeft
-            ? {
-                position: "absolute", zIndex: 3, pointerEvents: "none", top: "50%", transform: "translateY(-50%)",
-                height: `calc(${heightPercent}% - 10px)`, left: 18
-            }
-            : {
-                position: "absolute", zIndex: 3, pointerEvents: "none", right: seat.right, bottom: seat.bottom,
-                height: `min(calc(${heightPercent}% - 10px), calc(100% - ${seat.bottom + 22}px))`
-            };
+    const style = picture ? pictureMeterStyle(picture, settings.store.tileMeterHeight, spot) : tileMeterStyle(heightPercent, spot, seat);
 
     return (
         <div ref={boxRef} style={style}>
@@ -1682,8 +1740,37 @@ function VuUserAreaButton({ iconForeground, hideTooltips, nameplate }: UserAreaR
             aria-checked={showMeters}
             plated={nameplate != null}
             onClick={() => settings.store.showMeters = !showMeters}
+            onContextMenu={e => ContextMenuApi.openContextMenu(e, () => <VuButtonMenu />)}
         />
     );
+}
+
+function VuButtonMenu() {
+    const { showMeters } = settings.use(["showMeters"]);
+    return (
+        <Menu.Menu navId="hc-vu-button" onClose={ContextMenuApi.closeContextMenu} aria-label="VU meters">
+            <Menu.MenuCheckboxItem id="hc-vu-show" label="Show VU meters" checked={showMeters} action={() => settings.store.showMeters = !showMeters} />
+            <Menu.MenuSeparator />
+            <Menu.MenuItem id="hc-vu-settings" label="VU meter settings" action={() => openSettingsCategory("voice_and_video_panel", "VU Meters")} />
+        </Menu.Menu>
+    );
+}
+
+// Opens a settings page and scrolls to one of its categories by title (or to an element, given "#id"),
+// unfolding its category when folded.
+export function openSettingsCategory(panel: string, title: string) {
+    SettingsRouter.openUserSettings(panel);
+    let tries = 0;
+    const find = () => {
+        const heading = title.startsWith("#")
+            ? document.getElementById(title.slice(1))
+            : [...document.querySelectorAll<HTMLElement>('[class*="categories_"] h2, .dvx-sec-title')].find(h => h.textContent?.trim() === title);
+        if (!heading) { if (++tries < 40) setTimeout(find, 100); return; }
+        const category = heading.closest("[data-hc-folded]");
+        if (category) category.querySelector<HTMLButtonElement>(".hc-fold")?.click();
+        heading.scrollIntoView({ block: "start", behavior: "smooth" });
+    };
+    setTimeout(find, 150);
 }
 
 // --- Input level in the user area mic menu ---
@@ -1806,15 +1893,10 @@ const audioDeviceMenuPatch: NavContextMenuPatchCallback = (children, props: { re
     swapInputLevel(children);
 };
 
-// --- Options on the Voice & Video page, under HaloCord's voice panel ---
-
-const OPTIONS_ID = "hc-guard-options";
-let optionsRoot: ReturnType<typeof createRoot> | undefined;
-let optionsNode: HTMLDivElement | undefined;
-let optionsTimer: ReturnType<typeof setInterval> | undefined;
+// --- Options: the VU Meters category in Voice & Video (HaloDesktop adds it) ---
 
 type BoolKey = "showMeters" | "showUserAreaButton" | "showPeak" | "showPeakNumbers" | "showSelf" | "showWhileDeafened" | "showMutedStreamAudio";
-type SelectKey = "frameRate" | "peakNumberUsers" | "peakNumberSurfaces" | "tileSurfaces" | "tilePlacement" | "tileMeterSide";
+type SelectKey = "frameRate" | "peakNumberUsers" | "peakNumberSurfaces" | "tileSurfaces" | "tilePlacement" | "tileMeterPosition";
 type RangeKey = "floorDb" | "tileMeterHeight";
 
 function Row({ label, sub, off, children }: { label: string; sub: string; off?: boolean; children: React.ReactNode; }) {
@@ -1887,12 +1969,23 @@ function RangeRow({ name, label, unit, off }: { name: RangeKey; label: string; u
     );
 }
 
-function GuardOptions() {
+// The picture spot is HaloCalls' setting, shown here with the meter spot it pairs with.
+function PicturePositionRow() {
+    const { picturePosition } = callSettings.use(["picturePosition"]);
+    return (
+        <Row label="Profile picture spot on call tiles" sub="Where the rounded profile picture sits in its call tile.">
+            <select className="hc-vu-select" aria-label="Profile picture spot on call tiles" value={picturePosition} onChange={e => callSettings.store.picturePosition = e.currentTarget.value}>
+                {TILE_SPOTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+        </Row>
+    );
+}
+
+export function VuMeterSettings() {
     const { showMeters, showPeakNumbers } = settings.use(["showMeters", "showPeakNumbers"]);
     const off = !showMeters;
     return (
-        <>
-            <div className="dvx-sec-title">VU Meters</div>
+        <div id="hc-guard-options" className="dvx-ns">
             <SwitchRow name="showMeters" label="Show VU meters" />
             <SwitchRow name="showUserAreaButton" label="Show VU button in user area" />
             <RangeRow name="floorDb" label="Meter floor" unit=" dB" off={off} />
@@ -1902,10 +1995,6 @@ function GuardOptions() {
             <SelectRow name="peakNumberUsers" label="Peak numbers for" off={off || !showPeakNumbers} />
             <SelectRow name="peakNumberSurfaces" label="Meters with peak numbers" off={off || !showPeakNumbers} />
             <SwitchRow name="showSelf" label="Meter for your own microphone" off={off} />
-            <SelectRow name="tileSurfaces" label="Call tiles with meters" off={off} />
-            <SelectRow name="tilePlacement" label="Meter position on call tiles" off={off} />
-            <SelectRow name="tileMeterSide" label="Meter side on call tiles" off={off} />
-            <RangeRow name="tileMeterHeight" label="Tile meter height" unit="%" off={off} />
             <SwitchRow
                 name="showWhileDeafened"
                 label="Show VU meters and speaking glow while deafened"
@@ -1917,29 +2006,14 @@ function GuardOptions() {
                 sub="Off keeps a muted stream's meter flat."
                 off={off}
             />
-        </>
+            <div className="dvx-sec-title">Positions</div>
+            <SelectRow name="tileSurfaces" label="Call tiles with meters" off={off} />
+            <SelectRow name="tilePlacement" label="Meter position on call tiles" off={off} />
+            <SelectRow name="tileMeterPosition" label="Meter spot on call tiles" off={off} />
+            <RangeRow name="tileMeterHeight" label="Tile meter height" unit="%" off={off} />
+            <PicturePositionRow />
+        </div>
     );
-}
-
-// The panel is rebuilt whenever the page re-renders, so re-seat the section right after it.
-function mountOptions() {
-    const panel = document.getElementById("dvx-native-settings");
-    if (!panel?.parentNode) return;
-    if (!optionsNode) {
-        optionsNode = document.createElement("div");
-        optionsNode.id = OPTIONS_ID;
-        optionsNode.className = "dvx-ns";
-        optionsRoot = createRoot(optionsNode);
-        optionsRoot.render(<ErrorBoundary noop><GuardOptions /></ErrorBoundary>);
-    }
-    if (panel.nextSibling !== optionsNode) panel.after(optionsNode);
-}
-
-function unmountOptions() {
-    optionsRoot?.unmount();
-    optionsNode?.remove();
-    optionsRoot = undefined;
-    optionsNode = undefined;
 }
 
 export default definePlugin({
@@ -2000,14 +2074,15 @@ export default definePlugin({
             settings.store.metersMigrated = true;
             settings.store.metersOptIn = true;
         }
+        // The left or right side (2.12.18 and older) becomes a spot: the middle of that side (2.12.19).
+        if (!settings.store.positionMigrated) {
+            settings.store.tileMeterPosition = settings.store.tileMeterSide === "left" ? "left" : "right";
+            settings.store.positionMigrated = true;
+        }
         if (settings.store.showMeters) startMeters();
-        optionsTimer = setInterval(mountOptions, 500);
     },
 
     stop() {
-        clearInterval(optionsTimer);
-        optionsTimer = undefined;
-        unmountOptions();
         stopMeters();
     }
 });

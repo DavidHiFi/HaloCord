@@ -5,15 +5,16 @@
  */
 
 import { isPluginEnabled, setPluginEnabled } from "@api/PluginManager";
-import { useSettings } from "@api/Settings";
+import { definePluginSettings, useSettings } from "@api/Settings";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { changeNeedsRestart, HaloRestartButton } from "@components/HaloRestart";
 import { HaloRow, HaloSection, HaloSwitchRow } from "@components/HaloUI";
 import SettingsPlugin from "@plugins/_core/settings";
 import { RejoinSettings, TileSettings } from "@testcordplugins/haloCalls/CallSettings";
+import { VuMeterSettings } from "@testcordplugins/VoiceVUMeters";
 import { TestcordDevs } from "@utils/constants";
-import definePlugin from "@utils/types";
-import { i18n, Select, useEffect, useState } from "@webpack/common";
+import definePlugin, { OptionType } from "@utils/types";
+import { i18n, Select, useEffect, useRef, useState } from "@webpack/common";
 import type { ComponentType } from "react";
 
 // Shell side: desktop/shell/hc-desktop.js, exposed by the preload as window.HaloCordDesktop.
@@ -166,11 +167,77 @@ function CallSettings() {
     );
 }
 
+const settings = definePluginSettings({
+    // Titles of the Voice & Video categories folded shut with their chevron
+    collapsedVoiceCategories: { type: OptionType.STRING, default: "[]", description: "", hidden: true }
+});
+
+const collapsed = (): string[] => { try { return JSON.parse(settings.store.collapsedVoiceCategories); } catch { return []; } };
+
+// Gives every titled category on the open settings page a chevron that folds it to its title. Discord
+// re-renders the page freely, so an observer puts the chevrons and the folded state back.
+function CategoryFolds() {
+    const ref = useRef<HTMLSpanElement>(null);
+    useEffect(() => {
+        const list = ref.current?.closest('[class*="categories_"]');
+        if (!list || list.hasAttribute("data-hc-folds")) return;
+        list.setAttribute("data-hc-folds", "");
+        const apply = () => {
+            const shut = collapsed();
+            for (const category of list.children) {
+                const title = category.firstElementChild;
+                const heading = title?.querySelector("h2");
+                if (!title || !heading) continue;
+                const name = heading.textContent?.trim() ?? "";
+                const isShut = shut.includes(name);
+                if (category.hasAttribute("data-hc-folded") !== isShut) category.toggleAttribute("data-hc-folded", isShut);
+                let button = title.querySelector<HTMLButtonElement>(":scope > .hc-fold");
+                if (!button) {
+                    button = document.createElement("button");
+                    button.type = "button";
+                    button.className = "hc-fold";
+                    button.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>';
+                    button.onclick = () => {
+                        const now = collapsed().filter(n => n !== name);
+                        if (!category.hasAttribute("data-hc-folded")) now.push(name);
+                        settings.store.collapsedVoiceCategories = JSON.stringify(now);
+                        apply();
+                    };
+                    heading.style.cursor = "pointer";
+                    heading.onclick = () => button?.click();
+                    title.append(button);
+                }
+                const label = (isShut ? "Expand " : "Collapse ") + name;
+                if (button.getAttribute("aria-label") !== label) {
+                    button.setAttribute("aria-label", label);
+                    button.setAttribute("aria-expanded", String(!isShut));
+                }
+            }
+        };
+        apply();
+        const observer = new MutationObserver(apply);
+        observer.observe(list, { childList: true, subtree: true });
+        return () => { observer.disconnect(); list.removeAttribute("data-hc-folds"); };
+    }, []);
+    return <span ref={ref} hidden />;
+}
+
+function VuCategory() {
+    return <><CategoryFolds /><VuMeterSettings /></>;
+}
+
+function CallsCategory() {
+    return <><CategoryFolds /><CallSettings /></>;
+}
+
 // Puts a category at the top, the end, or right before the first category whose key matches `before`,
 // in one of Discord's own settings panels (Settings plugin layoutHooks).
 function addCategory(panelKey: string, key: string, title: () => string, terms: string[], Component: ComponentType, atEnd = false, before?: RegExp) {
     const Wrapped = () => <ErrorBoundary noop><Component /></ErrorBoundary>;
+    // Several categories can join one panel: each hook runs the one before it.
+    const previous = SettingsPlugin.layoutHooks[panelKey];
     SettingsPlugin.layoutHooks[panelKey] = (layout, types) => {
+        previous?.(layout, types);
         if (!native() || layout.some(n => n?.key === key)) return;
         const at = before ? layout.findIndex(n => n?.type === types.CATEGORY && before.test(n.key ?? "")) : -1;
         const index = at >= 0 ? at : atEnd ? layout.length : 0;
@@ -192,6 +259,7 @@ export default definePlugin({
     name: "HaloDesktop",
     description: "Desktop client behaviour for HaloCord: startup and tray settings, Discord build choice, call options in Voice & Video, update notice, no web download prompts.",
     authors: [TestcordDevs.DavidHiFi],
+    settings,
     required: true,
     hidden: true,
 
@@ -278,7 +346,10 @@ export default definePlugin({
             ["Windows Settings", "startup", "tray", "minimise", "minimize"], WindowsSettings);
         addCategory("developer_options_panel", "halocord_build_category", () => "Discord Build",
             ["Discord Build", "Stable", "PTB", "Canary"], BuildSelector);
+        // VU Meters, then Calls at the very bottom of Voice & Video
+        addCategory("voice_and_video_panel", "halocord_vu_category", () => "VU Meters",
+            ["VU Meters", "meter", "peak", "position", "spot", "profile picture"], VuCategory, true);
         addCategory("voice_and_video_panel", "halocord_calls_category", () => "Calls",
-            ["Calls", "idle", "AFK", "rejoin", "reconnect", "tiles", "profile picture", "glow", "banner"], CallSettings, true, /advanced/i);
+            ["Calls", "idle", "AFK", "rejoin", "reconnect", "tiles", "profile picture", "glow", "banner"], CallsCategory, true);
     }
 });

@@ -24,6 +24,8 @@ export const settings = definePluginSettings({
     avatarRadius: { type: OptionType.NUMBER, default: 5, description: "" },
     cornerRadius: { type: OptionType.NUMBER, default: 12, description: "" },
     zoom: { type: OptionType.NUMBER, default: 100, description: "" },
+    // One of the nine VU meter spots ("center", "top-left", "right" ...): where the picture sits in its tile
+    picturePosition: { type: OptionType.STRING, default: "center", description: "" },
     hideTileBackground: { type: OptionType.BOOLEAN, default: false, description: "" },
     hideUserBackgrounds: { type: OptionType.BOOLEAN, default: false, description: "" },
     showUserBanners: { type: OptionType.BOOLEAN, default: true, description: "" },

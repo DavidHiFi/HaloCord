@@ -101,10 +101,12 @@ export function getBtnLabel(el: HTMLElement): string | null {
 
 export function getAllButtons(): HTMLElement[] {
     const out: HTMLElement[] = [];
-    const pBtns = document.querySelector(S.panelButtons) as HTMLElement | null;
-    const cBtns = document.querySelector(S.callControls) as HTMLElement | null;
+    const pBtns = document.querySelector<HTMLElement>(`${S.panelButtons}:not(.hc-ua-row)`);
+    const cBtns = document.querySelector<HTMLElement>(S.callControls);
+    const row = document.querySelector<HTMLElement>(".hc-ua-row");
     if (pBtns) out.push(...(Array.from(pBtns.children) as HTMLElement[]));
     if (cBtns) out.push(...(Array.from(cBtns.children) as HTMLElement[]));
+    if (row) out.push(...(Array.from(row.children) as HTMLElement[]));
     return out;
 }
 

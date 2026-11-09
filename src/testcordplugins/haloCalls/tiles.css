@@ -41,17 +41,20 @@ div[data-selenium-video-tile] div[role="img"] {
 div[data-selenium-video-tile] div[role="img"]::before {
     content: "";
     position: absolute;
-    inset: 0;
+    inset: var(--vc-pfp-inset, 0px);
     background: center / contain no-repeat;
     background-image: var(--full-res-avatar);
+    /* The picture position (center unless set) places the square and anchors the zoom and the mask to it. */
+    background-position: var(--vc-pfp-pos, center);
+    transform-origin: var(--vc-pfp-pos, center);
     transform: scale(var(--vc-pfp-zoom, 1));
     -webkit-mask-image: var(--vc-pfp-avatar-mask, url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Crect%20width='100'%20height='100'%20rx='5'%20fill='%23fff'/%3E%3C/svg%3E"));
     -webkit-mask-repeat: no-repeat;
-    -webkit-mask-position: center;
+    -webkit-mask-position: var(--vc-pfp-pos, center);
     -webkit-mask-size: contain;
     mask-image: var(--vc-pfp-avatar-mask, url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Crect%20width='100'%20height='100'%20rx='5'%20fill='%23fff'/%3E%3C/svg%3E"));
     mask-repeat: no-repeat;
-    mask-position: center;
+    mask-position: var(--vc-pfp-pos, center);
     mask-size: contain;
 }
 
@@ -64,7 +67,7 @@ div[data-selenium-video-tile][style*="--vc-pfp-ring-pic"] div[role="img"] {
 }
 
 div[data-selenium-video-tile][style*="--vc-pfp-ring-pic"] div[role="img"]::before {
-    inset: max(0px, calc(15px - (1 - var(--vc-pfp-zoom, 1)) * 50cqmin));
+    inset: max(var(--vc-pfp-inset, 0px), calc(15px - (1 - var(--vc-pfp-zoom, 1)) * 50cqmin));
 }
 
 /* The doubled [role="img"] beats FullVCPFP's `border-radius: unset !important` */
