@@ -1453,12 +1453,12 @@ html.hc-theming :is([class~="wrapper_TNyK-N"]:hover [class~="link_TNyK-N"], [cla
 
 /* Collapsed voice channel: round avatars with their meters beside them, no overlap, a pill hover plate */
 html.hc-theming [class~="listCollapse_YUoOxm"] { gap: 4px; align-items: center; flex-wrap: wrap; row-gap: 4px; }
-html.hc-theming [class~="userSmall_YUoOxm"] { margin: 0 !important; }
-html.hc-theming [class~="userSmall_YUoOxm"] [class~="content_YUoOxm"] { display: flex; align-items: center; gap: 5px; padding: 2px 7px 2px 2px; border-radius: 999px !important; }
-html.hc-theming [class~="userSmall_YUoOxm"] [class~="content_YUoOxm"]:not(:has([data-vu-meter])) { padding-right: 2px; }
-html.hc-theming [class~="userSmall_YUoOxm"] .voice-user-buttons { display: none !important; }
-html.hc-theming [class~="userSmall_YUoOxm"] [class~="avatarSmall_YUoOxm"] { flex: none; width: 28px !important; height: 28px !important; margin: 0 !important; border: 0 !important; border-radius: 50% !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; }
-html.hc-theming [class~="userSmall_YUoOxm"] [data-vu-meter] { flex: none; margin-left: 0 !important; align-self: center; }
+html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] { margin: 0 !important; }
+html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [class~="content_YUoOxm"] { display: flex; align-items: center; gap: 5px; padding: 2px 7px 2px 2px; border-radius: 999px !important; }
+html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [class~="content_YUoOxm"]:not(:has([data-vu-meter])) { padding-right: 2px; }
+html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] .voice-user-buttons { display: none !important; }
+html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [class~="avatarSmall_YUoOxm"] { flex: none; width: 28px !important; height: 28px !important; margin: 0 !important; border: 0 !important; border-radius: 50% !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; }
+html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [data-vu-meter] { flex: none; margin-left: 0 !important; align-self: center; }
 
 /* The "new unreads" pill at the top and bottom of the channel list: dark glass, gradient border and accent text on hover. */
 html.hc-theming [class~="unreadMentionsBar_5dqHTG"] {
