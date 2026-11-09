@@ -169,14 +169,14 @@ try{
 var dvxLims=[];function dvxLimNum(k,d,lo,hi){var v=Number(Q[k]);if(!isFinite(v))v=d;return Math['max'](lo,Math['min'](hi,v));}function dvxLimOn(kind){var t=Q['limTarget'];return !!Q['limOn']&&(t==='both'||t===kind);}function dvxLimApply(L){var on=dvxLimOn(L['kind']),ceil=dvxLimNum('limCeil',-1,-30,0),gain=on?dvxLimNum('limGain',0,0,24):0,rel=dvxLimNum('limRel',100,10,1000)/1000,clean=on&&Q['limMode']!=='clip',th=clean?ceil:0,R=clean?20:1,T=L['ctx']['currentTime'];L['pre']['gain']['setTargetAtTime'](Math['pow'](10,gain/20),T,0.01);L['comp']['threshold']['setValueAtTime'](th,T);L['comp']['knee']['setValueAtTime'](0,T);L['comp']['ratio']['setValueAtTime'](R,T);L['comp']['attack']['setValueAtTime'](0,T);L['comp']['release']['setValueAtTime'](rel,T);L['trim']['gain']['setValueAtTime'](Math['pow'](10,0.6*th*(1-1/R)/20),T);var key=on?String(ceil):'';if(L['key']!==key){L['key']=key;if(on){var c=Math['pow'](10,ceil/20),n=4097,a=new Float32Array(n);for(var i=0;i<n;i++){var x=i/(n-1)*2-1;a[i]=Math['max'](-c,Math['min'](c,x));}L['clip']['curve']=a;}else L['clip']['curve']=null;}}function dvxLimit(ctx,kind){var L={'ctx':ctx,'kind':kind,'key':null,'pre':ctx['createGain'](),'comp':ctx['createDynamicsCompressor'](),'trim':ctx['createGain'](),'clip':ctx['createWaveShaper']()};L['clip']['oversample']='none';L['pre']['connect'](L['comp']);L['comp']['connect'](L['trim']);L['trim']['connect'](L['clip']);L['in']=L['pre'];L['out']=L['clip'];dvxLimApply(L);dvxLims['push'](L);return L;}function dvxLimSync(){for(var i=dvxLims['length']-1;i>=0;i--){var L=dvxLims[i];if(L['ctx']['state']==='closed'||L['dead']){dvxLims['splice'](i,1);continue;}try{dvxLimApply(L);}catch(dvxL1){}}}function dvxLimClose(L){if(!L)return;L['dead']=!![];['pre','comp','trim','clip']['forEach'](function(k){try{L[k]['disconnect']();}catch(dvxL2){}});}try{window['__hcLimit']=dvxLimit;window['__hcLimClose']=dvxLimClose;}catch(dvxL3){}function dvxGainValue(){var v=Number(Q['micGain']);if(!isFinite(v)||v<0)v=1;if(v>10)v=10;return v;}
 function dvxGainClose(dvxG){try{dvxLimClose(dvxG['lim']);}catch(dvxGL){}try{dvxG['src']['disconnect']();}catch(dvxG1){}try{dvxG['node']['disconnect']();}catch(dvxG2){}try{dvxG['conv']&&dvxG['conv']['disconnect']();}catch(dvxG2a){}try{dvxG['lp']&&dvxG['lp']['disconnect']();}catch(dvxG2b){}try{dvxG['wet']&&dvxG['wet']['disconnect']();}catch(dvxG2c){}try{dvxG['dryGain']&&dvxG['dryGain']['disconnect']();}catch(dvxSPc1){}try{dvxG['spkGain']&&dvxG['spkGain']['disconnect']();}catch(dvxSPc2){}try{dvxG['spkProc']&&dvxG['spkProc']['disconnect']();}catch(dvxSPc3){}try{dvxG['spkIn']&&dvxG['spkIn']['disconnect']();}catch(dvxSPc4){}try{dvxG['spkHp']&&dvxG['spkHp']['disconnect']();}catch(dvxSPc5){}try{dvxG['spkLp']&&dvxG['spkLp']['disconnect']();}catch(dvxSPc6){}try{var dvxEQw=dvxG['eq'];if(dvxEQw)for(var dvxEQx=0;dvxEQx<dvxEQw['length'];dvxEQx++)try{dvxEQw[dvxEQx]['disconnect']();}catch(dvxEQd){}}catch(dvxEQe){}try{dvxVstClose(dvxG['ctx']);}catch(dvxVST2){}try{for(var dvxAI=0;dvxAI<dvxAuxSpecs['length'];dvxAI++)dvxAuxClose(dvxG,dvxAuxSpecs[dvxAI]);}catch(dvxS2){}try{if(dvxG['ctx']['state']!=='closed')dvxG['ctx']['close']();}catch(dvxG3){}}
 function dvxGainPrune(){for(var i=dvxGainChains.length-1;i>=0;i--){var dvxG=dvxGainChains[i],dvxEnded=![];try{dvxEnded=dvxG['raw']['readyState']==='ended';}catch(dvxG4){}if(dvxEnded){dvxGainClose(dvxG),dvxGainChains['splice'](i,1);}}while(dvxGainChains.length>8)dvxGainClose(dvxGainChains['shift']());}
-var dvxEqFreqs=[25,40,63,100,160,250,400,630,1000,1600,2500,4000,6300,10000,12500,16000];
-function dvxEqDefaults(){var a=[];for(var i=0;i<16;i++)a['push']({'f':dvxEqFreqs[i],'g':0});return a;}
+var dvxEqFreqs=[25,35,50,70,100,140,200,280,400,560,800,1100,1600,2200,3200,4500,6300,9000,12500,16000],dvxEqN=dvxEqFreqs.length;var dvxEqFreqs16=[25,40,63,100,160,250,400,630,1000,1600,2500,4000,6300,10000,12500,16000];function dvxEqResample(g16){var o=[];for(var i=0;i<dvxEqN;i++){var f=dvxEqFreqs[i],k=0;while(k<14&&dvxEqFreqs16[k+1]<f)k++;var t=Math.log(f/dvxEqFreqs16[k])/Math.log(dvxEqFreqs16[k+1]/dvxEqFreqs16[k]);t=Math.max(0,Math.min(1,t));var a=Number(g16[k])||0,b=Number(g16[k+1])||0;o.push(Math.round((a+(b-a)*t)*2)/2);}return o;}
+function dvxEqDefaults(){var a=[];for(var i=0;i<dvxEqN;i++)a['push']({'f':dvxEqFreqs[i],'g':0});return a;}
 function dvxEqBands(){
   var a=null;
   try{var v=JSON['parse'](String(Q['eqBands']||''));if(v&&typeof v==='object'&&v['length'])a=v;}catch(dvxEQB1){}
-  if(!a||a['length']!==16)a=dvxEqDefaults();
+  if(a&&a['length']===16){var dvxEQold=dvxEqResample(a['map'](function(x){return x&&typeof x==='object'?x['g']:0;}));a=dvxEqDefaults();for(var dvxEQk=0;dvxEQk<dvxEqN;dvxEQk++)a[dvxEQk]['g']=dvxEQold[dvxEQk];}if(!a||a['length']!==dvxEqN)a=dvxEqDefaults();
   var o=[];
-  for(var i=0;i<16;i++){
+  for(var i=0;i<dvxEqN;i++){
     var b=a[i]&&typeof a[i]==='object'?a[i]:{};
     var f=Number(b['f']);if(!isFinite(f))f=dvxEqFreqs[i];if(f<20)f=20;if(f>20000)f=20000;
     var g=Number(b['g']);if(!isFinite(g))g=0;if(g<-12)g=-12;if(g>12)g=12;
@@ -187,7 +187,7 @@ function dvxEqBands(){
 function dvxEqQ(){var q=Number(Q['eqQ']);if(!isFinite(q)||q<0.3)q=1;if(q>6)q=6;return q;}
 function dvxEqBuild(dvxCtx,dvxIn,dvxOut){
   var dvxFs=[],dvxPrev=dvxIn,dvxBands=dvxEqBands(),dvxQ0=dvxEqQ(),dvxOn=!!Q['eqEnabled'];
-  for(var i=0;i<16;i++){
+  for(var i=0;i<dvxEqN;i++){
     var dvxF=dvxCtx['createBiquadFilter']();
     try{dvxF['type']='peaking';dvxF['frequency']['value']=dvxBands[i]['f'];dvxF['Q']['value']=dvxQ0;dvxF['gain']['value']=dvxOn?dvxBands[i]['g']:0;}catch(dvxEQB2){}
     try{dvxPrev['connect'](dvxF);}catch(dvxEQB3){}
@@ -1267,8 +1267,8 @@ function QK(){var Gz=document['createElement']('div');Gz['id']=Qy;var GZ=documen
 dvxEQcard['style']['cssText']='margin-top:12px;padding:12px 12px 10px;border:1px solid var(--background-modifier-accent,rgba(255,255,255,.08));border-radius:8px;background:rgba(0,0,0,.12)';
 var dvxEQhead=document['createElement']('div');dvxEQhead['style']['cssText']='display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px';
 var dvxEQhl=document['createElement']('div');
-var dvxEQt=document['createElement']('div');dvxEQt['className']='dvx-lbl';dvxEQt['textContent']='16-Band Parametric EQ';
-var dvxEQs=document['createElement']('div');dvxEQs['className']='dvx-sub';dvxEQs['textContent']='Sixteen peaking bands on your outgoing voice, before Opus. Drag a fader for its gain, type to set its frequency. Applies live and shows in your mic test.';
+var dvxEQt=document['createElement']('div');dvxEQt['className']='dvx-lbl';dvxEQt['textContent']='20-Band Parametric EQ';
+var dvxEQs=document['createElement']('div');dvxEQs['className']='dvx-sub';dvxEQs['textContent']='Twenty peaking bands on your outgoing voice, before Opus. Drag a fader for its gain, type to set its frequency. Applies live and shows in your mic test.';
 dvxEQhl['appendChild'](dvxEQt);dvxEQhl['appendChild'](dvxEQs);dvxEQhead['appendChild'](dvxEQhl);
 var dvxEQsw=QP(function(){return !!Q['eqEnabled'];},function(nx){Q['eqEnabled']=!!nx,e4();dvxEQpaint();});
 dvxEQhead['appendChild'](dvxEQsw);dvxEQcard['appendChild'](dvxEQhead);
@@ -1277,7 +1277,7 @@ dvxEQcv['style']['cssText']='width:100%;height:84px;display:block;border-radius:
 dvxEQcard['appendChild'](dvxEQcv);
 var dvxEQst=dvxEqBands(),dvxEQctl=[];
 var dvxEQgrid=document['createElement']('div');
-dvxEQgrid['style']['cssText']='display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:10px 6px;align-items:end';
+dvxEQgrid['style']['cssText']='display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:10px 6px;align-items:end';
 function dvxEQcommit(){Q['eqBands']=JSON['stringify'](dvxEQst);e4();dvxEQpaint();}
 function dvxEQcurve(){
   try{
@@ -1292,14 +1292,14 @@ function dvxEQcurve(){
     [30,100,300,1000,3000,10000]['forEach'](function(f){g['beginPath']();g['moveTo'](Xp(f),0);g['lineTo'](Xp(f),H);g['stroke']();});
     [12,6,0,-6,-12]['forEach'](function(db){g['beginPath']();g['moveTo'](0,Yp(db));g['lineTo'](W,Yp(db));g['stroke']();});
     var bands=dvxEqBands(),qq=dvxEqQ(),on=!!Q['eqEnabled'],co=[];
-    for(var bi=0;bi<16;bi++){
+    for(var bi=0;bi<dvxEqN;bi++){
       var b=bands[bi],A=Math['pow'](10,b['g']/40),w0=2*Math['PI']*b['f']/48000,c0=Math['cos'](w0),s0=Math['sin'](w0),al=s0/(2*qq);
       co['push']({'b0':1+al*A,'b1':-2*c0,'b2':1-al*A,'a0':1+al/A,'a1':-2*c0,'a2':1-al/A});
     }
     g['beginPath']();
     for(var px=0;px<=W;px++){
       var f=fmin*Math['pow'](fmax/fmin,px/W),w=2*Math['PI']*f/48000,cw=Math['cos'](w),sw=Math['sin'](w),cw2=Math['cos'](2*w),sw2=Math['sin'](2*w),db=0;
-      if(on)for(var ci=0;ci<16;ci++){
+      if(on)for(var ci=0;ci<dvxEqN;ci++){
         var c=co[ci];
         var nr=c['b0']+c['b1']*cw+c['b2']*cw2,nim=-(c['b1']*sw+c['b2']*sw2);
         var dr=c['a0']+c['a1']*cw+c['a2']*cw2,dim=-(c['a1']*sw+c['a2']*sw2);
@@ -1320,13 +1320,13 @@ function dvxEQpaint(){
   dvxEQcurve();
 }
 function dvxEQsetGains(arr){
-  for(var i=0;i<16&&i<arr['length'];i++){
+  for(var i=0;i<dvxEqN&&i<arr['length'];i++){
     dvxEQst[i]['g']=arr[i];
     try{dvxEQctl[i]['hs']['value']=String(arr[i]);}catch(dvxEQG0){}
   }
   dvxEQcommit();
 }
-for(var dvxEQi=0;dvxEQi<16;dvxEQi++)(function(idx){
+for(var dvxEQi=0;dvxEQi<dvxEqN;dvxEQi++)(function(idx){
   var col=document['createElement']('div');col['style']['cssText']='display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0';
   var gl=document['createElement']('div');gl['style']['cssText']='font-size:10px;line-height:12px;height:12px;font-variant-numeric:tabular-nums;color:var(--text-muted,#949ba4)';
   var hs=document['createElement']('input');hs['type']='range';hs['min']='-12';hs['max']='12';hs['step']='0.5';hs['value']=String(dvxEQst[idx]['g']);
@@ -1343,9 +1343,9 @@ for(var dvxEQi=0;dvxEQi<16;dvxEQi++)(function(idx){
   dvxEQctl['push']({'hs':hs,'fn':fn,'gl':gl});
 })(dvxEQi);
 dvxEQcard['appendChild'](dvxEQgrid);
-var dvxEQfoot=document['createElement']('div');dvxEQfoot['style']['cssText']='display:flex;flex-wrap:wrap;gap:6px;margin-top:10px';
+var dvxEQfoot=document['createElement']('div');dvxEQfoot['style']['cssText']='display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:10px';
 var dvxEQpresets=[['Flat',[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],['Bass',[4,3.5,3,2.5,2,1.5,1,0.5,0,0,0,0,0,0,0,0]],['Treble',[0,0,0,0,0,0,0,0,0,0.5,1,1.5,2,2.5,3,3.5]],['Warm',[2.5,2,1.5,0.5,-0.5,-0.5,0,0,0,0,0.5,1,1.5,2,2,2]],['Podcast',[-2,-2,-1.5,-1,0,0.5,1,1.5,1.5,1,0.5,0,0,0,0,0]],['V-Shape',[3,3,2.5,1.5,0,-1,-1.5,-1,0,1,1.5,2,2.5,3,3,3]],['Telephone',[-6,-6,-4,-2,0,2,3,3,2,1,0,-2,-4,-6,-6,-6]]];
-dvxEQpresets['forEach'](function(P){
+dvxEQpresets['forEach'](function(P){P=[P[0],dvxEqResample(P[1])];
   var b=document['createElement']('button');b['type']='button';b['textContent']=P[0];
   b['style']['cssText']='padding:4px 10px;border:1px solid var(--background-modifier-accent,rgba(255,255,255,.12));border-radius:5px;background:var(--background-tertiary,#1e1f22);color:var(--header-primary,#f2f3f5);font-size:11px;font-weight:600;cursor:pointer';
   b['onmouseenter']=function(){b['style']['borderColor']='var(--hc-accent,#AFE37F)';};

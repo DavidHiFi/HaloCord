@@ -1231,11 +1231,12 @@ html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"]::after,
 html.hc-theming #vc-indicators-indicator-items::after {
     position: absolute;
     z-index: 1;
-    padding: 2px;
-    border-radius: 15px;
+    /* Flush on the 12 px tile, overlapping its edge by half a pixel, so no background shows between the ring and the icon. */
+    padding: 2.5px;
+    border-radius: 14px;
     background: var(--hc-gradient);
     content: "";
-    inset: -3px;
+    inset: -2px;
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     mask-composite: exclude;
     opacity: 0;
@@ -1248,11 +1249,16 @@ html.hc-theming #vc-indicators-indicator-items:hover::after {
     opacity: 1;
 }
 
-/* The folder ring is drawn inside the scaled header, so it is sized to land on the same 2 px ring. */
+/* The folder ring is drawn inside the scaled header, so it is sized to land on the same ring. */
 html.hc-theming nav[class*="guilds_"] [class*="folderButton_"] > [class~="wrapper_hqZPsU"]::after {
-    padding: 2.4px;
-    border-radius: 18px;
-    inset: -3.6px;
+    padding: 3px;
+    border-radius: 16.8px;
+    inset: -2.4px;
+}
+
+/* Discord darkens a smaller square inside the folder on hover, which read as a second border inside the ring. */
+html.hc-theming nav[class*="guilds_"] [class*="folderIcon_"] {
+    background-color: transparent !important;
 }
 
 html.hc-theming nav[class*="guilds_"] [class*="circleIconButton_"],
@@ -1508,6 +1514,11 @@ html.hc-theming [class~="panels_pog62O"] {
 
 html.hc-theming [class~="panels_pog62O"] [class*="container_9U6LUN"] {
     border-bottom-color: var(--hc-dock-line);
+}
+
+/* The quest card sits straight on Voice Connected (or the buttons) with no divider of its own. */
+html.hc-theming [class~="panels_pog62O"] [class~="wrapperVisible_jdr5pz"] {
+    border-bottom: 1px solid var(--hc-dock-line);
 }
 
 html.hc-theming [class~="panels_pog62O"] .vc-devbanner-module-widget {
