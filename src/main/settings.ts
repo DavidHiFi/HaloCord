@@ -8,8 +8,9 @@ import type { Settings } from "@api/Settings";
 import { IpcEvents } from "@shared/IpcEvents";
 import { SettingsStore } from "@shared/SettingsStore";
 import { mergeDefaults } from "@utils/mergeDefaults";
-import { ipcMain } from "electron";
-import { mkdirSync, readFileSync, writeFileSync } from "fs";
+import { app, BrowserWindow, ipcMain } from "electron";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { join } from "path";
 
 import { NATIVE_SETTINGS_FILE, PRESETS_FILE, SETTINGS_DIR, SETTINGS_FILE } from "./utils/constants";
 
@@ -41,6 +42,15 @@ ipcMain.on(IpcEvents.GET_SETTINGS, e => e.returnValue = RendererSettings.plain);
 
 ipcMain.handle(IpcEvents.SET_SETTINGS, (_, data: Settings, pathToNotify?: string) => {
     RendererSettings.setData(data, pathToNotify);
+    if (data.windowsMaterial === "acrylic" && (pathToNotify === "haloThemeVariant" || pathToNotify === "haloTheming")) {
+        const helper = join(app.getAppPath(), "mcblur.js");
+        if (existsSync(helper)) {
+            const blur = require(helper);
+            for (const win of BrowserWindow.getAllWindows()) {
+                if (win.webContents.getURL().includes("discord.com")) blur.apply(win, true, blur.themeTint(data));
+            }
+        }
+    }
 });
 
 // Presets live in their own file at the shared (prod-level) dir so they persist

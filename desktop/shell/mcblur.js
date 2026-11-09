@@ -26,7 +26,20 @@ function hwndOf(win) {
 }
 
 // on: true applies acrylic with the given tint, false turns it back off.
-function apply(win, on, tint = 0x662E1E1E) {
+function themeTint(settings) {
+    if (settings.haloTheming === false || settings.haloThemeVariant === "custom") return 0x661E1E1E;
+    return settings.haloThemeVariant === "mochacord" ? 0x662E1E1E : 0x66181C15;
+}
+
+function savedTint() {
+    try {
+        const { app } = require("electron");
+        const file = require("path").join(app.getPath("userData"), "TestCord", "settings", "settings.json");
+        return themeTint(JSON.parse(require("fs").readFileSync(file, "utf8")));
+    } catch { return 0x66181C15; }
+}
+
+function apply(win, on, tint = savedTint()) {
     if (process.platform !== "win32" || !win || win.isDestroyed()) return false;
     const { k, AP, blurBehind, rectRgn, deleteObject, swca } = load();
     const hwnd = hwndOf(win);
@@ -45,4 +58,4 @@ function apply(win, on, tint = 0x662E1E1E) {
     }
 }
 
-module.exports = { apply };
+module.exports = { apply, themeTint };

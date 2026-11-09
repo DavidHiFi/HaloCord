@@ -54,7 +54,16 @@ function avatarMask(rx: number): string {
 // override recolors it on the root and on each nested theme container.
 let glowObserver: MutationObserver | undefined;
 
+function themeGlow() {
+    return Settings.haloTheming && Settings.haloThemeVariant !== "custom";
+}
+
+function overrideColor() {
+    return themeGlow() ? "var(--hc-grad-a)" : settings.store.glowColor.trim();
+}
+
 function getGlowColors(): [string, string] {
+    if (themeGlow()) return ["var(--hc-grad-a)", "var(--hc-grad-b)"];
     const color = settings.store.glowColor.trim();
     const first = settings.store.overrideGlow && HEX_COLOR.test(color) ? color : "var(--status-speaking, #23a55a)";
     const second = settings.store.glowColor2.trim();
@@ -63,8 +72,8 @@ function getGlowColors(): [string, string] {
 
 function applyGlowOverride() {
     const root = document.documentElement;
-    const color = settings.store.glowColor.trim();
-    const on = settings.store.overrideGlow && HEX_COLOR.test(color);
+    const color = overrideColor();
+    const on = themeGlow() || (settings.store.overrideGlow && HEX_COLOR.test(color));
     root.classList.toggle("vc-rvcpfp-override-glow", on);
     if (on) root.style.setProperty("--vc-rvcpfp-glow-color", color);
     else root.style.removeProperty("--vc-rvcpfp-glow-color");
@@ -161,8 +170,8 @@ function clearGlowOverride() {
 // Discord rewrites <html> class and style on theme changes, which drops the glow classes and colours.
 function glowOverrideStale() {
     const root = document.documentElement;
-    const color = settings.store.glowColor.trim();
-    const on = settings.store.overrideGlow && HEX_COLOR.test(color);
+    const color = overrideColor();
+    const on = themeGlow() || (settings.store.overrideGlow && HEX_COLOR.test(color));
     return root.classList.contains("vc-rvcpfp-override-glow") !== on
         || root.classList.contains("vc-rvcpfp-hover-glow") !== settings.store.hoverGlow
         || root.style.getPropertyValue("--vc-rvcpfp-glow-2") !== getGlowColors()[1]
@@ -177,7 +186,7 @@ export function syncTiles() {
     if (glowObserver) return;
     window.addEventListener("testcord-vu-audio-change", onAudioActivityChange);
     glowObserver = new MutationObserver(() => glowOverrideStale() && applyGlowOverride());
-    glowObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "style"] });
+    glowObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "style", "data-hc-theme"] });
 }
 
 export function stopTiles() {
