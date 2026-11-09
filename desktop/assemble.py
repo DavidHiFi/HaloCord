@@ -141,7 +141,8 @@ m += ('\nfunction mcWinFile(){return require("path").join(app.getPath("userData"
 # hc-desktop: shell/hc-desktop.js owns Windows startup, start minimised, minimise to tray and the
 # Stable / PTB / Canary choice. The window stays hidden when launched with --start-minimized, and
 # the app page skips the HTTP cache so every launch gets Discord's newest web build.
-for a, b in [('win=new BrowserWindow({width:1400,height:900,', 'win=new BrowserWindow({show:!hcDesk.hidden,width:1400,height:900,'),
+# The main window starts hidden either way: hc-update.js shows it after the launch update check.
+for a, b in [('win=new BrowserWindow({width:1400,height:900,', 'win=new BrowserWindow({show:!1,width:1400,height:900,'),
              ('win.loadURL("https://discord.com/app")', 'win.loadURL(hcDesk.appUrl(),{extraHeaders:"Cache-Control: no-cache\\n"})')]:
     assert m.count(a) == 1, a
     m = m.replace(a, b)
@@ -158,8 +159,9 @@ for a, b in [('autoHideMenuBar:!0,backgroundColor:"#1e2124",title:"HaloCord"', '
 m += '\nrequire("./hc-overlay-main.js");\n'
 # hc-keys: start the keybind bridge in main.
 m += '\nrequire("./hc-keys.js").init();\n'
-# hc-update: takes over the bundle's updater IPC (registered when equicord/main.js loaded above).
-m += '\nconst hcUpdate=require("./hc-update.js").init();\n'
+# hc-update: the launch update check, which shows the main window, and the bundle's updater IPC
+# (registered when equicord/main.js loaded above, so this takes it over).
+m += '\nconst hcUpdate=require("./hc-update.js").init({win:()=>win,hidden:hcDesk.hidden});\n'
 (asrc / "main.js").write_text(m, encoding="utf-8")
 # Display text only; lowercase ids (kurtcordDirect, KurtcordMLKEM, wire tags) stay so P2P and E2EE still talk to Kurtcord users.
 for f in ("preload.js", "userscript.js"):

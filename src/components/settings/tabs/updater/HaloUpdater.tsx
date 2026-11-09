@@ -15,7 +15,7 @@ import { useEffect, useState } from "@webpack/common";
 import type { ReactNode } from "react";
 
 // The Updater page in HaloCord. The shell's hc-update.js answers the updater calls: it checks
-// HaloCord's GitHub releases, downloads the installer, checks its SHA-256 and installs it on restart.
+// HaloCord's GitHub releases, downloads the installer, checks its SHA-256 and installs it on restart or at the next launch.
 // Header card and status pill follow the layout of Sudocord's updater page.
 
 interface UpdateInfo {
@@ -135,7 +135,7 @@ export function HaloUpdater() {
                 </div>
                 <p className="hc-ui-hero-text">
                     {status === "ready"
-                        ? `HaloCord ${next} is downloaded and checked. It installs when you restart or close HaloCord, and your settings stay as they are.`
+                        ? `HaloCord ${next} is downloaded and checked. It installs when you restart or next open HaloCord, and your settings stay as they are.`
                         : status === "available"
                             ? "A new HaloCord is out. Update and restart downloads it, checks it and installs it in a few seconds. Your settings stay as they are."
                             : "Each HaloCord update carries the client's own changes and the latest plugins from Vencord, Equicord and TestCord."}
