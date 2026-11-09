@@ -42,7 +42,7 @@ shutil.copy2(KOFFI / "build" / "koffi" / "win32_x64" / "koffi.node", kd / "build
 shutil.copy2(D / "shell" / "mcblur.js", asrc / "mcblur.js")
 shutil.copy2(D / "shell" / "shareaudio.js", asrc / "shareaudio.js")
 shutil.copy2(D / "shell" / "hc-desktop.js", asrc / "hc-desktop.js")  # hc-desktop: startup, tray, build choice, app icon
-shutil.copy2(D / "shell" / "hc-icon.js", asrc / "hc-icon.js")  # hc-icon: applies the green or Mocha blue app icon
+shutil.copy2(D / "shell" / "hc-icon.js", asrc / "hc-icon.js")  # hc-icon: applies the stock, green or Mocha blue app icon
 shutil.copy2(D / "shell" / "hc-update.js", asrc / "hc-update.js")  # hc-update: the in-app updater
 shutil.copy2(D / "shell" / "hc-watchdog.js", asrc / "hc-watchdog.js")  # hc-watchdog: reloads a hung, crashed or blank main window
 # build.json tells hc-update.js which commit this build is, for the list of changes in the next update.
@@ -298,7 +298,7 @@ shutil.copy2(D / "brand" / "icon.png", asrc / "icon.png")
 shutil.copy2(D / "brand" / "halocord.ico", asrc / "icon.ico")
 # Both app icons as real files, so shortcuts can point at the chosen one (Themes > App icon).
 (app / "resources" / "icons").mkdir(exist_ok=True)
-for f in ("halocord.ico", "halocord-mocha.ico"):
+for f in ("discord.ico", "halocord.ico", "halocord-mocha.ico"):
     shutil.copy2(D / "brand" / f, app / "resources" / "icons" / f)
 pkg = json.loads((asrc / "package.json").read_text())
 pkg.update(name="halocord", productName="HaloCord", version=VERSION, description="HaloCord", author="DavidHiFi")

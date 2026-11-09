@@ -1,4 +1,4 @@
-// HaloCord app icon choice (green or Catppuccin Mocha blue): window and taskbar icons, the tray,
+// HaloCord app icon choice (stock Discord, green or Catppuccin Mocha blue): window and taskbar icons, the tray,
 // the Start menu, desktop and pinned taskbar shortcuts, and the icon inside HaloCord.exe.
 // The .ico files sit in resources\icons, outside app.asar, so shortcuts can point at them.
 // A running exe cannot be written, but it can be renamed: the icon goes into a copy, and at quit the
@@ -7,7 +7,7 @@ const { app, BrowserWindow, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
 
-const FILES = { green: "halocord.ico", mocha: "halocord-mocha.ico" };
+const FILES = { stock: "discord.ico", green: "halocord.ico", mocha: "halocord-mocha.ico" };
 const RT_ICON = 3, RT_GROUP_ICON = 14, GROUP_ID = 1, LANG = 1033;  // the layout rcedit leaves in HaloCord.exe
 
 const variantOf = v => Object.hasOwn(FILES, v) ? v : "green";

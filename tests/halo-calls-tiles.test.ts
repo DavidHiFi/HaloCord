@@ -11,11 +11,13 @@ import vm from "node:vm";
 
 import { transformSync } from "esbuild";
 
-import { makeRange } from "../src/utils/types";
-
-const source = readFileSync(new URL("../src/testcordplugins/RoundedVcPfp/index.tsx", import.meta.url), "utf8")
+const read = (file: string) => readFileSync(new URL(`../src/testcordplugins/haloCalls/${file}`, import.meta.url), "utf8");
+const pluginSource = read("index.tsx");
+// tiles.tsx runs in a sandbox: its imports become sandbox globals and its exports a plain object.
+const source = read("tiles.tsx")
     .replace(/^import .*;\r?\n/gm, "")
-    .replace("export default definePlugin(", "globalThis.plugin = definePlugin(");
+    .replace(/^export (?=function|const)/gm, "")
+    + "\nglobalThis.plugin = { start: syncTiles, stop: stopTiles, getVoiceBackgroundStyles, useTileBanner };";
 let lookups = 0;
 let user: { getDefaultAvatarURL?: unknown; } = {};
 const voiceState: { channelId?: string; } = {};
@@ -31,6 +33,7 @@ const usrbgState = { enabled: false, hasBackground: false };
 // channel: the stream the call view currently paints, or none.
 let selectedStream: { type?: unknown; id?: unknown } | null = null;
 const store: Record<string, unknown> = {
+    tiles: true,
     avatarRadius: 5,
     cornerRadius: 12,
     zoom: 100,
@@ -38,8 +41,10 @@ const store: Record<string, unknown> = {
     hideUserBackgrounds: false,
     showUserBanners: false,
     preferBanners: false,
-    enableGlow: false,
+    overrideGlow: false,
+    hoverGlow: false,
     glowColor: "#45475a",
+    glowColor2: "",
     speakingIndicator: "box"
 };
 const windowListeners = new Map<string, Set<unknown>>();
@@ -49,10 +54,16 @@ const fakeWindow = {
 };
 const sandbox = {
     window: fakeWindow,
-    EquicordDevs: { mochienya: {} }, TestcordDevs: { DavidHiFi: {} },
-    definePlugin: (plugin: unknown) => plugin,
-    definePluginSettings: () => ({ store }), OptionType: { SLIDER: 5 }, style: "",
-    makeRange,
+    settings: { store },
+    Settings: { plugins: {} },
+    MediaEngineStore: { isDeaf: () => false, addReactChangeListener: () => {}, removeReactChangeListener: () => {} },
+    // syncTiles writes the glow override onto <html> and watches it for Discord's rewrites
+    document: { documentElement: { classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => false }, style: { setProperty: () => {}, removeProperty: () => {}, getPropertyValue: () => "" } } },
+    MutationObserver: class { observe() {} disconnect() {} },
+    HEX_COLOR: /^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i,
+    style: "",
+    enableStyle: () => {},
+    disableStyle: () => {},
     UserStore: { getUser: () => { lookups++; return user; } },
     VoiceStateStore: { getVoiceStateForUser: () => voiceState.channelId ? voiceState : undefined, addReactChangeListener: () => {}, removeReactChangeListener: () => {} },
     SelectedChannelStore: { getVoiceChannelId: () => selfVoiceChannel, addReactChangeListener: () => {}, removeReactChangeListener: () => {} },
@@ -77,7 +88,8 @@ const sandbox = {
         for (const store of stores) store.addReactChangeListener(() => {});
         return undefined;
     },
-    getUserAvatarUrl: () => undefined
+    getUserAvatarUrl: () => undefined,
+    useSettings: () => {}
 };
 vm.createContext(sandbox);
 vm.runInContext(transformSync(source, { loader: "tsx", format: "cjs" }).code, sandbox);
@@ -117,20 +129,20 @@ test("Picture masking follows the radius slider and the theme slot is always set
     Object.assign(store, { avatarRadius: 5 });
 });
 
-test("The glow follows its own switch while the box shows or hides", () => {
-    Object.assign(store, { hideTileBackground: false, enableGlow: true });
+test("Hiding the tile background clears only Discord's box, and silent tiles carry no glow", () => {
+    Object.assign(store, { hideTileBackground: false });
     const result = styles({ participantUserId: "1" });
     assert.equal(result["backgroundColor"], "");
     assert.equal("backgroundImage" in result, false);
     assert.equal(result["--vc-pfp-hide-bg"], "");
-    assert.equal(result["--vc-pfp-glow-filter"], "drop-shadow(0 0 14px rgba(69, 71, 90, 0.4)) drop-shadow(0 0 3px rgba(69, 71, 90, 0.6))");
+    assert.equal(result["--vc-pfp-glow-filter"], "");
 
-    Object.assign(store, { hideTileBackground: true, enableGlow: false });
+    Object.assign(store, { hideTileBackground: true });
     const floating = styles({ participantUserId: "1" });
     assert.equal(floating["backgroundColor"], "transparent");
     assert.equal(floating["--vc-pfp-hide-bg"], "1");
     assert.equal(floating["--vc-pfp-glow-filter"], "");
-    Object.assign(store, { enableGlow: false });
+    Object.assign(store, { hideTileBackground: false });
 });
 
 test("The speaking ring emits its markers only in picture mode while speaking", () => {
@@ -147,21 +159,23 @@ test("The speaking ring emits its markers only in picture mode while speaking", 
     Object.assign(store, { speakingIndicator: "box" });
 });
 
-test("Picture mode merges the speaking bloom into the filter while speaking", () => {
+// The picture-mode ring: two tight and two soft drop-shadows, left in the first colour, right in the second.
+const ring = (first: string, second = first) => `drop-shadow(-1px 0 1.5px ${first}) drop-shadow(1px 0 1.5px ${second}) drop-shadow(-2px 0 5px ${first}) drop-shadow(2px 0 5px ${second})`;
+const DISCORD_GREEN = "var(--status-speaking, #23a55a)";
+
+test("Picture mode rings the picture through the filter only while speaking", () => {
     voiceState.channelId = "channel-1";
-    Object.assign(store, { speakingIndicator: "picture", enableGlow: true, glowColor: "#45475a" });
+    Object.assign(store, { speakingIndicator: "picture", overrideGlow: true, glowColor: "#45475a" });
     const talking = styles({ participantUserId: "1" });
     assert.equal(talking["--vc-pfp-speaking"], "1");
-    assert.equal(talking["--vc-pfp-glow-filter"], "drop-shadow(0 0 14px rgba(69, 71, 90, 0.4)) drop-shadow(0 0 3px rgba(69, 71, 90, 0.6)) drop-shadow(0 0 2px var(--green-360, #23a55a)) drop-shadow(0 0 8px var(--green-360, #23a55a))");
+    assert.equal(talking["--vc-pfp-glow-filter"], ring("#45475a"));
 
-    Object.assign(store, { enableGlow: false });
-    const bloomOnly = styles({ participantUserId: "1" });
-    assert.equal(bloomOnly["--vc-pfp-glow-filter"], "drop-shadow(0 0 2px var(--green-360, #23a55a)) drop-shadow(0 0 8px var(--green-360, #23a55a))");
+    Object.assign(store, { overrideGlow: false });
+    assert.equal(styles({ participantUserId: "1" })["--vc-pfp-glow-filter"], ring(DISCORD_GREEN));
 
     Object.assign(store, { speakingIndicator: "box" });
-    const boxed = styles({ participantUserId: "1" });
-    assert.equal(boxed["--vc-pfp-glow-filter"], "");
-    voiceState.channelId = undefined;
+    assert.equal(styles({ participantUserId: "1" })["--vc-pfp-glow-filter"], "");
+    delete voiceState.channelId;
 });
 
 test("User backgrounds stay visible without their own switch and hide with it", () => {
@@ -231,23 +245,23 @@ test("A failed banner fetch retries uncached so rate-limited users still get the
     Object.assign(store, { showUserBanners: false });
 });
 
-test("The glow filter composes both layers from the configured hex", () => {
-    Object.assign(store, { hideTileBackground: true, enableGlow: true, glowColor: "#45475a" });
-    const result = styles({ participantUserId: "1" });
-    assert.equal(result["--vc-pfp-glow-filter"], "drop-shadow(0 0 14px rgba(69, 71, 90, 0.4)) drop-shadow(0 0 3px rgba(69, 71, 90, 0.6))");
+test("The ring takes the configured colours and falls back to Discord's for a bad hex", () => {
+    voiceState.channelId = "channel-1";
+    Object.assign(store, { speakingIndicator: "picture", overrideGlow: true, glowColor: "#45475a", glowColor2: "#cba6f7" });
+    assert.equal(styles({ participantUserId: "1" })["--vc-pfp-glow-filter"], ring("#45475a", "#cba6f7"));
+    assert.equal(styles({ participantUserId: "1" })["--vc-pfp-custom-glow-2"], "#cba6f7");
 
-    Object.assign(store, { glowColor: "#a8c" });
-    assert.equal(styles({ participantUserId: "1" })["--vc-pfp-glow-filter"], "drop-shadow(0 0 14px rgba(170, 136, 204, 0.4)) drop-shadow(0 0 3px rgba(170, 136, 204, 0.6))");
-    Object.assign(store, { enableGlow: true, glowColor: "not-a-color" });
-    assert.equal(styles({ participantUserId: "1" })["--vc-pfp-glow-filter"], "");
-    Object.assign(store, { hideTileBackground: false, enableGlow: false, glowColor: "#45475a" });
+    Object.assign(store, { glowColor: "not-a-color", glowColor2: "" });
+    assert.equal(styles({ participantUserId: "1" })["--vc-pfp-glow-filter"], ring(DISCORD_GREEN));
+    Object.assign(store, { speakingIndicator: "box", overrideGlow: false, glowColor: "#45475a" });
+    delete voiceState.channelId;
 });
 
 test("Stream tiles never glow in either mode, watched or not", () => {
     voiceState.channelId = "channel-1";
     const children = { props: { children: [{ props: { participant: { type: 0, streamId: "stream-1" } } }] } };
     for (const speakingIndicator of ["picture", "box"]) {
-        Object.assign(store, { speakingIndicator, enableGlow: false });
+        Object.assign(store, { speakingIndicator, overrideGlow: false });
         for (const selection of [null, { type: "STREAM", id: "guild:guild-1:channel-1:1" }]) {
             selectedStream = selection;
             const stream = plugin.getVoiceBackgroundStyles({ className: "tile", participantUserId: "1", children });
@@ -262,7 +276,7 @@ test("Stream tiles never glow in either mode, watched or not", () => {
     const person = styles({ participantUserId: "1" });
     assert.equal(person["--vc-pfp-stream"], "");
     assert.equal(person["--vc-pfp-speaking"], "1");
-    assert.ok(person["--vc-pfp-glow-filter"].includes("--green-360"));
+    assert.equal(person["--vc-pfp-glow-filter"], ring(DISCORD_GREEN));
     Object.assign(store, { speakingIndicator: "box" });
     delete voiceState.channelId;
 });
@@ -288,7 +302,7 @@ test("Speaking resolves through the call we are in while a participant's own voi
 });
 
 test("Camera tiles keep their speaking state and tile border in picture mode", () => {
-    Object.assign(store, { speakingIndicator: "picture", enableGlow: false });
+    Object.assign(store, { speakingIndicator: "picture", overrideGlow: false });
     voiceState.channelId = "channel-1";
     const children = { props: { children: [{ props: { participant: { type: 2, streamId: "camera-1" } } }] } };
     const camera = plugin.getVoiceBackgroundStyles({ className: "tile", participantUserId: "1", children });
@@ -313,13 +327,13 @@ test("Every store handed to useStateFromStores carries the Flux listener contrac
 const rules = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, "");
 
 test("The only box ring is box mode's, and it skips stream tiles", () => {
-    const css = rules(readFileSync(new URL("../src/testcordplugins/RoundedVcPfp/style.css", import.meta.url), "utf8"));
-    const boxRings = [...css.matchAll(/([^{}]+)\{[^}]*0 0 0 2px var\(--green-360/g)].map(m => m[1].trim());
+    const css = rules(readFileSync(new URL("../src/testcordplugins/haloCalls/tiles.css", import.meta.url), "utf8"));
+    const boxRings = [...css.matchAll(/([^{}]+)\{[^}]*box-shadow:\s*0 0 0 2px var\(--vc-pfp-custom-glow/g)].map(m => m[1].trim());
     assert.deepEqual(boxRings, ['div[data-selenium-video-tile][style*="--vc-pfp-speaking"]:not([style*="--vc-pfp-ring-pic"], [style*="--vc-pfp-stream"])']);
 });
 
 test("The glow filter sits on the unmasked avatar element so it traces only the picture", () => {
-    const css = rules(readFileSync(new URL("../src/testcordplugins/RoundedVcPfp/style.css", import.meta.url), "utf8"));
+    const css = rules(readFileSync(new URL("../src/testcordplugins/haloCalls/tiles.css", import.meta.url), "utf8"));
     const block = (selector: string) => css.split("}").map(part => part.split("{")).find(([sel]) => sel.trim() === selector)?.[1] ?? "";
     const avatar = block('div[data-selenium-video-tile] div[role="img"]');
     assert.match(avatar, /filter:\s*var\(--vc-pfp-glow-filter/, "glow filter must be on the avatar element");
@@ -334,8 +348,8 @@ test("The glow filter sits on the unmasked avatar element so it traces only the 
 test("Tile styles go into a fresh style object so cleared keys leave the DOM", () => {
     // Mutating the parent's style object in place made React compare it with
     // itself, so switching to box mode kept the picture-mode ring painted.
-    assert.ok(source.includes('replace: "$self.useTileBanner($2);$1={...$1,...$self.getVoiceBackgroundStyles($2)};"'));
-    assert.ok(!source.includes("Object.assign($1"));
+    assert.ok(pluginSource.includes('replace: "$self.useTileBanner($2);$1={...$1,...$self.getVoiceBackgroundStyles($2)};"'));
+    assert.ok(!pluginSource.includes("Object.assign($1"));
 });
 
 test("The audio-activity window listener is added on start and removed on stop", () => {

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { type MochaCordSettings, Settings, SettingsStore } from "@api/Settings";
+import { type MochaCordSettings, Settings, SettingsStore, type ThemeColorSettings } from "@api/Settings";
 import { IS_MAC, IS_WINDOWS } from "@utils/constants";
 import { createAndAppendStyle } from "@utils/css";
 import { PopoutWindowStore } from "@webpack/common";
@@ -150,33 +150,38 @@ function hasWindowBlur(root: HTMLElement) {
         || (IS_MAC && !!Settings.macosVibrancyStyle);
 }
 
+const rgbOf = (hex: string) => {
+    const h = hex.slice(1);
+    const full = h.length <= 4 ? [...h].map(c => c + c).join("") : h;
+    return [0, 2, 4].map(i => parseInt(full.slice(i, i + 2), 16)).join(" ");
+};
+
+const themeTokens = ":root:root, :root:root :is(.theme-dark, .theme-darker, .theme-midnight, .theme-light)";
+
+// Custom runs on stock Discord, so its colours go straight onto Discord's own tokens.
+function customTokens(colors: ThemeColorSettings) {
+    const out: string[] = [];
+    const pick = (key: keyof ThemeColorSettings) => isHexColor(colors[key]) ? colors[key] : null;
+    const accent = pick("accent"), text = pick("text"), muted = pick("textMuted"), surface = pick("surface"), background = pick("background"), hover = pick("hoverColor");
+    if (accent) out.push(`--brand-500: ${accent}; --brand-360: ${accent}; --brand-530: ${accent}; --brand-560: ${accent};`);
+    if (text) out.push(`--text-default: ${text}; --text-strong: ${text};`);
+    if (muted) out.push(`--text-muted: ${muted};`);
+    if (surface) out.push(`--background-surface-high: ${surface}; --background-surface-higher: ${surface};`);
+    if (background) out.push(`--background-base-lower: ${background}; --background-base-low: ${background}; --background-base-lowest: ${background};`);
+    if (hover) out.push(`--border-hover: ${hover};`);
+    return out;
+}
+
 export function applyHaloAppearance(root: HTMLElement) {
-    const mc = Settings.mochacord;
     for (const attr of Array.from(root.attributes)) {
         if (attr.name.startsWith("data-mc-")) root.removeAttribute(attr.name);
     }
+    // These two only position Discord's own window chrome, so they stay with theming off.
     if (!hasWindowBlur(root)) root.setAttribute("data-mc-window-blur", "off");
     if (root === document.documentElement && (ownTitleBar ??= IS_WINDOWS && !!window.HaloCordNative && !Settings.hcNativeTitleBar))
         root.setAttribute("data-mc-titlebar", "own");
-    for (const [key, name, fallback, value] of flags) {
-        if (mc[key] !== fallback) root.setAttribute(`data-mc-${name}`, value);
-    }
-    for (const [key, name, fallback] of choices) {
-        if (mc[key] !== fallback) root.setAttribute(`data-mc-${name}`, mc[key]);
-    }
-    // The colours live in their own stylesheet: Discord rewrites <html>'s inline style after startup, which
-    // dropped them and left the theme's badges and accents with no colour at all.
-    const colours: string[] = [];
-    for (const [key, name] of mochaColors) {
-        const value = mc[key];
-        // The HaloCord look tints MochaCord's accent and hover border with the HaloCord accent unless the user picked one.
-        const fallback = Settings.haloThemeVariant === "halocord" && (key === "accent" || key === "hoverColor") ? "var(--hc-accent)" : null;
-        const colour = isHexColor(value) ? value : fallback;
-        root.style.removeProperty(`--mc-${name}`);
-        if (!colour) continue;
-        root.setAttribute(`data-mc-${name}`, "");
-        colours.push(`--mc-${name}: ${colour};`);
-    }
+
+    for (const [, name] of mochaColors) root.style.removeProperty(`--mc-${name}`);
     const doc = root.ownerDocument;
     let colourStyle = doc.getElementById("halo-mc-colours");
     if (!colourStyle) {
@@ -184,9 +189,45 @@ export function applyHaloAppearance(root: HTMLElement) {
         colourStyle.id = "halo-mc-colours";
         (doc.getElementById("halo-fonts")?.parentElement ?? doc.head).append(colourStyle);
     }
-    colourStyle.textContent = colours.length ? `:root:root { ${colours.join(" ")} }` : "";
-
     const style = doc.getElementById("halo-fonts");
+
+    // Theme = Disabled is stock Discord: no options, colours or fonts, though their saved values stay.
+    if (!Settings.haloTheming) {
+        colourStyle.textContent = "";
+        if (style) style.textContent = "";
+        return;
+    }
+
+    const variant = Settings.haloThemeVariant;
+    const colours: string[] = [];
+    if (variant === "custom") {
+        colours.push(...customTokens(Settings.customTheme));
+    } else {
+        // HaloCord is the MochaCord sheet in other colours, so both share the layout options and differ only in colours.
+        const options = Settings.mochacord;
+        for (const [key, name, fallback, value] of flags) {
+            if (options[key] !== fallback) root.setAttribute(`data-mc-${name}`, value);
+        }
+        for (const [key, name, fallback] of choices) {
+            if (options[key] !== fallback) root.setAttribute(`data-mc-${name}`, options[key]);
+        }
+        // The colours live in their own stylesheet: Discord rewrites <html>'s inline style after startup, which
+        // dropped them and left the theme's badges and accents with no colour at all.
+        const palette = variant === "halocord" ? Settings.halocordTheme : Settings.mochacord;
+        for (const [key, name] of mochaColors) {
+            const value = palette[key];
+            if (!isHexColor(value)) continue;
+            root.setAttribute(`data-mc-${name}`, "");
+            colours.push(`--mc-${name}: ${value};`);
+        }
+        // HaloCord's own panels (call tiles, settings rows) follow a picked accent too.
+        if (isHexColor(palette.accent)) {
+            const a = palette.accent;
+            colours.push(`--hc-accent: ${a}; --hc-accent-2: ${a}; --hc-accent-rgb: ${rgbOf(a)}; --hc-grad-a: ${a}; --hc-grad-b: ${a};`);
+        }
+    }
+    colourStyle.textContent = colours.length ? `${variant === "custom" ? themeTokens : ":root:root"} { ${colours.join(" ")} }` : "";
+
     if (style) style.textContent = fontCss();
 }
 
@@ -210,16 +251,26 @@ function migrateFontLoader() {
     delete Settings.plugins.FontLoader;
 }
 
+// Before 2.12.13 HaloCord had its own copy of some layout options. It now shares MochaCord's, so only its colours stay.
+function dropOldHaloCordOptions() {
+    const colourKeys = new Set<string>(mochaColors.map(([key]) => key));
+    for (const key of Object.keys(SettingsStore.plain.halocordTheme ?? {})) {
+        if (!colourKeys.has(key)) delete (Settings.halocordTheme as Record<string, unknown>)[key];
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     if (IS_USERSCRIPT) return;
 
     migrateFontLoader();
+    dropOldHaloCordOptions();
     createAndAppendStyle("halo-fonts", managedStyleRootNode);
     applyEverywhere();
 
     localFacesReady.then(applyEverywhere);
 
-    for (const key of ["uiFont", "uiFontWeight", "uiFontItalic", "codeFont", "codeFontWeight", "codeFontItalic", "haloThemeVariant"])
+    for (const key of ["uiFont", "uiFontWeight", "uiFontItalic", "codeFont", "codeFontWeight", "codeFontItalic", "haloTheming", "haloThemeVariant"])
         SettingsStore.addChangeListener(key, applyEverywhere);
-    SettingsStore.addPrefixChangeListener("mochacord", applyEverywhere);
+    for (const prefix of ["mochacord", "halocordTheme", "customTheme"])
+        SettingsStore.addPrefixChangeListener(prefix, applyEverywhere);
 }, { once: true });

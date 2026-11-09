@@ -46,3 +46,50 @@
 .vc-optimizer-no-results {
     margin-top: 8px;
 }
+
+.vc-optimizer-presets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.vc-optimizer-preset {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 10px 12px;
+    border: 1px solid var(--hc-row-border, var(--border-subtle));
+    border-radius: 8px;
+    background: var(--hc-row-bg, var(--background-secondary));
+    color: var(--hc-text, var(--text-normal));
+    text-align: left;
+    cursor: pointer;
+}
+
+.vc-optimizer-preset:not(.vc-optimizer-preset-on):hover {
+    border-color: color-mix(in srgb, var(--hc-accent, var(--brand-500)) 55%, transparent);
+}
+
+.vc-optimizer-preset:focus-visible {
+    outline: 2px solid var(--hc-accent, var(--brand-500));
+    outline-offset: 2px;
+}
+
+.vc-optimizer-preset-on,
+.vc-optimizer-preset-on:hover {
+    border-color: transparent;
+    background: var(--hc-accent, var(--brand-500));
+    color: var(--hc-accent-ink, var(--white));
+}
+
+.vc-optimizer-preset-title {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.vc-optimizer-preset-description {
+    font-size: 12px;
+    opacity: 0.8;
+}

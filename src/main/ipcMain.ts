@@ -155,7 +155,7 @@ ipcMain.handle(IpcEvents.INIT_FILE_WATCHERS, ({ sender }) => {
 
 function getHaloEditorVariant() {
     const { haloTheming, haloThemeVariant } = RendererSettings.plain;
-    if (haloTheming === false) return null;
+    if (haloTheming === false || haloThemeVariant === "custom") return null;
     return haloThemeVariant === "mochacord" ? "mochacord" : "halocord";
 }
 

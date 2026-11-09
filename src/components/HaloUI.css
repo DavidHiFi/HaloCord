@@ -46,7 +46,26 @@ html.hc-theming {
     --hc-ring-w: 2px;
 }
 
+/* HaloCord and MochaCord share one layout sheet; these are HaloCord's dark green counterparts of the Mocha colours below. */
+html.hc-theming[data-hc-theme="halocord"] {
+    --hc-crust-rgb: 8 12 10;
+    --hc-ink-rgb: 219 232 223;
+    --hc-ring-rest: #34403a;
+    --hc-flyout-bg: #111714;
+    --hc-row-bg: rgb(var(--hc-crust-rgb) / 32%);
+    --hc-row-border: rgb(var(--hc-ink-rgb) / 7%);
+    --hc-panel-bg: rgb(var(--hc-crust-rgb) / 22%);
+    --hc-panel-border: rgb(var(--hc-ink-rgb) / 9%);
+    --hc-window-bg: #151c18;
+    --hc-text: #dbe8df;
+    --hc-text-muted: #a3b5aa;
+    --hc-scroll-thumb: rgb(var(--hc-ink-rgb) / 16%);
+}
+
 html.hc-theming[data-hc-theme="mochacord"] {
+    --hc-crust-rgb: 17 17 27;
+    --hc-ink-rgb: 205 214 244;
+    --hc-ring-rest: #45475a;
     --hc-grad-a: #89b4fa;
     --hc-grad-b: #cba6f7;
     --hc-flyout-bg: #181825;
@@ -55,23 +74,23 @@ html.hc-theming[data-hc-theme="mochacord"] {
     --hc-accent-2: #b4befe;
     --hc-accent-ink: #11111b;
     --hc-accent-rgb: 137 180 250;
-    --hc-row-bg: rgb(17 17 27 / 32%);
-    --hc-row-border: rgb(205 214 244 / 7%);
-    --hc-panel-bg: rgb(17 17 27 / 22%);
-    --hc-panel-border: rgb(205 214 244 / 9%);
+    --hc-row-bg: rgb(var(--hc-crust-rgb) / 32%);
+    --hc-row-border: rgb(var(--hc-ink-rgb) / 7%);
+    --hc-panel-bg: rgb(var(--hc-crust-rgb) / 22%);
+    --hc-panel-border: rgb(var(--hc-ink-rgb) / 9%);
 
     /* Opaque Mocha base. Discord Midnight sets base-lower to pure black on <html>, where these are resolved. */
     --hc-window-bg: #1e1e2e;
     --hc-text: #cdd6f4;
     --hc-text-muted: #a6adc8;
-    --hc-scroll-thumb: rgb(205 214 244 / 16%);
+    --hc-scroll-thumb: rgb(var(--hc-ink-rgb) / 16%);
 }
 
 /* The voice panel, the voice settings card and many plugins paint with Discord's retired background
-   variables, which current Discord no longer defines, so their Discord-grey fallbacks showed under MochaCord.
+   variables, which current Discord no longer defines, so their Discord-grey fallbacks showed under the HaloCord and MochaCord themes.
    Popups share the menu acrylic; tooltips, hover toolbars and notices take the opaque dark flyout colour
    instead of the theme's light surface1 pill. */
-html.hc-theming[data-hc-theme="mochacord"] body {
+html.hc-theming[data-hc-theme] body {
     --background-secondary: var(--hc-panel-bg);
     --background-tertiary: var(--hc-row-bg);
     --background-primary: var(--hc-window-bg);
@@ -84,7 +103,7 @@ html.hc-theming[data-hc-theme="mochacord"] body {
     --mochacord-acrylic-notification: var(--hc-flyout-bg);
 }
 
-html.hc-theming[data-hc-theme="mochacord"] #dvx-native-settings select option {
+html.hc-theming[data-hc-theme] #dvx-native-settings select option {
     background: var(--hc-window-bg);
     color: var(--hc-text);
 }
@@ -1555,13 +1574,13 @@ html.hc-theming [class~="header_XH4OpX"] :is([class~="inviteButton_XH4OpX"], [cl
     color: var(--hc-accent) !important;
 }
 
-/* MochaCord flyouts: menus, popouts and listboxes take the dark Mocha flyout colour. */
-html.hc-theming[data-hc-theme="mochacord"] :is([class*="layerContainer_"], [role="menu"], [role="tooltip"], [role="listbox"], [data-mana-component="popover"], [data-mana-component="tooltip"]) {
+/* Theme flyouts: menus, popouts and listboxes take the theme's dark flyout colour. */
+html.hc-theming[data-hc-theme] :is([class*="layerContainer_"], [role="menu"], [role="tooltip"], [role="listbox"], [data-mana-component="popover"], [data-mana-component="tooltip"]) {
     --bg-floating: var(--hc-flyout-bg);
 }
 
-/* MochaCord floating layers paint their base on the opaque flyout colour; the theme's 46% base let picker footers and the app launcher show through. */
-html.hc-theming[data-hc-theme="mochacord"] [class*="layerContainer_"] {
+/* Theme floating layers paint their base on the opaque flyout colour; the theme's 46% base let picker footers and the app launcher show through. */
+html.hc-theming[data-hc-theme] [class*="layerContainer_"] {
     --background-base-lower: var(--hc-flyout-bg);
     --background-base-low: var(--hc-flyout-bg);
     --background-base-lower-alt: var(--hc-flyout-bg);
@@ -1633,14 +1652,14 @@ html.hc-theming [class~="callContainer_hbKzX7"] :is([class~="leftTrayIcon_hbKzX7
     color: var(--hc-accent);
 }
 
-/* User panel buttons (plugin toggles, mute, deafen, settings, camera, screen share, activities, soundboard): Mocha mantle instead of surface0. */
-html.hc-theming[data-hc-theme="mochacord"] [class~="panels_pog62O"] :is(button[class~="button_9U6LUN"][class~="buttonColor_9U6LUN"], [class~="buttons_g6VwXp"] button[class~="button_Y-8oZW"]:not([class*="buttonChevron_"])):not([aria-checked="true"]) {
+/* User panel buttons (plugin toggles, mute, deafen, settings, camera, screen share, activities, soundboard): the dark flyout colour instead of the lighter surface. */
+html.hc-theming[data-hc-theme] [class~="panels_pog62O"] :is(button[class~="button_9U6LUN"][class~="buttonColor_9U6LUN"], [class~="buttons_g6VwXp"] button[class~="button_Y-8oZW"]:not([class*="buttonChevron_"])):not([aria-checked="true"]) {
     background-color: var(--hc-flyout-bg) !important;
     box-shadow: inset 0 0 0 1px var(--hc-row-border);
     transition: background-color 0.16s ease-out, color 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
-html.hc-theming[data-hc-theme="mochacord"] [class~="panels_pog62O"] :is(button[class~="button_9U6LUN"][class~="buttonColor_9U6LUN"], [class~="buttons_g6VwXp"] button[class~="button_Y-8oZW"]:not([class*="buttonChevron_"])):not([aria-checked="true"]):hover {
+html.hc-theming[data-hc-theme] [class~="panels_pog62O"] :is(button[class~="button_9U6LUN"][class~="buttonColor_9U6LUN"], [class~="buttons_g6VwXp"] button[class~="button_Y-8oZW"]:not([class*="buttonChevron_"])):not([aria-checked="true"]):hover {
     background-color: rgb(var(--hc-accent-rgb) / 14%) !important;
     box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
     color: var(--hc-accent);
@@ -1648,8 +1667,8 @@ html.hc-theming[data-hc-theme="mochacord"] [class~="panels_pog62O"] :is(button[c
 
 /* User area docks: the version banner on top and the ping, memory and uptime bar below are dark strips with a hairline, and a full width hairline splits the name row from the buttons. */
 html.hc-theming [class~="panels_pog62O"] {
-    --hc-dock-strip: rgb(17 17 27 / 55%);
-    --hc-dock-line: rgb(205 214 244 / 12%);
+    --hc-dock-strip: rgb(var(--hc-crust-rgb) / 55%);
+    --hc-dock-line: rgb(var(--hc-ink-rgb) / 12%);
 }
 
 html.hc-theming [class~="panels_pog62O"] [class*="container_9U6LUN"] {
@@ -1763,18 +1782,18 @@ html.hc-theming [class~="panels_pog62O"] [class~="buttons_g6VwXp"] > * {
 }
 
 
-/* Discord tints hovers, selected rows, tabs, search fields and secondary buttons with a light grey; under MochaCord they take crust fills and the accent instead. */
-html.hc-theming[data-hc-theme="mochacord"],
-html.hc-theming[data-hc-theme="mochacord"] :is(.theme-dark, .theme-darker, .theme-midnight) {
+/* Discord tints hovers, selected rows, tabs, search fields and secondary buttons with a light grey; under the themes they take dark crust fills and the accent instead. */
+html.hc-theming[data-hc-theme],
+html.hc-theming[data-hc-theme] :is(.theme-dark, .theme-darker, .theme-midnight) {
     --interactive-background-hover: rgb(var(--hc-accent-rgb) / 8%) !important;
     --interactive-background-active: rgb(var(--hc-accent-rgb) / 12%) !important;
     --interactive-background-selected: rgb(var(--hc-accent-rgb) / 16%) !important;
-    --background-mod-muted: rgb(17 17 27 / 30%) !important;
-    --background-mod-subtle: rgb(17 17 27 / 45%) !important;
-    --background-mod-normal: rgb(17 17 27 / 60%) !important;
+    --background-mod-muted: rgb(var(--hc-crust-rgb) / 30%) !important;
+    --background-mod-subtle: rgb(var(--hc-crust-rgb) / 45%) !important;
+    --background-mod-normal: rgb(var(--hc-crust-rgb) / 60%) !important;
     --background-mod-strong: rgb(var(--hc-accent-rgb) / 16%) !important;
-    --message-background-hover: rgb(17 17 27 / 35%) !important;
-    --control-secondary-background-default: rgb(17 17 27 / 55%) !important;
+    --message-background-hover: rgb(var(--hc-crust-rgb) / 35%) !important;
+    --control-secondary-background-default: rgb(var(--hc-crust-rgb) / 55%) !important;
     --control-secondary-background-hover: rgb(var(--hc-accent-rgb) / 14%) !important;
     --control-secondary-background-active: rgb(var(--hc-accent-rgb) / 20%) !important;
     --control-icon-only-background-hover: rgb(var(--hc-accent-rgb) / 14%) !important;
@@ -1786,16 +1805,16 @@ html.hc-theming [class~="content_YUoOxm"] > :is([class~="icons_YUoOxm"], [data-v
     transform: none !important;
 }
 
-/* Friends list row buttons (message, more): a Mocha ring at rest, a blue to mauve ring on hover. */
-html.hc-theming[data-hc-theme="mochacord"] [class~="peopleListItem_y75PxA"] [class*="actionButton_"] {
-    border: 1px solid #45475a;
+/* Friends list row buttons (message, more): a quiet ring at rest, the theme gradient ring on hover. */
+html.hc-theming[data-hc-theme] [class~="peopleListItem_y75PxA"] [class*="actionButton_"] {
+    border: 1px solid var(--hc-ring-rest);
     background: var(--hc-flyout-bg) !important;
     transition: border-color 0.16s ease-out, color 0.16s ease-out;
 }
 
-html.hc-theming[data-hc-theme="mochacord"] [class~="peopleListItem_y75PxA"] [class*="actionButton_"]:hover {
+html.hc-theming[data-hc-theme] [class~="peopleListItem_y75PxA"] [class*="actionButton_"]:hover {
     border-color: transparent;
-    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, linear-gradient(135deg, #89b4fa, #cba6f7) border-box !important;
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, linear-gradient(135deg, var(--hc-grad-a), var(--hc-grad-b)) border-box !important;
     color: var(--hc-text);
 }
 
@@ -1803,4 +1822,9 @@ html.hc-theming[data-hc-theme="mochacord"] [class~="peopleListItem_y75PxA"] [cla
     html.hc-theming.hc-theming :is([class*="bodyList_"], [class*="bodyList_"] > [class*="content_"]) {
         background: transparent !important;
     }
+}
+
+/* PanelLayout can carry a literal Mocha fill from its saved colour picker. Built-in themes own the panel surface. */
+html.hc-theming[data-hc-theme] section[class*="panels_"] {
+    background: color-mix(in srgb, var(--hc-window-bg) 25%, transparent) !important;
 }

@@ -15,9 +15,12 @@ import definePlugin, { OptionType } from "@utils/types";
 import { filters, find, findAll, findByPropsLazy, proxyLazyWebpack } from "@webpack";
 import { FluxDispatcher, MessageStore, SelectedChannelStore, showToast, Toasts, useEffect, useRef, useState } from "@webpack/common";
 
+import lightningStyle from "./lightning.css?managed";
 import { migrateOptimizerSettings } from "./migration";
 
 const logger = new Logger("TestcordOptimizer");
+
+const STRIP_STYLING_CLASS = "vc-optimizer-strip-styling";
 
 // Resolve each class token independently. Discord splits CSS modules across
 // builds (e.g. messageListItem in one module, messageContent in another), so a
@@ -661,6 +664,11 @@ export const settings = definePluginSettings({
         description: "Strip text-shadow from all elements. Reduces text painting cost in large message lists.",
         default: false
     },
+    stripDecorativeStyling: {
+        type: OptionType.BOOLEAN,
+        description: "Turn off every animation and transition, blur, shadow, glow and gradient overlay, plus the bouncing typing dots. Discord looks flat but runs as light as it can.",
+        default: false
+    },
     disableSpellcheck: {
         type: OptionType.BOOLEAN,
         description: "Disable spellcheck in text input areas. Spellcheck causes synchronous layout during typing.",
@@ -1069,6 +1077,7 @@ export default definePlugin({
     // Options live in HaloCord Settings > Performance (OptimizerTab), not the plugin list.
     hidden: true,
     settings,
+    managedStyle: lightningStyle,
 
     patches: [
         {
@@ -1237,6 +1246,8 @@ export default definePlugin({
     start() {
         if (settings.store.verboseLogging) logger.info("Starting optimizer suite");
 
+        document.documentElement.classList.toggle(STRIP_STYLING_CLASS, settings.store.stripDecorativeStyling);
+
         if (
             settings.store.pauseOffscreenMedia
             || settings.store.freezeGifsUntilHover && settings.store.gifFreezeMethod !== "css"
@@ -1306,6 +1317,8 @@ export default definePlugin({
 
     stop() {
         if (settings.store.verboseLogging) logger.info("Stopping, restoring originals");
+
+        document.documentElement.classList.remove(STRIP_STYLING_CLASS);
 
         this.teardownConsolidatedObserver();
         this.teardownDomThrottle();

@@ -1475,7 +1475,7 @@ function scaleOf(transform: string) {
 }
 
 // Discord paints the tile picture as one role=img element. Stock it is the avatar itself.
-// RoundedVCPFP stretches it over the tile and paints a centered square on ::before, scaled
+// HaloCalls tiles stretch it over the tile and paint a centered square on ::before, scaled
 // by its zoom, so the visible picture is that scaled square, not the element box.
 // FullVCPFP scales the element itself. Rounding is the element's border-radius.
 function measurePicture(tile: HTMLElement): PictureGeometry | null {
@@ -1560,7 +1560,7 @@ function TileMeter({ userId }: { userId?: string; }) {
             syncTimer = setTimeout(() => {
                 syncTimer = undefined;
                 syncStreamState();
-                // RoundedVCPFP's zoom and rounding arrive as inline style changes that resize nothing
+                // The tile zoom and rounding arrive as inline style changes that resize nothing
                 measureRef.current?.();
             }, 200);
         });

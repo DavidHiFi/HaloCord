@@ -55,6 +55,18 @@ div[data-selenium-video-tile] div[role="img"]::before {
     mask-size: contain;
 }
 
+/* The speaking halo reaches about 13px past the picture, but the zoom only leaves (1 - zoom) / 2 of the
+   tile's short side around it: plenty in a grid tile, a few pixels in the strip under a focused stream or
+   camera, where the tile's clip cut the halo off. Inset the picture by whatever the zoom leaves short of
+   15px. It is set while silent too, so the picture never jumps when someone starts talking. */
+div[data-selenium-video-tile][style*="--vc-pfp-ring-pic"] div[role="img"] {
+    container-type: size;
+}
+
+div[data-selenium-video-tile][style*="--vc-pfp-ring-pic"] div[role="img"]::before {
+    inset: max(0px, calc(15px - (1 - var(--vc-pfp-zoom, 1)) * 50cqmin));
+}
+
 /* The doubled [role="img"] beats FullVCPFP's `border-radius: unset !important` */
 div[data-selenium-video-tile] div[role="img"][role="img"] {
     border-radius: var(--vc-pfp-avatar-radius, 5%) !important;

@@ -7,6 +7,7 @@
 import "./styles.css";
 
 import { Settings, type ThemeActivationMode, useSettings } from "@api/Settings";
+import { isBundledTheme } from "@api/Themes";
 import { Divider } from "@components/Divider";
 import { Heading } from "@components/Heading";
 import { Link } from "@components/Link";
@@ -49,7 +50,7 @@ const filterOptions = [
     { label: "Disabled", value: ThemeFilter.Disabled }
 ];
 
-const isHaloTheme = (t: UnifiedTheme) => t.header.id === "mochacord" || themeFileToId(t.header.fileName) === "mochacord" || t.name === "MochaCord";
+const isHaloTheme = (t: UnifiedTheme) => isBundledTheme(t.header.fileName) || ["mochacord", "halocord", "custom"].includes(t.header.id ?? "");
 
 function FilterRow({ search, setSearch, filter, setFilter, options }: { search: string; setSearch(v: string): void; filter: ThemeFilter; setFilter(v: ThemeFilter): void; options: typeof filterOptions; }) {
     return (

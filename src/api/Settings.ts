@@ -40,16 +40,20 @@ export type SettingsPluginUiElements = {
     [id: string]: SettingsPluginUiElement;
 };
 
-export type MochaCordSettings = {
-    typing: "center" | "left";
-    typingDots: boolean;
-    hoverColors: boolean;
+/** Colour overrides as #hex, empty for the theme's own colour. Every theme keeps its own set. */
+export type ThemeColorSettings = {
     accent: string;
     text: string;
     textMuted: string;
     surface: string;
     background: string;
     hoverColor: string;
+};
+
+export type MochaCordSettings = ThemeColorSettings & {
+    typing: "center" | "left";
+    typingDots: boolean;
+    hoverColors: boolean;
     animations: boolean;
     windowControls: boolean;
     transparency: boolean;
@@ -71,8 +75,8 @@ export interface Settings {
     updaterBranch: "main" | "dev" | "dev2";
     useQuickCss: boolean;
     haloTheming: boolean;
-    /** Which look HaloCord theming uses. Disabled in the Theme dropdown is haloTheming off. */
-    haloThemeVariant: "halocord" | "mochacord";
+    /** Which theme is on. Disabled in the Theme dropdown is haloTheming off; Custom is stock Discord plus the user's own colours. */
+    haloThemeVariant: "halocord" | "mochacord" | "custom";
     uiFont: string;
     /** CSS weight of the installed style picked for uiFont; 400 keeps Discord's weights. */
     uiFontWeight: number;
@@ -80,7 +84,10 @@ export interface Settings {
     codeFont: string;
     codeFontWeight: number;
     codeFontItalic: boolean;
+    /** Layout options and MochaCord's colours. HaloCord uses the same sheet and layout options, with its own colours. */
     mochacord: MochaCordSettings;
+    halocordTheme: ThemeColorSettings;
+    customTheme: ThemeColorSettings;
     eagerPatches: boolean;
     enabledThemes: string[];
     enabledThemeLinks: string[];
@@ -146,7 +153,7 @@ export interface Settings {
     hideThemeMarketplace?: boolean;
     hideSnippetMarketplace?: boolean;
     useTestcordIcon: boolean;
-    haloInAppIcon: "green" | "mocha";
+    haloInAppIcon: "stock" | "green" | "mocha";
     experimentalDataStoreExport: boolean;
     /** Set once the 2.12.3 performance defaults were applied to an existing install. */
     hcPerfDefaults?: number;
@@ -189,6 +196,22 @@ const DefaultSettings: Settings = {
         hideBarTitle: true,
         topBarButtons: "off",
         topBarTitle: "off"
+    },
+    halocordTheme: {
+        accent: "",
+        text: "",
+        textMuted: "",
+        surface: "",
+        background: "",
+        hoverColor: ""
+    },
+    customTheme: {
+        accent: "",
+        text: "",
+        textMuted: "",
+        surface: "",
+        background: "",
+        hoverColor: ""
     },
     useTestcordIcon: false,
     haloInAppIcon: "green",

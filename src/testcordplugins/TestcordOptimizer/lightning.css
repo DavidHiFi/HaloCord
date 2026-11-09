@@ -1,0 +1,31 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2026 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+html.vc-optimizer-strip-styling *,
+html.vc-optimizer-strip-styling *::before,
+html.vc-optimizer-strip-styling *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
+
+html.vc-optimizer-strip-styling [class*="gradient_"],
+html.vc-optimizer-strip-styling [class*="Gradient_"] {
+    background-image: none !important;
+}
+
+html.vc-optimizer-strip-styling [class*="typingDots_"],
+html.vc-optimizer-strip-styling [class*="typing_"] [class*="dots_"] {
+    display: none !important;
+}

@@ -14,8 +14,26 @@
 .hc-mc-actions {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 8px;
     padding: 4px 2px 2px;
+}
+
+.hc-mc-file-select {
+    min-width: 140px;
+}
+
+.hc-mc-locked {
+    display: contents;
+}
+
+.hc-mc-locked-on {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    opacity: 0.4;
+    pointer-events: none;
+    cursor: default;
 }
 
 .hc-mc-button,

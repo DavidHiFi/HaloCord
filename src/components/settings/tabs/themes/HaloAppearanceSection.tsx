@@ -172,7 +172,8 @@ type ThemeChoice = "disabled" | Settings["haloThemeVariant"];
 const themeChoices: { label: string; value: ThemeChoice; }[] = [
     { label: "Disabled", value: "disabled" },
     { label: "HaloCord", value: "halocord" },
-    { label: "MochaCord", value: "mochacord" }
+    { label: "MochaCord", value: "mochacord" },
+    { label: "Custom", value: "custom" }
 ];
 
 export function HaloAppearanceSection() {
@@ -189,18 +190,20 @@ export function HaloAppearanceSection() {
             <HaloRow
                 accent
                 title="Theme"
-                description="HaloCord has a green accent, MochaCord a Catppuccin Mocha blue one. Both style Discord, settings and HaloCord windows. Disabled shows stock Discord."
+                description="HaloCord and MochaCord share one layout, in dark green or Catppuccin blue. Custom starts from stock Discord with your own colours and fonts. Disabled is stock Discord."
             >
                 <div className={cl("theme-select")}>
                     <Select options={themeChoices} closeOnSelect isSelected={v => v === choice} serialize={String} select={choose} />
                 </div>
             </HaloRow>
-            {settings.haloTheming && <ThemeFileRows />}
-            <FontRow setting="uiFont" title="UI font" description="The font for the whole app. Type the name of a font installed on this PC. Leave it empty for Discord's font." />
-            <FontStyleRow setting="uiFont" title="UI font style" />
-            <FontRow setting="codeFont" title="Code font" description="The font for code blocks and inline code. Leave it empty for Discord's font." />
-            <FontStyleRow setting="codeFont" title="Code font style" />
-            {settings.haloTheming && <ThemeOptionRows />}
+            <div className={cl("locked", !settings.haloTheming && "locked-on")} inert={!settings.haloTheming}>
+                <ThemeFileRows variant={settings.haloThemeVariant} />
+                <FontRow setting="uiFont" title="UI font" description="The font for the whole app. Type the name of a font installed on this PC. Leave it empty for Discord's font." />
+                <FontStyleRow setting="uiFont" title="UI font style" />
+                <FontRow setting="codeFont" title="Code font" description="The font for code blocks and inline code. Leave it empty for Discord's font." />
+                <FontStyleRow setting="codeFont" title="Code font style" />
+                <ThemeOptionRows variant={settings.haloThemeVariant} />
+            </div>
         </HaloSection>
     );
 }

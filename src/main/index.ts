@@ -23,6 +23,7 @@ import { join } from "path";
 import { pathToFileURL } from "url";
 
 import { initCsp } from "./csp";
+import { installCustomTheme } from "./haloCordTheme";
 import { startMochaCordThemeSync } from "./mochacordTheme";
 import { RendererSettings } from "./settings";
 import { IS_VANILLA, THEMES_DIR } from "./utils/constants";
@@ -32,6 +33,7 @@ import { installExt } from "./utils/extensions";
 if (!IS_VANILLA && !IS_EXTENSION) {
     app.whenReady().then(() => {
         startMochaCordThemeSync();
+        installCustomTheme();
         protocol.handle("vencord", ({ url: unsafeUrl }) => {
             let url = decodeURI(unsafeUrl).slice("vencord://".length).replace(/\?v=\d+$/, "");
 

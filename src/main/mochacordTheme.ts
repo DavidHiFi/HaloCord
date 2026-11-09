@@ -9,10 +9,12 @@ import { net } from "electron";
 import { readFile, writeFile } from "fs/promises";
 import { join } from "path";
 
+import { writeHaloCordTheme } from "./haloCordTheme";
 import { SETTINGS_DIR, THEMES_DIR } from "./utils/constants";
 
 // HaloCord ships the MochaCord theme in the themes folder (off until the user enables it) and keeps it in step
 // with the theme repo. A copy the user edited by hand is left alone: only the file we wrote last is replaced.
+// HaloCord.css is rebuilt from whatever MochaCord.css ends up on disk, so both themes keep one layout.
 const SOURCE = "https://raw.githubusercontent.com/DavidHiFi/MochaCord-Theme/main/MochaCord.css";
 const THEME = join(THEMES_DIR, "MochaCord.css");
 const RECORD = join(SETTINGS_DIR, "mochacord-theme.json");
@@ -43,19 +45,24 @@ async function install(css: string, etag?: string) {
     await writeFile(RECORD, JSON.stringify({ sha: sha(css), etag: etag ?? record.etag }));
 }
 
+const rebuildHaloCord = async () => writeHaloCordTheme(await readFile(THEME, "utf8"));
+
 async function sync() {
     try {
         const onDisk = await readFile(THEME, "utf8").catch(() => null);
         if (onDisk === null) await install(await readFile(BUNDLED, "utf8"));
+        await rebuildHaloCord();
     } catch (err) {
-        console.error("[HaloCord] Could not copy the bundled MochaCord theme", err);
+        console.error("[HaloCord] Could not set up the bundled MochaCord and HaloCord themes", err);
     }
     try {
         const { etag } = await readRecord();
         const res = await net.fetch(SOURCE, { headers: etag ? { "If-None-Match": etag } : {}, cache: "no-store" });
         if (res.status === 304 || !res.ok) return;
         const css = await res.text();
-        if (css.includes("@name MochaCord")) await install(css, res.headers.get("etag") ?? undefined);
+        if (!css.includes("@name MochaCord")) return;
+        await install(css, res.headers.get("etag") ?? undefined);
+        await rebuildHaloCord();
     } catch (err) {
         console.error("[HaloCord] MochaCord theme update check failed", err);
     }

@@ -23,6 +23,7 @@ import { findComponentByCodeLazy } from "@webpack";
 import { openModal, React, TextInput, Toasts, useState } from "@webpack/common";
 
 import { settings } from ".";
+import { Preset, PRESETS } from "./presets";
 
 const cl = classNameFactory("vc-optimizer-");
 
@@ -117,7 +118,8 @@ const CATEGORIES: Category[] = [
             "overscrollContain",
             "disableCSSFilters",
             "disableBoxShadows",
-            "disableTextShadows"
+            "disableTextShadows",
+            "stripDecorativeStyling"
         ]
     },
     {
@@ -201,6 +203,15 @@ const CATEGORIES: Category[] = [
 
 type RestartableDef = PluginSettingDef & { restartNeeded?: boolean; hidden?: boolean; };
 
+function presetTarget(preset: Preset): Record<string, unknown> {
+    const target: Record<string, unknown> = {};
+    for (const [key, def] of Object.entries(settings.def) as [string, RestartableDef][]) {
+        if (key === "enabled" || !("default" in def) || def.default === undefined) continue;
+        target[key] = key in preset.values ? preset.values[key] : def.default;
+    }
+    return target;
+}
+
 function settingLabel(id: string): string {
     return id.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/^./, c => c.toUpperCase());
 }
@@ -282,6 +293,18 @@ export default function OptimizerTab() {
         if (!restartKeys.includes("enabled")) setRestartKeys(prev => [...prev, "enabled"]);
     }
 
+    const activePreset = PRESETS.find(preset =>
+        Object.entries(presetTarget(preset)).every(([key, value]) => pluginSettings[key] === value)
+    );
+
+    function applyPreset(preset: Preset) {
+        for (const [key, value] of Object.entries(presetTarget(preset))) {
+            settings.store[key] = value;
+        }
+        if (!pluginSettings.enabled) setSuiteEnabled(true);
+        setRestartKeys(prev => prev.includes("preset") ? prev : [...prev, "preset"]);
+    }
+
     function resetAll() {
         let needsRestart = false;
         for (const [key, def] of Object.entries(settings.def) as [string, RestartableDef][]) {
@@ -339,6 +362,22 @@ export default function OptimizerTab() {
                 value={Boolean(pluginSettings.enabled)}
                 onChange={setSuiteEnabled}
             />
+
+            <div className={cl("presets")} role="radiogroup" aria-label="Performance preset">
+                {PRESETS.map(preset => (
+                    <button
+                        key={preset.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={activePreset === preset}
+                        className={cl("preset", activePreset === preset && "preset-on")}
+                        onClick={() => applyPreset(preset)}
+                    >
+                        <span className={cl("preset-title")}>{preset.title}</span>
+                        <span className={cl("preset-description")}>{preset.description}</span>
+                    </button>
+                ))}
+            </div>
 
             {restartKeys.length > 0 && (
                 <Notice

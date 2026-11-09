@@ -6,18 +6,15 @@
 
 import { isPluginEnabled, setPluginEnabled } from "@api/PluginManager";
 import { useSettings } from "@api/Settings";
-import { Button } from "@components/Button";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { changeNeedsRestart, HaloRestartButton } from "@components/HaloRestart";
 import { HaloRow, HaloSection, HaloSwitchRow } from "@components/HaloUI";
-import { openPluginModal } from "@components/settings/tabs/plugins/PluginModal";
 import SettingsPlugin from "@plugins/_core/settings";
+import { RejoinSettings, TileSettings } from "@testcordplugins/haloCalls/CallSettings";
 import { TestcordDevs } from "@utils/constants";
 import definePlugin from "@utils/types";
 import { i18n, Select, useEffect, useState } from "@webpack/common";
 import type { ComponentType } from "react";
-
-import Plugins from "~plugins";
 
 // Shell side: desktop/shell/hc-desktop.js, exposed by the preload as window.HaloCordDesktop.
 interface DesktopPrefs {
@@ -147,32 +144,25 @@ function togglePlugin(name: string, enabled: boolean, title: string) {
 }
 
 const IDLE_TITLE = "Stay in calls when idle";
-const REJOIN_TITLE = "Rejoin calls after a restart";
 
-// DisableCallIdle and VoiceRejoin are hidden from the plugin list; they are switched here instead.
+// DisableCallIdle is hidden from the plugin list and switched here; rejoin and tiles are HaloCalls, built in.
 function CallSettings() {
-    useSettings(["plugins.DisableCallIdle.enabled", "plugins.VoiceRejoin.enabled"]);
-    const rejoin = isPluginEnabled("VoiceRejoin");
+    useSettings(["plugins.DisableCallIdle.enabled"]);
     return (
-        <HaloSection>
-            <HaloSwitchRow
-                title={IDLE_TITLE}
-                description="Stops Discord from dropping you from a DM call after 3 minutes alone or moving you to the AFK channel."
-                value={isPluginEnabled("DisableCallIdle")}
-                onChange={v => togglePlugin("DisableCallIdle", v, IDLE_TITLE)}
-            >
-                <HaloRestartButton label={IDLE_TITLE} pendingKey="plugins.DisableCallIdle.enabled" />
-            </HaloSwitchRow>
-            <HaloSwitchRow
-                title={REJOIN_TITLE}
-                description="Puts you back in the DM or server call you were in when HaloCord restarts."
-                value={rejoin}
-                onChange={v => togglePlugin("VoiceRejoin", v, REJOIN_TITLE)}
-            >
-                <HaloRestartButton label={REJOIN_TITLE} pendingKey="plugins.VoiceRejoin.enabled" />
-                {rejoin && <Button variant="secondary" size="small" className="hc-ui-btn-quiet" onClick={() => openPluginModal(Plugins.VoiceRejoin)}>Options</Button>}
-            </HaloSwitchRow>
-        </HaloSection>
+        <>
+            <HaloSection>
+                <HaloSwitchRow
+                    title={IDLE_TITLE}
+                    description="Stops Discord from dropping you from a DM call after 3 minutes alone or moving you to the AFK channel."
+                    value={isPluginEnabled("DisableCallIdle")}
+                    onChange={v => togglePlugin("DisableCallIdle", v, IDLE_TITLE)}
+                >
+                    <HaloRestartButton label={IDLE_TITLE} pendingKey="plugins.DisableCallIdle.enabled" />
+                </HaloSwitchRow>
+                <RejoinSettings />
+            </HaloSection>
+            <TileSettings />
+        </>
     );
 }
 
@@ -289,6 +279,6 @@ export default definePlugin({
         addCategory("developer_options_panel", "halocord_build_category", () => "Discord Build",
             ["Discord Build", "Stable", "PTB", "Canary"], BuildSelector);
         addCategory("voice_and_video_panel", "halocord_calls_category", () => "Calls",
-            ["Calls", "idle", "AFK", "rejoin", "reconnect"], CallSettings, true, /advanced/i);
+            ["Calls", "idle", "AFK", "rejoin", "reconnect", "tiles", "profile picture", "glow", "banner"], CallSettings, true, /advanced/i);
     }
 });

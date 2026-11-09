@@ -10,13 +10,15 @@ import type { Plugin } from "@utils/types";
 import equicordTestcordModifiedIconBase64 from "file://../../browser/Equicord_Testcord_Modified_PluginIcon.png?base64";
 import equicordVencordTestcordModifiedIconBase64 from "file://../../browser/Equicord_Vencord_Testcord_Modified_PluginIcon.png?base64";
 import haloCordPluginIconBase64 from "file://../../browser/HaloCord_PluginIcon.png?base64";
+import haloCordPluginIconDiscordBase64 from "file://../../browser/HaloCord_PluginIcon_Discord.png?base64";
 import haloCordPluginIconMochaBase64 from "file://../../browser/HaloCord_PluginIcon_Mocha.png?base64";
 import testcordPluginIconBase64 from "file://../../browser/icon.png?base64";
 import vencordTestcordModifiedIconBase64 from "file://../../browser/Vencord_Testcord_Modified_PluginIcon.png?base64";
 
 export const TestcordPluginIconUrl = `data:image/png;base64,${testcordPluginIconBase64}`;
-// Green and Mocha blue, picked by Settings.haloInAppIcon.
+// Stock Discord, green and Mocha blue, picked by Settings.haloInAppIcon.
 export const HaloCordPluginIconUrls = {
+    stock: `data:image/png;base64,${haloCordPluginIconDiscordBase64}`,
     green: `data:image/png;base64,${haloCordPluginIconBase64}`,
     mocha: `data:image/png;base64,${haloCordPluginIconMochaBase64}`
 };

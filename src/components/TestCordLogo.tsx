@@ -6,6 +6,7 @@
 
 import { useSettings } from "@api/Settings";
 import halocordIconBase64 from "file://../../desktop/brand/icon.png?base64";
+import discordIconBase64 from "file://../../desktop/brand/icon-discord.png?base64";
 import halocordMochaIconBase64 from "file://../../desktop/brand/icon-mocha.png?base64";
 import React from "react";
 
@@ -13,8 +14,10 @@ export interface TestCordLogoProps extends React.SVGProps<SVGSVGElement> {
     size?: number | string;
 }
 
-// HaloCord app icon (desktop/brand/make_icon.py) in green and Mocha blue, shown wherever the TestCord logo was.
+// HaloCord app icon (desktop/brand/make_icon.py) in green and Mocha blue, or the stock Discord icon,
+// shown wherever the TestCord logo was.
 export const HALOCORD_ICONS = {
+    stock: `data:image/png;base64,${discordIconBase64}`,
     green: `data:image/png;base64,${halocordIconBase64}`,
     mocha: `data:image/png;base64,${halocordMochaIconBase64}`
 };

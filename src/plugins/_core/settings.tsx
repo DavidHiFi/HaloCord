@@ -690,8 +690,9 @@ const SectionBody = ErrorBoundary.wrap((props: Omit<SectionBodyProps, "collapsed
 }, { fallback: ({ wrappedProps }) => <ul className={wrappedProps.className}>{wrappedProps.children}</ul> });
 
 function TestCordDiscordIcon({ original }: { original: any; }) {
-    const { useTestcordIcon } = useSettings(["useTestcordIcon"]);
-    return useTestcordIcon ? <TestCordIcon size={35} /> : original;
+    const { useTestcordIcon, haloInAppIcon } = useSettings(["useTestcordIcon", "haloInAppIcon"]);
+    // Stock keeps Discord's own home button, hover animation included.
+    return useTestcordIcon && haloInAppIcon !== "stock" ? <TestCordIcon size={35} /> : original;
 }
 
 export default definePlugin({

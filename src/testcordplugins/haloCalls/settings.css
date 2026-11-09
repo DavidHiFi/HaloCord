@@ -1,0 +1,45 @@
+.hc-calls-select {
+    width: 190px;
+}
+
+.hc-calls-slider {
+    width: 220px;
+    padding-top: 18px;
+}
+
+.hc-calls-swatch {
+    width: 34px;
+    height: 32px;
+    padding: 2px;
+    border: 1px solid var(--hc-row-border, var(--border-subtle));
+    border-radius: 8px;
+    background: none;
+    cursor: pointer;
+}
+
+.hc-calls-hex {
+    width: 96px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--hc-row-border, var(--border-subtle));
+    border-radius: 8px;
+    background: var(--input-background, var(--background-secondary));
+    color: var(--text-normal);
+    font-family: var(--font-code);
+    font-size: 13px;
+}
+
+.hc-calls-hex-bad {
+    border-color: var(--status-danger);
+}
+
+.hc-calls-swatch:focus-visible,
+.hc-calls-hex:focus-visible {
+    outline: 2px solid var(--hc-accent, var(--brand-500));
+    outline-offset: 2px;
+}
+
+.hc-calls-swatch:disabled,
+.hc-calls-hex:disabled {
+    cursor: not-allowed;
+}

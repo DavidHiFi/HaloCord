@@ -33,10 +33,15 @@ let themesStyle: HTMLStyleElement;
 
 const themeChangeListeners = new Set<() => void>();
 
-export const MOCHACORD_FILE = "MochaCord.css";
+/** The theme file each Theme choice loads, and only that one. Disabled loads none. */
+export const THEME_FILES = {
+    halocord: "HaloCord.css",
+    mochacord: "MochaCord.css",
+    custom: "Custom.css"
+} as const satisfies Record<Settings["haloThemeVariant"], string>;
 
-/** True for any enabledThemes entry or file name that points at the bundled MochaCord theme. */
-export const isMochaCordTheme = (entry: string) => themeFileToId(entry) === "mochacord";
+/** True for any enabledThemes entry or file name that points at one of the theme files above. */
+export const isBundledTheme = (entry: string) => Object.values(THEME_FILES).some(file => themeFileToId(file) === themeFileToId(entry));
 
 function getThemeActivationMode(...ids: string[]): ThemeActivationMode {
     for (const id of ids) {
@@ -115,9 +120,9 @@ async function initThemes() {
     themesStyle ??= createAndAppendStyle("vencord-themes", userStyleRootNode);
 
     const { enabledThemeLinks, enabledThemes } = Settings;
-    // The HaloCord theme setting owns MochaCord: it applies whenever HaloCord theming is on.
-    const appliedThemes = enabledThemes.filter(entry => !isMochaCordTheme(entry));
-    if (Settings.haloTheming) appliedThemes.push(MOCHACORD_FILE);
+    // The Theme setting owns the bundled theme files: exactly the chosen one is loaded, never two of them.
+    const appliedThemes = enabledThemes.filter(entry => !isBundledTheme(entry));
+    if (Settings.haloTheming) appliedThemes.push(THEME_FILES[Settings.haloThemeVariant]);
 
     const { ThemeStore } = require("@webpack/common/stores") as typeof import("@webpack/common/stores");
 
@@ -236,8 +241,10 @@ const haloThemingRoots = new WeakSet<HTMLElement>();
 export function keepHaloThemingClass(root: HTMLElement) {
     const sync = () => {
         const on = Settings.haloTheming;
-        if (root.classList.contains("hc-theming") !== on) root.classList.toggle("hc-theming", on);
         const variant = on ? Settings.haloThemeVariant : null;
+        // Custom is stock Discord with the user's colours: it must not pick up HaloCord's green hc-theming styling.
+        const styled = on && variant !== "custom";
+        if (root.classList.contains("hc-theming") !== styled) root.classList.toggle("hc-theming", styled);
         if (root.getAttribute("data-hc-theme") === variant) return;
         if (variant) root.setAttribute("data-hc-theme", variant);
         else root.removeAttribute("data-hc-theme");
@@ -291,7 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
     SettingsStore.addChangeListener("enabledThemes", initThemes);
     SettingsStore.addChangeListener("themeActivationModes", initThemes);
     SettingsStore.addChangeListener("haloTheming", initThemes);
-    SettingsStore.addChangeListener("haloThemeVariant", updatePopoutWindows);
+    SettingsStore.addChangeListener("haloThemeVariant", initThemes);
 
     window.addEventListener("message", event => {
         const { discordPopoutEvent } = event.data || {};

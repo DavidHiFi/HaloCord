@@ -18,6 +18,7 @@ const cl = classNameFactory("hc-mc-");
 type IconVariant = keyof typeof HALOCORD_ICONS;
 
 const CHOICES: { value: IconVariant; label: string; }[] = [
+    { value: "stock", label: "Stock" },
     { value: "green", label: "Green" },
     { value: "mocha", label: "Mocha blue" }
 ];
@@ -109,7 +110,7 @@ export function HaloIconSection() {
     return (
         <HaloSection title="HaloCord icon">
             <AppIconRow />
-            <HaloRow title="Icon inside Discord" description="The HaloCord icon in the settings sidebar, on plugin cards, on the support card and, with Use HaloCord Icon on, the home button.">
+            <HaloRow title="Icon inside Discord" description="The icon in the settings sidebar, on plugin cards, on the support card and, with Use HaloCord Icon on, the home button. Stock shows Discord's own.">
                 <IconChoice title="Icon inside Discord" value={settings.haloInAppIcon} onChange={v => settings.haloInAppIcon = v} />
             </HaloRow>
         </HaloSection>
