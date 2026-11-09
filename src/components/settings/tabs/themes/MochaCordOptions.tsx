@@ -9,6 +9,7 @@ import "./HaloThemes.css";
 import { isHexColor, mochaColors } from "@api/HaloAppearance";
 import { type MochaCordSettings, type Settings, type ThemeActivationMode, useSettings } from "@api/Settings";
 import { reapplyThemes, THEME_FILES } from "@api/Themes";
+import { HaloColorPicker } from "@components/HaloColorPicker";
 import { HaloPill, HaloRow, HaloSwitchRow } from "@components/HaloUI";
 import { UserThemeHeader } from "@main/themes";
 import { classNameFactory } from "@utils/css";
@@ -93,12 +94,10 @@ function ColorRow({ setting, value, fallback, onChange }: { setting: ColorKey; v
 
     return (
         <HaloRow title={title} description={description}>
-            <input
-                type="color"
-                className={cl("swatch")}
-                aria-label={`${title} colour`}
+            <HaloColorPicker
+                label={`${title} colour`}
                 value={isHexColor(draft) && draft.length === 7 ? draft : fallback}
-                onChange={e => commit(e.currentTarget.value, 250)}
+                onChange={next => commit(next, 250)}
             />
             <input
                 className={cl("input", "hex", draft && !valid && "input-bad")}
