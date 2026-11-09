@@ -1477,8 +1477,12 @@ html.hc-theming [data-call-tile] :is([class~="overlayTitle_7NOr2f"], [class~="ex
 }
 
 /* Call bar side buttons (participants on the left, pop out and full screen on the right): a plate on hover, accent when on. */
+/* The plate gets 6px of room around the 24px icon; the negative margin keeps the icon where Discord put it. */
 html.hc-theming [class~="callContainer_hbKzX7"] :is([class~="leftTrayIcon_hbKzX7"], [class~="rightTrayIcon_hbKzX7"]) {
-    border-radius: 8px;
+    box-sizing: content-box;
+    padding: 6px;
+    margin: -6px;
+    border-radius: 10px;
     transition: background-color 0.16s ease-out, color 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
