@@ -284,6 +284,7 @@ async function launch({ win, hidden }) {
             // The installer starts the new version as its last step, so a launch from it finds the files already in place.
             if (Date.now() < until && exeStamp() !== startStamp) {
                 console.log("[HaloCord] launch update: an install finished, starting again");
+                require("./hc-guard.js").clean();
                 app.relaunch();
                 app.exit(0);
                 return;

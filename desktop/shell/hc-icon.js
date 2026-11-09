@@ -163,6 +163,8 @@ async function apply(variant, { tray, exeState, windows = true }) {
     if (windows) setWindowIcons(variant, tray);
     const result = { variant, shortcuts: 0, exe: "unchanged", exeState };
     if (process.platform !== "win32" || !app.isPackaged) return { ...result, exe: "dev build" };
+    // A safe start after quick crashes (hc-guard.js) leaves the exe alone.
+    if (require("./hc-guard.js").safe) return { ...result, exe: "safe start" };
     const changedFiles = [];
     try {
         const s = setShortcutIcons(variant);

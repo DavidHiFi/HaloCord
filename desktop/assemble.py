@@ -44,6 +44,7 @@ shutil.copy2(D / "shell" / "shareaudio.js", asrc / "shareaudio.js")
 shutil.copy2(D / "shell" / "hc-desktop.js", asrc / "hc-desktop.js")  # hc-desktop: startup, tray, build choice, app icon
 shutil.copy2(D / "shell" / "hc-icon.js", asrc / "hc-icon.js")  # hc-icon: applies the stock, green or Mocha blue app icon
 shutil.copy2(D / "shell" / "hc-update.js", asrc / "hc-update.js")  # hc-update: the in-app updater
+shutil.copy2(D / "shell" / "hc-guard.js", asrc / "hc-guard.js")  # hc-guard: log file and safe start after quick crashes
 shutil.copy2(D / "shell" / "hc-watchdog.js", asrc / "hc-watchdog.js")  # hc-watchdog: reloads a hung, crashed or blank main window
 # build.json tells hc-update.js which commit this build is, for the list of changes in the next update.
 git = lambda *a: subprocess.run(["git", *a], cwd=D.parent, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW).stdout.strip()
@@ -92,7 +93,8 @@ m = m.replace('path.join(__dirname,"icon.png")', 'require("./hc-desktop.js").ico
 # Load the bundle's main side first, with its settings in %APPDATA%\HaloCord\TestCord (Stable keeps %APPDATA%\Testcord).
 a = 'Menu:Menu}=require("electron");'
 assert m.count(a) == 1
-m = m.replace(a, a + 'process.env.DVX_NO_UPDATE_CHECK="1";process.env.TESTCORD_USER_DATA_DIR=require("path").join(app.getPath("userData"),"TestCord");require("./equicord/main.js");')
+# hc-guard first, so its log sees everything and a safe start can turn hardware acceleration off before ready.
+m = m.replace(a, a + 'const hcGuard=require("./hc-guard.js");process.env.DVX_NO_UPDATE_CHECK="1";process.env.TESTCORD_USER_DATA_DIR=require("path").join(app.getPath("userData"),"TestCord");require("./equicord/main.js");')
 # Screen share: the page's share picker (StreamEnhancer SharePicker) preselects the source, so the
 # old "Choose what to share" window only opens when nothing was picked. Chromium gets video only;
 # the sound comes from shell/shareaudio.js, which leaves HaloCord's own playback out.
@@ -134,7 +136,7 @@ m += ('\nfunction mcWinFile(){return require("path").join(app.getPath("userData"
       'again||[794,798].forEach(m=>w.hookWindowMessage(m,()=>setTimeout(()=>w.isDestroyed()||mcAcrylic(w,!0),400)))}catch(e){console.error("[HaloCord] acrylic failed",e)}}'
       'ipcMain.handle("halocord:show-item",(e,t)=>shell.showItemInFolder(String(t)));'
       # app.exit skips will-quit, so finish a waiting exe icon swap here or the copy is made again next start.
-      'ipcMain.handle("halocord:relaunch",()=>{hcUpdate.install()||(require("./hc-icon.js").finishPending(),app.relaunch(),app.exit(0))});'
+      'ipcMain.handle("halocord:relaunch",()=>{hcUpdate.install()||(require("./hc-icon.js").finishPending(),hcGuard.clean(),app.relaunch(),app.exit(0))});'
       'ipcMain.handle("halocord:open-settings-folder",()=>shell.openPath(app.getPath("userData")));'
       'ipcMain.handle("halocord:set-window-prefs",(e,t)=>{const p={};for(const k of["disableMinSize","transparent","winCtrlQ"])p[k]=!!(t&&t[k]);'
       'p.windowsMaterial=t&&"string"==typeof t.windowsMaterial?t.windowsMaterial:"none";p.nativeTitleBar=!t||!1!==t.nativeTitleBar;require("fs").writeFileSync(mcWinFile(),JSON.stringify(p))});\n')
@@ -156,7 +158,12 @@ for a, b in [('autoHideMenuBar:!0,backgroundColor:"#1e2124",title:"HaloCord"', '
     assert m.count(a) == 1, a
     m = m.replace(a, b)
 # hc-overlay: IPC halocord:overlay-* and the overlay window live in shell/hc-overlay-main.js.
-m += '\nrequire("./hc-overlay-main.js");\n'
+# A safe start (hc-guard.js) leaves out the overlay, window transparency and blur.
+m += '\nhcGuard.safe||require("./hc-overlay-main.js");\n'
+for a, b in [('...mcWinOpts()});', '...(hcGuard.safe?{}:mcWinOpts())});'),
+             ('mcAcrylic(win);mcTransparentMax(win);', 'hcGuard.safe||(mcAcrylic(win),mcTransparentMax(win));')]:
+    assert m.count(a) == 1, a
+    m = m.replace(a, b)
 # hc-keys: start the keybind bridge in main.
 m += '\nrequire("./hc-keys.js").init();\n'
 # hc-update: the launch update check, which shows the main window, and the bundle's updater IPC
