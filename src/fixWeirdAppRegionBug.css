@@ -26,9 +26,11 @@ body {
     -webkit-app-region: drag;
 }
 
-[class*="bar_"]:has([class*="winButtons_"]) [class*="winButton"],
-[class*="bar_"]:has([class*="winButtons_"]) [class*="backForwardButtons"],
-[class*="bar_"]:has([class*="winButtons_"]) [class*="trailing"] {
+/* Plain descendants: a :has() above these would restyle the whole window on every change. no-drag is harmless
+   outside a drag region. */
+[class*="winButtons_"] [class*="winButton"],
+[class*="bar_"] [class*="backForwardButtons"],
+[class*="bar_"] > [class*="trailing"] {
     -webkit-app-region: no-drag;
 }
 

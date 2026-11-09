@@ -164,20 +164,29 @@ export function applyHaloAppearance(root: HTMLElement) {
     for (const [key, name, fallback] of choices) {
         if (mc[key] !== fallback) root.setAttribute(`data-mc-${name}`, mc[key]);
     }
+    // The colours live in their own stylesheet: Discord rewrites <html>'s inline style after startup, which
+    // dropped them and left the theme's badges and accents with no colour at all.
+    const colours: string[] = [];
     for (const [key, name] of mochaColors) {
         const value = mc[key];
         // The HaloCord look tints MochaCord's accent and hover border with the HaloCord accent unless the user picked one.
         const fallback = Settings.haloThemeVariant === "halocord" && (key === "accent" || key === "hoverColor") ? "var(--hc-accent)" : null;
         const colour = isHexColor(value) ? value : fallback;
-        if (colour) {
-            root.setAttribute(`data-mc-${name}`, "");
-            root.style.setProperty(`--mc-${name}`, colour);
-        } else {
-            root.style.removeProperty(`--mc-${name}`);
-        }
+        root.style.removeProperty(`--mc-${name}`);
+        if (!colour) continue;
+        root.setAttribute(`data-mc-${name}`, "");
+        colours.push(`--mc-${name}: ${colour};`);
     }
+    const doc = root.ownerDocument;
+    let colourStyle = doc.getElementById("halo-mc-colours");
+    if (!colourStyle) {
+        colourStyle = doc.createElement("style");
+        colourStyle.id = "halo-mc-colours";
+        (doc.getElementById("halo-fonts")?.parentElement ?? doc.head).append(colourStyle);
+    }
+    colourStyle.textContent = colours.length ? `:root:root { ${colours.join(" ")} }` : "";
 
-    const style = root.ownerDocument.getElementById("halo-fonts");
+    const style = doc.getElementById("halo-fonts");
     if (style) style.textContent = fontCss();
 }
 

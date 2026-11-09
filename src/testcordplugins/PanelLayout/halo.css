@@ -89,8 +89,16 @@ html.hc-theming [class*="streamInfoContainer_"] [class*="infoRow_"] strong {
     color: var(--hc-text);
 }
 
-html.hc-theming [data-call-tile]:not(:has(video)) [class*="streamInfoContainer_"] {
-    display: none;
+/* The :has() stays on the tile itself and the info box reads the marker, so a change inside one tile does not
+   restyle the whole call view. */
+html.hc-theming [data-call-tile]:not(:has(video)) {
+    --hc-tile-no-video: 1;
+}
+
+@container style(--hc-tile-no-video: 1) {
+    html.hc-theming [data-call-tile] [class*="streamInfoContainer_"] {
+        display: none;
+    }
 }
 
 html.hc-theming [data-call-tile] :is([class*="experimentOverlayTitle_"], [class*="overlayTitle_"], [class*="activityContainer_"]) {
