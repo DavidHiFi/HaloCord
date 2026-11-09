@@ -227,7 +227,14 @@ for f in ("preload.js", "userscript.js"):
             # stayed dead long after it was free. Retry every 2 s with no lockout (2026-10-31).
             ("dvxMicBusy=!![];dvxMicNext=Date['now']()+15e3;", "dvxMicBusy=!![];dvxMicNext=Date['now']()+2e3;"),
             ("if(dvxMicFail>3&&Date['now']()<dvxMicNext+6e4)return;", ""),
-            ("dvxMicMutedNext=Date['now']()+9e4;", "dvxMicMutedNext=Date['now']()+2e3;"),
+            # A muted mic gets a fresh capture 2 s after the 8 s mute check, but some inputs (a VB-Audio
+            # virtual mic) flip to muted on their own and come back without help. Reopening one every
+            # 10 s gained nothing and stranded Discord's old inputs each time (measured 2026-11-09:
+            # 98 dead sources). Each muted reopen within 5 minutes of the last doubles the wait, up to
+            # 2 minutes, so a single dictation take still gets its mic back after 2 s.
+            ("dvxMicMutedNext=0,", "dvxMicMutedNext=0,dvxMicMutedAt=0,dvxMicMutedGap=0,"),
+            ("dvxMicMutedNext=Date['now']()+9e4;",
+             "dvxMicMutedGap=Date['now']()-dvxMicMutedAt<3e5?Math['min'](dvxMicMutedGap*2,12e4):2e3;dvxMicMutedAt=Date['now']();dvxMicMutedNext=dvxMicMutedAt+dvxMicMutedGap;"),
             # Swapping a fresh track into the sender left Discord's own input on the ended track, so its
             # voice activity never fired and nobody heard the owner until a rejoin. Reopen Discord's input.
             ("function dvxMicCloseOld(dvxG,dvxNewT){",

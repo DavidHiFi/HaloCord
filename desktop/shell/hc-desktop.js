@@ -95,6 +95,24 @@ async function setLogin(on, p) {
     });
 }
 
+// Web voice needs background throttling off, which also keeps the page "visible" while minimised or in
+// the tray, so meters, animations and plugin loops kept drawing for nobody. Runs in the page: report it
+// hidden the way a browser tab would, and pause CSS animations, while timers and voice keep full speed.
+function pageRest(on) {
+    const doc = Document.prototype;
+    if (!window.__hcRest) {
+        const hidden = Object.getOwnPropertyDescriptor(doc, "hidden");
+        const state = Object.getOwnPropertyDescriptor(doc, "visibilityState");
+        window.__hcRest = { on: false };
+        Object.defineProperty(document, "hidden", { configurable: true, get() { return window.__hcRest.on || hidden.get.call(this); } });
+        Object.defineProperty(document, "visibilityState", { configurable: true, get() { return window.__hcRest.on ? "hidden" : state.get.call(this); } });
+    }
+    if (window.__hcRest.on === on) return;
+    window.__hcRest.on = on;
+    document.documentElement.classList.toggle("hc-rest", on);
+    document.dispatchEvent(new Event("visibilitychange"));
+}
+
 exports.init = ({ win, tray, show }) => {
     let quitting = false;
     current();
@@ -114,6 +132,13 @@ exports.init = ({ win, tray, show }) => {
         w.setIcon(exports.icon());
         if (w !== win()) return;
         require("./hc-watchdog.js").watch(w);
+        const rest = () => {
+            if (w.isDestroyed()) return;
+            const on = w.isMinimized() || !w.isVisible();
+            w.webContents.executeJavaScript(`(${pageRest})(${on})`, true).catch(() => { });
+        };
+        for (const ev of ["minimize", "restore", "hide", "show"]) w.on(ev, rest);
+        w.webContents.on("did-finish-load", rest);
         w.on("session-end", () => { quitting = true; hcIcon.finishPending(); });
         w.on("close", e => {
             if (quitting || !prefs.minimizeToTray) return;

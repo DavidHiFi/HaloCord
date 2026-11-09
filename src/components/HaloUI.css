@@ -1,3 +1,10 @@
+/* Minimised or in the tray (desktop/shell/hc-desktop.js pageRest): nothing on screen, so nothing animates */
+html.hc-rest *,
+html.hc-rest *::before,
+html.hc-rest *::after {
+    animation-play-state: paused !important;
+}
+
 /* HaloCord settings look: the voice panel's dark rounded rows and green accent (desktop/base/userscript.js),
    used for options HaloCord adds to Discord. Without html.hc-theming the variables fall back to stock Discord. */
 :root {
@@ -1440,7 +1447,7 @@ html.hc-theming :is([class~="wrapper_TNyK-N"] [class~="link_TNyK-N"], [class~="v
     transition: background-color 0.16s ease-out;
 }
 html.hc-theming :is([class~="wrapper_TNyK-N"] [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"] [class~="content_YUoOxm"], [class~="interactive_zln_tS"])::after {
-    content: ""; position: absolute; inset: 0; padding: 1px; border-radius: inherit; pointer-events: none;
+    content: ""; position: absolute; inset: 0; padding: 1.5px; border-radius: inherit; pointer-events: none;
     background: var(--hc-gradient) border-box;
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
     opacity: 0; transition: opacity 0.16s ease-out;
@@ -1451,11 +1458,11 @@ html.hc-theming :is([class~="wrapper_TNyK-N"]:hover [class~="link_TNyK-N"], [cla
 html.hc-theming :is([class~="modeSelected_TNyK-N"] [class~="link_TNyK-N"], [class~="interactiveSelected_zln_tS"])::after { opacity: 0.5; }
 html.hc-theming :is([class~="wrapper_TNyK-N"]:hover [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"]:hover [class~="content_YUoOxm"], [class~="interactive_zln_tS"]:hover)::after { opacity: 1; }
 
-/* Collapsed voice channel: round avatars with their meters beside them, no overlap, a pill hover plate */
+/* Collapsed voice channel: round avatars with their meters beside them, no overlap, the shared row hover */
 html.hc-theming [class~="listCollapse_YUoOxm"] { gap: 4px; align-items: center; flex-wrap: wrap; row-gap: 4px; }
 html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] { margin: 0 !important; }
-html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [class~="content_YUoOxm"] { display: flex; align-items: center; gap: 5px; padding: 2px 7px 2px 2px; border-radius: 999px !important; }
-html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [class~="content_YUoOxm"]:not(:has([data-vu-meter])) { padding-right: 2px; }
+html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [class~="content_YUoOxm"] { display: flex; align-items: center; gap: 5px; padding: 3px 7px 3px 3px; }
+html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [class~="content_YUoOxm"]:not(:has([data-vu-meter])) { padding-right: 3px; }
 html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] .voice-user-buttons { display: none !important; }
 html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [class~="avatarSmall_YUoOxm"] { flex: none; width: 28px !important; height: 28px !important; margin: 0 !important; border: 0 !important; border-radius: 50% !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; }
 html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [data-vu-meter] { flex: none; margin-left: 0 !important; align-self: center; }

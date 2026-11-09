@@ -367,7 +367,9 @@ export default definePlugin({
         const ringPic = settings.store.speakingIndicator === "picture";
         // Picture mode puts the speaking ring in the filter, other tiles get a box from the stylesheet
         const [glowColor, glowColor2] = getGlowColors();
-        const glowFilter = ringPic && speakingGlow ? `drop-shadow(-1px -1px 2px ${glowColor}) drop-shadow(1px 1px 2px ${glowColor2}) drop-shadow(-3px 0 8px ${glowColor}) drop-shadow(3px 0 8px ${glowColor2})` : "";
+        // Chained drop-shadows add up: keep the total reach (about 13px) inside the gap the 90% zoom leaves
+        // under the picture, or the tile's clip cuts the bottom of the halo off.
+        const glowFilter = ringPic && speakingGlow ? `drop-shadow(-1px 0 1.5px ${glowColor}) drop-shadow(1px 0 1.5px ${glowColor2}) drop-shadow(-2px 0 5px ${glowColor}) drop-shadow(2px 0 5px ${glowColor2})` : "";
         return {
             "--full-res-avatar": `url("${avatarUrl}")`,
             "--vc-pfp-radius": `${Math.round(settings.store.cornerRadius)}px`,
