@@ -1478,6 +1478,10 @@ html.hc-theming [class~="headerBar_neq5ug"] [class~="toolbar_neq5ug"] button[cla
     justify-content: center;
     padding: 0;
 }
+html.hc-theming [class~="headerBar_neq5ug"] [class~="toolbar_neq5ug"] button[class*="lookBlank_"] :is([class*="controlIcon_"], [class*="controlIcon_"] > svg) {
+    width: 16px;
+    height: 16px;
+}
 
 html.hc-theming [class~="headerBar_neq5ug"] :is([class~="clipsEnabledIndicator_U6LhXD"] > [class*="badge_"], [class*="streamQualityIndicator_"]) * {
     border-radius: 0 !important;
