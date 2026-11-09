@@ -1521,6 +1521,37 @@ html.hc-theming [class~="panels_pog62O"] [class~="wrapperVisible_jdr5pz"] {
     border-bottom: 1px solid var(--hc-dock-line);
 }
 
+/* Hovering expands the card, and the expanded view keeps the collapsed background stacked above the
+   content. With the theme's see-through background that layer greys out the whole card and its button. */
+html.hc-theming [class~="panels_pog62O"] [class~="wrapper_jdr5pz"] [class*="contentExpanded_"] [class*="postEnrollmentBackgroundCollapsed_"] {
+    opacity: 0 !important;
+}
+
+/* Square top corners, so the card lines up with the straight divider above it. */
+html.hc-theming [class~="panels_pog62O"] [class~="contentWrapper_jdr5pz"]::after,
+html.hc-theming [class~="panels_pog62O"] :is(
+    [class~="wrapper_jdr5pz"],
+    [class~="contentWrapper_jdr5pz"],
+    [class*="postEnrollmentBackground_"],
+    [class*="heroAssetWrapper_"],
+    [class~="wrapper_VCaaii"],
+    [class*="background_VCaaii"],
+    [class*="borders_VCaaii"],
+    [class*="confetti_VCaaii"]
+) {
+    border-radius: 0 !important;
+}
+
+/* Who's Watching: the gradient replaces the grey border on hover, like the name box. */
+html.hc-theming [class~="panels_pog62O"] .vc-whos-watching-screenshare-panel {
+    transition: background 0.16s ease-out, border-color 0.16s ease-out;
+}
+
+html.hc-theming [class~="panels_pog62O"] .vc-whos-watching-screenshare-panel:hover {
+    border-color: transparent !important;
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
+}
+
 html.hc-theming [class~="panels_pog62O"] .vc-devbanner-module-widget {
     border-bottom: 1px solid var(--hc-dock-line);
     background-color: var(--hc-dock-strip) !important;
