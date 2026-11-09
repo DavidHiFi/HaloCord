@@ -1427,6 +1427,35 @@ html.hc-theming [data-call-tile] :is([class*="streamQualityIndicator_"], [class*
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
 }
 
+/* The tile grid keeps 64 px free under the last row for the call buttons; the HaloCord dock is a
+   little taller than Discord's, so the grid ends 16 px higher and the bottom row never touches it. */
+html.hc-theming [class~="videoGridWrapper_QKgWuD"] > [class~="videoGrid_QKgWuD"] { height: calc(100% - 16px); margin-bottom: 16px; }
+
+/* Channel rows: hover and the open channel (the voice call you are viewing) get the gradient border
+   over their tint. A masked ::after draws it inside the row, so nothing shifts. */
+html.hc-theming [class~="wrapper_TNyK-N"] [class~="link_TNyK-N"]::after {
+    content: ""; position: absolute; inset: 0; padding: 1px; border-radius: inherit; pointer-events: none;
+    background: var(--hc-gradient) border-box;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+    opacity: 0; transition: opacity 0.16s ease-out;
+}
+html.hc-theming [class~="wrapper_TNyK-N"] [class~="link_TNyK-N"] { transition: background-color 0.16s ease-out; }
+html.hc-theming [class~="wrapper_TNyK-N"]:hover [class~="link_TNyK-N"]::after { opacity: 1; }
+html.hc-theming [class~="modeSelected_TNyK-N"] [class~="link_TNyK-N"]::after { opacity: 0.55; }
+html.hc-theming [class~="modeSelected_TNyK-N"]:hover [class~="link_TNyK-N"]::after { opacity: 1; }
+html.hc-theming [class~="modeSelected_TNyK-N"]:hover [class~="link_TNyK-N"] { background: rgb(var(--hc-accent-rgb) / 20%) !important; }
+
+/* The "new unreads" pill at the top and bottom of the channel list: dark glass, gradient border and accent text on hover. */
+html.hc-theming [class~="unreadMentionsBar_5dqHTG"] {
+    border: 1px solid var(--hc-panel-border) !important; background: var(--hc-chip-bg) !important;
+    backdrop-filter: blur(24px) saturate(140%); color: var(--hc-text);
+    transition: border-color 0.16s ease-out, color 0.16s ease-out;
+}
+html.hc-theming [class~="unreadMentionsBar_5dqHTG"]:hover {
+    border-color: transparent !important; color: var(--hc-accent);
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
+}
+
 /* Stream header (clips badge, quality and LIVE badge, chat button): the same dark glass chips as the tile tags, gradient border on hover. */
 html.hc-theming [class~="headerBar_neq5ug"] :is([class~="clipsEnabledIndicator_U6LhXD"] > [class*="badge_"], [class*="streamQualityIndicator_"], [class~="toolbar_neq5ug"] button[class*="lookBlank_"]) {
     display: flex;
