@@ -73,12 +73,26 @@ div[data-selenium-video-tile][style*="--vc-pfp-speaking"]:not([style*="--vc-pfp-
     box-shadow: 0 0 0 2px var(--vc-pfp-custom-glow, var(--status-speaking, #23a55a)), -6px 0 16px 3px color-mix(in srgb, var(--vc-pfp-custom-glow, var(--status-speaking, #23a55a)) 50%, transparent), 6px 0 16px 3px color-mix(in srgb, var(--vc-pfp-custom-glow-2, var(--vc-pfp-custom-glow, var(--status-speaking, #23a55a))) 50%, transparent) !important;
 }
 
-html.vc-rvcpfp-hover-glow div[data-selenium-video-tile]:not([style*="--vc-pfp-ring-pic"], [style*="--vc-pfp-stream"]):hover {
-    box-shadow: 0 0 0 1px var(--vc-rvcpfp-glow-1), -6px 0 14px 2px color-mix(in srgb, var(--vc-rvcpfp-glow-1) 40%, transparent), 6px 0 14px 2px color-mix(in srgb, var(--vc-rvcpfp-glow-2) 40%, transparent) !important;
+/* Hover rings the whole tile box with a gradient border in both modes, so it never
+   lands on the picture's speaking ring. The tile clips its content, so the border is
+   a masked ::after inside the edge. */
+html.vc-rvcpfp-hover-glow div[data-selenium-video-tile]:not([style*="--vc-pfp-stream"])::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    padding: 2px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--vc-rvcpfp-glow-1, #89b4fa), var(--vc-rvcpfp-glow-2, #cba6f7)) border-box;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease-out;
 }
 
-html.vc-rvcpfp-hover-glow div[data-selenium-video-tile][style*="--vc-pfp-ring-pic"]:not([style*="--vc-pfp-speaking"], [style*="--vc-pfp-stream"]):hover div[role="img"] {
-    filter: drop-shadow(-1px -1px 2px var(--vc-rvcpfp-glow-1)) drop-shadow(1px 1px 2px var(--vc-rvcpfp-glow-2)) drop-shadow(-3px 0 6px var(--vc-rvcpfp-glow-1)) drop-shadow(3px 0 6px var(--vc-rvcpfp-glow-2)) !important;
+html.vc-rvcpfp-hover-glow div[data-selenium-video-tile]:not([style*="--vc-pfp-stream"]):hover::after {
+    opacity: 1;
 }
 
 /* Camera tiles have no picture, so they keep Discord's own tile border */

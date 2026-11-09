@@ -1310,6 +1310,38 @@ html.hc-theming [class*="tooltipPrimary_"] [class*="tooltipPointer_"] {
     border-top-color: var(--hc-flyout-bg) !important;
 }
 
+/* Profile hover toolbars (edit and clear on the custom status, the activity and avatar bars): dark frosted glass with a
+   border instead of the theme's see-through toolbar colour; the buttons take the accent on hover. */
+html.hc-theming :is([class~="popover_yDAPhH"], [class~="popover_oWBF11"]) {
+    border: 1px solid rgb(var(--hc-accent-rgb) / 28%) !important;
+    background: var(--hc-chip-bg) !important;
+    backdrop-filter: blur(24px) saturate(140%) !important;
+    box-shadow: 0 4px 14px rgb(0 0 0 / 35%) !important;
+}
+
+html.hc-theming [class~="popover_yDAPhH"] [class~="button_yDAPhH"] {
+    transition: background-color 0.16s ease-out, color 0.16s ease-out;
+}
+
+html.hc-theming [class~="popover_yDAPhH"] [class~="button_yDAPhH"]:hover {
+    background: rgb(var(--hc-accent-rgb) / 16%) !important;
+    color: var(--hc-accent);
+}
+
+html.hc-theming [class~="popover_yDAPhH"] [class~="button_yDAPhH"]:hover [class~="icon_yDAPhH"] {
+    color: var(--hc-accent);
+    fill: var(--hc-accent);
+}
+
+/* The custom status bubble sits on the same glass, so the bubble and its toolbar read as one piece. */
+html.hc-theming [class~="container_rmCN9_"] {
+    --custom-status-bubble-background-color: var(--hc-chip-bg);
+}
+
+html.hc-theming [class~="outer_rmCN9_"] {
+    border-color: var(--hc-panel-border) !important;
+}
+
 /* Guild header: as tall as the rail's first row, with an inset hover pill that never touches the clipped edge. */
 html.hc-theming #app-mount {
     --custom-channel-header-height: 56px;
@@ -1393,6 +1425,55 @@ html.hc-theming [data-call-tile] [class*="streamQualityIndicator_"] [class*="qua
 html.hc-theming [data-call-tile] :is([class*="streamQualityIndicator_"], [class*="overlayTitle_"], [class*="experimentOverlayTitle_"], [class*="activityContainer_"], [class*="overlayButton_"] > button, [class*="controlsRow_"] > button):hover {
     border-color: transparent !important;
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
+}
+
+/* Stream header (clips badge, quality and LIVE badge, chat button): the same dark glass chips as the tile tags, gradient border on hover. */
+html.hc-theming [class~="headerBar_neq5ug"] :is([class~="clipsEnabledIndicator_U6LhXD"] > [class*="badge_"], [class*="streamQualityIndicator_"], [class~="toolbar_neq5ug"] button[class*="lookBlank_"]) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    box-sizing: border-box;
+    padding: 0 8px;
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 8px;
+    background: var(--hc-chip-bg);
+    backdrop-filter: blur(24px) saturate(140%);
+    color: var(--hc-text);
+    transition: border-color 0.16s ease-out;
+}
+
+html.hc-theming [class~="headerBar_neq5ug"] [class~="toolbar_neq5ug"] button[class*="lookBlank_"] {
+    width: 32px;
+    min-width: 0;
+    justify-content: center;
+    padding: 0;
+}
+
+html.hc-theming [class~="headerBar_neq5ug"] :is([class~="clipsEnabledIndicator_U6LhXD"] > [class*="badge_"], [class*="streamQualityIndicator_"]) * {
+    border-radius: 0 !important;
+    background: none !important;
+    color: inherit;
+}
+
+html.hc-theming [class~="headerBar_neq5ug"] [class*="streamQualityIndicator_"] [class*="pill_"] {
+    padding: 0;
+}
+
+html.hc-theming [class~="headerBar_neq5ug"] [class*="streamQualityIndicator_"] [class*="liveIndicator__"] {
+    padding-inline-start: 6px;
+    border-inline-start: 1px solid var(--hc-panel-border);
+    color: var(--hc-live);
+    font-weight: 700;
+}
+
+html.hc-theming [class~="headerBar_neq5ug"] :is([class~="clipsEnabledIndicator_U6LhXD"] > [class*="badge_"], [class*="streamQualityIndicator_"], [class~="toolbar_neq5ug"] button[class*="lookBlank_"]):hover {
+    border-color: transparent !important;
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
+}
+
+html.hc-theming [class~="headerBar_neq5ug"] [class~="toolbar_neq5ug"] button[class*="lookBlank_"]:hover {
+    color: var(--hc-accent);
 }
 
 /* The voice area keeps a flat surface on hover: no top-down or bottom-up scrim behind the call controls. */

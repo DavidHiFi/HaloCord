@@ -61,6 +61,7 @@ function describe(r: AppIconResult | false) {
     if (r.error) return `The icon could not be changed: ${r.error}`;
     const links = r.shortcuts ? `${r.shortcuts} shortcut${r.shortcuts === 1 ? "" : "s"}, ` : "";
     if (r.exe?.startsWith("failed")) return `Changed the windows, tray and ${links}but HaloCord.exe kept its icon (${r.exe.slice(8)}).`;
+    if (r.exe === "at restart") return `Changed the windows, tray${r.shortcuts ? ` and ${links.slice(0, -2)}` : ""}. HaloCord.exe gets the new icon the next time HaloCord restarts.`;
     return `Changed the windows, tray, ${links}and HaloCord.exe.`;
 }
 

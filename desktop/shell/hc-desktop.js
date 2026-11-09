@@ -99,6 +99,7 @@ exports.init = ({ win, tray, show }) => {
     let quitting = false;
     current();
     app.on("before-quit", () => { quitting = true; });
+    app.on("will-quit", () => hcIcon.finishPending());
     // One icon rewrite at a time; each uses the newest choice, so quick switches settle on the last one.
     let iconQueue = Promise.resolve();
     const applyIcon = windows => iconQueue = iconQueue.then(async () => {
@@ -113,7 +114,7 @@ exports.init = ({ win, tray, show }) => {
         w.setIcon(exports.icon());
         if (w !== win()) return;
         require("./hc-watchdog.js").watch(w);
-        w.on("session-end", () => { quitting = true; });
+        w.on("session-end", () => { quitting = true; hcIcon.finishPending(); });
         w.on("close", e => {
             if (quitting || !prefs.minimizeToTray) return;
             e.preventDefault();

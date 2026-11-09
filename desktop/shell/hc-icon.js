@@ -1,8 +1,8 @@
 // HaloCord app icon choice (green or Catppuccin Mocha blue): window and taskbar icons, the tray,
 // the Start menu, desktop and pinned taskbar shortcuts, and the icon inside HaloCord.exe.
 // The .ico files sit in resources\icons, outside app.asar, so shortcuts can point at them.
-// A running exe cannot be written, but it can be renamed: the icon goes into a copy, the running
-// file steps aside as HaloCord.exe.<time>.old (deleted at the next start) and the copy takes its name.
+// A running exe cannot be written, but it can be renamed: the icon goes into a copy, and at quit the
+// running file steps aside as HaloCord.exe.<time>.old (deleted at the next start) and the copy takes its name.
 const { app, BrowserWindow, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
@@ -69,11 +69,23 @@ function resourceSizes(file, ids) {
 const endAsync = (h, discard) => new Promise((resolve, reject) =>
     win32().end.async(h, discard, (e, ok) => e ? reject(e) : resolve(ok)));
 
-async function setExeIcon(variant) {
-    // The process may already run from an earlier .old file, so every rewrite gets its own name.
-    const exe = process.execPath, next = `${exe}.new`, old = `${exe}.${Date.now()}.old`;
+// The rewritten copy waits as HaloCord.exe.new and takes the exe's place only when HaloCord quits.
+// Swapping it in while running broke every new page process: cross-site frames such as the quest
+// hCaptcha aborted until the next restart (2026-11-09). { next, size, mtimeMs } of the exe it copied.
+let pending = null;
+
+function dropPending() {
+    if (!pending) return;
+    try { fs.rmSync(pending.next, { force: true }); } catch { }
+    pending = null;
+}
+
+async function prepareExeIcon(variant) {
+    dropPending();
+    const exe = process.execPath, next = `${exe}.new`;
     const { group, images } = parseIco(fs.readFileSync(icoPath(variant)));
     if (!(resourceSizes(exe, [[RT_GROUP_ICON, GROUP_ID]])?.[0] > 0)) throw new Error("HaloCord.exe has no icon group to replace");
+    const source = fs.statSync(exe);
     await fs.promises.copyFile(exe, next);
     try {
         const { begin, update } = win32();
@@ -85,13 +97,28 @@ async function setExeIcon(variant) {
         const want = [group.length, ...images.map(i => i.length)];
         const got = resourceSizes(next, [[RT_GROUP_ICON, GROUP_ID], ...images.map((_, i) => [RT_ICON, i + 1])]);
         if (!got || got.some((n, i) => n !== want[i])) throw new Error("the rewritten copy did not check out");
+    } catch (e) {
+        try { fs.rmSync(next, { force: true }); } catch { }
+        throw e;
+    }
+    pending = { next, size: source.size, mtimeMs: source.mtimeMs };
+    // A rename keeps size and modified time, so this is what the exe looks like after the swap.
+    const st = fs.statSync(next);
+    return { variant, size: st.size, mtimeMs: st.mtimeMs };
+}
+
+// Runs at quit. Skipped when an update already replaced the exe the copy was made from.
+function finishPending() {
+    if (!pending) return;
+    const { next, size, mtimeMs } = pending, exe = process.execPath;
+    pending = null;
+    try {
+        const st = fs.statSync(exe);
+        if (st.size !== size || st.mtimeMs !== mtimeMs) { fs.rmSync(next, { force: true }); return; }
+        const old = `${exe}.${Date.now()}.old`;
         fs.renameSync(exe, old);
         try { fs.renameSync(next, exe); } catch (e) { fs.renameSync(old, exe); throw e; }
-    } finally {
-        try { fs.rmSync(next, { force: true }); } catch { }
-    }
-    const st = fs.statSync(exe);
-    return { variant, size: st.size, mtimeMs: st.mtimeMs };
+    } catch (e) { console.error("[HaloCord] exe icon swap failed", e); }
 }
 
 // Shortcuts to this exe in the places the installer and Windows put them.
@@ -148,10 +175,10 @@ async function apply(variant, { tray, exeState, windows = true }) {
         // A fresh install or update carries the green icon, and a rewrite records what it wrote.
         const current = same ? exeState.variant : "green";
         if (!same) result.exeState = null;
-        if (current !== variant) {
-            result.exeState = await setExeIcon(variant);
-            result.exe = "updated";
-            changedFiles.push(process.execPath);
+        if (current === variant) dropPending();
+        else {
+            result.exeState = await prepareExeIcon(variant);
+            result.exe = "at restart";
         }
     } catch (e) {
         console.error("[HaloCord] exe icon failed", e);
@@ -161,16 +188,19 @@ async function apply(variant, { tray, exeState, windows = true }) {
     return result;
 }
 
-// Removes the exe files earlier rewrites set aside; the one this process runs from stays locked.
+// Removes the exe files earlier swaps set aside and a copy a killed process never swapped in.
+// Synchronous so it cannot delete a copy the icon rewrite right after it makes.
 function cleanup() {
     if (!app.isPackaged) return;
     const dir = path.dirname(process.execPath), prefix = `${path.basename(process.execPath)}.`.toLowerCase();
-    fs.readdir(dir, (e, names) => {
-        for (const n of e ? [] : names) {
-            const l = n.toLowerCase();
-            if (l.startsWith(prefix) && (/^\d+\.old$/.test(l.slice(prefix.length)) || l === `${prefix}new`)) fs.rm(path.join(dir, n), { force: true }, () => { });
+    let names = [];
+    try { names = fs.readdirSync(dir); } catch { }
+    for (const n of names) {
+        const l = n.toLowerCase();
+        if (l.startsWith(prefix) && (/^\d+\.old$/.test(l.slice(prefix.length)) || l === `${prefix}new`)) {
+            try { fs.rmSync(path.join(dir, n), { force: true }); } catch { }
         }
-    });
+    }
 }
 
-module.exports = { icoPath, variantOf, apply, cleanup };
+module.exports = { icoPath, variantOf, apply, cleanup, finishPending };
