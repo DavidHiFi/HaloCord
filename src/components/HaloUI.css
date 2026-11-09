@@ -1506,6 +1506,10 @@ html.hc-theming [class~="panels_pog62O"] {
     --hc-dock-line: rgb(205 214 244 / 12%);
 }
 
+html.hc-theming [class~="panels_pog62O"] [class*="container_9U6LUN"] {
+    border-bottom-color: var(--hc-dock-line);
+}
+
 html.hc-theming [class~="panels_pog62O"] .vc-devbanner-module-widget {
     border-bottom: 1px solid var(--hc-dock-line);
     background-color: var(--hc-dock-strip) !important;
@@ -1539,7 +1543,15 @@ html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6V
 
 /* With the buttons on top the name row has the whole width, so the ring gets room around the avatar. */
 html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"] {
+    margin-top: 12px;
     padding: 3px 6px;
+}
+
+/* The flex gap and stretched rows left about 23 px between the button grid and the name row. */
+html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="container_g6VwXp"] {
+    /* Panel Layout's grid CSS sets gap with !important. */
+    row-gap: 0 !important;
+    align-content: flex-start;
 }
 
 /* Only with Panel Layout's "All Buttons Top": beside the buttons the wrapper is just the avatar, and the line
@@ -1547,9 +1559,9 @@ html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="accountPo
 html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]::before {
     content: "";
     position: absolute;
-    top: -3px;
-    right: -8px;
-    left: -8px;
+    top: -7px;
+    right: -9px;
+    left: -9px;
     height: 1px;
     background: var(--hc-dock-line);
     pointer-events: none;
