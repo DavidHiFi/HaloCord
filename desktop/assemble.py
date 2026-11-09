@@ -145,6 +145,13 @@ for a, b in [('win=new BrowserWindow({width:1400,height:900,', 'win=new BrowserW
     assert m.count(a) == 1, a
     m = m.replace(a, b)
 m += '\nconst hcDesk=require("./hc-desktop.js").init({win:()=>win,tray:()=>tray,show:showWindow});\n'
+# No File/Edit/View bar on Alt: the menu stays set (its shortcuts, Ctrl+R included, keep working) but never shows.
+# The window guard only stops whole-window navigation; it used to cancel every outside frame too (hCaptcha, embeds).
+for a, b in [('autoHideMenuBar:!0,backgroundColor:"#1e2124",title:"HaloCord"', 'autoHideMenuBar:!1,backgroundColor:"#1e2124",title:"HaloCord"'),
+             ('mcAcrylic(win);mcTransparentMax(win);', 'win.setMenuBarVisibility(!1);mcAcrylic(win);mcTransparentMax(win);'),
+             ('win.webContents.on("will-navigate",(e,t)=>{"about:blank"===t', 'win.webContents.on("will-navigate",(e,t)=>{e&&!1===e.isMainFrame||"about:blank"===t')]:
+    assert m.count(a) == 1, a
+    m = m.replace(a, b)
 # hc-overlay: IPC halocord:overlay-* and the overlay window live in shell/hc-overlay-main.js.
 m += '\nrequire("./hc-overlay-main.js");\n'
 # hc-keys: start the keybind bridge in main.
