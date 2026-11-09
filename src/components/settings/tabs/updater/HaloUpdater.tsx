@@ -77,7 +77,8 @@ export function HaloUpdater() {
         setError("");
         try {
             const outdated = await checkForUpdates();
-            const i = await loadInfo();
+            // The check itself worked; missing version details must not turn it into a failure.
+            const i = await loadInfo()?.catch(() => null);
             setStatus(i?.ready ? "ready" : outdated ? "available" : "current");
         } catch (e) {
             UpdateLogger.error("Update check failed", e);
@@ -102,7 +103,7 @@ export function HaloUpdater() {
     }
 
     // Load the installed version first so the stats show even when the check fails.
-    useEffect(() => { loadInfo(); check(); }, []);
+    useEffect(() => { loadInfo()?.catch(() => { }); check(); }, []);
 
     const [tone, label] = STATUS[status];
     const busy = status === "checking" || status === "downloading";

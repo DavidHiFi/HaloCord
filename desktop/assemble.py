@@ -133,7 +133,8 @@ m += ('\nfunction mcWinFile(){return require("path").join(app.getPath("userData"
       'function mcAcrylic(w,again){if("win32"===process.platform&&"acrylic"===mcWinPrefs().windowsMaterial)try{require("./mcblur.js").apply(w,!0);'
       'again||[794,798].forEach(m=>w.hookWindowMessage(m,()=>setTimeout(()=>w.isDestroyed()||mcAcrylic(w,!0),400)))}catch(e){console.error("[HaloCord] acrylic failed",e)}}'
       'ipcMain.handle("halocord:show-item",(e,t)=>shell.showItemInFolder(String(t)));'
-      'ipcMain.handle("halocord:relaunch",()=>{hcUpdate.install()||(app.relaunch(),app.exit(0))});'
+      # app.exit skips will-quit, so finish a waiting exe icon swap here or the copy is made again next start.
+      'ipcMain.handle("halocord:relaunch",()=>{hcUpdate.install()||(require("./hc-icon.js").finishPending(),app.relaunch(),app.exit(0))});'
       'ipcMain.handle("halocord:open-settings-folder",()=>shell.openPath(app.getPath("userData")));'
       'ipcMain.handle("halocord:set-window-prefs",(e,t)=>{const p={};for(const k of["disableMinSize","transparent","winCtrlQ"])p[k]=!!(t&&t[k]);'
       'p.windowsMaterial=t&&"string"==typeof t.windowsMaterial?t.windowsMaterial:"none";p.nativeTitleBar=!t||!1!==t.nativeTitleBar;require("fs").writeFileSync(mcWinFile(),JSON.stringify(p))});\n')

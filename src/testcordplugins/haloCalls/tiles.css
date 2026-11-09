@@ -1,7 +1,7 @@
+/* Call and stream video only; a bare video selector also rounded embeds and profile previews. */
 div[data-selenium-video-tile],
 div[class*="videoWrapper"],
-div[class*="media-engine-video"],
-video {
+video[class*="media-engine-video"] {
     border-radius: var(--vc-pfp-radius, 12px) !important;
 }
 
@@ -127,8 +127,8 @@ div[data-selenium-video-tile][style*="--vc-pfp-deaf"] [class*="border_"] {
 }
 
 html.vc-rvcpfp-override-glow [class*="avatarSpeaking"] {
-    box-shadow: inset 0 0 0 2px var(--vc-rvcpfp-glow-color, #89b4fa) !important;
+    box-shadow: inset 0 0 0 2px var(--vc-rvcpfp-glow-color, var(--hc-accent)) !important;
 }
 html.vc-rvcpfp-override-glow [class*="userAvatar_"] {
-    --status-speaking: var(--vc-rvcpfp-glow-color, #89b4fa) !important;
+    --status-speaking: var(--vc-rvcpfp-glow-color, var(--hc-accent)) !important;
 }

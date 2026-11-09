@@ -118,39 +118,38 @@ ipcMain.handle(IpcEvents.GET_THEME_SYSTEM_VALUES, () => {
 ipcMain.handle(IpcEvents.OPEN_THEMES_FOLDER, () => shell.openPath(THEMES_DIR));
 ipcMain.handle(IpcEvents.OPEN_SETTINGS_FOLDER, () => shell.openPath(SETTINGS_DIR));
 
-let fsWatchers = [] as FSWatcher[];
+// One set per page, closed when that page asks again (a reload) or goes away.
+const fsWatchers = new Map<number, FSWatcher[]>();
 
 ipcMain.handle(IpcEvents.INIT_FILE_WATCHERS, ({ sender }) => {
-    fsWatchers.forEach(w => w.close());
-
-    let quickCssWatcher: FSWatcher | undefined;
-    let rendererCssWatcher: FSWatcher | undefined;
+    const closeAll = () => {
+        fsWatchers.get(sender.id)?.forEach(w => w.close());
+        fsWatchers.delete(sender.id);
+    };
+    const known = fsWatchers.has(sender.id);
+    closeAll();
+    const watchers: FSWatcher[] = [];
+    fsWatchers.set(sender.id, watchers);
+    if (!known) sender.once("destroyed", closeAll);
 
     open(QUICK_CSS_PATH, "a+").then(fd => {
         fd.close();
-        quickCssWatcher = watch(QUICK_CSS_PATH, { persistent: false }, debounce(async () => {
+        // The page asked again, or went away, while the file was opened.
+        if (fsWatchers.get(sender.id) !== watchers) return;
+        watchers.push(watch(QUICK_CSS_PATH, { persistent: false }, debounce(async () => {
             sender.postMessage(IpcEvents.QUICK_CSS_UPDATE, await readCss());
-        }, 50));
+        }, 50)));
     }).catch(() => { });
 
-    const themesWatcher = watch(THEMES_DIR, { persistent: false }, debounce(() => {
+    watchers.push(watch(THEMES_DIR, { persistent: false }, debounce(() => {
         sender.postMessage(IpcEvents.THEME_UPDATE, void 0);
-    }));
+    })));
 
     if (IS_DEV) {
-        rendererCssWatcher = watch(RENDERER_CSS_PATH, { persistent: false }, async () => {
+        watchers.push(watch(RENDERER_CSS_PATH, { persistent: false }, async () => {
             sender.postMessage(IpcEvents.RENDERER_CSS_UPDATE, await readFile(RENDERER_CSS_PATH, "utf-8"));
-        });
+        }));
     }
-
-    fsWatchers = [quickCssWatcher, themesWatcher, rendererCssWatcher].filter(Boolean) as FSWatcher[];
-
-    sender.once("destroyed", () => {
-        quickCssWatcher?.close();
-        themesWatcher.close();
-        rendererCssWatcher?.close();
-        fsWatchers = [];
-    });
 });
 
 function getHaloEditorVariant() {

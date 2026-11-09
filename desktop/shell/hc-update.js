@@ -37,7 +37,7 @@ const NOT_FOUND = "No HaloCord release with an update file was found on GitHub";
 async function get(url, headers) {
     let res;
     try {
-        res = await net.fetch(url, { headers: { ...UA, ...headers }, cache: "no-store" });
+        res = await net.fetch(url, { headers: { ...UA, ...headers }, cache: "no-store", signal: AbortSignal.timeout(30000) });
     } catch (e) {
         throw new Error(`Could not reach GitHub (${e.message}). Check your connection and try again.`);
     }
@@ -52,7 +52,10 @@ const ghToken = () => new Promise(resolve => execFile("gh", ["auth", "token"], {
 // The API answers an asset request with a redirect to a signed download link that needs no login.
 // Read the link without following it: Electron 37 crashes when a request hook (TrafficGuard's token
 // guard) removes a header while net.fetch follows a redirect, and the login stays on api.github.com.
-const assetLink = (url, headers) => new Promise((resolve, reject) => {
+const assetLink = (url, headers) => new Promise((done, fail) => {
+    // A stalled request would otherwise leave the update check waiting for the rest of the session.
+    const stall = setTimeout(() => { req.abort(); fail(new Error("GitHub did not answer. Check your connection and try again.")); }, 30000);
+    const resolve = v => { clearTimeout(stall); done(v); }, reject = e => { clearTimeout(stall); fail(e); };
     const req = net.request({ url, redirect: "manual" });
     for (const [k, v] of Object.entries({ ...UA, ...headers })) req.setHeader(k, v);
     req.on("redirect", (_status, _method, to) => { req.abort(); resolve(to); });
@@ -115,12 +118,17 @@ async function fetchInstaller() {
     const res = await latest.fetch();
     if (!res.body) throw new Error("The installer download came back empty");
     const hash = crypto.createHash("sha256"), out = fs.createWriteStream(part);
+    // A full disk fails the write stream; without a listener that error would crash the main process.
+    let failed = null;
+    const failure = new Promise((_, reject) => out.once("error", e => reject(failed = e)));
+    failure.catch(() => { });
     try {
         for await (const chunk of res.body) {
+            if (failed) throw failed;
             hash.update(chunk);
-            if (!out.write(chunk)) await new Promise(r => out.once("drain", r));
+            if (!out.write(chunk)) await Promise.race([new Promise(r => out.once("drain", r)), failure]);
         }
-        await new Promise((resolve, reject) => out.end(e => e ? reject(e) : resolve()));
+        await Promise.race([new Promise((resolve, reject) => out.end(e => e ? reject(e) : resolve())), failure]);
     } catch (e) {
         out.destroy();
         fs.rmSync(part, { force: true });

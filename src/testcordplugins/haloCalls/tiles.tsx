@@ -27,10 +27,6 @@ const audioActivityStore = {
     removeReactChangeListener(listener: () => void) {
         void audioActivityListeners.delete(listener);
     },
-    subscribe(listener: () => void) {
-        audioActivityListeners.add(listener);
-        return () => void audioActivityListeners.delete(listener);
-    },
     getVersion: () => audioActivityVersion
 };
 function onAudioActivityChange() {
@@ -103,7 +99,8 @@ async function runBannerFetchQueue() {
         } catch {
             const attempts = (bannerFetchAttempts.get(userId) ?? 0) + 1;
             bannerFetchAttempts.set(userId, attempts);
-            if (attempts < 4) {
+            // A fetch still in flight when tiles stopped must not queue a retry after the cleanup.
+            if (attempts < 4 && settings.store.tiles) {
                 const retry = setTimeout(() => {
                     bannerRetryTimers.delete(retry);
                     bannerFetchQueue.push(userId);

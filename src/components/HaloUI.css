@@ -5,7 +5,7 @@ html.hc-rest *::after {
     animation-play-state: paused !important;
 }
 
-/* HaloCord settings look: the voice panel's dark rounded rows and green accent (desktop/base/userscript.js),
+/* HaloCord settings look: the voice panel's dark rounded rows and accent colour (desktop/base/userscript.js),
    used for options HaloCord adds to Discord. Without html.hc-theming the variables fall back to stock Discord. */
 :root {
     --hc-accent: var(--brand-500, #5865f2);
@@ -520,7 +520,7 @@ html.hc-theming .vc-settings-tab .vc-plugin-health-toggle input:checked + .vc-pl
     background: var(--hc-accent-ink);
 }
 
-/* Section titles: green caps with the lit dot. */
+/* Section titles: accent caps with the lit dot. */
 html.hc-theming .vc-settings-tab .vc-h4,
 html.hc-theming .vc-settings-tab .vc-h5,
 html.hc-theming .vc-settings-tab .vc-optimizer-category > .vc-h3,
@@ -548,7 +548,7 @@ html.hc-theming .vc-settings-tab .vc-stats-card:not(.vc-stats-hero) > .vc-h3::be
     vertical-align: 0;
 }
 
-/* Donate and Contribute cards: dark panel with a green wash instead of the pastel art (set inline, hence !important). */
+/* Donate and Contribute cards: dark panel with an accent wash instead of the pastel art (set inline, hence !important). */
 html.hc-theming .vc-settings-tab .vc-special-card-special {
     border: 1px solid rgb(var(--hc-accent-rgb) / 18%);
     border-radius: 14px;
@@ -691,7 +691,7 @@ html.hc-theming .vc-settings-tab .vc-notice-info {
     background: color-mix(in srgb, var(--hc-accent-2) 10%, transparent);
 }
 
-/* Buttons: green for the main action, dark with a green edge for the rest. Themes force button colors, hence !important. */
+/* Buttons: accent for the main action, dark with an accent edge for the rest. Themes force button colors, hence !important. */
 @container style(--hc-vc-scope: 1) {
     html.hc-theming.hc-theming .vc-btn-base.vc-btn-primary,
     html.hc-theming.hc-theming .vc-btn-base.vc-btn-positive {
@@ -799,7 +799,7 @@ html.hc-theming [class*="subnav_"] [role="listitem"] > [role="link"][aria-curren
     color: var(--hc-accent);
 }
 
-/* Settings sidebar: every page is a pill, lit green when open. The masked gradient edge follows Sudocord's settings navigation. */
+/* Settings sidebar: every page is a pill, lit in the accent when open. The masked gradient edge follows Sudocord's settings navigation. */
 html.hc-theming [class*="sectionList_"] [class*="itemContainer_"] > [class*="item_"][role="link"] {
     position: relative;
     border: 1px solid var(--hc-row-border);
@@ -847,7 +847,7 @@ html.hc-theming [class*="sectionList_"] [class*="itemContainer_"] > [class*="ite
     color: var(--hc-accent);
 }
 
-/* Discord's own settings and HaloCord plugin windows: Discord's brand tokens turned green.
+/* Discord's own settings and HaloCord plugin windows: Discord's brand tokens turned to the accent.
    Theme wrappers inside re-declare the tokens, so they get the same values. */
 @container style(--hc-sw-scope: 1) {
     html.hc-theming.hc-theming :is([class*="container_"]:has(> aside[class*="sidebar_"]), [data-mana-component="modal"]),

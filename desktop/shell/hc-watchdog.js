@@ -27,9 +27,12 @@ exports.watch = function watch(w) {
     });
     wc.on("responsive", () => { clearTimeout(hangTimer); hangTimer = null; });
 
+    // A page that keeps crashing backs off like a failed load instead of reloading every second.
+    let crashMs = 1000;
     wc.on("render-process-gone", (_, d) => {
         if (d?.reason === "clean-exit") return;
-        setTimeout(() => reload("page process " + d?.reason), 1000);
+        setTimeout(() => reload("page process " + d?.reason), crashMs);
+        crashMs = Math.min(crashMs * 2, 60000);
     });
 
     wc.on("did-fail-load", (_, code, desc, url, isMain) => {
@@ -39,7 +42,7 @@ exports.watch = function watch(w) {
         setTimeout(() => { if (!w.isDestroyed()) wc.loadURL(url).catch(() => { }); }, retryMs);
         retryMs = Math.min(retryMs * 2, 60000);
     });
-    wc.on("did-finish-load", () => { retryMs = 3000; });
+    wc.on("did-finish-load", () => { retryMs = 3000; crashMs = 1000; });
 
     w.on("show", () => {
         try { wc.invalidate(); } catch { }

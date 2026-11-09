@@ -123,7 +123,7 @@ const settings = definePluginSettings({
     opacity: { type: OptionType.SLIDER, description: "Overlay opacity", markers: [10, 25, 50, 75, 100], default: 100, stickToMarkers: false, onChange: sync },
 });
 
-let feeding = false, timer: ReturnType<typeof setTimeout> | undefined, lastVoice = "", accent = "";
+let feeding = false, timer: ReturnType<typeof setTimeout> | undefined, lastVoice = "", lastActivity = "", accent = "";
 let games: Game[] = [], presenceTimer: ReturnType<typeof setTimeout> | undefined, playing = new Map<string, string>(), watching = false;
 let accentObserver: MutationObserver | undefined, accentProbe: HTMLSpanElement | undefined;
 const gameListeners = new Set<() => void>();
@@ -220,23 +220,28 @@ function friendsPlaying(): Friend[] {
     return out.sort((a, b) => Number(b.same) - Number(a.same) || a.name.localeCompare(b.name)).slice(0, 20);
 }
 
+function sendActivity(list: ReturnType<typeof friendsPlaying>) {
+    const json = JSON.stringify(list);
+    if (json === lastActivity) return;
+    lastActivity = json;
+    bridge()?.activity(list);
+}
+
 // Presence feeds the Activity widget and the Now Playing notices; at most once a second.
 function onPresence() {
     presenceTimer ??= setTimeout(() => {
         presenceTimer = undefined;
         const s = settings.store, list = friendsPlaying(), api = bridge();
-        if (s.widgetActivity) api?.activity(list);
+        // Any friend's presence change lands here, so only send the widget a list that changed.
+        if (s.widgetActivity) sendActivity(list);
         const seen = new Set(games.flatMap(g => [g.id, g.name.toLowerCase()]));
-        const next = new Map(list.map(f => [f.id, f.game]));
-        if (playing.size || next.size) {
-            for (const f of list) {
-                if (playing.get(f.id) === f.game) continue;
-                const other = !f.same && seen.has(f.game.toLowerCase());
-                if (f.same ? s.noticeNowPlaying : other && s.noticeNowPlayingOther)
-                    api?.notify({ kind: "nowplaying", title: f.name, body: `Started playing ${f.game}`, icon: f.avatar });
-            }
+        for (const f of list) {
+            if (playing.get(f.id) === f.game) continue;
+            const other = !f.same && seen.has(f.game.toLowerCase());
+            if (f.same ? s.noticeNowPlaying : other && s.noticeNowPlayingOther)
+                api?.notify({ kind: "nowplaying", title: f.name, body: `Started playing ${f.game}`, icon: f.avatar });
         }
-        playing = next;
+        playing = new Map(list.map(f => [f.id, f.game]));
     }, 1000);
 }
 
@@ -248,7 +253,8 @@ function watchPresence() {
     if (on) {
         playing = new Map(friendsPlaying().map(f => [f.id, f.game]));
         PresenceStore.addChangeListener(onPresence);
-        if (s.widgetActivity) bridge()?.activity(friendsPlaying());
+        lastActivity = "";
+        if (s.widgetActivity) sendActivity(friendsPlaying());
     } else {
         PresenceStore.removeChangeListener(onPresence);
         clearTimeout(presenceTimer);
@@ -309,7 +315,11 @@ function readAccent() {
 function watchAccent(on: boolean) {
     accentObserver?.disconnect();
     accentObserver = undefined;
-    if (!on) return;
+    if (!on) {
+        accentProbe?.remove();
+        accentProbe = undefined;
+        return;
+    }
     accent = readAccent();
     accentObserver = new MutationObserver(() => {
         const a = readAccent();

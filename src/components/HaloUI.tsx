@@ -10,7 +10,7 @@ import { classes } from "@utils/misc";
 import type { ReactNode } from "react";
 
 // HaloCord's own settings rows, in the look of the voice panel in Voice & Video: dark rounded rows,
-// green accents and green switches. Layout ideas for the status pill and header card come from
+// accent-coloured highlights and switches. Layout ideas for the status pill and header card come from
 // Sudocord's settings pages.
 
 export function HaloSection({ title, children }: { title?: string; children: ReactNode; }) {
@@ -26,7 +26,7 @@ export interface HaloRowProps {
     title: ReactNode;
     description?: ReactNode;
     disabled?: boolean;
-    /** Green-tinted row, for the one setting a section is about. */
+    /** Accent-tinted row, for the one setting a section is about. */
     accent?: boolean;
     children?: ReactNode;
 }

@@ -6,10 +6,20 @@
 
 import "./HaloColorPicker.css";
 
-import { useRef } from "@webpack/common";
+import { useEffect, useRef, useState } from "@webpack/common";
+
+// "#abc" or "abc123", with or without the hash. Returns "#aabbcc", or null while the text is not a colour yet.
+const parseHex = (text: string) => {
+    const hex = text.trim().replace(/^#/, "").toLowerCase();
+    if (/^[\da-f]{6}$/.test(hex)) return `#${hex}`;
+    if (/^[\da-f]{3}$/.test(hex)) return `#${[...hex].map(c => c + c).join("")}`;
+    return null;
+};
 
 export function HaloColorPicker({ value, label, onChange, disabled = false }: { value: string; label: string; onChange(value: string): void; disabled?: boolean; }) {
     const popup = useRef<HTMLDivElement>(null);
+    const [hexDraft, setHexDraft] = useState(value.toUpperCase());
+    useEffect(() => setHexDraft(value.toUpperCase()), [value]);
     const channels = [0, 1, 2].map(i => parseInt(value.slice(1 + i * 2, 3 + i * 2), 16));
     const update = (index: number, next: number) => onChange(`#${channels.map((v, i) => (i === index ? next : v).toString(16).padStart(2, "0")).join("")}`);
     return <>
@@ -30,7 +40,25 @@ export function HaloColorPicker({ value, label, onChange, disabled = false }: { 
                     if (e.currentTarget.value !== "") update(index, Math.max(0, Math.min(255, Number(e.currentTarget.value))));
                 }} />
             </label>)}
-            <output>{value.toUpperCase()}</output>
+            <label className="hc-colour-hex">
+                <span>Hex</span>
+                <input
+                    type="text"
+                    spellCheck={false}
+                    maxLength={7}
+                    value={hexDraft}
+                    aria-label={`${label} hex value`}
+                    aria-invalid={!parseHex(hexDraft)}
+                    onChange={e => {
+                        const text = e.currentTarget.value;
+                        setHexDraft(text);
+                        const hex = parseHex(text);
+                        if (hex && hex !== value.toLowerCase()) onChange(hex);
+                    }}
+                    onBlur={() => setHexDraft(value.toUpperCase())}
+                    onKeyDown={e => { if (e.key === "Enter") popup.current?.hidePopover(); }}
+                />
+            </label>
         </div>
     </>;
 }

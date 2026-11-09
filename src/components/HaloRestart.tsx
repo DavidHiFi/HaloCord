@@ -87,7 +87,9 @@ export const isRestartPending = (key: string) => pending.has(key);
 
 /** Records the change and, when a restart is now needed, shows the restart prompt. */
 export function changeNeedsRestart(key: string, from: unknown, to: unknown, label: string) {
-    if (noteRestartChange(key, from, to)) void openRestartPrompt(label);
+    // Prompt once per setting; later changes to an already pending one don't ask again.
+    const wasPending = pending.has(key);
+    if (noteRestartChange(key, from, to) && !wasPending) void openRestartPrompt(label);
 }
 
 function subscribe(listener: () => void) {

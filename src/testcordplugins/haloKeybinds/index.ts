@@ -190,6 +190,8 @@ export default definePlugin({
     },
 
     stop() {
+        watcher = null;
+        held.clear();
         api()?.setFilter([], false);
     }
 });

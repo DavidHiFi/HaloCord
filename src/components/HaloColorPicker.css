@@ -66,9 +66,46 @@
     box-sizing: border-box;
 }
 
-.hc-colour-picker output {
-    color: var(--hc-text);
+/* Spinner arrows covered the last digit of the narrow channel boxes. */
+.hc-colour-channel input[type="number"] {
+    appearance: textfield;
+    text-align: center;
+}
+
+.hc-colour-channel input[type="number"]::-webkit-inner-spin-button,
+.hc-colour-channel input[type="number"]::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
+}
+
+.hc-colour-hex {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
     font-size: 13px;
+}
+
+.hc-colour-hex input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 6px;
+    background: var(--hc-window-bg);
+    color: var(--hc-text);
+    font-family: var(--font-code);
+    text-transform: uppercase;
+}
+
+.hc-colour-hex input:focus {
+    border-color: var(--hc-accent);
+    outline: none;
+}
+
+.hc-colour-hex input[aria-invalid="true"] {
+    border-color: var(--text-feedback-critical, var(--status-danger));
 }
 
 .hc-colour-swatch:focus-visible,

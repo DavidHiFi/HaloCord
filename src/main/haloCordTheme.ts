@@ -57,8 +57,12 @@ export async function writeHaloCordTheme(mochaCss: string) {
     const css = buildHaloCordCss(mochaCss);
     if (!css) return;
     const onDisk = await readFile(THEME, "utf8").catch(() => null);
-    if (onDisk === css) return;
     const recorded = await readRecordedSha();
+    // Up to date: make sure the record says so, or the next update would take the file for a user edit.
+    if (onDisk === css) {
+        if (recorded !== sha(css)) await writeFile(RECORD, JSON.stringify({ sha: sha(css) }));
+        return;
+    }
     if (onDisk !== null && (!recorded || sha(onDisk) !== recorded)) return;
     await writeFile(THEME, css);
     await writeFile(RECORD, JSON.stringify({ sha: sha(css) }));
@@ -67,7 +71,8 @@ export async function writeHaloCordTheme(mochaCss: string) {
 export async function installCustomTheme() {
     try {
         await mkdir(THEMES_DIR, { recursive: true });
-        await writeFile(CUSTOM_THEME, CUSTOM_HEADER, { flag: "wx" }).catch(() => { });
+        // "wx" fails when the file already exists, which is the normal case; anything else is a real error.
+        await writeFile(CUSTOM_THEME, CUSTOM_HEADER, { flag: "wx" }).catch(e => { if (e?.code !== "EEXIST") throw e; });
     } catch (err) {
         console.error("[HaloCord] Could not create the Custom theme file", err);
     }

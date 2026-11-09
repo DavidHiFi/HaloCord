@@ -427,6 +427,7 @@ function updateDomAttributes() {
 // Square children paint over the panel's rounded border, so the first and last visible ones get rounded corners.
 // Reading order and size forces a style and layout pass, so it only runs when the panel's children change.
 let lastEdgeKey = "";
+let running = false;
 function panelKey(section: HTMLElement) {
     let key = "";
     for (const child of section.children) {
@@ -3805,7 +3806,10 @@ export default definePlugin({
     userAreaButton: { icon: PanelLayoutIcon, render: PanelLayoutButton },
 
     async start() {
+        running = true;
         await Promise.all([loadConfigs(), initModuleManager()]);
+        // Turned off while the configs loaded: stop() already ran, so add nothing.
+        if (!running) return;
         addUserAreaButton("panel-collapse-toggle", CollapseToggleButton, 50);
         addUserAreaButton("panel-stream-info", StreamInfoButton, 40);
         apply();
@@ -3816,6 +3820,7 @@ export default definePlugin({
         document.addEventListener("click", onGlobalClick, true);
     },
     stop() {
+        running = false;
         removeUserAreaButton("panel-collapse-toggle");
         removeUserAreaButton("panel-stream-info");
         unsubscribeModules?.();

@@ -25,7 +25,6 @@ function hwndOf(win) {
     return b.length >= 8 ? b.readBigUInt64LE(0) : BigInt(b.readUInt32LE(0));
 }
 
-// on: true applies acrylic with the given tint, false turns it back off.
 function themeTint(settings) {
     if (settings.haloTheming === false || settings.haloThemeVariant === "custom") return 0x661E1E1E;
     return settings.haloThemeVariant === "mochacord" ? 0x662E1E1E : 0x66181C15;
@@ -39,6 +38,7 @@ function savedTint() {
     } catch { return 0x66181C15; }
 }
 
+// on: true applies acrylic with the given tint, false turns it back off.
 function apply(win, on, tint = savedTint()) {
     if (process.platform !== "win32" || !win || win.isDestroyed()) return false;
     const { k, AP, blurBehind, rectRgn, deleteObject, swca } = load();

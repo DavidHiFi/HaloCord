@@ -178,6 +178,8 @@
 }
 
 .hc-mc-hex {
+    /* Wide enough for the "Theme default" placeholder in a monospace font. */
+    width: 132px;
     font-family: var(--font-code);
 }
 

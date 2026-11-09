@@ -40,14 +40,18 @@ async function readRecord(): Promise<ThemeRecord> {
 async function install(css: string, etag?: string) {
     const record = await readRecord();
     const onDisk = await readFile(THEME, "utf8").catch(() => null);
-    if (onDisk !== null && onDisk !== css && record.sha && sha(onDisk) !== record.sha) return;
+    if (onDisk !== null && onDisk !== css && record.sha && sha(onDisk) !== record.sha) {
+        // Edited by the user: keep their file, but remember the tag so the hourly check is a cheap 304.
+        if (etag) await writeFile(RECORD, JSON.stringify({ ...record, etag }));
+        return;
+    }
     if (onDisk !== css) await writeFile(THEME, css);
     await writeFile(RECORD, JSON.stringify({ sha: sha(css), etag: etag ?? record.etag }));
 }
 
 const rebuildHaloCord = async () => writeHaloCordTheme(await readFile(THEME, "utf8"));
 
-async function sync() {
+async function setUpLocal() {
     try {
         const onDisk = await readFile(THEME, "utf8").catch(() => null);
         if (onDisk === null) await install(await readFile(BUNDLED, "utf8"));
@@ -55,10 +59,14 @@ async function sync() {
     } catch (err) {
         console.error("[HaloCord] Could not set up the bundled MochaCord and HaloCord themes", err);
     }
+}
+
+async function checkForUpdate() {
     try {
         const { etag } = await readRecord();
         const res = await net.fetch(SOURCE, { headers: etag ? { "If-None-Match": etag } : {}, cache: "no-store" });
-        if (res.status === 304 || !res.ok) return;
+        if (res.status === 304) return;
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const css = await res.text();
         if (!css.includes("@name MochaCord")) return;
         await install(css, res.headers.get("etag") ?? undefined);
@@ -69,6 +77,6 @@ async function sync() {
 }
 
 export function startMochaCordThemeSync() {
-    sync();
-    setInterval(sync, HOUR);
+    setUpLocal().then(checkForUpdate);
+    setInterval(checkForUpdate, HOUR).unref();
 }

@@ -10,6 +10,7 @@ import { isHexColor, mochaColors } from "@api/HaloAppearance";
 import { type MochaCordSettings, type Settings, type ThemeActivationMode, useSettings } from "@api/Settings";
 import { reapplyThemes, THEME_FILES } from "@api/Themes";
 import { HaloColorPicker } from "@components/HaloColorPicker";
+import { openHaloConfirm } from "@components/HaloRestart";
 import { HaloPill, HaloRow, HaloSwitchRow } from "@components/HaloUI";
 import { UserThemeHeader } from "@main/themes";
 import { classNameFactory } from "@utils/css";
@@ -132,8 +133,11 @@ export function ThemeFileRows({ variant }: { variant: Variant; }) {
 
     useEffect(() => setChosen(variant), [variant]);
     useEffect(() => {
+        // Switching files quickly must not let the earlier file's answer land last.
+        let current = true;
         setFile(undefined);
-        reload();
+        findThemeFile(fileName).then(f => current && setFile(f));
+        return () => { current = false; };
     }, [fileName]);
 
     const activationFile = THEME_FILES[variant];
@@ -169,6 +173,13 @@ export function ThemeFileRows({ variant }: { variant: Variant; }) {
     };
 
     const remove = async () => {
+        const ok = await openHaloConfirm({
+            title: `Delete the ${label} theme file?`,
+            body: "Any edits you made to it are lost. HaloCord puts a fresh copy back on the next start.",
+            confirmText: "Delete",
+            danger: true
+        });
+        if (!ok) return;
         await VencordNative.themes.deleteTheme(fileName).catch(() => { });
         reload();
         showToast({ text: chosen === "mochacord" ? "Theme file deleted. HaloCord downloads a fresh copy on the next start." : "Theme file deleted. HaloCord recreates it on the next start." });

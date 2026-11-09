@@ -81,12 +81,17 @@ function AppIconRow() {
     }, []);
 
     const choose = async (v: IconVariant) => {
+        const previous = value;
         setValue(v);
         setBusy(true);
         setStatus("Changing the icon...");
         try {
-            setStatus(describe(await native()!.set("appIcon", v)));
+            const result = await native()!.set("appIcon", v);
+            // Nothing changed, so the picker goes back to the icon HaloCord still has.
+            if (!result || result.error) setValue(previous);
+            setStatus(describe(result));
         } catch (e) {
+            setValue(previous);
             setStatus(`The icon could not be changed: ${String((e as Error)?.message ?? e)}`);
         } finally {
             setBusy(false);

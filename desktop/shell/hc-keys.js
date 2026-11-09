@@ -23,6 +23,8 @@ function start() {
         { windowsHide: true, stdio: ["pipe", "pipe", "ignore"] });
     let buf = "";
     p.stdout.setEncoding("ascii");
+    // A helper that ran for a while was healthy, so its later exits start a fresh restart budget.
+    const healthy = setTimeout(() => { if (proc === p) restarts = 0; }, 30000);
     p.stdout.on("data", d => {
         buf += d;
         for (let i; (i = buf.indexOf("\n")) >= 0; buf = buf.slice(i + 1)) {
@@ -36,6 +38,7 @@ function start() {
         if (proc === p) proc = null;
     });
     p.on("exit", () => {
+        clearTimeout(healthy);
         if (proc !== p) return;
         proc = null;
         if (!quitting && ++restarts <= 5) setTimeout(() => (codes.length || all) && start(), 2000);

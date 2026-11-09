@@ -295,7 +295,9 @@ const pick = (v, list, d) => list.includes(v) ? v : d;
 ipcMain.handle("halocord:overlay-config", (e, c) => {
     if (owner !== e.sender) {
         owner = e.sender;
-        owner.once("destroyed", () => { owner = null; cfg = null; voice = null; activity = []; teardown(); });
+        const was = owner;
+        // Only the current owner going away clears the state; a replaced owner's page can close later.
+        was.once("destroyed", () => { if (owner !== was) return; owner = null; cfg = null; voice = null; activity = []; teardown(); });
     }
     c = c || {};
     const w = c.widgets || {}, n = c.notices || {};

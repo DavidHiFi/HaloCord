@@ -91,7 +91,6 @@ async function buildThemeIdMap(): Promise<Map<string, string>> {
             const id = (h as any).id ?? themeFileToId(h.fileName);
             m.set(id.toLowerCase(), h.fileName);
             m.set(h.fileName.toLowerCase(), h.fileName);
-            // also parse css @id to be safe
             try {
                 const css = await VencordNative.themes.getThemeData(h.fileName).catch(() => "");
                 if (css) {
@@ -116,7 +115,24 @@ function resolveThemeFile(entry: string, map: Map<string, string>): string {
     return entry;
 }
 
-async function initThemes() {
+// Choosing a theme changes two settings at once, so calls overlap. Run one at a time and, when more came in
+// meanwhile, once more after it, so a slow early run never overwrites a newer one's styles.
+let themesRun: Promise<void> | null = null, themesAgain = false;
+function initThemes() {
+    if (themesRun) {
+        themesAgain = true;
+        return themesRun;
+    }
+    themesRun = (async () => {
+        do {
+            themesAgain = false;
+            await applyThemes();
+        } while (themesAgain);
+    })().finally(() => { themesRun = null; });
+    return themesRun;
+}
+
+async function applyThemes() {
     themesStyle ??= createAndAppendStyle("vencord-themes", userStyleRootNode);
 
     const { enabledThemeLinks, enabledThemes } = Settings;
@@ -154,10 +170,7 @@ async function initThemes() {
             const resolved = resolveThemeFile(entry, idMap);
             for (const [id, targetFile] of idMap.entries()) {
                 if (targetFile.toLowerCase() === resolved.toLowerCase() && !id.endsWith(".css")) {
-                    if (entry !== id) {
-                        changed = true;
-                        return id;
-                    }
+                    if (entry !== id) changed = true;
                     return id;
                 }
             }
@@ -242,7 +255,7 @@ export function keepHaloThemingClass(root: HTMLElement) {
     const sync = () => {
         const on = Settings.haloTheming;
         const variant = on ? Settings.haloThemeVariant : null;
-        // Custom is stock Discord with the user's colours: it must not pick up HaloCord's green hc-theming styling.
+        // Custom is stock Discord with the user's colours: it must not pick up HaloCord's hc-theming styling.
         const styled = on && variant !== "custom";
         if (root.classList.contains("hc-theming") !== styled) root.classList.toggle("hc-theming", styled);
         if (root.getAttribute("data-hc-theme") === variant) return;
