@@ -1728,9 +1728,12 @@ html.hc-theming [class~="contentRegion_jnk11m"] [class~="group_8GP31u"] > [class
 }
 
 /* Call view header ("Public", the channel status line and the chat button): the theme's 46% base let the stream
-   show through. It takes the opaque flyout fill, a rest hairline and the gradient edge on hover. */
+   show through. It takes the opaque flyout fill, a rest hairline and the gradient edge on hover. It sits 6px
+   inside the call frame on three sides with an 8px corner, so the frame's 14px inner corner wraps it evenly. */
 html.hc-theming[data-hc-theme] [class*="callContainer_"] [class~="subtitleContainer_neq5ug"] > [class~="headerBar_neq5ug"][class~="container_ybUK7Z"] {
     box-sizing: border-box;
+    margin: 6px 6px 0 !important;
+    border-radius: 8px !important;
     border: 1px solid var(--hc-panel-border);
     background: var(--hc-flyout-bg) !important;
     box-shadow: none !important;
