@@ -319,6 +319,12 @@ html.hc-theming section[class*="panels_"] :is(.hc-ua-row, .hc-ua-name) > [data-h
     opacity: 1;
 }
 
+/* Mute and Deafen move as a wrapper around their button, and the button draws its own ring,
+   so the wrapper's ring would stack a second one on hover. */
+html.hc-theming section[class*="panels_"] :is(.hc-ua-row, .hc-ua-name) > [data-hc-ua-key]:has(> button)::after {
+    display: none;
+}
+
 /* Keep every moved button at the grid's 48px box: the audio button wrappers ship with 1px extra
    padding and read one size bigger than their neighbours wherever they are docked. */
 html.hc-theming section[class*="panels_"] [data-hc-ua-key] {
