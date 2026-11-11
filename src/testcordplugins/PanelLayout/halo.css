@@ -68,6 +68,46 @@ html.hc-theming [class*="streamInfoContainer_"] {
     line-height: 17px;
 }
 
+/* Its border and hover ring can be switched off in Voice & Video > Stream Info (HaloDesktop). */
+html.hc-theming [class*="streamInfoContainer_"] {
+    position: relative;
+    transition: border-color 0.16s ease-out, background-color 0.16s ease-out;
+}
+
+html.hc-theming[data-hc-si-no-border] [class*="streamInfoContainer_"] {
+    border-color: transparent;
+}
+
+html.hc-theming [class*="streamInfoContainer_"]::after {
+    position: absolute;
+    padding: var(--hc-ring-thin, 1.5px);
+    border-radius: inherit;
+    background: var(--hc-gradient);
+    content: "";
+    inset: -1px;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease-out;
+}
+
+html.hc-theming:not([data-hc-si-no-hover]) [class*="streamInfoContainer_"]:hover {
+    border-color: transparent;
+    background: linear-gradient(135deg, rgb(var(--hc-accent-rgb) / 10%), color-mix(in srgb, var(--hc-grad-b) 8%, transparent)), color-mix(in srgb, var(--hc-window-bg) 88%, transparent);
+}
+
+html.hc-theming:not([data-hc-si-no-hover]) [class*="streamInfoContainer_"]:hover::after {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.hc-theming [class*="streamInfoContainer_"],
+    html.hc-theming [class*="streamInfoContainer_"]::after {
+        transition: none;
+    }
+}
+
 html.hc-theming [class*="streamInfoContainer_"] > div:first-child {
     margin-bottom: 6px;
     padding-bottom: 4px;
@@ -212,4 +252,139 @@ html.hc-theming [data-window-chrome] > [class*="trailing_"] :is([class*="clickab
 /* Server list starts right under the arrow cap. */
 html.hc-theming nav[class*="guilds_"] [class*="scroller_"] {
     padding-top: 4px !important;
+}
+
+/* The voice panel's noise suppression and disconnect buttons get their own resting dock, and the
+   blue to mauve gradient ring on hover like every other docked button. */
+html.hc-theming section[class*="panels_"] .button_9OQtot {
+    position: relative;
+    border: 1px solid var(--hc-panel-border) !important;
+    border-radius: 8px !important;
+    background: color-mix(in srgb, var(--hc-window-bg) 82%, transparent) !important;
+}
+
+html.hc-theming section[class*="panels_"] .button_9OQtot::after {
+    position: absolute;
+    padding: 1.5px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--blue-2, #89b4fa), var(--purple-2, #cba6f7));
+    content: "";
+    inset: 0;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease-out;
+}
+
+html.hc-theming section[class*="panels_"] .button_9OQtot:hover::after {
+    opacity: 1;
+}
+
+/* The green connection ping stays plain at rest and takes the same ring while hovered. */
+html.hc-theming .ping_4LJE6I {
+    position: relative;
+    border-radius: 8px;
+}
+
+/* Buttons parked on the drag rows and beside the username wear the same dock as the user area
+   buttons, so nothing floats there without a border. */
+html.hc-theming section[class*="panels_"] :is(.hc-ua-row, .hc-ua-name) > [data-hc-ua-key] {
+    position: relative;
+    border: 1px solid var(--hc-panel-border) !important;
+    border-radius: 8px !important;
+    background: color-mix(in srgb, var(--hc-window-bg) 82%, transparent) !important;
+    box-sizing: border-box;
+}
+
+html.hc-theming section[class*="panels_"] :is(.hc-ua-row, .hc-ua-name) > [data-hc-ua-key]::after {
+    position: absolute;
+    padding: 1.5px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--blue-2, #89b4fa), var(--purple-2, #cba6f7));
+    content: "";
+    inset: 0;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease-out;
+}
+
+html.hc-theming section[class*="panels_"] :is(.hc-ua-row, .hc-ua-name) > [data-hc-ua-key]:hover::after {
+    opacity: 1;
+}
+
+/* Keep every moved button at the grid's 48px box: the audio button wrappers ship with 1px extra
+   padding and read one size bigger than their neighbours wherever they are docked. */
+html.hc-theming section[class*="panels_"] [data-hc-ua-key] {
+    box-sizing: border-box;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+}
+
+/* Mute and Deafen are wrappers around their own bordered button; a dock on the wrapper as well drew a
+   second, thicker edge beside the username. The button inside keeps the single edge. */
+html.hc-theming section[class*="panels_"] :is(.hc-ua-row, .hc-ua-name) > [data-hc-ua-key]:not(button) {
+    border: 0 !important;
+    background: transparent !important;
+}
+
+/* Discord spreads the call buttons over equal 1fr columns, which left wide gaps once each button kept
+   the 48px box. Fixed 48px columns at the panel's gap line them up with the grid below. */
+html.hc-theming section[class*="panels_"] .actionButtons_9U6LUN:has(> [data-hc-ua-key]) {
+    grid-template-columns: repeat(auto-fill, 48px) !important;
+    justify-content: start !important;
+}
+
+/* Soundboard (and any wrapped call button) is a wrapper whose button is only 32px tall inside the 48px box. */
+html.hc-theming section[class*="panels_"] [data-hc-ua-key]:not(button) > :is(button, [class*="button_"]),
+html.hc-theming section[class*="panels_"] [data-hc-ua-key]:not(button) .button_9U6LUN {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+}
+
+/* One on look for every toggle: per-button colours from the layout editor (Force Mono, Stereo Mode)
+   dropped the dock edge and painted a flat tint, so they read unlike the other lit buttons. */
+html.hc-theming section[class*="panels_"] .button_9OQtot:is([aria-checked="true"], [aria-pressed="true"]):not(#hc-ua) {
+    border: 1px solid var(--hc-panel-border) !important;
+    border-radius: 8px !important;
+    background: color-mix(in srgb, var(--hc-window-bg) 82%, transparent) !important;
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%) !important;
+    color: var(--hc-accent) !important;
+}
+
+html.hc-theming section[class*="panels_"] .button_9OQtot:is([aria-checked="true"], [aria-pressed="true"]):not(#hc-ua):hover {
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 65%), 0 0 10px rgb(var(--hc-accent-rgb) / 35%) !important;
+}
+
+/* The name row keeps a drag marker comment when emptied, which defeats :empty; hide it while locked. */
+html:not([data-hc-ua-unlocked]) section[class*="panels_"] .hc-ua-name:not(:has([data-hc-ua-key])) {
+    display: none !important;
+}
+
+html.hc-theming .ping_4LJE6I::after {
+    position: absolute;
+    padding: 1.5px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--blue-2, #89b4fa), var(--purple-2, #cba6f7));
+    content: "";
+    inset: 0;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease-out;
+}
+
+html.hc-theming .ping_4LJE6I:hover::after {
+    opacity: 1;
 }

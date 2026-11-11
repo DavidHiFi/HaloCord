@@ -34,6 +34,7 @@ import { Constants, ContextMenuApi, Menu, RestAPI, showToast, UserProfileStore, 
 import haloCordContributorBadgeBase64 from "file://../../../../browser/HaloCordContributorBadge.png?base64";
 import haloCordOwnerBadgeBase64 from "file://../../../../browser/HaloCordOwnerBadge.png?base64";
 import testcordArtistIconBase64 from "file://../../../../browser/TestcordArtist.png?base64";
+import testcordContributorIconBase64 from "file://../../../../browser/TestcordContributorBadge.png?base64";
 
 import Plugins, { PluginMeta } from "~plugins";
 
@@ -41,7 +42,8 @@ import { EquicordTranslatorModal, TestCordDonorModal, VencordDonorModal } from "
 
 const CONTRIBUTOR_BADGE = "https://cdn.discordapp.com/emojis/1092089799109775453.png?size=64";
 const EQUICORD_CONTRIBUTOR_BADGE = "https://Equicord.org/assets/favicon.png";
-const TESTCORD_CONTRIBUTOR_BADGE = "https://raw.githubusercontent.com/TestcordDev/TestCord/main/browser/icon.png";
+// Bundled: the GitHub copy this loaded from was taken down when TestCord moved to Codeberg.
+const TESTCORD_CONTRIBUTOR_BADGE = `data:image/png;base64,${testcordContributorIconBase64}`;
 const USERPLUGIN_CONTRIBUTOR_BADGE = "https://Equicord.org/assets/icons/misc/userplugin.png";
 const TESTCORD_ADMIN_BADGE = "https://raw.githubusercontent.com/TestcordDev/tbadges/main/admnew.png";
 const TESTCORD_OWNER_BADGE = "https://raw.githubusercontent.com/TestcordDev/tbadges/refs/heads/main/ownnew.png";

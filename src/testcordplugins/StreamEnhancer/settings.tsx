@@ -199,6 +199,7 @@ export const defaultStreamEnhancerConfig = {
     previewStretchFill: true,
     previewFlipX: false,
     previewFlipY: false,
+
     viewerResizeSliderEnabled: false,
 };
 

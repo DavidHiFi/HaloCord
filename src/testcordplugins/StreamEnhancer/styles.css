@@ -526,6 +526,18 @@ img[src*="/streams/"] {
 .vc-stream-enhancer-share-seg-item:disabled { opacity: .45; cursor: not-allowed; }
 .vc-stream-enhancer-share-seg-item:focus-visible { outline: 2px solid var(--hc-accent); outline-offset: 2px; }
 .vc-stream-enhancer-share-seg-note { font-size: 11px; font-weight: 500; color: var(--hc-text-muted, var(--text-muted)); }
+/* A chip with no note line (Custom) gets a larger label, centred in the row's height. */
+.vc-stream-enhancer-share-seg-item { justify-content: center; }
+.vc-stream-enhancer-share-seg-solo { font-size: 14.5px; }
+/* Chips and audio source rows: a lighter tint and the blue to mauve gradient ring fade in on hover. */
+html.hc-theming .vc-stream-enhancer-halo :is(.vc-stream-enhancer-share-seg-item, .vc-stream-enhancer-share-row) { position: relative; }
+html.hc-theming .vc-stream-enhancer-halo :is(.vc-stream-enhancer-share-seg-item, .vc-stream-enhancer-share-row)::after { content: ""; position: absolute; inset: -1px; padding: var(--hc-ring-thin, 1.5px); border-radius: inherit; pointer-events: none; background: var(--hc-gradient, var(--hc-accent)); mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); opacity: 0; transition: opacity .16s ease-out; }
+html.hc-theming .vc-stream-enhancer-halo :is(.vc-stream-enhancer-share-seg-item, .vc-stream-enhancer-share-row):hover:not(:disabled) { border-color: transparent; background: linear-gradient(rgb(255 255 255 / 4%), rgb(255 255 255 / 4%)), color-mix(in srgb, var(--hc-grad-a, var(--hc-accent)) 8%, var(--hc-row-bg, transparent)); }
+html.hc-theming .vc-stream-enhancer-halo :is(.vc-stream-enhancer-share-seg-item, .vc-stream-enhancer-share-row):hover:not(:disabled)::after { opacity: 1; }
+/* Selected chips and rows carry the blue to mauve gradient ring at rest, not only on hover. */
+html.hc-theming .vc-stream-enhancer-halo :is(.vc-stream-enhancer-share-seg-on, .vc-stream-enhancer-share-row-on) { border-color: transparent; }
+html.hc-theming .vc-stream-enhancer-halo :is(.vc-stream-enhancer-share-seg-on, .vc-stream-enhancer-share-row-on)::after,
+html.hc-theming .vc-stream-enhancer-halo :is(.vc-stream-enhancer-share-seg-on, .vc-stream-enhancer-share-row-on):hover::after { opacity: 1; }
 .vc-stream-enhancer-share-radios { display: flex; flex-direction: column; gap: 4px; }
 .vc-stream-enhancer-halo .vc-stream-enhancer-share-row { padding: 8px 10px; border: 1px solid transparent; border-radius: 9px; color: var(--hc-text, var(--text-default, var(--text-normal))); }
 .vc-stream-enhancer-halo .vc-stream-enhancer-share-row:hover { background: var(--hc-row-bg); border-color: var(--hc-row-border); }

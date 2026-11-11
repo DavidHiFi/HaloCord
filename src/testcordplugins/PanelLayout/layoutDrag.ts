@@ -6,7 +6,7 @@
 
 import { getBtnLabelWithCallButtons, getCanonicalLabel, S } from "./modules/buttonDetection";
 
-export type LayoutSection = "account" | "actions" | "plugins";
+export type LayoutSection = "account" | "actions" | "plugins" | "name";
 export type ButtonLayout = Record<string, { s: LayoutSection; i: number; }>;
 
 export interface LayoutDragApi {
@@ -15,6 +15,8 @@ export interface LayoutDragApi {
     isLocked(): boolean;
     getOrderBase(): number;
     getGap(): number;
+    /** True when buttons can sit in their own row beside the username (the "All Buttons Top" layout). */
+    wantsNameRow(): boolean;
 }
 
 interface Drop {
@@ -27,15 +29,17 @@ interface Hosts {
     account: HTMLElement | null;
     actions: HTMLElement | null;
     plugins: HTMLElement | null;
+    name: HTMLElement | null;
 }
 
 const PANELS = 'section[class*="panels_"]';
 const KEY = "data-hc-ua-key";
 const ROW = "hc-ua-row";
+const NAME = "hc-ua-name";
 const STYLE_ID = "hc-ua-layout-style";
 const HOLD_MS = 250;
 const MOVE_PX = 4;
-const SECTIONS: LayoutSection[] = ["account", "actions", "plugins"];
+const SECTIONS: LayoutSection[] = ["account", "actions", "plugins", "name"];
 
 let api: LayoutDragApi | null = null;
 let observer: MutationObserver | null = null;
@@ -59,11 +63,19 @@ function getHosts(createRow: boolean): Hosts | null {
         plugins.className = `${S.panelButtons.slice(1)} ${ROW}`;
         panels.appendChild(plugins);
     }
+    const container = panels.querySelector<HTMLElement>(S.panelContainer);
+    let name = container?.querySelector<HTMLElement>(`:scope > .${NAME}`) ?? null;
+    if (!name && container && api?.wantsNameRow()) {
+        name = document.createElement("div");
+        name.className = `${S.panelButtons.slice(1)} ${NAME}`;
+        container.appendChild(name);
+    }
     return {
         panels,
-        account: panels.querySelector<HTMLElement>(`${S.panelButtons}:not(.${ROW})`),
+        account: panels.querySelector<HTMLElement>(`${S.panelButtons}:not(.${ROW}):not(.${NAME})`),
         actions: panels.querySelector<HTMLElement>(S.callControls),
         plugins,
+        name,
     };
 }
 
@@ -148,7 +160,7 @@ function buildCss(layout: ButtonLayout, gap: number, base: number) {
     const rules = Object.entries(layout).map(([key, { s, i }]) => {
         const q = JSON.stringify(key);
         const sel = `[${KEY}=${q}]`;
-        return `html body ${PANELS} ${sel}${sel}${sel} { order: ${(s === "account" ? base : 0) + i * 10} !important; }`;
+        return `html body ${PANELS} ${sel}${sel}${sel} { order: ${(s === "account" || s === "name" ? base : 0) + i * 10} !important; }`;
     });
     return `
 ${PANELS} > .${ROW} { display: flex !important; flex-wrap: wrap !important; align-items: center !important; flex-direction: row !important; gap: ${gap}px !important; padding: 6px 8px !important; box-sizing: border-box; flex-shrink: 0; width: auto !important; height: auto !important; }
@@ -156,6 +168,11 @@ ${PANELS} > .${ROW}:empty { display: none !important; }
 html[data-hc-ua-unlocked] ${PANELS} > .${ROW}:empty { display: flex !important; min-height: 40px; outline: 1px dashed rgb(203 166 247 / 60%); outline-offset: -3px; border-radius: 8px; justify-content: center; }
 html[data-hc-ua-unlocked] ${PANELS} > .${ROW}:empty::before { content: "Drop buttons here"; font-size: 12px; color: var(--text-muted, #a6adc8); }
 html[data-hc-ua-unlocked] ${PANELS} [${KEY}] { outline: 1px dashed rgb(137 180 250 / 65%); outline-offset: 1px; border-radius: 8px; cursor: grab; }
+html body ${PANELS} ${S.panelContainer} > .${NAME}.${NAME} { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; justify-content: flex-end !important; gap: ${gap}px !important; order: 4 !important; flex: 0 0 auto !important; width: auto !important; height: auto !important; min-width: 0 !important; margin: 0 !important; padding: 0 0 0 ${gap}px !important; grid-template-columns: none !important; }
+html body ${PANELS} ${S.panelContainer} > .${NAME}.${NAME}::before, html body ${PANELS} ${S.panelContainer} > .${NAME}.${NAME}::after { content: none !important; display: none !important; }
+html body ${PANELS} ${S.panelContainer} > .${NAME}.${NAME}:empty { display: none !important; }
+html[data-hc-ua-unlocked] body ${PANELS} ${S.panelContainer} > .${NAME}.${NAME}:empty { display: flex !important; min-width: 40px; min-height: 32px; outline: 1px dashed rgb(203 166 247 / 60%); outline-offset: -3px; border-radius: 8px; justify-content: center !important; margin-left: ${gap}px !important; padding: 0 !important; }
+html[data-hc-ua-unlocked] body ${PANELS} ${S.panelContainer} > .${NAME}.${NAME}:empty::before { content: "+" !important; display: block !important; font-size: 14px; color: var(--text-muted, #a6adc8); }
 ${PANELS} [data-hc-ua-dragging] { opacity: 0.3; }
 html[data-hc-ua-drag], html[data-hc-ua-drag] * { cursor: grabbing !important; user-select: none !important; }
 .hc-ua-ghost { position: fixed; z-index: 2147483000; pointer-events: none; margin: 0 !important; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 8px; opacity: 0.92; color: var(--interactive-icon-active, #cdd6f4); background: rgb(var(--hc-accent-rgb, 137 180 250) / 22%); outline: 1px solid var(--hc-accent, #89b4fa); box-shadow: 0 6px 18px rgb(0 0 0 / 40%); transform: scale(1.08); }
@@ -168,7 +185,10 @@ export function syncLayout() {
     if (!api) return;
     const layout = api.getLayout();
     const unlocked = !api.isLocked();
-    const wantRow = unlocked || Object.values(layout).some(e => e.s === "plugins");
+    // The spare row sits above the version banner, so it only shows when a saved layout already uses it;
+    // unlocking no longer offers an empty drop zone up there.
+    const wantRow = Object.values(layout).some(e => e.s === "plugins");
+    if (!api.wantsNameRow()) dropNameRow();
     const found = getHosts(wantRow);
     document.documentElement.toggleAttribute("data-hc-ua-unlocked", unlocked);
 
@@ -195,7 +215,7 @@ export function syncLayout() {
     }
 
     const hosts: Record<LayoutSection, HTMLElement | null> = found;
-    for (const host of [found.account, found.actions, found.plugins]) {
+    for (const host of [found.account, found.actions, found.plugins, found.name]) {
         if (!host) continue;
         for (const el of Array.from(host.children)) {
             if (!(el instanceof HTMLElement)) continue;
@@ -204,15 +224,12 @@ export function syncLayout() {
         }
     }
 
-    for (const el of [...keyedChildren(found.account), ...keyedChildren(found.actions), ...keyedChildren(found.plugins)]) {
+    for (const el of [...keyedChildren(found.account), ...keyedChildren(found.actions), ...keyedChildren(found.plugins), ...keyedChildren(found.name)]) {
         const entry = layout[el.getAttribute(KEY) ?? ""];
         const rec = moved.get(el);
-        if (!entry) {
-            if (rec) moveTo(el, rec.home);
-            continue;
-        }
-        const host = hosts[entry.s];
+        const host = entry ? hosts[entry.s] : null;
         if (host) moveTo(el, host);
+        else if (rec) moveTo(el, rec.home);
     }
 
     if (found.plugins) {
@@ -222,6 +239,17 @@ export function syncLayout() {
             found.plugins.style.order = String((accountPanel ? orderOf(accountPanel) : 0) - 1);
         }
     }
+}
+
+// Leaving "All Buttons Top" sends every button in the name row back to where Discord put it, then drops the row.
+function dropNameRow() {
+    const row = document.querySelector<HTMLElement>(`${PANELS} ${S.panelContainer} > .${NAME}`);
+    if (!row) return;
+    for (const el of Array.from(row.children)) {
+        const rec = el instanceof HTMLElement ? moved.get(el) : undefined;
+        if (el instanceof HTMLElement && rec) moveTo(el, rec.home);
+    }
+    row.remove();
 }
 
 function queueSync() {
@@ -455,5 +483,6 @@ export function stopLayoutDrag() {
     lastCss = "";
     document.documentElement.removeAttribute("data-hc-ua-unlocked");
     document.querySelector(`${PANELS} > .${ROW}`)?.remove();
+    document.querySelector(`${PANELS} .${NAME}`)?.remove();
     document.querySelectorAll(`[${KEY}]`).forEach(e => e.removeAttribute(KEY));
 }

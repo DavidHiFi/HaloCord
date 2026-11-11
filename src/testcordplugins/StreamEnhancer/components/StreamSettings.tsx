@@ -10,7 +10,8 @@ import { Switch } from "@components/Switch";
 import { classNameFactory } from "@utils/css";
 import { classes } from "@utils/misc";
 import { ModalRoot, ModalSize, openModal, type RenderModalProps } from "@utils/modal";
-import { Slider, useEffect, useState } from "@webpack/common";
+import { findByPropsLazy } from "@webpack";
+import { Slider, useEffect, useState,useStateFromStores } from "@webpack/common";
 import type { ReactNode } from "react";
 
 import { applyLive, frameRates, heavyNote, isHeavy, loadSaved, type Mode, modeFor, modes, resolutions, type Saved } from "../quality";
@@ -79,7 +80,7 @@ export function Segmented<T extends string | number>({ label, choices, value, on
         <div className={cl("seg")} role="radiogroup" aria-label={label}>
             {choices.map(c => (
                 <button key={String(c.value)} type="button" role="radio" aria-checked={c.value === value} disabled={disabled}
-                    className={cl("seg-item", c.value === value && "seg-on")} onClick={() => onChange(c.value)}>
+                    className={cl("seg-item", c.value === value && "seg-on", !c.note && "seg-solo")} onClick={() => onChange(c.value)}>
                     <span>{c.label}</span>
                     {c.note && <span className={cl("seg-note")}>{c.note}</span>}
                 </button>
@@ -176,7 +177,27 @@ export function QualityPanel({ opts, set, inputs }: { opts: Saved; set: (next: P
                 </Field>
                 <PanRow pan={opts.pan} set={pan => set({ pan })} muted={opts.mute} />
             </HaloSection>
+            <PreviewPanel />
         </>
+    );
+}
+
+// Discord's own "View When Discord Isn't Focused" box writes the setting through updatedUnsyncedSettings,
+// so this switch reads and writes that very same unsynced user setting and the two stay in step.
+const pauseSelfPreviewStore = findByPropsLazy("pauseSelfStreamPreviewWhenUnfocused");
+const pauseSelfPreviewUpdater = findByPropsLazy("updatedUnsyncedSettings");
+
+function PreviewPanel() {
+    const pause = useStateFromStores([pauseSelfPreviewStore], () => pauseSelfPreviewStore.pauseSelfStreamPreviewWhenUnfocused !== false);
+    return (
+        <HaloSection title="Preview">
+            <HaloSwitchRow
+                title="Pause my preview when Discord isn't focused"
+                description="Pauses your own stream preview while the window is in the background to save GPU. The stream itself keeps running."
+                value={pause}
+                onChange={v => pauseSelfPreviewUpdater.updatedUnsyncedSettings({ pauseSelfStreamPreviewWhenUnfocused: v })}
+            />
+        </HaloSection>
     );
 }
 

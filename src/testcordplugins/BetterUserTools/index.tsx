@@ -12,7 +12,7 @@ import { EquicordDevs, TestcordDevs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import definePlugin, { OptionType } from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { ContextMenuApi, MediaEngineStore, Menu, React, showToast, Toasts, UserStore, VoiceStateStore } from "@webpack/common";
+import { ContextMenuApi, FluxDispatcher, MediaEngineStore, Menu, React, showToast, Toasts, UserStore, VoiceStateStore } from "@webpack/common";
 
 type LoopbackActions = {
     setLoopback(tag: string, enabled: boolean): unknown;
@@ -33,6 +33,48 @@ const getHcMicTest = () => (window as Window & { __hcMicTest?: HcMicTest; }).__h
 
 const VoiceActions = findByPropsLazy("setLoopback", "toggleSelfDeaf") as unknown as LoopbackActions | null;
 
+// Discord's engine option setters live together; every menu row that uses one is hidden while the module is missing.
+type EngineActions = {
+    setNoiseCancellation?(enable: boolean, options?: { section?: string }): unknown;
+    setEchoCancellation?(enable: boolean, options?: { section?: string }): unknown;
+    setAutomaticGainControl?(enable: boolean, options?: { section?: string }): unknown;
+};
+const EngineActions = findByPropsLazy("setNoiseCancellation") as unknown as (EngineActions & Record<string, unknown>) | null;
+
+function engineAction(name: keyof EngineActions): ((...args: unknown[]) => unknown) | undefined {
+    try {
+        const fn = (EngineActions as Record<string, unknown> | null)?.[name];
+        return typeof fn === "function" ? fn as (...args: unknown[]) => unknown : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+function readInputDevices(): Array<{ id: string; name: string; }> {
+    try {
+        return Object.values((MediaEngineStore as unknown as { getInputDevices?: () => Record<string, { id: string; name: string; }> }).getInputDevices?.() ?? {});
+    } catch {
+        return [];
+    }
+}
+
+function currentInputDevice(): string | null {
+    try {
+        return (MediaEngineStore as unknown as { getInputDeviceId?: () => string }).getInputDeviceId?.() ?? null;
+    } catch {
+        return null;
+    }
+}
+
+function readInputVolume(): number {
+    try {
+        const v = (MediaEngineStore as unknown as { getInputVolume?: () => number }).getInputVolume?.();
+        return typeof v === "number" ? v : 100;
+    } catch {
+        return 100;
+    }
+}
+
 const ShowCurrentGame = getUserSettingLazy<boolean>("status", "showCurrentGame")!;
 const StatusSetting = getUserSettingLazy<string>("status", "status")!;
 
@@ -46,6 +88,11 @@ const settings = definePluginSettings({
         description: "Show Off The Radar button",
         type: OptionType.BOOLEAN,
         default: true
+    },
+    deafenWhileTest: {
+        description: "Deafen yourself while a mic test runs, and restore afterwards",
+        type: OptionType.BOOLEAN,
+        default: false
     }
 });
 
@@ -95,6 +142,32 @@ function isInVoiceChannel() {
     return Boolean(state?.channelId);
 }
 
+// The "deafen while testing" choice: take deafen when a test starts, hand it back when it ends.
+async function beginTestDeafen() {
+    const actions = getVoiceActions();
+    if (!actions || !settings.store.deafenWhileTest) return;
+    if (isInVoiceChannel() && !MediaEngineStore.isSelfDeaf()) {
+        try {
+            await actions.toggleSelfDeaf();
+            selfDeafenedByPlugin = true;
+        } catch (err) {
+            log.error("Failed to deafen for mic test", err);
+        }
+    }
+}
+
+async function endTestDeafen() {
+    const actions = getVoiceActions();
+    if (selfDeafenedByPlugin && actions && MediaEngineStore.isSelfDeaf()) {
+        try {
+            await actions.toggleSelfDeaf();
+        } catch (err) {
+            log.error("Failed to restore deafen after mic test", err);
+        }
+    }
+    selfDeafenedByPlugin = false;
+}
+
 async function enableLoopback() {
     const actions = getVoiceActions();
     if (!actions) return false;
@@ -102,13 +175,7 @@ async function enableLoopback() {
     try {
         await actions.setLoopback("mic_test", true);
         loopbackActive = true;
-
-        if (isInVoiceChannel() && !MediaEngineStore.isSelfDeaf()) {
-            await actions.toggleSelfDeaf();
-            selfDeafenedByPlugin = true;
-        } else {
-            selfDeafenedByPlugin = false;
-        }
+        await beginTestDeafen();
 
         notifyMic("Mic test loopback enabled", Toasts.Type.SUCCESS);
         return true;
@@ -130,11 +197,7 @@ async function disableLoopback(silent = false) {
     try {
         await actions.setLoopback("mic_test", false);
         loopbackActive = false;
-
-        if (selfDeafenedByPlugin && MediaEngineStore.isSelfDeaf()) {
-            await actions.toggleSelfDeaf();
-        }
-        selfDeafenedByPlugin = false;
+        await endTestDeafen();
 
         if (!silent) notifyMic("Mic test loopback disabled", Toasts.Type.SUCCESS);
     } catch (err) {
@@ -150,8 +213,10 @@ async function startHcTest(hc: HcMicTest, id: string) {
         notifyMic(`Choose a device for ${source.label} in Voice & Video first`, Toasts.Type.FAILURE);
         return;
     }
-    if (await hc.start(id)) notifyMic(`Mic test: ${source.label}`, Toasts.Type.SUCCESS);
-    else if (hc.active() === null) notifyMic(`Mic test failed for ${source.label} (see console)`, Toasts.Type.FAILURE);
+    if (await hc.start(id)) {
+        await beginTestDeafen();
+        notifyMic(`Mic test: ${source.label}`, Toasts.Type.SUCCESS);
+    } else if (hc.active() === null) notifyMic(`Mic test failed for ${source.label} (see console)`, Toasts.Type.FAILURE);
 }
 
 function MicTestMenu({ hc, onChange }: { hc: HcMicTest; onChange(): void; }) {
@@ -159,6 +224,38 @@ function MicTestMenu({ hc, onChange }: { hc: HcMicTest; onChange(): void; }) {
     const update = () => { rerender(); onChange(); };
     const active = hc.active();
     const current = active ?? hc.selected();
+
+    // Voice & Video page inputs, mirrored live so the menu shows what the engine has right now.
+    const [devices, setDevices] = React.useState(readInputDevices);
+    const [volume, setVolume] = React.useState(readInputVolume);
+    React.useEffect(() => {
+        const refresh = () => { setDevices(readInputDevices()); setVolume(readInputVolume()); };
+        FluxDispatcher.subscribe("AUDIO_SET_INPUT_DEVICE", refresh);
+        FluxDispatcher.subscribe("AUDIO_SET_INPUT_VOLUME", refresh);
+        return () => {
+            FluxDispatcher.unsubscribe("AUDIO_SET_INPUT_DEVICE", refresh);
+            FluxDispatcher.unsubscribe("AUDIO_SET_INPUT_VOLUME", refresh);
+        };
+    }, []);
+
+    const testMainDevice = (id: string) => {
+        FluxDispatcher.dispatch({ type: "AUDIO_SET_INPUT_DEVICE", id });
+        startHcTest(hc, "main").then(update);
+    };
+
+    const engineToggle = (name: keyof EngineActions, label: string, get: () => boolean) => {
+        const set = engineAction(name);
+        if (!set) return null;
+        return (
+            <Menu.MenuCheckboxItem
+                key={name}
+                id={`better-user-tools-mic-test-${name}`}
+                label={label}
+                checked={get()}
+                action={() => { try { set(!get(), { section: "Mic Test" }); } catch (err) { log.error(`Failed to toggle ${label}`, err); } update(); }}
+            />
+        );
+    };
 
     return (
         <Menu.Menu navId="better-user-tools-mic-test" onClose={ContextMenuApi.closeContextMenu} aria-label="Mic Test Loopback">
@@ -174,12 +271,55 @@ function MicTestMenu({ hc, onChange }: { hc: HcMicTest; onChange(): void; }) {
                 />
             ))}
             <Menu.MenuSeparator />
+            {devices.length > 0 && (
+                <Menu.MenuItem id="better-user-tools-mic-test-devices" label="Test input device">
+                    {devices.map(d => (
+                        <Menu.MenuRadioItem
+                            key={d.id}
+                            id={`better-user-tools-mic-test-dev-${d.id}`}
+                            group="better-user-tools-mic-test-dev"
+                            label={d.name}
+                            checked={d.id === currentInputDevice()}
+                            action={() => testMainDevice(d.id)}
+                        />
+                    ))}
+                </Menu.MenuItem>
+            )}
+            <Menu.MenuCheckboxItem
+                id="better-user-tools-mic-test-deafen"
+                label="Deafen while testing"
+                checked={settings.store.deafenWhileTest}
+                action={() => { settings.store.deafenWhileTest = !settings.store.deafenWhileTest; update(); }}
+            />
+            <Menu.MenuGroup label="INPUT VOLUME">
+                <Menu.MenuControlItem
+                    id="better-user-tools-mic-test-volume"
+                    control={(props, ref) => (
+                        <Menu.MenuSliderControl
+                            ref={ref}
+                            {...props}
+                            minValue={0}
+                            maxValue={100}
+                            value={volume}
+                            onChange={v => {
+                                setVolume(v);
+                                FluxDispatcher.dispatch({ type: "AUDIO_SET_INPUT_VOLUME", volume: v });
+                            }}
+                        />
+                    )}
+                />
+            </Menu.MenuGroup>
+            {engineToggle("setNoiseCancellation", "Noise suppression", () => (MediaEngineStore as unknown as { getNoiseSuppression?: () => boolean }).getNoiseSuppression?.() ?? true)}
+            {engineToggle("setEchoCancellation", "Echo cancellation", () => (MediaEngineStore as unknown as { getEchoCancellation?: () => boolean }).getEchoCancellation?.() ?? true)}
+            {engineToggle("setAutomaticGainControl", "Automatic gain control", () => (MediaEngineStore as unknown as { getAutomaticGainControl?: () => boolean }).getAutomaticGainControl?.() ?? true)}
+            <Menu.MenuSeparator />
             <Menu.MenuItem
                 id="better-user-tools-mic-test-stop"
                 label="Stop Mic Test"
                 disabled={active === null}
                 action={() => {
                     hc.stop();
+                    endTestDeafen();
                     notifyMic("Mic test stopped", Toasts.Type.SUCCESS);
                     update();
                 }}
@@ -269,6 +409,7 @@ function MicLoopbackButton({ iconForeground, hideTooltips, nameplate }: UserArea
         if (hc) {
             if (hc.active() !== null) {
                 hc.stop();
+                endTestDeafen();
                 notifyMic("Mic test stopped", Toasts.Type.SUCCESS);
             } else {
                 await startHcTest(hc, hc.selected());

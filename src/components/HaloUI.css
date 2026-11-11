@@ -44,6 +44,7 @@ html.hc-theming {
     --hc-chip-bg: color-mix(in srgb, var(--hc-flyout-bg) 88%, transparent);
     --hc-live: var(--status-danger, #f23f43);
     --hc-ring-w: 2px;
+
     /* Thin rings drawn with a mask must cover whole screen pixels, or one side renders a pixel
        thinner than the other. These are 1.5 px and 2.5 px rounded to the display's pixel grid. */
     --hc-ring-thin: 1.5px;
@@ -1273,6 +1274,7 @@ html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"]::after,
 html.hc-theming #vc-indicators-indicator-items::after {
     position: absolute;
     z-index: 1;
+
     /* Flush on the 12 px tile, overlapping its edge slightly, so no background shows between the ring and the icon. */
     padding: var(--hc-ring-rail);
     border-radius: 14px;
@@ -1296,6 +1298,16 @@ html.hc-theming nav[class*="guilds_"] [class*="folderButton_"] > [class~="wrappe
     padding: 3px;
     border-radius: 16.8px;
     inset: -2.4px;
+}
+
+/* Voice, stream and count badges on a rail icon sit above its hover ring instead of under it. */
+html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"] > :is([class*="upperBadge_"], [class*="lowerBadge_"]) {
+    z-index: 2;
+}
+
+/* DM and group DM pictures stay round, so their ring is round too and lies flush on the picture. */
+html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"]:has(img[src*="/avatars/"], img[src*="/channel-icons/"])::after {
+    border-radius: 50%;
 }
 
 /* Discord darkens a smaller square inside the folder on hover, which read as a second border inside the ring. */
@@ -1356,8 +1368,8 @@ html.hc-theming [class*="tooltipPrimary_"] [class*="tooltipPointer_"] {
    border instead of the theme's see-through toolbar colour; the buttons take the accent on hover. */
 html.hc-theming :is([class~="popover_yDAPhH"], [class~="popover_oWBF11"]) {
     border: 1px solid rgb(var(--hc-accent-rgb) / 28%) !important;
-    background: var(--hc-chip-bg) !important;
-    backdrop-filter: blur(24px) saturate(140%) var(--hc-backdrop-solid) !important;
+    background: var(--hc-status-glass) !important;
+    backdrop-filter: var(--hc-status-blur) !important;
     box-shadow: 0 4px 14px rgb(0 0 0 / 35%) !important;
 }
 
@@ -1375,13 +1387,36 @@ html.hc-theming [class~="popover_yDAPhH"] [class~="button_yDAPhH"]:hover [class~
     fill: var(--hc-accent);
 }
 
-/* The custom status bubble sits on the same glass, so the bubble and its toolbar read as one piece. */
+/* The custom status bubble sits on the same glass, so the bubble and its toolbar read as one piece. The frost is
+   dense enough that text behind stays unreadable even where the profile card leaves the blur nothing to sample. */
+html.hc-theming {
+    --hc-status-glass: linear-gradient(180deg, rgb(255 255 255 / 4%), transparent 50%), color-mix(in srgb, var(--hc-flyout-bg) 93%, transparent);
+    --hc-status-blur: blur(28px) saturate(150%) var(--hc-backdrop-solid);
+}
+
 html.hc-theming [class~="container_rmCN9_"] {
-    --custom-status-bubble-background-color: var(--hc-chip-bg);
+    --custom-status-bubble-background-color: color-mix(in srgb, var(--hc-flyout-bg) 93%, transparent);
 }
 
 html.hc-theming [class~="outer_rmCN9_"] {
     border-color: var(--hc-panel-border) !important;
+    background: var(--hc-status-glass);
+    backdrop-filter: var(--hc-status-blur);
+}
+
+html.hc-theming [class~="editable_rmCN9_"]:hover > [class~="outer_rmCN9_"] {
+    background: linear-gradient(rgb(255 255 255 / 4%), rgb(255 255 255 / 4%)), var(--hc-status-glass);
+}
+
+/* The inner span repeats the bubble colour; on glass that would stack a second tint, so only the outer layer paints. */
+html.hc-theming [class~="outer_rmCN9_"] > [class~="inner_rmCN9_"] {
+    background: transparent;
+}
+
+/* The two thought-bubble dots sit outside the blurred box, so they take the solid fill instead of a see-through copy. */
+html.hc-theming [class~="outer_rmCN9_"]::before,
+html.hc-theming [class~="outer_rmCN9_"]::after {
+    background: var(--hc-flyout-bg);
 }
 
 /* Guild header: as tall as the rail's first row, with an inset hover pill that never touches the clipped edge. */
@@ -1481,12 +1516,14 @@ html.hc-theming :is([class~="wrapper_TNyK-N"] [class~="link_TNyK-N"], [class~="v
     border-radius: 8px;
     transition: background-color 0.16s ease-out;
 }
+
 html.hc-theming :is([class~="wrapper_TNyK-N"] [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"] [class~="content_YUoOxm"], [class~="interactive_zln_tS"])::after {
     content: ""; position: absolute; inset: 0; padding: var(--hc-ring-thin); border-radius: inherit; pointer-events: none;
     background: var(--hc-gradient) border-box;
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
     opacity: 0; transition: opacity 0.16s ease-out;
 }
+
 html.hc-theming :is([class~="wrapper_TNyK-N"]:hover [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"]:hover [class~="content_YUoOxm"], [class~="interactive_zln_tS"]:hover) {
     background: var(--hc-flyout-bg) !important;
 }
@@ -1494,7 +1531,7 @@ html.hc-theming :is([class~="modeSelected_TNyK-N"] [class~="link_TNyK-N"], [clas
 html.hc-theming :is([class~="wrapper_TNyK-N"]:hover [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"]:hover [class~="content_YUoOxm"], [class~="interactive_zln_tS"]:hover)::after { opacity: 1; }
 
 /* Collapsed voice channel: round avatars with their meters beside them, no overlap, the shared row hover */
-html.hc-theming [class~="listCollapse_YUoOxm"] { gap: 4px; align-items: center; flex-wrap: wrap; row-gap: 4px; }
+html.hc-theming [class~="listCollapse_YUoOxm"] { gap: 4px; align-items: center; flex-wrap: wrap; }
 html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] { margin: 0 !important; }
 html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [class~="content_YUoOxm"] { display: flex; align-items: center; gap: 5px; padding: 3px 7px 3px 3px; }
 html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [class~="content_YUoOxm"]:not(:has([data-vu-meter])) { padding-right: 3px; }
@@ -1508,6 +1545,7 @@ html.hc-theming [class~="unreadMentionsBar_5dqHTG"] {
     backdrop-filter: blur(24px) saturate(140%) var(--hc-backdrop-solid); color: var(--hc-text);
     transition: border-color 0.16s ease-out, color 0.16s ease-out;
 }
+
 html.hc-theming [class~="unreadMentionsBar_5dqHTG"]:hover {
     border-color: transparent !important; color: var(--hc-accent);
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
@@ -1535,6 +1573,7 @@ html.hc-theming [class~="headerBar_neq5ug"] [class~="toolbar_neq5ug"] button[cla
     justify-content: center;
     padding: 0;
 }
+
 html.hc-theming [class~="headerBar_neq5ug"] [class~="toolbar_neq5ug"] button[class*="lookBlank_"] :is([class*="controlIcon_"], [class*="controlIcon_"] > svg) {
     width: 16px;
     height: 16px;
@@ -1615,6 +1654,93 @@ html.hc-theming [class~="container_dvN-MP"] {
     backdrop-filter: blur(28px) saturate(140%) !important;
 }
 
+/* Server and channel settings: the theme painted the sidebar as a square solid slab running the full height of the
+   window. It becomes a rounded dock floating inside the page, with the rest hairline and the gradient edge on hover. */
+html.hc-theming [class~="sidebarRegion_jnk11m"] {
+    box-sizing: border-box;
+    padding: 12px 0 12px 12px;
+    background: none !important;
+}
+
+html.hc-theming[data-hc-theme] [class~="sidebarRegionScroller_jnk11m"] {
+    box-sizing: border-box;
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 12px;
+    background: var(--hc-flyout-bg) !important;
+    transition: border-color 0.16s ease-out;
+}
+
+/* One gradient edge recipe for every settings dock: the opaque fill on the padding box over the gradient on the
+   border box, so a scrolling sidebar keeps its edge in place. */
+html.hc-theming[data-hc-theme] :is(
+    [class~="sidebarRegionScroller_jnk11m"],
+    [class~="contentRegion_jnk11m"] [class~="cardPrimary_qCN-Ri"],
+    [class~="contentRegion_jnk11m"] [class~="group_8GP31u"]
+):hover {
+    border-color: transparent !important;
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
+}
+
+/* Settings tabs and the permission role list: rounded rows, the dark hover, and the accent on look for the open one. */
+html.hc-theming[data-hc-theme] :is([class~="sidebarRegionScroller_jnk11m"] [class~="side_6zZYhF"], [class~="contentRegion_jnk11m"]) [class~="item_6zZYhF"]:not(#hc-settings) {
+    border-radius: 8px;
+    background-color: transparent !important;
+    transition: background-color 0.16s ease-out, color 0.16s ease-out, box-shadow 0.16s ease-out;
+}
+
+html.hc-theming[data-hc-theme] :is([class~="sidebarRegionScroller_jnk11m"] [class~="side_6zZYhF"], [class~="contentRegion_jnk11m"]) [class~="item_6zZYhF"]:not(#hc-settings):hover {
+    background-color: var(--hc-window-bg) !important;
+    box-shadow: inset 0 0 0 1px var(--hc-row-border);
+}
+
+html.hc-theming[data-hc-theme] :is([class~="sidebarRegionScroller_jnk11m"] [class~="side_6zZYhF"], [class~="contentRegion_jnk11m"]) [class~="item_6zZYhF"][class~="selected_6zZYhF"]:not(#hc-settings) {
+    background-color: rgb(var(--hc-accent-rgb) / 16%) !important;
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
+    color: var(--hc-accent) !important;
+}
+
+/* The "Permissions synced with category" banner: the same dock as the sidebar instead of a square-edged slab. */
+html.hc-theming[data-hc-theme] [class~="contentRegion_jnk11m"] [class~="cardPrimary_qCN-Ri"] {
+    border: 1px solid var(--hc-panel-border) !important;
+    border-radius: 12px;
+    background: var(--hc-flyout-bg) !important;
+}
+
+/* The role list column was a second see-through slab the height of the whole page; it reads as part of the page
+   now, split from the permissions by one hairline. */
+html.hc-theming [class~="contentRegion_jnk11m"] [class~="scroller_EDKX0U"] {
+    border-inline-end: 1px solid var(--hc-row-border);
+    background: none !important;
+}
+
+/* Deny, neutral and allow switches: the unset parts drop their grey fill; the set part keeps its red or green. */
+html.hc-theming[data-hc-theme] [class~="contentRegion_jnk11m"] [class~="group_8GP31u"] {
+    border: 1px solid var(--hc-panel-border) !important;
+    background: var(--hc-flyout-bg) !important;
+}
+
+html.hc-theming [class~="contentRegion_jnk11m"] [class~="group_8GP31u"] > [class~="item_8GP31u"][aria-checked="false"] {
+    background-color: transparent !important;
+}
+
+html.hc-theming [class~="contentRegion_jnk11m"] [class~="group_8GP31u"] > [class~="item_8GP31u"][aria-checked="false"]:hover {
+    background-color: rgb(var(--hc-accent-rgb) / 14%) !important;
+}
+
+/* Call view header ("Public", the channel status line and the chat button): the theme's 46% base let the stream
+   show through. It takes the opaque flyout fill, a rest hairline and the gradient edge on hover. */
+html.hc-theming[data-hc-theme] [class*="callContainer_"] [class~="subtitleContainer_neq5ug"] > [class~="headerBar_neq5ug"][class~="container_ybUK7Z"] {
+    box-sizing: border-box;
+    border: 1px solid var(--hc-panel-border);
+    background: var(--hc-flyout-bg) !important;
+    box-shadow: none !important;
+}
+
+html.hc-theming[data-hc-theme] [class*="callContainer_"] [class~="subtitleContainer_neq5ug"] > [class~="headerBar_neq5ug"][class~="container_ybUK7Z"]:hover {
+    border-color: transparent;
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
+}
+
 /* Back and forward: one dock inside the rounded cap, one hover plate for both arrows. */
 html.hc-theming [class~="backForwardButtons_nS9Yqn"] {
     min-width: 0;
@@ -1648,6 +1774,7 @@ html.hc-theming [data-call-tile] :is([class~="overlayTitle_7NOr2f"], [class~="ex
 }
 
 /* Call bar side buttons (participants on the left, pop out and full screen on the right): a plate on hover, accent when on. */
+
 /* The plate gets 6px of room around the 24px icon; the negative margin keeps the icon where Discord put it. */
 html.hc-theming [class~="callContainer_hbKzX7"] :is([class~="leftTrayIcon_hbKzX7"], [class~="rightTrayIcon_hbKzX7"]) {
     box-sizing: content-box;
@@ -1780,33 +1907,57 @@ html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6V
 
 /* With the buttons on top the name row has the whole width, so the hover tint gets room around the avatar. */
 html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"] {
-    margin-top: 12px;
+    margin-top: 16px;
     padding: 4px 7px;
 }
 
-/* The flex gap and stretched rows left about 23 px between the button grid and the name row. */
+/* The flex gap and stretched rows left about 23 px between the button grid and the name row. The
+   panel's fixed height cannot hold extra dragged-in button rows, so let it hug its content; every
+   separator offset below is then measured from the account row, which is always the last one. */
 html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="container_g6VwXp"] {
     /* Panel Layout's grid CSS sets gap with !important. */
     row-gap: 0 !important;
     align-content: flex-start;
+    height: auto !important; /* Discord pins the user area to 249px; dragged-in rows overflow it */
+    position: relative;
 }
 
-/* Only with Panel Layout's "All Buttons Top": beside the buttons the wrapper is just the avatar, and the line
-   would be a short stub over it. */
+/* Only with Panel Layout's "All Buttons Top": the wrapper's own strip shrink-wraps with it, so draw
+   the separator on the panel instead: full width, centred in the 16px gap above the account row. */
 html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]::before {
+    content: none !important;
+}
+
+html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="container_g6VwXp"]::after {
     content: "";
     position: absolute;
-    top: -7px;
-    right: -9px;
-    left: -9px;
+    inset: auto 0 70px; /* the account row: 55px tall + 8px panel padding + 7px above it */
     height: 1px;
     background: var(--hc-dock-line);
     pointer-events: none;
 }
 
-/* Every user area widget shows hover as a tint only; the panel's own border is the one dock. */
+/* The name row hovers with a soft tint and the theme's gradient ring, faded in. */
 html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]:hover {
     background: rgb(var(--hc-accent-rgb) / 8%) !important;
+}
+
+html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]::after {
+    position: absolute;
+    padding: 1.5px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--blue-2, #89b4fa), var(--purple-2, #cba6f7));
+    content: "";
+    inset: 0;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease-out;
+}
+
+html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]:hover::after {
+    opacity: 1;
 }
 
 html.hc-theming [class~="panels_pog62O"] [class~="buttons_g6VwXp"],
@@ -1851,8 +2002,41 @@ html.hc-theming[data-hc-theme] [class~="peopleListItem_y75PxA"] [class*="actionB
     color: var(--hc-text);
 }
 
+/* Friends page search box and blocked accounts notice: a quiet ring at rest, the gradient ring on hover or focus. */
+html.hc-theming[data-hc-theme] [class~="peopleColumn_zrUwGA"] :is([class~="container_0PLWhS"], [class~="blockedIgnoredSettingsNotice_YgJORb"]) {
+    border: 1px solid var(--hc-ring-rest) !important;
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, linear-gradient(var(--hc-ring-rest), var(--hc-ring-rest)) border-box !important;
+    transition: border-color 0.16s ease-out;
+}
+
+html.hc-theming[data-hc-theme] [class~="peopleColumn_zrUwGA"] :is([class~="container_0PLWhS"]:is(:hover, :focus-within), [class~="blockedIgnoredSettingsNotice_YgJORb"]:hover) {
+    border-color: transparent !important;
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
+}
+
+/* "Go to settings" sits in a small pill dock, with the gradient ring on hover. */
+html.hc-theming[data-hc-theme] [class~="blockedIgnoredSettingsNotice_YgJORb"] a {
+    display: inline-block;
+    margin-inline-start: 4px;
+    padding: 1px 9px;
+    border: 1px solid var(--hc-ring-rest);
+    border-radius: 999px;
+    background: linear-gradient(rgb(var(--hc-accent-rgb) / 10%), rgb(var(--hc-accent-rgb) / 10%)) padding-box, linear-gradient(var(--hc-ring-rest), var(--hc-ring-rest)) border-box;
+    color: var(--hc-accent);
+    text-decoration: none !important;
+    transition: border-color 0.16s ease-out, background-color 0.16s ease-out, color 0.16s ease-out;
+}
+
+html.hc-theming[data-hc-theme] [class~="blockedIgnoredSettingsNotice_YgJORb"] a:hover {
+    border-color: transparent;
+    background: linear-gradient(rgb(var(--hc-accent-rgb) / 18%), rgb(var(--hc-accent-rgb) / 18%)) padding-box, linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box;
+    color: var(--hc-text);
+}
+
+/* The invite list is a listbox, and MochaCord frosts every listbox with an id-weight rule, so a second lighter
+   panel showed inside the dialog. The :not(#id) outweighs it. */
 @container style(--hc-copy-dialog: 1) {
-    html.hc-theming.hc-theming :is([class*="bodyList_"], [class*="bodyList_"] > [class*="content_"]) {
+    html.hc-theming.hc-theming :is([class*="bodyList_"], [class*="bodyList_"] > [class*="content_"]):not(#hc-copy-list) {
         background: transparent !important;
     }
 }
@@ -1884,6 +2068,7 @@ html.hc-theming[data-hc-theme] section[class*="panels_"] {
 [data-hc-folded] .hc-fold svg { transform: rotate(-90deg); }
 [data-hc-folded] > :not(:first-child) { display: none !important; }
 [data-hc-folded] > :first-child { padding-bottom: 0 !important; }
+
 @media (prefers-reduced-motion: reduce) { .hc-fold svg { transition: none; } }
 
 /* Reply previews: keep "(edited)" clear of the ellipsis that clamps the text before it. */

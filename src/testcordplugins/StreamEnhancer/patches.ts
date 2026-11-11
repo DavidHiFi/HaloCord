@@ -539,15 +539,6 @@ export const streamEnhancerPatches: Array<Omit<Patch, "plugin">> = [
             replace: "$&style:$self.cameraPreviewStyle(),"
         }
     },
-    // Discord pauses your own stream preview whenever the window loses focus and shows "paused this preview
-    // to save your resources", which reads as the share stalling. Keep the preview running.
-    {
-        find: "get pauseSelfStreamPreviewWhenUnfocused(){",
-        replacement: {
-            match: /(get pauseSelfStreamPreviewWhenUnfocused\(\)\{)return [^}]+/,
-            replace: "$1return!1"
-        }
-    },
     {
         find: 'location:"VideoStream",videoSpinnerContext',
         replacement: {

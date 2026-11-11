@@ -14,7 +14,8 @@ import { RejoinSettings, TileSettings } from "@testcordplugins/haloCalls/CallSet
 import { VuMeterSettings } from "@testcordplugins/VoiceVUMeters";
 import { TestcordDevs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
-import { i18n, Select, useEffect, useRef, useState } from "@webpack/common";
+import { findStoreLazy } from "@webpack";
+import { FluxDispatcher, i18n, Select, useEffect, useRef, useState, useStateFromStores } from "@webpack/common";
 import type { ComponentType } from "react";
 
 // Shell side: desktop/shell/hc-desktop.js, exposed by the preload as window.HaloCordDesktop.
@@ -167,10 +168,61 @@ function CallSettings() {
     );
 }
 
+// The stream info box's borders are switched by attributes on <html>, read by PanelLayout's halo.css.
+function applyStreamInfoLook() {
+    const root = document.documentElement;
+    root.toggleAttribute("data-hc-si-no-border", !settings.store.streamInfoBorder);
+    root.toggleAttribute("data-hc-si-no-hover", !settings.store.streamInfoHoverBorder);
+}
+
 const settings = definePluginSettings({
     // Titles of the Voice & Video categories folded shut with their chevron
-    collapsedVoiceCategories: { type: OptionType.STRING, default: "[]", description: "", hidden: true }
+    collapsedVoiceCategories: { type: OptionType.STRING, default: "[]", description: "", hidden: true },
+    streamInfoAlways: { type: OptionType.BOOLEAN, default: false, description: "Show the stream info box on every stream, not only the one under the pointer", hidden: true },
+    streamInfoBorder: { type: OptionType.BOOLEAN, default: true, description: "Resting border around the stream info box", hidden: true, onChange: applyStreamInfoLook },
+    streamInfoHoverBorder: { type: OptionType.BOOLEAN, default: true, description: "Gradient border on the stream info box on hover", hidden: true, onChange: applyStreamInfoLook }
 });
+
+const DeveloperOptionsStore = findStoreLazy("DeveloperOptionsStore") as { isStreamInfoOverlayEnabled?: boolean; };
+
+function StreamInfoCategory() {
+    const s = settings.use(["streamInfoAlways", "streamInfoBorder", "streamInfoHoverBorder"]);
+    const on = useStateFromStores([DeveloperOptionsStore as never], () => DeveloperOptionsStore.isStreamInfoOverlayEnabled === true);
+    return (
+        <>
+            <CategoryFolds />
+            <HaloSection>
+                <HaloSwitchRow
+                    title="Stream info overlay"
+                    description="Resolution, frame rate, bitrate and codec in a box over streams and cameras. The same switch as Discord's own under Diagnostics."
+                    value={on}
+                    onChange={v => FluxDispatcher.dispatch({ type: "DEVELOPER_OPTIONS_UPDATE_SETTINGS", settings: { isStreamInfoOverlayEnabled: v } })}
+                />
+                <HaloSwitchRow
+                    title="Always show overlay"
+                    description="Keep the box on every stream. Off, it only shows on the stream under the pointer."
+                    value={s.streamInfoAlways}
+                    disabled={!on}
+                    onChange={v => settings.store.streamInfoAlways = v}
+                />
+                <HaloSwitchRow
+                    title="Resting border"
+                    description="A thin border around the box."
+                    value={s.streamInfoBorder}
+                    disabled={!on}
+                    onChange={v => settings.store.streamInfoBorder = v}
+                />
+                <HaloSwitchRow
+                    title="Hover border"
+                    description="The blue to mauve gradient border when the pointer is over the box."
+                    value={s.streamInfoHoverBorder}
+                    disabled={!on}
+                    onChange={v => settings.store.streamInfoHoverBorder = v}
+                />
+            </HaloSection>
+        </>
+    );
+}
 
 const collapsed = (): string[] => { try { return JSON.parse(settings.store.collapsedVoiceCategories); } catch { return []; } };
 
@@ -320,6 +372,14 @@ export default definePlugin({
         },
         // The stream store only listens to VOICE_STATE_UPDATES, so passive guilds never clear a
         // stream when its owner leaves voice: ghost avatars in the guild tooltip and Active Now.
+        // Stream info box: Discord only draws it on the call tile under the pointer.
+        {
+            find: ".isStreamInfoOverlayEnabled),[",
+            replacement: {
+                match: /(\i)&&(\i)&&(?=\(0,\i\.jsx\)\(\i\.\i,\{currentUserId:\i,participant:)/,
+                replace: "$1&&($2||$self.streamInfoAlways())&&"
+            }
+        },
         {
             find: 'displayName="ApplicationStreamingStore"',
             replacement: {
@@ -330,6 +390,8 @@ export default definePlugin({
     ],
 
     streamVoiceStateUpdates: null as VoiceStatesHandler | null,
+
+    streamInfoAlways: () => settings.store.streamInfoAlways,
 
     passiveStreams({ guildId, voiceStates, removedVoiceStateUsers }: PassiveVoiceUpdate) {
         return this.streamVoiceStateUpdates?.({
@@ -342,6 +404,7 @@ export default definePlugin({
 
     start() {
         const general = () => discordString("cg6ltt", "General");
+        applyStreamInfoLook();
         addCategory("system_panel", "halocord_windows_category", general,
             ["Windows Settings", "startup", "tray", "minimise", "minimize"], WindowsSettings);
         addCategory("developer_options_panel", "halocord_build_category", () => "Discord Build",
@@ -349,6 +412,8 @@ export default definePlugin({
         // VU Meters, then Calls at the very bottom of Voice & Video
         addCategory("voice_and_video_panel", "halocord_vu_category", () => "VU Meters",
             ["VU Meters", "meter", "peak", "position", "spot", "profile picture"], VuCategory, true);
+        addCategory("voice_and_video_panel", "halocord_stream_info_category", () => "Stream Info",
+            ["Stream Info", "overlay", "bitrate", "resolution", "codec", "fps", "always show", "border"], StreamInfoCategory, true);
         addCategory("voice_and_video_panel", "halocord_calls_category", () => "Calls",
             ["Calls", "idle", "AFK", "rejoin", "reconnect", "tiles", "profile picture", "glow", "banner"], CallsCategory, true);
     }

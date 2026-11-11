@@ -61,6 +61,7 @@ import {
     subscribeModules,
 } from "./modules";
 import { SettingsGearIcon } from "./modules/icons";
+import { startTitleTips, stopTitleTips, TITLE_TIPS_ROOT } from "./titleTips";
 
 migratePluginSettings("PanelLayout", "deraculpanellayout");
 migratePluginSettings("PanelLayout", "deracul-panel-layout");
@@ -180,6 +181,7 @@ const layoutApi = {
     isLocked: () => settings.store.layoutLocked,
     getOrderBase: () => settings.store.userPanelLayout.startsWith("split_") ? 40000 : 0,
     getGap: () => settings.store.buttonGap ?? 6,
+    wantsNameRow: () => settings.store.userPanelLayout === "all_top",
 };
 
 function resetButtonLayout() {
@@ -221,6 +223,8 @@ interface ButtonConfig {
     colorfulActiveButton: boolean;
     colorfulInActiveButton: boolean;
     linkedTo?: string[];
+    /** Set when the button was dragged into the other user area group in the Buttons tab. */
+    group?: "native" | "user";
 }
 
 const BUTTON_CONFIG_KEY = "panel-layout-configs";
@@ -1160,7 +1164,7 @@ function buildCustomCSS(): string {
         if (cfg.order != null) {
             let orderVal = cfg.order;
             if (isSplit) {
-                const isNative = NATIVE_BUTTON_LABELS.has(getCanonicalLabel(cfg.label));
+                const isNative = cfg.group ? cfg.group === "native" : NATIVE_BUTTON_LABELS.has(getCanonicalLabel(cfg.label));
                 orderVal = isNative ? (40000 + cfg.order) : (10000 + cfg.order);
             }
             lines.push(`${sel} { order: ${orderVal} !important; }`);
@@ -1747,26 +1751,87 @@ function getBtnItems(): BtnItem[] {
     return getDetectedBtnItems(id => getBtnCfg(id).order ?? 0, true);
 }
 
-function getDragGroup(item: BtnItem): "call" | "native" | "user" {
+type DragGroup = "call" | "native" | "user";
+
+const CALL_DRAG_LABELS = new Set(["Camera", "Screen Share", "Activity", "Soundboard"]);
+const NATIVE_DRAG_LABELS = new Set(["Toggle Plugin Panel", "Mute", "Deafen", "User Settings"]);
+// Split layouts order account entries from 40000 (the name row). Shifting by 3000 steps of 10 lands them at 10000, the top row.
+const SPLIT_TOP_SHIFT = 3000;
+
+function defaultDragGroup(item: BtnItem): DragGroup {
     const canonical = getCanonicalLabel(item.label);
-    if (canonical === "Camera" || canonical === "Screen Share" || canonical === "Activity" || canonical === "Soundboard") return "call";
-    if (canonical === "Toggle Plugin Panel" || canonical === "Mute" || canonical === "Deafen" || canonical === "User Settings") return "native";
+    if (CALL_DRAG_LABELS.has(canonical)) return "call";
+    if (NATIVE_DRAG_LABELS.has(canonical)) return "native";
     return "user";
 }
+
+// The group a button shows in on the Buttons tab, read from where it really sits in the user area.
+function getDragGroup(item: BtnItem): DragGroup {
+    const def = defaultDragGroup(item);
+    const entry = settings.store.userAreaLayout[item.label];
+    const layout = settings.store.userPanelLayout;
+    if (entry?.s === "actions") return "call";
+    if (entry?.s === "name") return "native";
+    if (!entry && def === "call") return "call";
+    if (entry?.s === "plugins" || layout === "all_top") return "user";
+    if (entry && layout.startsWith("split_")) return entry.i >= 0 ? "native" : "user";
+    return getBtnCfg(item.id).group ?? (def === "call" ? "user" : def);
+}
+
+function layoutEntryFor(group: DragGroup, item: BtnItem, idx: number): ButtonLayout[string] | null {
+    const layout = settings.store.userPanelLayout;
+    const existing = settings.store.userAreaLayout[item.label];
+    const needsMove = (defaultDragGroup(item) === "call") !== (group === "call");
+    if (group === "call") return needsMove || existing ? { s: "actions", i: idx } : null;
+    if (group === "native") {
+        if (layout === "all_top") return { s: "name", i: idx };
+        return needsMove || existing ? { s: "account", i: idx } : null;
+    }
+    if (existing?.s === "plugins") return { s: "plugins", i: idx };
+    if (!needsMove && !existing) return null;
+    return { s: "account", i: layout.startsWith("split_") ? idx - SPLIT_TOP_SHIFT : idx };
+}
+
+function sortedBtnItems(): BtnItem[] {
+    const layout = settings.store.userAreaLayout;
+    const rank = (it: BtnItem) => {
+        const entry = layout[it.label];
+        return entry ? entry.i * 10 : (getBtnCfg(it.id).order ?? 0);
+    };
+    return [...getBtnItems()].sort((a, b) => rank(a) - rank(b));
+}
+
+function renderBuiltInIcon(canonical: string) {
+    switch (canonical) {
+        case "Activity": return <ActivityIcon width={20} height={20} size="smmd" />;
+        case "Soundboard": return <SoundboardIcon width={20} height={20} size="smmd" />;
+        case "Screen Share": return <ScreenOffIcon width={20} height={20} size="smmd" />;
+        case "Camera": return <CameraIcon width={20} height={20} size="smmd" />;
+        case "Toggle Plugin Panel": return <CollapseOffIcon width={20} height={20} size="smmd" />;
+        case "Mute": return <MuteOffIcon width={20} height={20} size="smmd" />;
+        case "Deafen": return <DeafenOffIcon width={20} height={20} size="smmd" />;
+        case "User Settings": return <SettingsIcon width={20} height={20} size="smmd" />;
+        default: return null;
+    }
+}
+
+const TILE_PREVIEW_STYLE: React.CSSProperties = {
+    width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--background-tertiary, var(--background-surface-highest))",
+    display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-default)",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.15)", pointerEvents: "none"
+};
 
 function ButtonsDragTab() {
     const pluginsCollapsed = settings.use(["userPanelLayout", "pluginsCollapsed"]);
     const [, forceUpdate] = React.useReducer(x => x + 1, 0);
-    const [items, setItems] = React.useState<BtnItem[]>(() => getBtnItems());
+    const [items, setItems] = React.useState<BtnItem[]>(() => sortedBtnItems());
     const [listeningId, setListeningId] = React.useState<string | null>(null);
 
     const dragFromIndex = React.useRef<number | null>(null);
-    const dragFromGroup = React.useRef<"call" | "native" | "user" | null>(null);
     const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
+    const [dragOverGroup, setDragOverGroup] = React.useState<DragGroup | null>(null);
     const [activeDragIndex, setActiveDragIndex] = React.useState<number | null>(null);
     const [dropPosition, setDropPosition] = React.useState<"before" | "after">("before");
-
-    let hasCallButtons = false;
 
     React.useEffect(() => {
         if (!listeningId) return;
@@ -1781,9 +1846,15 @@ function ButtonsDragTab() {
         return () => window.removeEventListener("keydown", handler, true);
     }, [listeningId]);
 
+    const resetDrag = () => {
+        dragFromIndex.current = null;
+        setActiveDragIndex(null);
+        setDragOverIndex(null);
+        setDragOverGroup(null);
+    };
+
     const handleDragStart = (e: React.DragEvent, index: number) => {
         dragFromIndex.current = index;
-        dragFromGroup.current = getDragGroup(items[index]);
         setActiveDragIndex(index);
         e.dataTransfer.effectAllowed = "move";
         e.dataTransfer.setData("text/plain", String(index));
@@ -1794,54 +1865,57 @@ function ButtonsDragTab() {
 
     const handleDragOver = (e: React.DragEvent, index: number) => {
         e.preventDefault();
-        if (dragFromGroup.current !== null && dragFromGroup.current !== getDragGroup(items[index])) {
-            e.dataTransfer.dropEffect = "none";
-            if (dragOverIndex !== null) setDragOverIndex(null);
-            return;
-        }
+        e.stopPropagation();
         e.dataTransfer.dropEffect = "move";
         const rect = e.currentTarget.getBoundingClientRect();
         const pos = e.clientX < rect.left + rect.width / 2 ? "before" : "after";
         if (dragOverIndex !== index) setDragOverIndex(index);
+        if (dragOverGroup !== null) setDragOverGroup(null);
         if (dropPosition !== pos) setDropPosition(pos);
     };
 
-    const commitDrop = (targetIndex: number) => {
-        const fromIndex = dragFromIndex.current;
-        if (
-            fromIndex !== null && fromIndex >= 0 && fromIndex < items.length &&
-            targetIndex >= 0 && targetIndex < items.length &&
-            getDragGroup(items[fromIndex]) === getDragGroup(items[targetIndex])
-        ) {
-            const desiredSlot = dropPosition === "after" ? targetIndex + 1 : targetIndex;
-            const insertIndex = fromIndex < desiredSlot ? desiredSlot - 1 : desiredSlot;
-            if (insertIndex !== fromIndex && insertIndex >= 0 && insertIndex < items.length) {
-                setItems(prev => {
-                    const next = [...prev];
-                    const [moved] = next.splice(fromIndex, 1);
-                    next.splice(insertIndex, 0, moved);
-                    next.forEach((it, idx) => setBtnCfg(it.id, { order: idx * 10 }));
-                    apply();
-                    return next;
-                });
-            }
-        }
-        dragFromIndex.current = null;
-        dragFromGroup.current = null;
-        setActiveDragIndex(null);
-        setDragOverIndex(null);
-    };
-
-    const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    const handleGroupDragOver = (e: React.DragEvent, group: DragGroup) => {
         e.preventDefault();
-        commitDrop(targetIndex);
+        e.dataTransfer.dropEffect = "move";
+        if (dragOverIndex !== null) setDragOverIndex(null);
+        if (dragOverGroup !== group) setDragOverGroup(group);
     };
 
-    const handleDragEnd = () => {
-        dragFromIndex.current = null;
-        dragFromGroup.current = null;
-        setActiveDragIndex(null);
-        setDragOverIndex(null);
+    // Moves the dragged button next to the target button, or to the end of `group` when there is no target,
+    // then writes the new order, group and user area position for every button so the live panel matches the tab.
+    const commitDrop = (group: DragGroup, targetIndex: number | null) => {
+        const fromIndex = dragFromIndex.current;
+        const position = dropPosition;
+        resetDrag();
+        if (fromIndex === null || fromIndex === targetIndex || !items[fromIndex]) return;
+
+        const groups = new Map(items.map(it => [it.id, getDragGroup(it)] as const));
+        const next = [...items];
+        const [moved] = next.splice(fromIndex, 1);
+        const target = targetIndex === null ? undefined : items[targetIndex];
+        let insertAt: number;
+        if (target) {
+            insertAt = next.indexOf(target) + (position === "after" ? 1 : 0);
+        } else {
+            let last = -1;
+            next.forEach((it, idx) => { if (groups.get(it.id) === group) last = idx; });
+            insertAt = last >= 0 ? last + 1 : next.length;
+        }
+        next.splice(insertAt, 0, moved);
+        groups.set(moved.id, group);
+
+        setBtnCfg(moved.id, { group: group === "call" ? undefined : group });
+        const layout: ButtonLayout = { ...settings.store.userAreaLayout };
+        next.forEach((it, idx) => {
+            setBtnCfg(it.id, { order: idx * 10 });
+            const entry = layoutEntryFor(groups.get(it.id) ?? getDragGroup(it), it, idx);
+            if (entry) layout[it.label] = entry;
+            else delete layout[it.label];
+        });
+        settings.store.userAreaLayout = layout;
+        setItems(next);
+        apply();
+        forceUpdate();
     };
 
     function set<K extends keyof typeof settings.store>(key: K, val: (typeof settings.store)[K]) {
@@ -1855,10 +1929,121 @@ function ButtonsDragTab() {
         apply(); forceUpdate();
     }
 
+    const topLayout = pluginsCollapsed.userPanelLayout === "all_top" || pluginsCollapsed.userPanelLayout.startsWith("split_");
+    const groupTitles: Record<DragGroup, string> = {
+        user: topLayout ? "Top row" : "Plugin buttons",
+        call: "Call buttons",
+        native: topLayout ? "Next to your name" : "Discord buttons",
+    };
+
+    const renderTile = (item: BtnItem, index: number, group: DragGroup) => {
+        const cfg = getBtnCfg(item.id);
+        const isDragging = activeDragIndex === index;
+        const isOver = dragOverIndex === index && activeDragIndex !== index;
+        const canonical = getCanonicalLabel(item.label);
+        const isPanelLayout = canonical === "Panel Layout" || item.id === "Panel Layout";
+        const builtIn = renderBuiltInIcon(canonical);
+        return (
+            <div
+                key={item.id}
+                draggable
+                onDragStart={e => handleDragStart(e, index)}
+                onDragOver={e => handleDragOver(e, index)}
+                onDragLeave={e => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node) && dragOverIndex === index) setDragOverIndex(null);
+                }}
+                onDrop={e => { e.preventDefault(); e.stopPropagation(); commitDrop(group, index); }}
+                onDragEnd={resetDrag}
+                className={builtIn ? "icon-color-fix" : undefined}
+                style={{
+                    position: "relative",
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: "10px",
+                    cursor: isDragging ? "grabbing" : "grab",
+                    opacity: isDragging ? 0.35 : 1,
+                    transform: isDragging ? "scale(0.94)" : "scale(1)",
+                    transition: "opacity 0.1s ease, transform 0.1s ease",
+                    userSelect: "none",
+                }}
+                title={item.label}
+            >
+                {isOver && (
+                    <div
+                        style={{
+                            position: "absolute", top: "0px", bottom: "0px",
+                            left: dropPosition === "before" ? "-7px" : undefined,
+                            right: dropPosition === "after" ? "-7px" : undefined,
+                            width: "2px", borderRadius: "2px",
+                            background: "var(--hc-gradient, var(--brand-experiment, var(--background-brand)))",
+                            zIndex: 10, pointerEvents: "none",
+                        }}
+                    />
+                )}
+                {builtIn
+                    ? <div className="deracul-btn-preview" style={TILE_PREVIEW_STYLE}>{builtIn}</div>
+                    : (
+                        <div
+                            className="deracul-btn-preview"
+                            dangerouslySetInnerHTML={{ __html: item.iconHTML }}
+                            style={{ ...TILE_PREVIEW_STYLE, color: item.id === "Game Activity" ? "var(--status-danger)" : "var(--text-default)" }}
+                        />
+                    )}
+                {isPanelLayout ? (
+                    <MiniToggle value={!settings.store.hideUserPanelButton} onChange={v => set("hideUserPanelButton", !v)} />
+                ) : (
+                    <MiniToggle
+                        value={!cfg.hidden}
+                        onChange={v => {
+                            setBtnCfg(item.id, { hidden: !v });
+                            apply(); forceUpdate();
+                        }}
+                    />
+                )}
+            </div>
+        );
+    };
+
+    const renderGroup = (group: DragGroup, grow: boolean) => {
+        const tiles = items.map((item, index) => ({ item, index })).filter(({ item }) => getDragGroup(item) === group);
+        const over = dragOverGroup === group;
+        return (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", minWidth: grow ? 0 : "fit-content", flex: grow ? "1 1 auto" : "0 0 auto" }}>
+                <BaseText size="xs" weight="semibold" color="text-muted" style={{ paddingLeft: "8px", whiteSpace: "nowrap" }}>{groupTitles[group]}</BaseText>
+                <div
+                    className="deracul-scrollbar"
+                    onDragOver={e => handleGroupDragOver(e, group)}
+                    onDragLeave={e => {
+                        if (!e.currentTarget.contains(e.relatedTarget as Node) && dragOverGroup === group) setDragOverGroup(null);
+                    }}
+                    onDrop={e => { e.preventDefault(); commitDrop(group, null); }}
+                    style={{
+                        display: "flex", flexDirection: "row", gap: "12px", overflowX: "auto",
+                        alignItems: "center", padding: "4px 8px", minHeight: "64px", borderRadius: "8px",
+                        boxShadow: over ? "inset 0 0 0 1px var(--hc-accent, var(--brand-experiment))" : undefined,
+                        transition: "box-shadow 0.1s ease",
+                    }}
+                >
+                    {tiles.map(({ item, index }) => renderTile(item, index, group))}
+                    {tiles.length === 0 && (
+                        <div style={{
+                            width: "36px", height: "36px", borderRadius: "8px", flexShrink: 0,
+                            border: "1px dashed var(--border-subtle, var(--background-modifier-accent))",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: "var(--text-muted)", fontSize: "16px", pointerEvents: "none",
+                        }}>+</div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    const divider = (
+        <div style={{ width: "2px", borderRadius: "2px", backgroundColor: "var(--border-subtle)", marginLeft: "14px", marginRight: "14px", flexShrink: 0 }} />
+    );
+
     return (
         <Flex flexDirection="column" gap={16} style={{ paddingBottom: "12px" }}>
             <Paragraph style={{ color: "var(--text-muted)", fontSize: "13px" }}>
-                Drag a square left or right to change its order. Use the switches to show or hide them.
+                Drag a square to change its order, or drop it in another group to move it there. Use the switches to show or hide them.
             </Paragraph>
 
             {items.length === 0 ? (
@@ -1870,365 +2055,11 @@ function ButtonsDragTab() {
                             display: "flex",
                             justifyContent: "space-between",
                         }}>
-                            <div className="deracul-scrollbar" style={{
-                                display: "flex",
-                                flexDirection: "row",
-                                gap: "12px",
-                                overflowX: "auto",
-                                alignItems: "center",
-                                padding: "4px 8px",
-                            }}>
-                                {items.map((item, index) => {
-                                    const cfg = getBtnCfg(item.id);
-                                    const isDragging = activeDragIndex === index;
-                                    const isOver = dragOverIndex === index && activeDragIndex !== index;
-                                    const canonical = getCanonicalLabel(item.label);
-                                    const isActivity = canonical === "Activity";
-                                    const isSoundboard = canonical === "Soundboard";
-                                    const isCamera = canonical === "Camera";
-                                    const isScreenShare = canonical === "Screen Share";
-                                    const isMute = canonical === "Mute";
-                                    const isDeafen = canonical === "Deafen";
-                                    const isUserSettings = canonical === "User Settings";
-                                    const isTogglePluginPanel = canonical === "Toggle Plugin Panel";
-                                    const isPanelLayout = canonical === "Panel Layout" || item.id === "Panel Layout" || item.label === "Panel Layout";
-
-                                    if (isCamera || isScreenShare || isActivity || isSoundboard) {
-                                        hasCallButtons = true;
-                                        return;
-                                    }
-
-                                    if (isTogglePluginPanel || isMute || isDeafen || isUserSettings) { return; }
-
-                                    return (
-                                        <div
-                                            key={item.id}
-                                            draggable
-                                            onDragStart={e => handleDragStart(e, index)}
-                                            onDragOver={e => handleDragOver(e, index)}
-                                            onDragLeave={e => {
-                                                if (!e.currentTarget.contains(e.relatedTarget as Node) && dragOverIndex === index) {
-                                                    setDragOverIndex(null);
-                                                }
-                                            }}
-                                            onDrop={e => handleDrop(e, index)}
-                                            onDragEnd={handleDragEnd}
-                                            style={{
-                                                position: "relative",
-                                                display: "flex", flexDirection: "column", alignItems: "center", gap: "10px",
-                                                cursor: isDragging ? "grabbing" : "grab",
-                                                opacity: isDragging ? 0.35 : 1,
-                                                transform: isDragging ? "scale(0.94)" : "scale(1)",
-                                                transition: "opacity 0.1s ease, transform 0.1s ease",
-                                                userSelect: "none",
-                                            }}
-                                            title={item.label}
-                                        >
-                                            {isOver && (
-                                                <div
-                                                    style={{
-                                                        position: "absolute",
-                                                        top: "0px",
-                                                        bottom: "0px",
-                                                        left: dropPosition === "before" ? "-7px" : undefined,
-                                                        right: dropPosition === "after" ? "-7px" : undefined,
-                                                        width: "2px",
-                                                        borderRadius: "2px",
-                                                        backgroundColor: "var(--brand-experiment, var(--background-brand))",
-                                                        zIndex: 10,
-                                                        pointerEvents: "none",
-                                                    }}
-                                                />
-                                            )}
-                                            <div
-                                                className="deracul-btn-preview"
-                                                dangerouslySetInnerHTML={{ __html: item.iconHTML }}
-                                                style={{
-                                                    width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--background-tertiary, var(--background-surface-highest))",
-                                                    display: "flex", alignItems: "center", justifyContent: "center", color: item.id === "Game Activity" ? "var(--status-danger)" : "var(--text-default)",
-                                                    boxShadow: "0 2px 4px rgba(0,0,0,0.15)", pointerEvents: "none"
-                                                }}
-                                            />
-                                            {isPanelLayout ? (
-                                                <MiniToggle
-                                                    value={!settings.store.hideUserPanelButton}
-                                                    onChange={v => {
-                                                        set("hideUserPanelButton", !v);
-                                                    }}
-                                                />
-                                            ) : (
-                                                <MiniToggle
-                                                    value={!cfg.hidden}
-                                                    onChange={v => {
-                                                        setBtnCfg(item.id, { hidden: !v });
-                                                        apply(); forceUpdate();
-                                                    }}
-                                                />
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            {hasCallButtons && (
-                                <>
-                                    <div
-                                        style={{
-                                            width: "2px",
-                                            borderRadius: "2px",
-                                            backgroundColor: "var(--border-subtle)",
-                                            marginLeft: "14px",
-                                            marginRight: "14px",
-                                        }}
-                                    />
-
-                                    <div className="deracul-scrollbar" style={{
-                                        display: "flex",
-                                        flexDirection: "row",
-                                        gap: "12px",
-                                        overflowX: "auto",
-                                        minWidth: "fit-content",
-                                        alignItems: "center",
-                                        padding: "4px 8px",
-                                    }}>
-                                        {items.map((item, index) => {
-                                            const cfg = getBtnCfg(item.id);
-                                            const isDragging = activeDragIndex === index;
-                                            const isOver = dragOverIndex === index && activeDragIndex !== index;
-                                            const canonical = getCanonicalLabel(item.label);
-                                            const isActivity = canonical === "Activity";
-                                            const isSoundboard = canonical === "Soundboard";
-                                            const isCamera = canonical === "Camera";
-                                            const isScreenShare = canonical === "Screen Share";
-
-                                            if (!isCamera && !isScreenShare && !isActivity && !isSoundboard) { return; }
-
-                                            return (
-                                                <div
-                                                    key={item.id}
-                                                    draggable
-                                                    onDragStart={e => handleDragStart(e, index)}
-                                                    onDragOver={e => handleDragOver(e, index)}
-                                                    onDragLeave={e => {
-                                                        if (!e.currentTarget.contains(e.relatedTarget as Node) && dragOverIndex === index) {
-                                                            setDragOverIndex(null);
-                                                        }
-                                                    }}
-                                                    onDrop={e => handleDrop(e, index)}
-                                                    onDragEnd={handleDragEnd}
-                                                    style={{
-                                                        position: "relative",
-                                                        display: "flex", flexDirection: "column", alignItems: "center", gap: "10px",
-                                                        cursor: isDragging ? "grabbing" : "grab",
-                                                        opacity: isDragging ? 0.35 : 1,
-                                                        transform: isDragging ? "scale(0.94)" : "scale(1)",
-                                                        transition: "opacity 0.1s ease, transform 0.1s ease",
-                                                        userSelect: "none",
-                                                    }}
-                                                    className="icon-color-fix"
-                                                    title={item.label}
-                                                >
-                                                    {isOver && (
-                                                        <div
-                                                            style={{
-                                                                position: "absolute",
-                                                                top: "0px",
-                                                                bottom: "0px",
-                                                                left: dropPosition === "before" ? "-7px" : undefined,
-                                                                right: dropPosition === "after" ? "-7px" : undefined,
-                                                                width: "2px",
-                                                                borderRadius: "2px",
-                                                                backgroundColor: "var(--brand-experiment, var(--background-brand))",
-                                                                zIndex: 10,
-                                                                pointerEvents: "none",
-                                                            }}
-                                                        />
-                                                    )}
-                                                    {isActivity && (
-                                                        <div
-                                                            className="deracul-btn-preview"
-                                                            style={{
-                                                                width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--background-tertiary, var(--background-surface-highest))",
-                                                                display: "flex", alignItems: "center", justifyContent: "center", color: item.id === "Game Activity" ? "var(--status-danger)" : "var(--text-default)",
-                                                                boxShadow: "0 2px 4px rgba(0,0,0,0.15)", pointerEvents: "none"
-                                                        }}>
-                                                            <ActivityIcon width={20} height={20} size="smmd" />
-                                                        </div>
-                                                    )}
-                                                    {isSoundboard && (
-                                                        <div
-                                                            className="deracul-btn-preview"
-                                                            style={{
-                                                                width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--background-tertiary, var(--background-surface-highest))",
-                                                                display: "flex", alignItems: "center", justifyContent: "center", color: item.id === "Game Activity" ? "var(--status-danger)" : "var(--text-default)",
-                                                                boxShadow: "0 2px 4px rgba(0,0,0,0.15)", pointerEvents: "none"
-                                                        }}>
-                                                            <SoundboardIcon width={20} height={20} size="smmd" />
-                                                        </div>
-                                                    )}
-                                                    {isScreenShare && (
-                                                        <div
-                                                            className="deracul-btn-preview"
-                                                            style={{
-                                                                width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--background-tertiary, var(--background-surface-highest))",
-                                                                display: "flex", alignItems: "center", justifyContent: "center", color: item.id === "Game Activity" ? "var(--status-danger)" : "var(--text-default)",
-                                                                boxShadow: "0 2px 4px rgba(0,0,0,0.15)", pointerEvents: "none"
-                                                        }}>
-                                                            <ScreenOffIcon width={20} height={20} size="smmd" />
-                                                        </div>
-                                                    )}
-                                                    {isCamera && (
-                                                        <div
-                                                            className="deracul-btn-preview"
-                                                            style={{
-                                                                width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--background-tertiary, var(--background-surface-highest))",
-                                                                display: "flex", alignItems: "center", justifyContent: "center", color: item.id === "Game Activity" ? "var(--status-danger)" : "var(--text-default)",
-                                                                boxShadow: "0 2px 4px rgba(0,0,0,0.15)", pointerEvents: "none"
-                                                        }}>
-                                                            <CameraIcon width={20} height={20} size="smmd" />
-                                                        </div>
-                                                    )}
-                                                    <MiniToggle
-                                                        value={!cfg.hidden}
-                                                        onChange={v => {
-                                                            setBtnCfg(item.id, { hidden: !v });
-                                                            apply(); forceUpdate();
-                                                        }}
-                                                    />
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </>
-                            )}
-
-                            <div
-                                style={{
-                                    width: "2px",
-                                    borderRadius: "2px",
-                                    backgroundColor: "var(--border-subtle)",
-                                    marginLeft: hasCallButtons ? "4px" : "14px",
-                                    marginRight: "14px",
-                                }}
-                            />
-
-                            <div className="deracul-scrollbar" style={{
-                                display: "flex",
-                                flexDirection: "row",
-                                gap: "12px",
-                                overflowX: "auto",
-                                minWidth: "fit-content",
-                                alignItems: "center",
-                                padding: "4px 8px",
-                            }}>
-                                {items.map((item, index) => {
-                                    const cfg = getBtnCfg(item.id);
-                                    const isDragging = activeDragIndex === index;
-                                    const isOver = dragOverIndex === index && activeDragIndex !== index;
-                                    const canonical = getCanonicalLabel(item.label);
-                                    const isMute = canonical === "Mute";
-                                    const isDeafen = canonical === "Deafen";
-                                    const isUserSettings = canonical === "User Settings";
-                                    const isTogglePluginPanel = canonical === "Toggle Plugin Panel";
-
-                                    if (!isMute && !isDeafen && !isUserSettings && !isTogglePluginPanel) { return; }
-
-                                    return (
-                                        <div
-                                            key={item.id}
-                                            draggable
-                                            onDragStart={e => handleDragStart(e, index)}
-                                            onDragOver={e => handleDragOver(e, index)}
-                                            onDragLeave={e => {
-                                                if (!e.currentTarget.contains(e.relatedTarget as Node) && dragOverIndex === index) {
-                                                    setDragOverIndex(null);
-                                                }
-                                            }}
-                                            onDrop={e => handleDrop(e, index)}
-                                            onDragEnd={handleDragEnd}
-                                            style={{
-                                                position: "relative",
-                                                display: "flex", flexDirection: "column", alignItems: "center", gap: "10px",
-                                                cursor: isDragging ? "grabbing" : "grab",
-                                                opacity: isDragging ? 0.35 : 1,
-                                                transform: isDragging ? "scale(0.94)" : "scale(1)",
-                                                transition: "opacity 0.1s ease, transform 0.1s ease",
-                                                userSelect: "none",
-                                            }}
-                                            className="icon-color-fix"
-                                            title={item.label}
-                                        >
-                                            {isOver && (
-                                                <div
-                                                    style={{
-                                                        position: "absolute",
-                                                        top: "0px",
-                                                        bottom: "0px",
-                                                        left: dropPosition === "before" ? "-7px" : undefined,
-                                                        right: dropPosition === "after" ? "-7px" : undefined,
-                                                        width: "2px",
-                                                        borderRadius: "2px",
-                                                        backgroundColor: "var(--brand-experiment, var(--background-brand))",
-                                                        zIndex: 10,
-                                                        pointerEvents: "none",
-                                                    }}
-                                                />
-                                            )}
-                                            {isTogglePluginPanel && (
-                                                <div
-                                                    className="deracul-btn-preview"
-                                                    style={{
-                                                        width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--background-tertiary, var(--background-surface-highest))",
-                                                        display: "flex", alignItems: "center", justifyContent: "center", color: item.id === "Game Activity" ? "var(--status-danger)" : "var(--text-default)",
-                                                        boxShadow: "0 2px 4px rgba(0,0,0,0.15)", pointerEvents: "none"
-                                                }}>
-                                                    <CollapseOffIcon width={20} height={20} size="smmd" />
-                                                </div>
-                                            )}
-                                            {isMute && (
-                                                <div
-                                                    className="deracul-btn-preview"
-                                                    style={{
-                                                        width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--background-tertiary, var(--background-surface-highest))",
-                                                        display: "flex", alignItems: "center", justifyContent: "center", color: item.id === "Game Activity" ? "var(--status-danger)" : "var(--text-default)",
-                                                        boxShadow: "0 2px 4px rgba(0,0,0,0.15)", pointerEvents: "none"
-                                                }}>
-                                                    <MuteOffIcon width={20} height={20} size="smmd" />
-                                                </div>
-                                            )}
-                                            {isDeafen && (
-                                                <div
-                                                    className="deracul-btn-preview"
-                                                    style={{
-                                                        width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--background-tertiary, var(--background-surface-highest))",
-                                                        display: "flex", alignItems: "center", justifyContent: "center", color: item.id === "Game Activity" ? "var(--status-danger)" : "var(--text-default)",
-                                                        boxShadow: "0 2px 4px rgba(0,0,0,0.15)", pointerEvents: "none"
-                                                }}>
-                                                    <DeafenOffIcon width={20} height={20} size="smmd" />
-                                                </div>
-                                            )}
-                                            {isUserSettings && (
-                                                <div
-                                                    className="deracul-btn-preview"
-                                                    style={{
-                                                        width: "36px", height: "36px", borderRadius: "8px", backgroundColor: "var(--background-tertiary, var(--background-surface-highest))",
-                                                        display: "flex", alignItems: "center", justifyContent: "center", color: item.id === "Game Activity" ? "var(--status-danger)" : "var(--text-default)",
-                                                        boxShadow: "0 2px 4px rgba(0,0,0,0.15)", pointerEvents: "none"
-                                                }}>
-                                                    <SettingsIcon width={20} height={20} size="smmd" />
-                                                </div>
-                                            )}
-                                            <MiniToggle
-                                                value={!cfg.hidden}
-                                                onChange={v => {
-                                                    setBtnCfg(item.id, { hidden: !v });
-                                                    apply(); forceUpdate();
-                                                }}
-                                            />
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                            {renderGroup("user", true)}
+                            {divider}
+                            {renderGroup("call", false)}
+                            {divider}
+                            {renderGroup("native", false)}
 
                             <div style={{ position: "relative", alignContent: "center", flexShrink: 0 }}>
                                 <button
@@ -2860,7 +2691,7 @@ function SettingsModal({ modalProps }: { modalProps: RenderModalProps; }) {
                 </div>
             }
         >
-            <div style={{ width: "100%" }}>
+            <div {...{ [TITLE_TIPS_ROOT]: "" }} style={{ width: "100%" }}>
                 {customizableItems.length === 0 ? (
                     <div style={{ padding: "24px 16px", textAlign: "center" }}>
                         <BaseText size="sm" color="text-muted">
@@ -3178,7 +3009,7 @@ function SettingModalItem({
             {...modalProps}
             size="xl"
         >
-            <div style={{ display: "flex", flexDirection: "row-reverse", gap: "24px", height: `${MODAL_BODY_HEIGHT}px` }}>
+            <div {...{ [TITLE_TIPS_ROOT]: "" }} style={{ display: "flex", flexDirection: "row-reverse", gap: "24px", height: `${MODAL_BODY_HEIGHT}px` }}>
                 <div className="deracul-scrollbar" style={{ flex: 1, height: "100%", overflowY: "auto", paddingRight: "4px" }}>
                     <Flex flexDirection="column" gap={16}>
                         {!isUserSettings && !isPanelLayout && !isActivity && !isSoundboard && (
@@ -3594,7 +3425,7 @@ function PanelLayoutModal({ modalProps }: { modalProps: RenderModalProps; }) {
             {...modalProps}
             size="xl"
         >
-            <div className="deracul-scrollbar" style={{ height: `${MODAL_BODY_HEIGHT}px`, overflowY: "auto", paddingRight: "4px" }}>
+            <div className="deracul-scrollbar" {...{ [TITLE_TIPS_ROOT]: "" }} style={{ height: `${MODAL_BODY_HEIGHT}px`, overflowY: "auto", paddingRight: "4px" }}>
                 <Flex flexDirection="column" gap={16}>
                     {tab === "panel" && <>
                         <SectionHeading>Layout Structure</SectionHeading>
@@ -3761,7 +3592,7 @@ function StreamInfoButton({ iconForeground, hideTooltips, nameplate }: UserAreaR
     const on = useStateFromStores([DeveloperOptionsStore], () => DeveloperOptionsStore.isStreamInfoOverlayEnabled === true);
     if (!streamInfoButton) return null;
 
-    const label = on ? "Hide stream info" : "Show stream info";
+    const label = (on ? "Hide stream info" : "Show stream info") + " (right-click for settings)";
 
     return (
         <UserAreaButton
@@ -3773,6 +3604,7 @@ function StreamInfoButton({ iconForeground, hideTooltips, nameplate }: UserAreaR
             icon={<StreamInfoIcon style={{ color: iconForeground }} />}
             plated={nameplate != null}
             onClick={() => FluxDispatcher.dispatch({ type: "DEVELOPER_OPTIONS_UPDATE_SETTINGS", settings: { isStreamInfoOverlayEnabled: !on } })}
+            onContextMenu={e => { e.preventDefault(); openSettingsCategory("voice_and_video_panel", "Stream Info"); }}
         />
     );
 }
@@ -3953,6 +3785,7 @@ export default definePlugin({
         addUserAreaButton("panel-limiter", LimiterButton, 45);
         addUserAreaButton("panel-layout-lock", LayoutLockButton, 60);
         startLayoutDrag(layoutApi);
+        startTitleTips();
         apply();
         startObserver();
         unsubscribeModules = subscribeModules(() => apply());
@@ -3967,6 +3800,7 @@ export default definePlugin({
         removeUserAreaButton("panel-limiter");
         removeUserAreaButton("panel-layout-lock");
         stopLayoutDrag();
+        stopTitleTips();
         unsubscribeModules?.();
         unsubscribeModules = null;
         stopModuleManager();
