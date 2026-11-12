@@ -1300,6 +1300,19 @@ html.hc-theming nav[class*="guilds_"] [class*="folderButton_"] > [class~="wrappe
     inset: -2.4px;
 }
 
+/* The home logo fills its bubble edge to edge like a server icon (MochaCord shrinks it to 31px): the plate is
+   about 90% of the PNG, so the image is 112% and the bubble clips it. The rail ring above already frames it. */
+html.hc-theming #app-mount nav[class*="guilds_"] [data-list-item-id="guildsnav___home"] > [class*="childWrapper_"] {
+    overflow: hidden;
+}
+
+html.hc-theming #app-mount nav[class*="guilds_"] [data-list-item-id="guildsnav___home"] > [class*="childWrapper_"] > img {
+    flex: none;
+    width: 112%;
+    height: 112%;
+    object-fit: cover;
+}
+
 /* Voice, stream and count badges on a rail icon sit above its hover ring instead of under it. */
 html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"] > :is([class*="upperBadge_"], [class*="lowerBadge_"]) {
     z-index: 2;
@@ -1603,6 +1616,11 @@ html.hc-theming [class~="headerBar_neq5ug"] :is([class~="clipsEnabledIndicator_U
 
 html.hc-theming [class~="headerBar_neq5ug"] [class~="toolbar_neq5ug"] button[class*="lookBlank_"]:hover {
     color: var(--hc-accent);
+}
+
+/* MochaCord rings toolbar buttons with a ::after mask; the chip's own gradient border is the one ring here. */
+html.hc-theming [class~="headerBar_neq5ug"] [class~="toolbar_neq5ug"] button[class*="lookBlank_"]::after {
+    display: none;
 }
 
 /* The voice area keeps a flat surface on hover: no top-down or bottom-up scrim behind the call controls. */
