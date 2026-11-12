@@ -1417,7 +1417,11 @@ html.hc-theming [class~="container_rmCN9_"] {
     --custom-status-bubble-background-color: color-mix(in srgb, var(--hc-flyout-bg) 93%, transparent);
 }
 
+/* The backdrop filter makes the bubble the dots' containing block, so Discord's overflow: hidden clipped the dots to a
+   stray arc inside the top-left corner. The bubble no longer clips; the large dot is cut at the bubble's inner edge
+   below so it caps the border instead of showing through the see-through inside. */
 html.hc-theming [class~="outer_rmCN9_"] {
+    overflow: visible;
     border-color: var(--hc-panel-border) !important;
     background: var(--hc-status-glass);
     backdrop-filter: var(--hc-status-blur);
@@ -1432,10 +1436,14 @@ html.hc-theming [class~="outer_rmCN9_"] > [class~="inner_rmCN9_"] {
     background: transparent;
 }
 
-/* The two thought-bubble dots sit outside the blurred box, so they take the solid fill instead of a see-through copy. */
+/* The two thought-bubble dots sit outside the blurred box, so they take the solid fill with the bubble's top tint. */
 html.hc-theming [class~="outer_rmCN9_"]::before,
 html.hc-theming [class~="outer_rmCN9_"]::after {
-    background: var(--hc-flyout-bg);
+    background: linear-gradient(rgb(255 255 255 / 4%), rgb(255 255 255 / 4%)), var(--hc-flyout-bg);
+}
+
+html.hc-theming [class~="outer_rmCN9_"]::before {
+    clip-path: inset(0 0 12px);
 }
 
 /* Guild header: as tall as the rail's first row, with an inset hover pill that never touches the clipped edge. */
@@ -2253,9 +2261,16 @@ html.hc-theming[data-hc-theme] [class~="subnav_8qMUr2"] [class~="thumb_8qMUr2"]:
 
 /* Scrollbars: the blue to mauve gradient thumb everywhere. Chromium ignores ::-webkit-scrollbar on any element that
    sets scrollbar-color or scrollbar-width, so those go back to auto here; bars hidden on purpose stay hidden. */
-html.hc-theming.hc-theming :is([class*="thin_"], [class*="auto_"], [class*="scroller_"], [class*="Scroller_"], .dvx-dd-menu, .vc-update-modal-commits, .vc-vmsg-mics, .panellayout-scrollbar, .deracul-scrollbar, .vc-stream-enhancer-share-grid, .vc-stream-enhancer-camera-body, .vc-presets-summary, .vc-presets-modal-textarea, .vc-presets-merge-list, .vc-presets-stats, .hc-mc-combo-menu, .nai-scroll, .vc-pl-custom-btn-row, .vc-plugin-ui-elements-modal [class*="scroller"], [class*="messageTextArea_"]):not([class*="none_"], [class*="comboBoxInputScroller_"], [class*="noScrollbar_"], [class*="scrollable_ybUK7Z"], [class*="emojis_rAadqU"], [class*="listBox_b5PEJH"]) {
+html.hc-theming.hc-theming :is([class*="thin_"], [class*="auto_"], [class*="scroller_"], [class*="Scroller_"], .dvx-dd-menu, .vc-update-modal-commits, .vc-vmsg-mics, .panellayout-scrollbar, .deracul-scrollbar, .vc-stream-enhancer-share-grid, .vc-stream-enhancer-camera-body, .vc-presets-summary, .vc-presets-modal-textarea, .vc-presets-merge-list, .vc-presets-stats, .hc-mc-combo-menu, .nai-scroll, .vc-pl-custom-btn-row, .vc-plugin-ui-elements-modal [class*="scroller"], [class*="messageTextArea_"]):not([class*="none_"], [class*="comboBoxInputScroller_"], [class*="noScrollbar_"], [class*="scrollable_ybUK7Z"], [class*="emojis_rAadqU"], [class*="listBox_b5PEJH"], [class~="scroller_5dqHTG"]) {
     scrollbar-color: auto !important;
     scrollbar-width: auto !important;
+}
+
+/* The server rail scrolls by wheel with no bar: Discord's stable 8px gutter pushed every tile 4px left of the rail's
+   centre and left a wider gap on the right. */
+html.hc-theming nav[class*="guilds_"] [class~="scroller_5dqHTG"] {
+    scrollbar-gutter: auto;
+    scrollbar-width: none;
 }
 
 :where(html.hc-theming) ::-webkit-scrollbar {
