@@ -267,17 +267,20 @@
     margin-top: 28px !important;
 }
 
+/* Long sources and tags wrap to a second line rather than being cut short. */
 .vc-plugins-card-meta {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 6px 8px;
     min-height: 20px;
 }
 
 .vc-plugins-card-source {
     min-width: 0;
-    flex: 1 1 auto;
+    max-width: 100%;
+    flex: 1 0 auto;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -295,20 +298,23 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 5px;
-    flex-wrap: nowrap;
+    gap: 4px 5px;
+    flex-wrap: wrap;
+    max-width: 100%;
+    margin-left: auto;
 }
 
 .vc-plugins-card-tags {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     align-items: center;
     gap: 4px;
 }
 
 .vc-plugins-card-tag {
-    max-width: 85px;
+    flex: none;
     height: 20px;
     box-sizing: border-box;
     display: inline-flex;

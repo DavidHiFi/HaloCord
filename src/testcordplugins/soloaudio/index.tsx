@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import "./style.css";
+
 import { addContextMenuPatch, NavContextMenuPatchCallback, removeContextMenuPatch } from "@api/ContextMenu";
 import { definePluginSettings } from "@api/Settings";
 import { UserAreaButton, UserAreaRenderProps } from "@api/UserArea";
@@ -230,14 +232,15 @@ function removeUserFromGroup(groupId: string, userId: string) {
     if (soloedGroupId === groupId) reapplyCurrentSolo();
 }
 
+// HaloCord tokens, falling back to stock Discord values when HaloCord theming is off.
 const C = {
-    text: "#dbdee1",
-    textMuted: "#949ba4",
-    header: "#f2f3f5",
-    cardBg: "#2b2d31",
-    brand: "#5865f2",
-    green: "#23a559",
-    border: "rgba(255,255,255,0.06)"
+    text: "var(--hc-text, #dbdee1)",
+    textMuted: "var(--hc-text-muted, #949ba4)",
+    header: "var(--hc-text, #f2f3f5)",
+    brand: "var(--hc-accent, #5865f2)",
+    green: "var(--hc-accent, #23a559)",
+    border: "var(--hc-panel-border, rgb(255 255 255 / 8%))",
+    toggleOff: "rgb(255 255 255 / 16%)"
 };
 
 function SectionLabel({ children, style }: { children: string, style?: React.CSSProperties }) {
@@ -245,7 +248,7 @@ function SectionLabel({ children, style }: { children: string, style?: React.CSS
 }
 
 function Card({ children }: { children: React.ReactNode; }) {
-    return <div style={{ backgroundColor: C.cardBg, borderRadius: "8px", border: `1px solid ${C.border}`, padding: "16px", display: "flex", flexDirection: "column", gap: "16px", marginBottom: "24px" }}>{children}</div>;
+    return <div className="vc-solo-card">{children}</div>;
 }
 
 function SliderRow({ label, value, min, max, step, unit = "px", onChange }: {
@@ -281,7 +284,7 @@ function Toggle({ label, desc, value, onChange }: { label: React.ReactNode; desc
             </div>
             <div style={{
                 width: "40px", height: "24px", borderRadius: "12px", flexShrink: 0,
-                backgroundColor: value ? C.green : "#80848e",
+                backgroundColor: value ? C.green : C.toggleOff,
                 position: "relative", transition: "background 0.2s ease-in-out"
             }}>
                 <div style={{
@@ -332,23 +335,18 @@ function SoloAudioModal({ modalProps }: { modalProps: RenderModalProps; }) {
             : "None";
 
     return (
-        <ModalRoot {...modalProps} size={ModalSize.SMALL}>
+        <ModalRoot {...modalProps} size={ModalSize.SMALL} className="vc-solo-modal">
             <ModalHeader separator={false} style={{ flexDirection: "column", padding: "24px 24px 0 24px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%" }}>
                     <SoloAudioIcon style={{ color: C.header }} />
                     <span style={{ fontSize: "20px", fontWeight: 800, color: C.header, lineHeight: 1 }}>Solo Audio Control</span>
                 </div>
 
-                <div style={{ display: "flex", gap: "24px", marginTop: "24px", borderBottom: `1px solid ${C.border}`, width: "100%" }}>
+                <div className="vc-solo-tabs" role="tablist">
                     {tabs.map(t => (
-                        <div key={t.id} onClick={() => setTab(t.id)} style={{
-                            paddingBottom: "12px", cursor: "pointer", fontSize: "14px", fontWeight: tab === t.id ? 600 : 500,
-                            color: tab === t.id ? C.header : C.textMuted,
-                            borderBottom: tab === t.id ? `2px solid ${C.brand}` : "2px solid transparent",
-                            transition: "all 0.15s ease"
-                        }}>
+                        <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className="vc-solo-tab" onClick={() => setTab(t.id)}>
                             {t.label}
-                        </div>
+                        </button>
                     ))}
                 </div>
             </ModalHeader>
@@ -364,7 +362,7 @@ function SoloAudioModal({ modalProps }: { modalProps: RenderModalProps; }) {
                                     Targeting: <strong style={{ color: (soloedUserId || soloedGroupId) ? C.green : C.text }}>{currentSoloText}</strong>
                                 </div>
                                 {(soloedUserId || soloedGroupId) && (
-                                    <Button size={Button.Sizes.SMALL} color={Button.Colors.RED} onClick={() => { clearSolo(); forceUpdate(); }}>⏹ Clear</Button>
+                                    <Button size={Button.Sizes.SMALL} className="vc-solo-btn vc-solo-danger" onClick={() => { clearSolo(); forceUpdate(); }}>⏹ Clear</Button>
                                 )}
                             </div>
                         </Card>
@@ -382,7 +380,7 @@ function SoloAudioModal({ modalProps }: { modalProps: RenderModalProps; }) {
                                             <img src={pfp} width={24} height={24} style={{ borderRadius: "50%" }} />
                                             <span style={{ color: C.text, fontSize: 15, fontWeight: 500 }}>{u?.globalName ?? u?.username ?? uid}</span>
                                         </div>
-                                        <Button size={Button.Sizes.SMALL} color={isSolo ? Button.Colors.GREEN : Button.Colors.BRAND} onClick={() => { applySoloUser(uid); forceUpdate(); }}>
+                                        <Button size={Button.Sizes.SMALL} className={isSolo ? "vc-solo-btn vc-solo-active" : "vc-solo-btn"} onClick={() => { applySoloUser(uid); forceUpdate(); }}>
                                             {isSolo ? "✓ Active" : "Solo"}
                                         </Button>
                                     </div>
@@ -401,7 +399,7 @@ function SoloAudioModal({ modalProps }: { modalProps: RenderModalProps; }) {
                                             <span style={{ color: C.text, fontSize: 15, fontWeight: 500 }}>{g.name}</span>
                                             <span style={{ color: C.textMuted, fontSize: 12 }}>{g.userIds.length} members ({g.volume ?? 100}%)</span>
                                         </div>
-                                        <Button size={Button.Sizes.SMALL} color={isSolo ? Button.Colors.GREEN : Button.Colors.BRAND} onClick={() => { applySoloGroup(g.id); forceUpdate(); }}>
+                                        <Button size={Button.Sizes.SMALL} className={isSolo ? "vc-solo-btn vc-solo-active" : "vc-solo-btn"} onClick={() => { applySoloGroup(g.id); forceUpdate(); }}>
                                             {isSolo ? "✓ Active" : "Solo"}
                                         </Button>
                                     </div>
@@ -413,7 +411,7 @@ function SoloAudioModal({ modalProps }: { modalProps: RenderModalProps; }) {
                     {tab === "groups" && <>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                             <SectionLabel style={{ margin: 0 }}>Your Squads</SectionLabel>
-                            <Button size={Button.Sizes.MIN} color={Button.Colors.BRAND} onClick={() => {
+                            <Button size={Button.Sizes.MIN} className="vc-solo-btn" onClick={() => {
                                 const name = prompt("Enter new group name:");
                                 if (name?.trim()) { createGroup(name.trim()); forceUpdate(); }
                             }}>+ New Group</Button>
@@ -423,7 +421,7 @@ function SoloAudioModal({ modalProps }: { modalProps: RenderModalProps; }) {
                             <Card key={group.id}>
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.border}`, paddingBottom: "12px", marginBottom: "12px" }}>
                                     <span style={{ color: C.text, fontSize: "16px", fontWeight: "bold" }}>{group.name}</span>
-                                    <Button size={Button.Sizes.MIN} color={Button.Colors.RED} onClick={() => { deleteGroup(group.id); forceUpdate(); }}>Delete</Button>
+                                    <Button size={Button.Sizes.MIN} className="vc-solo-btn vc-solo-danger" onClick={() => { deleteGroup(group.id); forceUpdate(); }}>Delete</Button>
                                 </div>
 
                                 <SliderRow
@@ -504,7 +502,7 @@ function SoloAudioModal({ modalProps }: { modalProps: RenderModalProps; }) {
             </ModalContent>
 
             <ModalFooter style={{ padding: "16px 24px", backgroundColor: "transparent", borderTop: "none" }}>
-                <Button color={Button.Colors.BRAND} onClick={() => modalProps.onClose()} style={{ width: "100%" }}>Done</Button>
+                <Button className="vc-solo-btn" onClick={() => modalProps.onClose()} style={{ width: "100%" }}>Done</Button>
             </ModalFooter>
         </ModalRoot>
     );

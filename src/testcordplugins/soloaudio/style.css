@@ -1,0 +1,85 @@
+/* Solo Audio Control: HaloCord tokens (src/components/HaloUI.css), with stock Discord values when HaloCord theming is off. */
+.vc-solo-tabs {
+    display: flex;
+    gap: 2px;
+    width: 100%;
+    margin-top: 20px;
+    padding: 3px;
+    border: 1px solid var(--hc-panel-border, rgb(255 255 255 / 8%));
+    border-radius: 12px;
+    background: var(--hc-row-bg, rgb(0 0 0 / 20%));
+    box-sizing: border-box;
+}
+
+.vc-solo-tab {
+    flex: 1 1 0;
+    padding: 6px 9px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--hc-text-muted, #949ba4);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    text-align: center;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.16s ease-out, color 0.16s ease-out, box-shadow 0.16s ease-out;
+}
+
+.vc-solo-tab:hover {
+    background-color: var(--hc-window-bg, #1e1f22);
+    box-shadow: inset 0 0 0 1px var(--hc-row-border, rgb(255 255 255 / 6%));
+    color: var(--hc-text, #f2f3f5);
+}
+
+.vc-solo-tab[aria-selected="true"] {
+    background-color: rgb(var(--hc-accent-rgb, 88 101 242) / 16%);
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb, 88 101 242) / 45%);
+    color: var(--hc-accent, #5865f2);
+    font-weight: 600;
+}
+
+.vc-solo-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px;
+    border: 1px solid var(--hc-panel-border, rgb(255 255 255 / 8%));
+    border-radius: 12px;
+    background: var(--hc-row-bg, rgb(0 0 0 / 20%));
+}
+
+/* Accent secondary buttons, the settings button look: tinted edge at rest, a little fill on hover. */
+.vc-solo-modal .vc-solo-btn.vc-solo-btn {
+    border: 1px solid rgb(var(--hc-accent-rgb, 88 101 242) / 30%) !important;
+    background: var(--hc-row-bg, rgb(0 0 0 / 20%)) !important;
+    color: var(--hc-accent, #5865f2) !important;
+    transition: background-color 0.16s ease-out, border-color 0.16s ease-out;
+}
+
+.vc-solo-modal .vc-solo-btn.vc-solo-btn:hover:not(:disabled) {
+    border-color: rgb(var(--hc-accent-rgb, 88 101 242) / 55%) !important;
+    background: rgb(var(--hc-accent-rgb, 88 101 242) / 10%) !important;
+}
+
+.vc-solo-modal .vc-solo-btn.vc-solo-active {
+    border-color: rgb(var(--hc-accent-rgb, 88 101 242) / 60%) !important;
+    background: rgb(var(--hc-accent-rgb, 88 101 242) / 18%) !important;
+}
+
+.vc-solo-modal .vc-solo-btn.vc-solo-danger {
+    border-color: rgb(243 139 168 / 35%) !important;
+    color: var(--hc-danger, #f38ba8) !important;
+}
+
+.vc-solo-modal .vc-solo-btn.vc-solo-danger:hover:not(:disabled) {
+    border-color: rgb(243 139 168 / 60%) !important;
+    background: rgb(243 139 168 / 10%) !important;
+}
+
+.vc-solo-modal .vc-solo-btn > * {
+    color: inherit !important;
+}

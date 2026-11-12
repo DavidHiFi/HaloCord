@@ -13,10 +13,33 @@ const fs = require("fs");
 const path = require("path");
 
 const REPO = "DavidHiFi/HaloCord";
-const DOWNLOADS = `https://github.com/${REPO}/releases/download/`;
-// HALOCORD_UPDATE_FEED points the check at a local folder served over HTTP, for testing an update.
-const TEST_FEED = process.env.HALOCORD_UPDATE_FEED;
+// HALOCORD_UPDATE_FEED points the check at a local folder served over HTTP, for testing an update. Only a
+// loopback address is taken, so a variable set by something else cannot send updates to another server.
+const TEST_FEED = (() => {
+    const raw = process.env.HALOCORD_UPDATE_FEED;
+    if (!raw) return null;
+    try {
+        const u = new URL(raw);
+        if (u.protocol === "http:" && ["127.0.0.1", "localhost", "[::1]"].includes(u.hostname)) return u.href.replace(/\/?$/, "/");
+    } catch { }
+    console.warn("[HaloCord] HALOCORD_UPDATE_FEED ignored: only http://127.0.0.1 or localhost is allowed");
+    return null;
+})();
 const FEED = TEST_FEED || `https://github.com/${REPO}/releases/latest/download/`;
+// The release script signs each update file with the private half, kept in the owner's Bitwarden. The hash
+// and the installer come over the same connection, so the signature is what proves the file is ours.
+const UPDATE_KEY = crypto.createPublicKey({ key: Buffer.from("MCowBQYDK2VwAyEAouQOcOxvfNnPEtreGhZ1tD0jtF2DjdfzeJ4vY6g7+2k=", "base64"), format: "der", type: "spki" });
+const signedText = (version, url, sha256) => Buffer.from(`HaloCord-update\n${version}\n${url}\n${sha256}`, "utf8");
+function signatureOk(version, url, sha256, sig) {
+    try { return typeof sig === "string" && crypto.verify(null, signedText(version, url, sha256), UPDATE_KEY, Buffer.from(sig, "base64")); } catch { return false; }
+}
+// The installer must come from this repo's release downloads (or the loopback test feed), compared as a URL.
+function trustedInstallerUrl(raw) {
+    let u;
+    try { u = new URL(raw); } catch { return false; }
+    if (TEST_FEED) return u.origin === new URL(TEST_FEED).origin;
+    return u.protocol === "https:" && u.hostname === "github.com" && u.pathname.startsWith(`/${REPO}/releases/download/`) && !u.search && !u.hash;
+}
 const DIR = path.join(app.getPath("temp"), "HaloCord-update");
 const build = (() => { try { return require("./build.json"); } catch { return {}; } })();
 const UA = { "User-Agent": `HaloCord/${app.getVersion()}` };
@@ -101,10 +124,12 @@ async function check() {
     }
     const sha256 = /^[a-f0-9]{64}$/i.test(m.sha256 ?? "") ? m.sha256.toLowerCase() : null;
     const url = String(m.url ?? "");
-    if (!sha256 || !url.startsWith(TEST_FEED || DOWNLOADS))
+    if (!sha256 || !trustedInstallerUrl(url))
         throw new Error(`The update file for HaloCord ${version} is incomplete, so nothing was downloaded`);
+    if (!signatureOk(version, url, sha256, m.sig))
+        throw new Error(`The update file for HaloCord ${version} is not signed by HaloCord, so nothing was downloaded`);
     if (latest?.version !== version) staged = null;
-    latest = { version, sha256, fetch: () => open(url) };
+    latest = { version, sha256, url, sig: m.sig, fetch: () => open(url) };
     const notes = Array.isArray(m.notes) && m.notes.length ? m.notes : [`HaloCord ${version}`];
     return { changes: notes.map(message => ({ hash: `v${version}`, author: "HaloCord", message: String(message) })), diverged: false };
 }
@@ -121,8 +146,9 @@ async function readyInstaller() {
     try {
         const r = JSON.parse(fs.readFileSync(READY, "utf8"));
         const file = path.join(DIR, `HaloCord-Setup-${r.version}.exe`);
-        if (isNewer(r.version, app.getVersion()) && fs.existsSync(file) && await sha256Of(file) === r.sha256) {
-            latest = { version: r.version, sha256: r.sha256, fetch: null };
+        // Signed like the update file, so an installer and ready.json planted in the temp folder are not run.
+        if (isNewer(r.version, app.getVersion()) && signatureOk(r.version, r.url, r.sha256, r.sig) && fs.existsSync(file) && await sha256Of(file) === r.sha256) {
+            latest = { version: r.version, sha256: r.sha256, url: r.url, sig: r.sig, fetch: null };
             staged = file;
             return true;
         }
@@ -169,7 +195,7 @@ async function fetchInstaller() {
     }
     fs.renameSync(part, file);
     staged = file;
-    fs.writeFileSync(READY, JSON.stringify({ version: latest.version, sha256: latest.sha256 }));
+    fs.writeFileSync(READY, JSON.stringify({ version: latest.version, sha256: latest.sha256, url: latest.url, sig: latest.sig }));
     console.log(`[HaloCord] update ${latest.version} downloaded and verified: ${file}`);
     return "updated";
 }
@@ -178,7 +204,20 @@ async function fetchInstaller() {
 // the shortcuts) and, with --force-run, starts the new version. It always restarts: an install that
 // started nothing left people opening HaloCord while their files were being replaced, and the installer
 // killed that window seconds later. Settings in %APPDATA%\HaloCord are not touched.
+// Hashes the staged installer again right before it runs, so a file swapped in the temp folder after the
+// download check never starts. Blocks the main process briefly, but only while HaloCord is closing to update.
+function stagedIntact() {
+    try {
+        if (crypto.createHash("sha256").update(fs.readFileSync(staged)).digest("hex") === latest.sha256) return true;
+    } catch { }
+    console.warn("[HaloCord] the downloaded installer changed after it was checked, so it was deleted");
+    try { fs.rmSync(DIR, { recursive: true, force: true }); } catch { }
+    staged = null;
+    return false;
+}
+
 function runInstaller() {
+    if (!stagedIntact()) return false;
     installing = true;
     // The loopback helper follows the shared app, not HaloCord, so stop it here; the keys and
     // Stream Deck helpers exit with HaloCord.
@@ -186,12 +225,13 @@ function runInstaller() {
     noteAttempt(latest.version);
     spawn(staged, ["/S", "--updated", "--force-run"], { detached: true, stdio: "ignore", windowsHide: true }).unref();
     console.log(`[HaloCord] installing update ${latest.version}`);
+    return true;
 }
 
 // Restart: install the downloaded update and start the new version. Returns false when there is none.
 function install() {
     if (!staged || installing) return false;
-    runInstaller();
+    if (!runInstaller()) return false;
     app.quit();
     setTimeout(() => app.exit(0), 5000);
     return true;
@@ -272,7 +312,7 @@ async function launch({ win, hidden }) {
     const installNow = () => {
         say("Installing update", `HaloCord ${latest.version}`, 100);
         console.log(`[HaloCord] launch update: installing ${latest.version}`);
-        runInstaller();
+        if (!runInstaller()) return done();
         setTimeout(() => { app.quit(); setTimeout(() => app.exit(0), 5000); }, 400);
     };
     try {

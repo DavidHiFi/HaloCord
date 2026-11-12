@@ -1247,6 +1247,9 @@ function tick() {
             void pollStats();
         }
 
+        // Nothing is on screen while the window is hidden: keep the meter list in sync, skip levels and drawing.
+        if (document.hidden) return;
+
         // also run here so displays stay honest while the rAF loop is parked
         if (!web) readNativeLevels();
         advanceEnvelopes(now);

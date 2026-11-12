@@ -169,15 +169,26 @@ export const settings = definePluginSettings({
     fixProfileNameplate: { type: OptionType.BOOLEAN, default: true, description: "Fixes the rounding of the profile nameplate", onChange: () => apply() },
     showUserAndStatus: { type: OptionType.BOOLEAN, default: true, description: "Show the user and the status at the same time", onChange: () => apply() },
     showDrawerLabel: { type: OptionType.BOOLEAN, default: false, description: "Show a 'P' label next to the plugin drawer toggle so it's clear what the arrow opens", onChange: () => apply() },
+    callButtonsFill: { type: OptionType.BOOLEAN, default: true, description: "Stretch the voice panel's call buttons across the row instead of the 48px grid", onChange: () => apply() },
     streamInfoButton: { type: OptionType.BOOLEAN, default: false, description: "Show a user area button that turns the stream info overlay on and off" },
     showLimiterButton: { type: OptionType.BOOLEAN, default: true, description: "Limiter button: show a user area button that turns the Hard Limiter on and off. Right click it for the limiter settings." },
     layoutLocked: { type: OptionType.BOOLEAN, default: true, description: "Lock the user area button layout. Unlock it to hold and drag any button to another spot or section.", onChange: () => syncLayout() },
     userAreaLayout: { type: OptionType.CUSTOM, description: "Saved user area button positions.", default: {} as ButtonLayout, hidden: true },
 });
 
+// Spreading the store copies its proxy entries, and a proxy in the saved tree makes every settings save throw
+// "An object could not be cloned". Every write goes through this, so only plain { s, i } pairs are stored.
+function plainLayout(layout: ButtonLayout): ButtonLayout {
+    const out: ButtonLayout = {};
+    for (const [label, entry] of Object.entries(layout)) {
+        if (entry) out[label] = { s: entry.s, i: entry.i };
+    }
+    return out;
+}
+
 const layoutApi = {
     getLayout: (): ButtonLayout => settings.store.userAreaLayout,
-    setLayout: (layout: ButtonLayout) => { settings.store.userAreaLayout = layout; },
+    setLayout: (layout: ButtonLayout) => { settings.store.userAreaLayout = plainLayout(layout); },
     isLocked: () => settings.store.layoutLocked,
     getOrderBase: () => settings.store.userPanelLayout.startsWith("split_") ? 40000 : 0,
     getGap: () => settings.store.buttonGap ?? 6,
@@ -293,6 +304,9 @@ function setBtnCfg(id: string, patch: Partial<ButtonConfig>) {
 function cssVal(val: string): string {
     return JSON.stringify(val);
 }
+
+// The stream info button's fixed name, which keys its saved place and its Buttons tab switch.
+const STREAM_INFO_LABEL = "Show stream info (right-click for settings)";
 
 function getBtnSelector(canonical: string): string {
     const label = cssVal(canonical);
@@ -898,6 +912,12 @@ function buildCSS(): string {
         case "hidden": lines.push(`${S.callControls} { display: none !important; }`); break;
         default:
             if (gap !== 4) lines.push(`${S.callControls} { gap: ${gap}px !important; }`);
+            // Fill: the call buttons share the row like Discord's own layout. Off: fixed 48px columns that
+            // line up with the button grid below (Discord's 1fr columns around 48px buttons left wide gaps).
+            lines.push(st.callButtonsFill
+                ? `html body section[class*="panels_"] ${S.callControls} { grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)) !important; }
+                   html body section[class*="panels_"] ${S.callControls} > [data-hc-ua-key] { width: auto !important; justify-self: stretch !important; }`
+                : `html body section[class*="panels_"] ${S.callControls} { grid-template-columns: repeat(auto-fill, 48px) !important; justify-content: start !important; }`);
             break;
     }
 
@@ -951,8 +971,10 @@ function buildCSS(): string {
     // chevron hidden the button keeps all four corners; with it shown the chevron carries the same plate,
     // so the pair reads as one rounded button instead of a plate cut flat on one side.
     const pairRadius = { pill: 20, square: 2, default: 8 }[st.buttonStyle] ?? radius;
-    const muteButton = `${S.panelButtons} .audioButtonParent_gKpIZP .audioButtonWithMenu_gKpIZP`;
-    const muteChevron = `${S.panelButtons} .audioButtonParent_gKpIZP ${S.chevron}`;
+    // Mute and Deafen can be dragged into the voice panel's call row, so every rule covers both homes.
+    const audioHomes = `:is(${S.panelButtons}, ${S.callControls})`;
+    const muteButton = `${audioHomes} .audioButtonParent_gKpIZP .audioButtonWithMenu_gKpIZP`;
+    const muteChevron = `${audioHomes} .audioButtonParent_gKpIZP ${S.chevron}`;
     if (st.hideChevrons) {
         lines.push(`${muteButton} { border-start-end-radius: ${pairRadius}px !important; border-end-end-radius: ${pairRadius}px !important; }`);
     } else if (st.buttonStyle !== "default") {
@@ -999,7 +1021,7 @@ function buildCSS(): string {
         lines.push(`absolutelyNothing${callButtonStylingCamera === true ? `${defaultBtn}Camera"]:not([aria-pressed="true"])` : ""}${callButtonStylingScreenShare === true ? `${defaultBtn}Screen Share"]:not([aria-pressed="true"])` : ""}${callButtonStylingActivity === true ? `${defaultBtn}Activity"]:not([aria-pressed="true"])` : ""}${callButtonStylingSoundboard === true ? `, ${S.callControls} [data-deracul-label="Soundboard"] ${S.callButton}[type="button"]:not([aria-pressed="true"])` : ""} { background: transparent !important }`);
     }
 
-    if (st.hideChevrons) lines.push(`${S.panelButtons} ${S.chevron} { display: none !important; }`);
+    if (st.hideChevrons) lines.push(`${S.panelButtons} ${S.chevron}, ${muteChevron} { display: none !important; }`);
     if (st.hideDisconnect) lines.push(`${S.disconnect} { display: none !important; }`);
     if (st.hideVoiceStatus) lines.push(`${S.voiceStatus} { display: none !important; }`);
     if (st.hidePingIcon) lines.push(`${S.pingIcon} { display: none !important; }`);
@@ -1008,6 +1030,7 @@ function buildCSS(): string {
         lines.push(`${S.callControls} ${S.callButton}[type="button"] .lottieIcon_69Onuk, ${S.callControls} ${S.callButton} svg { width: 18px !important; height: 18px !important; }`);
     }
     if (st.hideUserPanelButton) lines.push(`${getBtnSelector("Panel Layout")} { display: none !important; }`);
+    if (!st.streamInfoButton) lines.push(`${getBtnSelector(STREAM_INFO_LABEL)} { display: none !important; }`);
 
     if (st.lockButtonPosition) {
         const isSplit = ["split_row", "split_grid2", "split_grid3", "split_grid4", "all_top"].includes(st.userPanelLayout);
@@ -1912,7 +1935,7 @@ function ButtonsDragTab() {
             if (entry) layout[it.label] = entry;
             else delete layout[it.label];
         });
-        settings.store.userAreaLayout = layout;
+        settings.store.userAreaLayout = plainLayout(layout);
         setItems(next);
         apply();
         forceUpdate();
@@ -1942,6 +1965,7 @@ function ButtonsDragTab() {
         const isOver = dragOverIndex === index && activeDragIndex !== index;
         const canonical = getCanonicalLabel(item.label);
         const isPanelLayout = canonical === "Panel Layout" || item.id === "Panel Layout";
+        const isStreamInfo = item.label === STREAM_INFO_LABEL || item.id === STREAM_INFO_LABEL;
         const builtIn = renderBuiltInIcon(canonical);
         return (
             <div
@@ -1989,6 +2013,8 @@ function ButtonsDragTab() {
                     )}
                 {isPanelLayout ? (
                     <MiniToggle value={!settings.store.hideUserPanelButton} onChange={v => set("hideUserPanelButton", !v)} />
+                ) : isStreamInfo ? (
+                    <MiniToggle value={settings.store.streamInfoButton} onChange={v => set("streamInfoButton", v)} />
                 ) : (
                     <MiniToggle
                         value={!cfg.hidden}
@@ -3448,8 +3474,7 @@ function PanelLayoutModal({ modalProps }: { modalProps: RenderModalProps; }) {
                             <FormSwitch title="Lock Button Position" description="Prevents Mute, Deafen, and Settings buttons from dropping down to a new row when you have a long status or share screen." value={s.lockButtonPosition} onChange={v => set("lockButtonPosition", v)} />
                             <FormSwitch title="Hide line" description="Hide the line between user and buttons" value={s.hideLine} onChange={v => set("hideLine", v)} />
                             <FormSwitch title="Fix Profile Nameplate" description="Fixes the rounding of the profile nameplate" value={s.fixProfileNameplate} onChange={v => set("fixProfileNameplate", v)} />
-                            <FormSwitch title="Show User And Status" description="Show the user and the status at the same time" value={s.showUserAndStatus} onChange={v => set("showUserAndStatus", v)} />
-                            <FormSwitch title="Stream info button" description="Show a user area button that turns the stream info overlay on and off" value={s.streamInfoButton} onChange={v => set("streamInfoButton", v)} hideBorder />
+                            <FormSwitch title="Show User And Status" description="Show the user and the status at the same time" value={s.showUserAndStatus} onChange={v => set("showUserAndStatus", v)} hideBorder />
                         </Card>
                     </>}
 
@@ -3457,6 +3482,9 @@ function PanelLayoutModal({ modalProps }: { modalProps: RenderModalProps; }) {
                         <SectionHeading>Action Bar Layout</SectionHeading>
                         <Card variant="primary">
                             <Dropdown label="Call Controls Alignment" options={CALL_LAYOUTS} value={s.callControlsLayout} onChange={v => set("callControlsLayout", v)} />
+                            {s.callControlsLayout === "default" && (
+                                <FormSwitch title="Fill the call row" description="Stretch the call buttons across the whole row. Off keeps them at the 48px size of the buttons below." value={s.callButtonsFill} onChange={v => set("callButtonsFill", v)} hideBorder />
+                            )}
                         </Card>
 
                         <SectionHeading>Styling</SectionHeading>
@@ -3588,16 +3616,15 @@ function StreamInfoIcon({ style }: { style?: React.CSSProperties; }) {
 }
 
 function StreamInfoButton({ iconForeground, hideTooltips, nameplate }: UserAreaRenderProps) {
-    const { streamInfoButton } = settings.use(["streamInfoButton"]);
     const on = useStateFromStores([DeveloperOptionsStore], () => DeveloperOptionsStore.isStreamInfoOverlayEnabled === true);
-    if (!streamInfoButton) return null;
+    const tooltip = (on ? "Hide stream info" : "Show stream info") + " (right-click for settings)";
 
-    const label = (on ? "Hide stream info" : "Show stream info") + " (right-click for settings)";
-
+    // Always rendered so the Buttons tab can list it; the streamInfoButton setting hides it with CSS (apply()).
+    // The label stays fixed: Panel Layout keys its saved place and switch by label.
     return (
         <UserAreaButton
-            tooltipText={hideTooltips ? void 0 : label}
-            aria-label={label}
+            tooltipText={hideTooltips ? void 0 : tooltip}
+            aria-label={STREAM_INFO_LABEL}
             aria-checked={on}
             role="switch"
             className="icon-color-fix"
@@ -3777,6 +3804,8 @@ export default definePlugin({
 
     async start() {
         running = true;
+        // Rewrites layouts saved by older builds as plain copies with the same values.
+        settings.store.userAreaLayout = plainLayout(settings.store.userAreaLayout ?? {});
         await Promise.all([loadConfigs(), initModuleManager()]);
         // Turned off while the configs loaded: stop() already ran, so add nothing.
         if (!running) return;

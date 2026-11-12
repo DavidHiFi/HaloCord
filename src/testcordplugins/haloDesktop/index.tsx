@@ -15,7 +15,7 @@ import { VuMeterSettings } from "@testcordplugins/VoiceVUMeters";
 import { TestcordDevs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
 import { findStoreLazy } from "@webpack";
-import { FluxDispatcher, i18n, Select, useEffect, useRef, useState, useStateFromStores } from "@webpack/common";
+import { FluxDispatcher, i18n, Select, SelectedChannelStore, useEffect, useRef, useState, useStateFromStores } from "@webpack/common";
 import type { ComponentType } from "react";
 
 // Shell side: desktop/shell/hc-desktop.js, exposed by the preload as window.HaloCordDesktop.
@@ -182,6 +182,10 @@ const settings = definePluginSettings({
     streamInfoBorder: { type: OptionType.BOOLEAN, default: true, description: "Resting border around the stream info box", hidden: true, onChange: applyStreamInfoLook },
     streamInfoHoverBorder: { type: OptionType.BOOLEAN, default: true, description: "Gradient border on the stream info box on hover", hidden: true, onChange: applyStreamInfoLook }
 });
+
+// Discord's call tile participant: type 0 is a Go Live stream (1 hidden stream, 2 user, 3 activity).
+const STREAM_PARTICIPANT = 0;
+interface StreamParticipant { type?: number; stream?: { channelId?: string | null; }; }
 
 const DeveloperOptionsStore = findStoreLazy("DeveloperOptionsStore") as { isStreamInfoOverlayEnabled?: boolean; };
 
@@ -372,12 +376,13 @@ export default definePlugin({
         },
         // The stream store only listens to VOICE_STATE_UPDATES, so passive guilds never clear a
         // stream when its owner leaves voice: ghost avatars in the guild tooltip and Active Now.
-        // Stream info box: Discord only draws it on the call tile under the pointer.
+        // Stream info box: Discord only draws it on the call tile under the pointer. Always on is limited to
+        // stream tiles in the call you are in, so a channel's preview (not joined) shows no boxes.
         {
             find: ".isStreamInfoOverlayEnabled),[",
             replacement: {
-                match: /(\i)&&(\i)&&(?=\(0,\i\.jsx\)\(\i\.\i,\{currentUserId:\i,participant:)/,
-                replace: "$1&&($2||$self.streamInfoAlways())&&"
+                match: /(\i)&&(\i)&&(?=\(0,\i\.jsx\)\(\i\.\i,\{currentUserId:\i,participant:(\i)\}\))/,
+                replace: "$1&&($2||$self.streamInfoAlways($3))&&"
             }
         },
         {
@@ -391,7 +396,11 @@ export default definePlugin({
 
     streamVoiceStateUpdates: null as VoiceStatesHandler | null,
 
-    streamInfoAlways: () => settings.store.streamInfoAlways,
+    streamInfoAlways(participant?: StreamParticipant) {
+        if (!settings.store.streamInfoAlways || participant?.type !== STREAM_PARTICIPANT) return false;
+        const channelId = participant.stream?.channelId;
+        return channelId == null || channelId === SelectedChannelStore.getVoiceChannelId();
+    },
 
     passiveStreams({ guildId, voiceStates, removedVoiceStateUsers }: PassiveVoiceUpdate) {
         return this.streamVoiceStateUpdates?.({

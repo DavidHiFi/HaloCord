@@ -163,6 +163,39 @@ function stopNativeNotificationPolling() {
     }
 }
 
+// Progress and notifications only come from a native upload, so both polls run while one is in flight and
+// a few seconds after, instead of calling the main process 90 times a minute while idle.
+const POLL_TAIL_MS = 3000;
+let uploadsInFlight = 0;
+let pollStopTimer: number | null = null;
+
+function stopUploadPolling() {
+    if (pollStopTimer !== null) clearTimeout(pollStopTimer);
+    pollStopTimer = null;
+    stopProgressPolling();
+    stopNativeNotificationPolling();
+}
+
+async function trackUpload<T>(upload: Promise<T>): Promise<T> {
+    uploadsInFlight++;
+    if (pollStopTimer !== null) clearTimeout(pollStopTimer);
+    pollStopTimer = null;
+    startProgressPolling();
+    startNativeNotificationPolling();
+    try {
+        return await upload;
+    } finally {
+        uploadsInFlight = Math.max(0, uploadsInFlight - 1);
+        if (uploadsInFlight === 0) {
+            void pollNativeNotifications();
+            pollStopTimer = window.setTimeout(() => {
+                pollStopTimer = null;
+                if (uploadsInFlight === 0) stopUploadPolling();
+            }, POLL_TAIL_MS);
+        }
+    }
+}
+
 // Format ETA seconds into human-readable string
 function SettingsComponent(props: { setValue(v: any): void; }) {
     const initialUploader = settings.store.fileUploader || "Catbox";
@@ -1187,7 +1220,7 @@ async function handleSmallFileUpload(file: File, skipBatchStart = false) {
 
         // Secure upload: send buffer to main process (no file paths exposed)
         log.debug("Calling Native.uploadFileBuffer...");
-        const result = await Native.uploadFileBuffer(
+        const result = await trackUpload(Native.uploadFileBuffer(
             buffer,
             uploadFileName,
             mimeType,
@@ -1210,7 +1243,7 @@ async function handleSmallFileUpload(file: File, skipBatchStart = false) {
                 uploadTimeout: parseInt(settings.store.uploadTimeout || "300000", 10),
                 useEmbedsVideo: settings.store.useEmbedsVideo
             }
-        );
+        ));
 
         const typedResult = result as UploadResult;
         log.debug("Upload result", result);
@@ -1326,7 +1359,7 @@ async function triggerFileUpload() {
         log.info(`Manual uploader: ${selectedUploader}`);
 
         // Secure upload: everything happens in main process (unlimited file size)
-        const result = await Native.pickAndUploadFile({
+        const result = await trackUpload(Native.pickAndUploadFile({
             fileUploader: selectedUploader,
             gofileToken: settings.store.gofileToken,
             catboxUserHash: settings.store.catboxUserHash,
@@ -1346,7 +1379,7 @@ async function triggerFileUpload() {
             nitroTier: settings.store.nitroType,
             uploadTimeout: parseInt(settings.store.uploadTimeout || "300000", 10),
             useEmbedsVideo: settings.store.useEmbedsVideo
-        }) as UploadResult & { useNativeUpload?: boolean; buffer?: ArrayBuffer; };
+        })) as UploadResult & { useNativeUpload?: boolean; buffer?: ArrayBuffer; };
 
         // If file is under Nitro limit, use Discord's native upload
         if (result.useNativeUpload && result.buffer && result.fileName) {
@@ -1561,10 +1594,8 @@ export default definePlugin({
     ],
 
     start() {
-        // Start progress polling for the progress bar
-        startProgressPolling();
-        startNativeNotificationPolling();
-        log.debug("Progress polling initialized from plugin start");
+        // Catch anything queued before a reload; the polls themselves start with each upload.
+        void pollNativeNotifications();
 
         // Enable drag-and-drop if enabled in settings
         if (settings.store.dragAndDropEnabled !== "No") {
@@ -1584,8 +1615,7 @@ export default definePlugin({
     },
 
     stop() {
-        // Stop progress polling to prevent memory leaks
-        stopProgressPolling();
+        stopUploadPolling();
 
         // Disable drag-and-drop
         disableDragDropOverride();
@@ -1593,8 +1623,6 @@ export default definePlugin({
         // Disable paste
         document.removeEventListener("paste", handlePaste, { capture: true });
         log.info("BigFileUpload disabled");
-
-        stopNativeNotificationPolling();
     },
 
     // Following SpotifyControls pattern - render the component directly

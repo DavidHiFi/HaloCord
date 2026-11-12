@@ -35,6 +35,73 @@ export function setNitroLimitChecker(fn: (fileSize: number) => boolean) {
     shouldUseNativeUploadFn = fn;
 }
 
+const OVERLAY_STYLE_ID = "bigfileupload-animations";
+
+// HaloCord's tokens (HaloUI.css) give the overlay the client's frosted dock look; the fallbacks are stock Discord.
+const OVERLAY_CSS = `
+.bfu-drop-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    background: rgb(var(--hc-crust-rgb, 0 0 0) / 45%);
+    backdrop-filter: blur(12px) saturate(120%);
+}
+.bfu-drop-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    min-width: 360px;
+    padding: 36px 56px 32px;
+    border: var(--hc-ring-thin, 1.5px) solid transparent;
+    border-radius: 16px;
+    background:
+        linear-gradient(var(--hc-window-bg, #313338), var(--hc-window-bg, #313338)) padding-box,
+        var(--hc-gradient, linear-gradient(135deg, var(--brand-500, #5865f2), var(--brand-500, #5865f2))) border-box;
+    box-shadow: 0 12px 40px rgb(0 0 0 / 45%);
+}
+.bfu-drop-icon {
+    width: 128px;
+    height: 128px;
+    animation: bfu-drop-pulse 1.5s ease-in-out infinite;
+}
+.bfu-drop-title {
+    color: var(--hc-text, #f2f3f5);
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+}
+.bfu-drop-channel {
+    color: var(--hc-accent, var(--brand-360, #949cf7));
+}
+.bfu-drop-sub {
+    padding: 4px 12px;
+    border: 1px solid var(--hc-row-border, rgb(255 255 255 / 6%));
+    border-radius: 999px;
+    background: var(--hc-row-bg, rgb(0 0 0 / 20%));
+    color: var(--hc-text-muted, #b5bac1);
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+}
+@keyframes bfu-drop-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.9; }
+}
+`;
+
+function ensureOverlayStyle() {
+    if (document.getElementById(OVERLAY_STYLE_ID)) return;
+    const style = document.createElement("style");
+    style.id = OVERLAY_STYLE_ID;
+    style.textContent = OVERLAY_CSS;
+    document.head.appendChild(style);
+}
+
 function showDragOverlay() {
     if (dragOverlay) return;
     log.debug("Creating drag overlay for secure upload prompt");
@@ -43,76 +110,34 @@ function showDragOverlay() {
     const channel = channelId ? ChannelStore.getChannel(channelId) : null;
     const channelName = channel?.name || "channel";
 
+    ensureOverlayStyle();
+
     dragOverlay = document.createElement("div");
-    dragOverlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(88, 101, 242, 0.3);
-        backdrop-filter: blur(4px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        pointer-events: none;
-    `;
+    dragOverlay.className = "bfu-drop-overlay";
 
     const content = document.createElement("div");
-    content.style.cssText = `
-        background: rgba(88, 101, 242, 0.95);
-        padding: 48px 64px;
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 16px;
-    `;
+    content.className = "bfu-drop-card";
 
     const icon = document.createElement("img");
+    icon.className = "bfu-drop-icon";
     icon.src = "https://media.discordapp.net/stickers/1039992459209490513.png";
-    icon.style.cssText = `
-        width: 128px;
-        height: 128px;
-        animation: pulse 1.5s ease-in-out infinite;
-    `;
 
     const text = document.createElement("div");
-    text.textContent = "Upload to #" + channelName;
-    text.style.cssText = `
-        font-size: 24px;
-        font-weight: 700;
-        color: white;
-        text-align: center;
-    `;
+    text.className = "bfu-drop-title";
+    text.append("Upload to ");
+    const channelLabel = document.createElement("span");
+    channelLabel.className = "bfu-drop-channel";
+    channelLabel.textContent = "#" + channelName;
+    text.appendChild(channelLabel);
 
     const subtext = document.createElement("div");
+    subtext.className = "bfu-drop-sub";
     subtext.textContent = "Using BigFileUpload (Max 1GB via drag-and-drop)";
-    subtext.style.cssText = `
-        font-size: 14px;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.8);
-        text-align: center;
-    `;
 
     content.appendChild(icon);
     content.appendChild(text);
     content.appendChild(subtext);
     dragOverlay.appendChild(content);
-
-    if (!document.getElementById("bigfileupload-animations")) {
-        const style = document.createElement("style");
-        style.id = "bigfileupload-animations";
-        style.textContent = `
-            @keyframes pulse {
-                0%, 100% { transform: scale(1); opacity: 1; }
-                50% { transform: scale(1.05); opacity: 0.9; }
-            }
-        `;
-        document.head.appendChild(style);
-    }
 
     document.body.appendChild(dragOverlay);
 }
@@ -279,7 +304,7 @@ export function disableDragDropOverride() {
     dragEnterCount = 0;
 
     // Clean up the animation style element to prevent memory leak
-    const animationStyle = document.getElementById("bigfileupload-animations");
+    const animationStyle = document.getElementById(OVERLAY_STYLE_ID);
     if (animationStyle) {
         animationStyle.remove();
     }

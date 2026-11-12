@@ -952,13 +952,6 @@ html.hc-theming label:has(input:checked) {
 }
 
 @container style(--hc-sw-scope: 1) {
-    html.hc-theming.hc-theming :is([class*="thin_"], [class*="auto_"], [class*="scroller_"], [class*="Scroller_"]):not([class*="none_"]) {
-        scrollbar-color: var(--hc-scroll-thumb) transparent;
-        scrollbar-width: thin;
-    }
-}
-
-@container style(--hc-sw-scope: 1) {
     html.hc-theming.hc-theming ::-webkit-scrollbar-track {
         background: transparent;
     }
@@ -1301,9 +1294,12 @@ html.hc-theming nav[class*="guilds_"] [class*="folderButton_"] > [class~="wrappe
 }
 
 /* The home logo fills its bubble edge to edge like a server icon (MochaCord shrinks it to 31px): the plate is
-   about 90% of the PNG, so the image is 112% and the bubble clips it. The rail ring above already frames it. */
+   about 90% of the PNG, so the image is 112% and the bubble clips it. The rail ring above already frames it.
+   The bubble has the 12px corner of every other rail tile, so it sits concentric with the rail ring. */
 html.hc-theming #app-mount nav[class*="guilds_"] [data-list-item-id="guildsnav___home"] > [class*="childWrapper_"] {
+    position: relative;
     overflow: hidden;
+    border-radius: 12px !important;
 }
 
 html.hc-theming #app-mount nav[class*="guilds_"] [data-list-item-id="guildsnav___home"] > [class*="childWrapper_"] > img {
@@ -1311,6 +1307,16 @@ html.hc-theming #app-mount nav[class*="guilds_"] [data-list-item-id="guildsnav__
     width: 112%;
     height: 112%;
     object-fit: cover;
+}
+
+/* A quiet accent edge drawn over the home logo like the other tiles' tinted edge. */
+html.hc-theming #app-mount nav[class*="guilds_"] [data-list-item-id="guildsnav___home"] > [class*="childWrapper_"]::after {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 35%);
+    content: "";
+    pointer-events: none;
 }
 
 /* Voice, stream and count badges on a rail icon sit above its hover ring instead of under it. */
@@ -1932,6 +1938,16 @@ html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="accountPo
     padding: 4px 7px;
 }
 
+/* Panel Layout's buttons beside the name take the account row's top gap, so they centre on the avatar row
+   below the separator instead of on the gap above it (layoutDrag.ts reads this). */
+html.hc-theming {
+    --hc-ua-name-top: 4px;
+}
+
+html.hc-theming[data-hc-buttons-top] {
+    --hc-ua-name-top: 16px;
+}
+
 /* The flex gap and stretched rows left about 23 px between the button grid and the name row. The
    panel's fixed height cannot hold extra dragged-in button rows, so let it hug its content; every
    separator offset below is then measured from the account row, which is always the last one. */
@@ -2097,4 +2113,169 @@ html.hc-theming[data-hc-theme] section[class*="panels_"] {
 [class*="repliedTextPreview_"] .messagelogger-edited .edited {
     margin-inline-start: 0.35em;
     white-space: nowrap;
+}
+
+/* Profile tabs (Board, Activity, Mutual Friends, Mutual Servers): one dock with pill tabs, the settings tab look,
+   instead of Discord's underline. The modal's dock is its tab scroller, so a long tab scrolls inside the dock
+   rather than cutting through its edge. */
+html.hc-theming[data-hc-theme] :is([class~="tabBar_OpoUmC"], [class~="tabListScroller_y4ZEM5"]) {
+    padding: 3px !important;
+    border: 1px solid var(--hc-panel-border) !important;
+    border-radius: 12px;
+    background: var(--hc-row-bg);
+}
+
+html.hc-theming[data-hc-theme] [class~="tabBar_OpoUmC"] {
+    gap: 2px !important;
+    margin: 16px 16px 0;
+}
+
+html.hc-theming[data-hc-theme] [class~="tabListScroller_y4ZEM5"] > [class~="top_6zZYhF"] {
+    gap: 2px;
+    border-bottom: 0 !important;
+}
+
+html.hc-theming[data-hc-theme] :is([class~="tabBar_OpoUmC"] [class~="tabBarItem_OpoUmC"], [class~="tabBarItem_y4ZEM5"]) {
+    height: auto !important;
+    margin: 0 !important;
+    padding: 6px 9px !important;
+    border: 0 !important;
+    border-radius: 8px;
+    line-height: 20px !important;
+    color: var(--hc-text-muted);
+    transition: background-color 0.16s ease-out, color 0.16s ease-out, box-shadow 0.16s ease-out;
+}
+
+html.hc-theming[data-hc-theme] :is([class~="tabBar_OpoUmC"] [class~="tabBarItem_OpoUmC"], [class~="tabBarItem_y4ZEM5"])::after {
+    display: none !important;
+}
+
+html.hc-theming[data-hc-theme] :is([class~="tabBar_OpoUmC"] [class~="tabBarItem_OpoUmC"], [class~="tabBarItem_y4ZEM5"]):hover {
+    background-color: var(--hc-window-bg);
+    box-shadow: inset 0 0 0 1px var(--hc-row-border);
+    color: var(--hc-text);
+}
+
+html.hc-theming[data-hc-theme] :is([class~="tabBar_OpoUmC"] [class~="tabBarItem_OpoUmC"], [class~="tabBarItem_y4ZEM5"]):is([class~="selected_6zZYhF"], [aria-selected="true"]) {
+    background-color: rgb(var(--hc-accent-rgb) / 16%);
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
+    color: var(--hc-accent) !important;
+}
+
+/* The buttons on a profile (banner buttons, Close, Add Friend, More) sat almost black on the art; a light frosted
+   glass with an edge instead. */
+html.hc-theming[data-hc-theme] :is(
+    [class~="bannerButton_C4gRrZ"],
+    :is([class~="modalHeaderButtons_ZhNJfE"], [class~="profileButtons_s3DB6Y"]) [class~="secondary_F7qvhY"]
+) {
+    border: 1px solid rgb(var(--hc-ink-rgb) / 24%) !important;
+    background: rgb(var(--hc-ink-rgb) / 18%) !important;
+    color: var(--hc-text) !important;
+    backdrop-filter: blur(12px) saturate(140%);
+    transition: background-color 0.16s ease-out, border-color 0.16s ease-out;
+}
+
+html.hc-theming[data-hc-theme] :is(
+    [class~="bannerButton_C4gRrZ"],
+    :is([class~="modalHeaderButtons_ZhNJfE"], [class~="profileButtons_s3DB6Y"]) [class~="secondary_F7qvhY"]
+):is(:hover, :active) {
+    border-color: rgb(var(--hc-accent-rgb) / 70%) !important;
+    background: rgb(var(--hc-ink-rgb) / 26%) !important;
+}
+
+/* Profile activity cards (Playing, In voice, recent games) had no edge on the profile art; they take the quiet ring,
+   and the accent when one can be clicked. */
+html.hc-theming[data-hc-theme] [class~="card_Bu4Al8"] {
+    border: 1px solid var(--hc-ring-rest);
+    transition: border-color 0.16s ease-out;
+}
+
+html.hc-theming[data-hc-theme] [class~="clickableContainer_Bu4Al8"]:hover > [class~="card_Bu4Al8"] {
+    border-color: rgb(var(--hc-accent-rgb) / 55%);
+}
+
+/* Settings pages on Discord's new layout (Account, Data & Privacy, Notifications): each category is a dock like the
+   Voice & Video groups, with the gradient edge on hover, instead of loose rows split by hairlines. */
+html.hc-theming[data-hc-theme] [class~="categories_nNq2Vb"] {
+    gap: 16px;
+}
+
+html.hc-theming[data-hc-theme] [class~="categories_nNq2Vb"] > [class~="divider_nNq2Vb"] {
+    display: none !important;
+}
+
+html.hc-theming[data-hc-theme] [class~="categories_nNq2Vb"] > [class~="container_Gl6U0S"] {
+    margin: 0 !important;
+    padding: 16px 20px !important;
+    border: 1px solid var(--hc-panel-border);
+    border-radius: 12px;
+    background: var(--hc-flyout-bg);
+    transition: border-color 0.16s ease-out;
+}
+
+html.hc-theming[data-hc-theme] [class~="categories_nNq2Vb"] > [class~="container_Gl6U0S"]:hover {
+    border-color: transparent;
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box;
+}
+
+/* Rows that open something take the settings tab hover: the dark fill and a hairline, not a grey slab. */
+html.hc-theming[data-hc-theme] [class~="baseControlItem_FiiQ6I"] {
+    border-radius: 10px;
+    transition: background-color 0.16s ease-out, box-shadow 0.16s ease-out;
+}
+
+html.hc-theming[data-hc-theme] [class~="baseControlItem_FiiQ6I"][class~="clickable_FiiQ6I"]:hover {
+    background-color: var(--hc-window-bg) !important;
+    box-shadow: inset 0 0 0 1px var(--hc-row-border);
+}
+
+/* Discord's secondary buttons on settings pages (Edit, Change) match HaloCord's own plugin buttons. */
+html.hc-theming[data-hc-theme] [class~="panel_nNq2Vb"] [class~="button_F7qvhY"][class~="secondary_F7qvhY"] {
+    border: 1px solid rgb(var(--hc-accent-rgb) / 30%) !important;
+    background-color: var(--hc-row-bg) !important;
+    color: var(--hc-accent) !important;
+    transition: background-color 0.16s ease-out, border-color 0.16s ease-out;
+}
+
+html.hc-theming[data-hc-theme] [class~="panel_nNq2Vb"] [class~="button_F7qvhY"][class~="secondary_F7qvhY"]:hover:not(:disabled) {
+    border-color: rgb(var(--hc-accent-rgb) / 55%) !important;
+    background-color: rgb(var(--hc-accent-rgb) / 10%) !important;
+}
+
+/* The sidebar's section jump list marks the open section, and its marker, in the accent. */
+html.hc-theming[data-hc-theme] [class~="subnav_8qMUr2"] [class~="item_8qMUr2"][class~="active_8qMUr2"] {
+    color: var(--hc-accent) !important;
+}
+
+html.hc-theming[data-hc-theme] [class~="subnav_8qMUr2"] [class~="thumb_8qMUr2"]:not([class~="hidden_8qMUr2"]) {
+    background-color: var(--hc-accent) !important;
+}
+
+/* Scrollbars: the blue to mauve gradient thumb everywhere. Chromium ignores ::-webkit-scrollbar on any element that
+   sets scrollbar-color or scrollbar-width, so those go back to auto here; bars hidden on purpose stay hidden. */
+html.hc-theming.hc-theming :is([class*="thin_"], [class*="auto_"], [class*="scroller_"], [class*="Scroller_"], .dvx-dd-menu, .vc-update-modal-commits, .vc-vmsg-mics, .panellayout-scrollbar, .deracul-scrollbar, .vc-stream-enhancer-share-grid, .vc-stream-enhancer-camera-body, .vc-presets-summary, .vc-presets-modal-textarea, .vc-presets-merge-list, .vc-presets-stats, .hc-mc-combo-menu, .nai-scroll, .vc-pl-custom-btn-row, .vc-plugin-ui-elements-modal [class*="scroller"], [class*="messageTextArea_"]):not([class*="none_"], [class*="comboBoxInputScroller_"], [class*="noScrollbar_"], [class*="scrollable_ybUK7Z"], [class*="emojis_rAadqU"], [class*="listBox_b5PEJH"]) {
+    scrollbar-color: auto !important;
+    scrollbar-width: auto !important;
+}
+
+:where(html.hc-theming) ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+:where(html.hc-theming) ::-webkit-scrollbar-thumb {
+    min-height: 32px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+}
+
+html.hc-theming ::-webkit-scrollbar-thumb {
+    background-color: transparent !important;
+    background-image: var(--hc-gradient) !important;
+    background-clip: padding-box !important;
+}
+
+html.hc-theming ::-webkit-scrollbar-track,
+html.hc-theming ::-webkit-scrollbar-corner {
+    background: transparent;
 }

@@ -406,6 +406,19 @@ function forgetListener(target: EventTarget, type: string, listener: EventListen
     }
 }
 
+const watchedForEnd = new WeakSet<EventTarget>();
+
+function forgetTarget(target: EventTarget) {
+    const targetListeners = listenerOwners.get(target);
+    if (!targetListeners) return;
+    for (const [key, listeners] of [...targetListeners]) {
+        const sep = key.lastIndexOf(":");
+        const type = key.slice(0, sep);
+        const capture = key.slice(sep + 1) === "true";
+        for (const listener of [...listeners.keys()]) forgetListener(target, type, listener, capture);
+    }
+}
+
 /**
  * Calculates Composite Impact Score from measurable signals.
  *
@@ -512,6 +525,14 @@ export const PluginProfiler = {
                 const pluginName = currentPlugin();
                 if (pluginName && listener) {
                     rememberListener(this, type, listener, pluginName, options);
+                    // A finished request or closed socket never fires again, but nothing removes its listeners,
+                    // so they counted as live forever (70 for DetectBlock's profile lookups) and kept the object alive.
+                    const endEvent = this instanceof XMLHttpRequest ? "loadend" : this instanceof WebSocket ? "close" : null;
+                    if (endEvent && !watchedForEnd.has(this)) {
+                        watchedForEnd.add(this);
+                        const target = this;
+                        next.call(this, endEvent, () => forgetTarget(target), { once: true });
+                    }
                 }
                 return next.call(this, type, listener, options);
             }

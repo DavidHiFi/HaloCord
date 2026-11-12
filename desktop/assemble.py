@@ -77,6 +77,27 @@ assert m.count('UPD_REPO="kurtzonaudio/kurtcord"') == 1
 m = m.replace('UPD_REPO="kurtzonaudio/kurtcord"', 'UPD_REPO="DavidHiFi/HaloCord"')
 m = m.replace("https://github.com/kurtzonaudio/kurtcord/releases/latest", "https://github.com/DavidHiFi/HaloCord/releases/latest")
 m = m.replace("<p class='r'>Kurtzon</p>", "<p class='r'>HaloCord</p>")
+# Security (2.13.4). A devtools-port file in the profile or KURTCORD_DEBUG=1 opened a debug port that any local
+# program could use to drive the signed-in account. The debug port is now only the deliberate
+# --remote-debugging-port switch on the command line.
+a = 'e=t.existsSync(a.join(app.getPath("userData"),"devtools-port"))||"1"===process.env.KURTCORD_DEBUG'
+assert m.count(a) == 1
+m = m.replace(a, 'e=!1')
+# Links from the page that are not Discord pages opened with any scheme; now only web and mail links leave the app.
+a = ':(shell.openExternal(e),{action:"deny"}))'
+assert m.count(a) == 1
+m = m.replace(a, ':(/^(https?|mailto):/i.test(e)&&shell.openExternal(e),{action:"deny"}))')
+# Every permission was granted to every page and frame. Discord pages (and HaloCord's own file: pages) keep
+# them; a frame from another site inside a Discord page (a video embed) only gets fullscreen, pointer lock
+# and clipboard write, so it cannot ask for the mic, camera, location or notifications.
+a = 'e.setPermissionRequestHandler((e,t,a)=>a(!0)),e.setPermissionCheckHandler(()=>!0)'
+assert m.count(a) == 1
+m = m.replace(a, (
+    'e.setPermissionRequestHandler((e,t,a,n)=>{const o=e&&!e.isDestroyed()?e.getURL():"";a(hcTrusted(o)&&(hcTrusted(n&&n.requestingUrl||o)||hcFramePerms.includes(t)))}),'
+    'e.setPermissionCheckHandler((e,t,a,n)=>{const o=n&&n.embeddingOrigin||(e&&!e.isDestroyed()?e.getURL():"");return hcTrusted(o)&&(hcTrusted(a||o)||hcFramePerms.includes(t))})'))
+a = 'Menu:Menu}=require("electron");'
+assert m.count(a) == 1
+m = m.replace(a, a + 'const hcFramePerms=["fullscreen","pointerLock","clipboard-sanitized-write"],hcTrusted=e=>{if("about:blank"===e)return!0;try{const t=new URL(e);return"file:"===t.protocol||"https:"===t.protocol&&("discord.com"===t.hostname||t.hostname.endsWith(".discord.com"))}catch(e){return!1}};')
 # Match the installer shortcut's id, or the taskbar groups HaloCord under a stale "Kurtcord" name.
 assert m.count('app.setAppUserModelId("com.kurtcord.desktop")') == 1
 m = m.replace('app.setAppUserModelId("com.kurtcord.desktop")', 'app.setAppUserModelId("com.davidhifi.halocord")')
@@ -323,6 +344,20 @@ for k, v in dict(CompanyName="DavidHiFi", ProductName="HaloCord", FileDescriptio
                  OriginalFilename="HaloCord.exe", LegalCopyright="Copyright (c) 2026 DavidHiFi").items():
     rc += ["--set-version-string", k, v]
 subprocess.run(rc, creationflags=subprocess.CREATE_NO_WINDOW, check=True)
+# Electron fuses (2.13.4): turn off RunAsNode, NODE_OPTIONS and --inspect, so another program cannot start
+# HaloCord.exe as a plain Node runtime or attach a Node debugger to it. Nothing in HaloCord uses them.
+# Wire after the sentinel: version byte 1, length, then one '0'/'1' per fuse in Electron's fixed order.
+FUSE_SENTINEL = b"dL7pKGdnNz796PbbjQWNKmHXBZaB9tsX"
+blob = bytearray(exe.read_bytes())
+at = blob.find(FUSE_SENTINEL)
+assert at != -1 and blob.find(FUSE_SENTINEL, at + 1) == -1, "Electron fuse wire not found exactly once"
+wire = at + len(FUSE_SENTINEL)
+assert blob[wire] == 1 and blob[wire + 1] >= 4, "unknown Electron fuse wire version"
+for fuse in (0, 2, 3):  # RunAsNode, EnableNodeOptionsEnvironmentVariable, EnableNodeCliInspectArguments
+    assert blob[wire + 2 + fuse] in b"01"
+    blob[wire + 2 + fuse] = ord("0")
+exe.write_bytes(bytes(blob))
+print("fuses:", blob[wire + 2:wire + 2 + blob[wire + 1]].decode("latin-1"))
 print("rebranded strings in main.js:", n)
 shutil.rmtree(OUT / "installer" / "dist", ignore_errors=True)
 (OUT / "installer").mkdir(exist_ok=True)

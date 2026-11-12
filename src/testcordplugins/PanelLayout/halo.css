@@ -54,8 +54,11 @@ html.hc-theming .vc-whos-watching-more-users {
     color: var(--hc-text-muted);
 }
 
+/* On a small tile the box keeps inside the tile and its rows wrap instead of running past the edge. */
 html.hc-theming [class*="streamInfoContainer_"] {
-    min-width: 180px;
+    min-width: min(180px, calc(100% - 32px));
+    max-width: calc(100% - 32px);
+    box-sizing: border-box;
     padding: 8px 10px;
     border: 1px solid var(--hc-panel-border);
     border-radius: 10px;
@@ -118,6 +121,7 @@ html.hc-theming [class*="streamInfoContainer_"] > div:first-child {
 }
 
 html.hc-theming [class*="streamInfoContainer_"] [class*="infoRow_"] {
+    flex-wrap: wrap;
     margin-bottom: 2px;
 }
 
@@ -339,13 +343,6 @@ html.hc-theming section[class*="panels_"] [data-hc-ua-key] {
 html.hc-theming section[class*="panels_"] :is(.hc-ua-row, .hc-ua-name) > [data-hc-ua-key]:not(button) {
     border: 0 !important;
     background: transparent !important;
-}
-
-/* Discord spreads the call buttons over equal 1fr columns, which left wide gaps once each button kept
-   the 48px box. Fixed 48px columns at the panel's gap line them up with the grid below. */
-html.hc-theming section[class*="panels_"] .actionButtons_9U6LUN {
-    grid-template-columns: repeat(auto-fill, 48px) !important;
-    justify-content: start !important;
 }
 
 /* Soundboard (and any wrapped call button) is a wrapper whose button is only 32px tall inside the 48px box. */
