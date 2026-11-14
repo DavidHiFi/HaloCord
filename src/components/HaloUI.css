@@ -1,3 +1,6 @@
+/* stylelint-disable selector-class-pattern -- Discord's hashed class names are matched as plain classes: Chromium files those by class and checks
+   them on few elements, where [class~="..."] was checked on every element on screen. */
+
 /* Minimised or in the tray (desktop/shell/hc-desktop.js pageRest): nothing on screen, so nothing animates */
 html.hc-rest *,
 html.hc-rest *::before,
@@ -996,12 +999,12 @@ html.hc-theming [class*="tabBar_"] [role="tab"] {
     overflow: visible;
 }
 
-html.hc-theming [class~="container_TP1WMf"][class~="popover_81IzEA"] {
+html.hc-theming .container_TP1WMf.popover_81IzEA {
     width: 380px;
     max-width: calc(100vw - 32px);
 }
 
-html.hc-theming [class~="tabs_TP1WMf"] [role="tab"] {
+html.hc-theming .tabs_TP1WMf [role="tab"] {
     min-width: max-content;
     padding-inline: 6px;
     line-height: 1.5;
@@ -1014,19 +1017,19 @@ html.hc-theming :where(
     nav[class*="guilds_"],
     [data-window-chrome] > [class*="leading_"],
     [data-window-chrome] > [class*="trailing_"],
-    [class~="sidebarList_pog62O"],
-    [class~="panels_pog62O"],
-    [class~="chatContent_z_gUBg"],
-    [class~="chat_z_gUBg"] > [class~="subtitleContainer_z_gUBg"],
-    [class~="container_86es0b"],
-    [class~="peopleColumn_zrUwGA"],
-    [class~="nowPlayingColumn_zrUwGA"],
-    [class~="callContainer_hbKzX7"],
-    [class~="messagesWrapper_8AE1Qq"],
-    [class~="channelTextArea_z_gUBg"],
-    [class~="wrapper_ST_Y69"],
-    [class~="outer_P1YEjQ"],
-    [class~="container_dvN-MP"]
+    .sidebarList_pog62O,
+    .panels_pog62O,
+    .chatContent_z_gUBg,
+    .chat_z_gUBg > .subtitleContainer_z_gUBg,
+    .container_86es0b,
+    .peopleColumn_zrUwGA,
+    .nowPlayingColumn_zrUwGA,
+    .callContainer_hbKzX7,
+    .messagesWrapper_8AE1Qq,
+    .channelTextArea_z_gUBg,
+    .wrapper_ST_Y69,
+    .outer_P1YEjQ,
+    .container_dvN-MP
 )::after {
     position: absolute;
     z-index: 1;
@@ -1044,29 +1047,29 @@ html.hc-theming :where(
 
 html.hc-theming :is(
     [data-window-chrome] > [class*="trailing_"],
-    [class~="sidebarList_pog62O"],
-    [class~="panels_pog62O"],
-    [class~="chatContent_z_gUBg"],
-    [class~="chat_z_gUBg"] > [class~="subtitleContainer_z_gUBg"],
-    [class~="container_86es0b"],
-    [class~="peopleColumn_zrUwGA"],
-    [class~="nowPlayingColumn_zrUwGA"],
-    [class~="callContainer_hbKzX7"],
-    [class~="messagesWrapper_8AE1Qq"],
-    [class~="channelTextArea_z_gUBg"],
-    [class~="wrapper_ST_Y69"],
-    [class~="outer_P1YEjQ"],
-    [class~="container_dvN-MP"]
+    .sidebarList_pog62O,
+    .panels_pog62O,
+    .chatContent_z_gUBg,
+    .chat_z_gUBg > .subtitleContainer_z_gUBg,
+    .container_86es0b,
+    .peopleColumn_zrUwGA,
+    .nowPlayingColumn_zrUwGA,
+    .callContainer_hbKzX7,
+    .messagesWrapper_8AE1Qq,
+    .channelTextArea_z_gUBg,
+    .wrapper_ST_Y69,
+    .outer_P1YEjQ,
+    .container_dvN-MP
 ):hover::after {
     opacity: 1;
 }
 
 html.hc-theming :is(
-    [class~="sidebarList_pog62O"],
-    [class~="chat_z_gUBg"] > [class~="subtitleContainer_z_gUBg"],
-    [class~="container_86es0b"],
-    [class~="peopleColumn_zrUwGA"],
-    [class~="nowPlayingColumn_zrUwGA"]
+    .sidebarList_pog62O,
+    .chat_z_gUBg > .subtitleContainer_z_gUBg,
+    .container_86es0b,
+    .peopleColumn_zrUwGA,
+    .nowPlayingColumn_zrUwGA
 ) {
     position: relative;
 }
@@ -1079,33 +1082,38 @@ html.hc-theming :is(
 html.hc-theming :is(
     nav[class*="guilds_"],
     [data-window-chrome] > [class*="leading_"],
-    [class~="sidebarList_pog62O"],
-    [class~="container_86es0b"],
-    [class~="peopleColumn_zrUwGA"],
-    [class~="nowPlayingColumn_zrUwGA"],
-    [class~="callContainer_hbKzX7"],
-    [class~="messagesWrapper_8AE1Qq"],
-    [class~="outer_P1YEjQ"]
+    .sidebarList_pog62O,
+    .container_86es0b,
+    .peopleColumn_zrUwGA,
+    .nowPlayingColumn_zrUwGA,
+    .callContainer_hbKzX7,
+    .messagesWrapper_8AE1Qq,
+    .outer_P1YEjQ
 )::after {
     z-index: 3;
     inset: 0;
 }
 
 html.hc-theming :is(
-    [class~="sidebarList_pog62O"],
-    [class~="container_86es0b"],
-    [class~="peopleColumn_zrUwGA"],
-    [class~="nowPlayingColumn_zrUwGA"],
-    [class~="callContainer_hbKzX7"],
-    [class~="messagesWrapper_8AE1Qq"],
-    [class~="outer_P1YEjQ"]
+    .sidebarList_pog62O,
+    .container_86es0b,
+    .peopleColumn_zrUwGA,
+    .nowPlayingColumn_zrUwGA,
+    .callContainer_hbKzX7,
+    .messagesWrapper_8AE1Qq,
+    .outer_P1YEjQ
 ):hover,
 html.hc-theming[data-hc-rail-hover] :is([data-window-chrome] > [class*="leading_"], nav[class*="guilds_"]) {
     border-color: transparent !important;
 }
 
-html.hc-theming [class~="outer_P1YEjQ"] {
+html.hc-theming .outer_P1YEjQ {
     --hc-ring-w: 1px;
+}
+
+/* MochaCord strips the call container's fill, so its 2px border sat over nothing. */
+html.hc-theming .callContainer_hbKzX7 {
+    background-color: var(--hc-panel-bg) !important;
 }
 
 /* The rest of MochaCord's bordered panels (page title bars such as Quests and Friends, Shop, forums, discovery,
@@ -1113,50 +1121,50 @@ html.hc-theming [class~="outer_P1YEjQ"] {
    inside the edge and the border turns transparent on hover, which works whether or not the panel clips. The
    :where position keeps Discord's own sticky or absolute positioning. */
 :where(html.hc-theming) :where(
-    [class~="container__89463"] > [class~="toolbar__89463"],
-    [class~="container__89463"] > [class~="contentContainer__89463"],
-    [class~="content_z_gUBg"] > [class~="membersWrap_86es0b"],
-    [class~="container_zrUwGA"] > [class~="container_ybUK7Z"],
-    [class~="container_nMe-a6"] > [class~="container_ybUK7Z"],
-    [class~="homeWrapper__0920e"] > [class~="container_ybUK7Z"],
-    [class~="container_FrbQJp"] > [class~="container_ybUK7Z"],
-    [class~="container_UU236g"] > [class~="container_ybUK7Z"],
-    [class~="headerBar_tSk_LE"],
-    [class~="container_nMe-a6"] > [class~="content_z_gUBg"],
-    [class~="shop_Mqg79R"],
-    [class~="searchResultsWrap_QHVbp3"],
-    [class~="container_BkGrJJ"],
-    [class~="chat_UU236g"],
-    [class~="container_a592e1"],
-    [class~="callContainer_DwQMm_"],
-    [class~="chat_z_gUBg"] > [class~="header_zjGJlN"],
-    [class~="chat_z_gUBg"] > [class~="header_xTP3zy"],
-    [class~="chat_z_gUBg"] > [class~="container_xTP3zy"]
+    .container__89463 > .toolbar__89463,
+    .container__89463 > .contentContainer__89463,
+    .content_z_gUBg > .membersWrap_86es0b,
+    .container_zrUwGA > .container_ybUK7Z,
+    .container_nMe-a6 > .container_ybUK7Z,
+    .homeWrapper__0920e > .container_ybUK7Z,
+    .container_FrbQJp > .container_ybUK7Z,
+    .container_UU236g > .container_ybUK7Z,
+    .headerBar_tSk_LE,
+    .container_nMe-a6 > .content_z_gUBg,
+    .shop_Mqg79R,
+    .searchResultsWrap_QHVbp3,
+    .container_BkGrJJ,
+    .chat_UU236g,
+    .container_a592e1,
+    .callContainer_DwQMm_,
+    .chat_z_gUBg > .header_zjGJlN,
+    .chat_z_gUBg > .header_xTP3zy,
+    .chat_z_gUBg > .container_xTP3zy
 ) {
     position: relative;
 }
 
 /* stylelint-disable-next-line no-descending-specificity -- a separate host list from the ring above */
 html.hc-theming :where(
-    [class~="container__89463"] > [class~="toolbar__89463"],
-    [class~="container__89463"] > [class~="contentContainer__89463"],
-    [class~="content_z_gUBg"] > [class~="membersWrap_86es0b"],
-    [class~="container_zrUwGA"] > [class~="container_ybUK7Z"],
-    [class~="container_nMe-a6"] > [class~="container_ybUK7Z"],
-    [class~="homeWrapper__0920e"] > [class~="container_ybUK7Z"],
-    [class~="container_FrbQJp"] > [class~="container_ybUK7Z"],
-    [class~="container_UU236g"] > [class~="container_ybUK7Z"],
-    [class~="headerBar_tSk_LE"],
-    [class~="container_nMe-a6"] > [class~="content_z_gUBg"],
-    [class~="shop_Mqg79R"],
-    [class~="searchResultsWrap_QHVbp3"],
-    [class~="container_BkGrJJ"],
-    [class~="chat_UU236g"],
-    [class~="container_a592e1"],
-    [class~="callContainer_DwQMm_"],
-    [class~="chat_z_gUBg"] > [class~="header_zjGJlN"],
-    [class~="chat_z_gUBg"] > [class~="header_xTP3zy"],
-    [class~="chat_z_gUBg"] > [class~="container_xTP3zy"]
+    .container__89463 > .toolbar__89463,
+    .container__89463 > .contentContainer__89463,
+    .content_z_gUBg > .membersWrap_86es0b,
+    .container_zrUwGA > .container_ybUK7Z,
+    .container_nMe-a6 > .container_ybUK7Z,
+    .homeWrapper__0920e > .container_ybUK7Z,
+    .container_FrbQJp > .container_ybUK7Z,
+    .container_UU236g > .container_ybUK7Z,
+    .headerBar_tSk_LE,
+    .container_nMe-a6 > .content_z_gUBg,
+    .shop_Mqg79R,
+    .searchResultsWrap_QHVbp3,
+    .container_BkGrJJ,
+    .chat_UU236g,
+    .container_a592e1,
+    .callContainer_DwQMm_,
+    .chat_z_gUBg > .header_zjGJlN,
+    .chat_z_gUBg > .header_xTP3zy,
+    .chat_z_gUBg > .container_xTP3zy
 )::after {
     position: absolute;
     z-index: 3;
@@ -1173,56 +1181,56 @@ html.hc-theming :where(
 }
 
 html.hc-theming :is(
-    [class~="container__89463"] > [class~="toolbar__89463"],
-    [class~="container__89463"] > [class~="contentContainer__89463"],
-    [class~="content_z_gUBg"] > [class~="membersWrap_86es0b"],
-    [class~="container_zrUwGA"] > [class~="container_ybUK7Z"],
-    [class~="container_nMe-a6"] > [class~="container_ybUK7Z"],
-    [class~="homeWrapper__0920e"] > [class~="container_ybUK7Z"],
-    [class~="container_FrbQJp"] > [class~="container_ybUK7Z"],
-    [class~="container_UU236g"] > [class~="container_ybUK7Z"],
-    [class~="headerBar_tSk_LE"],
-    [class~="container_nMe-a6"] > [class~="content_z_gUBg"],
-    [class~="shop_Mqg79R"],
-    [class~="searchResultsWrap_QHVbp3"],
-    [class~="container_BkGrJJ"],
-    [class~="chat_UU236g"],
-    [class~="container_a592e1"],
-    [class~="callContainer_DwQMm_"],
-    [class~="chat_z_gUBg"] > [class~="header_zjGJlN"],
-    [class~="chat_z_gUBg"] > [class~="header_xTP3zy"],
-    [class~="chat_z_gUBg"] > [class~="container_xTP3zy"]
+    .container__89463 > .toolbar__89463,
+    .container__89463 > .contentContainer__89463,
+    .content_z_gUBg > .membersWrap_86es0b,
+    .container_zrUwGA > .container_ybUK7Z,
+    .container_nMe-a6 > .container_ybUK7Z,
+    .homeWrapper__0920e > .container_ybUK7Z,
+    .container_FrbQJp > .container_ybUK7Z,
+    .container_UU236g > .container_ybUK7Z,
+    .headerBar_tSk_LE,
+    .container_nMe-a6 > .content_z_gUBg,
+    .shop_Mqg79R,
+    .searchResultsWrap_QHVbp3,
+    .container_BkGrJJ,
+    .chat_UU236g,
+    .container_a592e1,
+    .callContainer_DwQMm_,
+    .chat_z_gUBg > .header_zjGJlN,
+    .chat_z_gUBg > .header_xTP3zy,
+    .chat_z_gUBg > .container_xTP3zy
 ):hover {
     border-color: transparent !important;
 }
 
 html.hc-theming :is(
-    [class~="container__89463"] > [class~="toolbar__89463"],
-    [class~="container__89463"] > [class~="contentContainer__89463"],
-    [class~="content_z_gUBg"] > [class~="membersWrap_86es0b"],
-    [class~="container_zrUwGA"] > [class~="container_ybUK7Z"],
-    [class~="container_nMe-a6"] > [class~="container_ybUK7Z"],
-    [class~="homeWrapper__0920e"] > [class~="container_ybUK7Z"],
-    [class~="container_FrbQJp"] > [class~="container_ybUK7Z"],
-    [class~="container_UU236g"] > [class~="container_ybUK7Z"],
-    [class~="headerBar_tSk_LE"],
-    [class~="container_nMe-a6"] > [class~="content_z_gUBg"],
-    [class~="shop_Mqg79R"],
-    [class~="searchResultsWrap_QHVbp3"],
-    [class~="container_BkGrJJ"],
-    [class~="chat_UU236g"],
-    [class~="container_a592e1"],
-    [class~="callContainer_DwQMm_"],
-    [class~="chat_z_gUBg"] > [class~="header_zjGJlN"],
-    [class~="chat_z_gUBg"] > [class~="header_xTP3zy"],
-    [class~="chat_z_gUBg"] > [class~="container_xTP3zy"]
+    .container__89463 > .toolbar__89463,
+    .container__89463 > .contentContainer__89463,
+    .content_z_gUBg > .membersWrap_86es0b,
+    .container_zrUwGA > .container_ybUK7Z,
+    .container_nMe-a6 > .container_ybUK7Z,
+    .homeWrapper__0920e > .container_ybUK7Z,
+    .container_FrbQJp > .container_ybUK7Z,
+    .container_UU236g > .container_ybUK7Z,
+    .headerBar_tSk_LE,
+    .container_nMe-a6 > .content_z_gUBg,
+    .shop_Mqg79R,
+    .searchResultsWrap_QHVbp3,
+    .container_BkGrJJ,
+    .chat_UU236g,
+    .container_a592e1,
+    .callContainer_DwQMm_,
+    .chat_z_gUBg > .header_zjGJlN,
+    .chat_z_gUBg > .header_xTP3zy,
+    .chat_z_gUBg > .container_xTP3zy
 ):hover::after {
     opacity: 1;
 }
 
 /* With a separated chat bar the chat column has no border; its message box and composer carry the ring. */
 @container body style(--custom-chatbar: separated) {
-    html.hc-theming [class~="chatContent_z_gUBg"]::after {
+    html.hc-theming .chatContent_z_gUBg::after {
         display: none;
     }
 }
@@ -1243,11 +1251,11 @@ html.hc-theming[data-hc-rail-hover] :is([data-window-chrome] > [class*="leading_
 }
 
 /* Profiles: the inner card's corners must follow the outer border, or they cover it and the ring thins there. */
-html.hc-theming [class~="outer_P1YEjQ"]:not(.custom-theme-background) [class~="inner_P1YEjQ"] {
+html.hc-theming .outer_P1YEjQ:not(.custom-theme-background) .inner_P1YEjQ {
     border-radius: calc(var(--radius-lg, 16px) - 1px);
 }
 
-html.hc-theming [class~="outer_P1YEjQ"].custom-theme-background [class~="inner_P1YEjQ"] {
+html.hc-theming .outer_P1YEjQ.custom-theme-background .inner_P1YEjQ {
     border-radius: calc(var(--radius-lg, 16px) - 1px - var(--custom-user-profile-theme-padding, 4px));
 }
 
@@ -1257,13 +1265,13 @@ html.hc-theming nav[class*="guilds_"] [class*="folderHeader_"] {
     scale: calc(40 / 48);
 }
 
-html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"],
+html.hc-theming nav[class*="guilds_"] .wrapper_hqZPsU,
 html.hc-theming #vc-indicators-indicator-items {
     position: relative;
 }
 
 /* stylelint-disable-next-line no-descending-specificity -- rail icons are never panel hosts */
-html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"]::after,
+html.hc-theming nav[class*="guilds_"] .wrapper_hqZPsU::after,
 html.hc-theming #vc-indicators-indicator-items::after {
     position: absolute;
     z-index: 1;
@@ -1281,13 +1289,13 @@ html.hc-theming #vc-indicators-indicator-items::after {
     transition: opacity 0.16s ease-out;
 }
 
-html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"]:hover::after,
+html.hc-theming nav[class*="guilds_"] .wrapper_hqZPsU:hover::after,
 html.hc-theming #vc-indicators-indicator-items:hover::after {
     opacity: 1;
 }
 
 /* The folder ring is drawn inside the scaled header, so it is sized to land on the same ring. */
-html.hc-theming nav[class*="guilds_"] [class*="folderButton_"] > [class~="wrapper_hqZPsU"]::after {
+html.hc-theming nav[class*="guilds_"] [class*="folderButton_"] > .wrapper_hqZPsU::after {
     padding: 3px;
     border-radius: 16.8px;
     inset: -2.4px;
@@ -1320,12 +1328,12 @@ html.hc-theming #app-mount nav[class*="guilds_"] [data-list-item-id="guildsnav__
 }
 
 /* Voice, stream and count badges on a rail icon sit above its hover ring instead of under it. */
-html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"] > :is([class*="upperBadge_"], [class*="lowerBadge_"]) {
+html.hc-theming nav[class*="guilds_"] .wrapper_hqZPsU > :is([class*="upperBadge_"], [class*="lowerBadge_"]) {
     z-index: 2;
 }
 
 /* DM and group DM pictures stay round, so their ring is round too and lies flush on the picture. */
-html.hc-theming nav[class*="guilds_"] [class~="wrapper_hqZPsU"]:has(img[src*="/avatars/"], img[src*="/channel-icons/"])::after {
+html.hc-theming nav[class*="guilds_"] .wrapper_hqZPsU:has(img[src*="/avatars/"], img[src*="/channel-icons/"])::after {
     border-radius: 50%;
 }
 
@@ -1354,7 +1362,7 @@ html.hc-theming #vc-indicators-indicator-items:hover {
 }
 
 /* Selection and unread pills, including the counter's hover pill. */
-html.hc-theming nav[class*="guilds_"] :is([class*="pill_"] [class*="item_"], [class~="wrapper__o8_Xq"] > [class~="item__o8_Xq"]),
+html.hc-theming nav[class*="guilds_"] :is([class*="pill_"] [class*="item_"], .wrapper__o8_Xq > .item__o8_Xq),
 html.hc-theming #vc-indicators-indicator-items::before {
     background: linear-gradient(180deg, var(--hc-grad-a), var(--hc-grad-b)) !important;
 }
@@ -1390,23 +1398,23 @@ html.hc-theming [class*="tooltipPrimary_"] [class*="tooltipPointer_"] {
 
 /* Profile hover toolbars (edit and clear on the custom status, the activity and avatar bars): dark frosted glass with a
    border instead of the theme's see-through toolbar colour; the buttons take the accent on hover. */
-html.hc-theming :is([class~="popover_yDAPhH"], [class~="popover_oWBF11"]) {
+html.hc-theming :is(.popover_yDAPhH, .popover_oWBF11) {
     border: 1px solid rgb(var(--hc-accent-rgb) / 28%) !important;
     background: var(--hc-status-glass) !important;
     backdrop-filter: var(--hc-status-blur) !important;
     box-shadow: 0 4px 14px rgb(0 0 0 / 35%) !important;
 }
 
-html.hc-theming [class~="popover_yDAPhH"] [class~="button_yDAPhH"] {
+html.hc-theming .popover_yDAPhH .button_yDAPhH {
     transition: background-color 0.16s ease-out, color 0.16s ease-out;
 }
 
-html.hc-theming [class~="popover_yDAPhH"] [class~="button_yDAPhH"]:hover {
+html.hc-theming .popover_yDAPhH .button_yDAPhH:hover {
     background: rgb(var(--hc-accent-rgb) / 16%) !important;
     color: var(--hc-accent);
 }
 
-html.hc-theming [class~="popover_yDAPhH"] [class~="button_yDAPhH"]:hover [class~="icon_yDAPhH"] {
+html.hc-theming .popover_yDAPhH .button_yDAPhH:hover .icon_yDAPhH {
     color: var(--hc-accent);
     fill: var(--hc-accent);
 }
@@ -1418,36 +1426,36 @@ html.hc-theming {
     --hc-status-blur: blur(28px) saturate(150%) var(--hc-backdrop-solid);
 }
 
-html.hc-theming [class~="container_rmCN9_"] {
+html.hc-theming .container_rmCN9_ {
     --custom-status-bubble-background-color: color-mix(in srgb, var(--hc-flyout-bg) 93%, transparent);
 }
 
 /* The backdrop filter makes the bubble the dots' containing block, so Discord's overflow: hidden clipped the dots to a
    stray arc inside the top-left corner. The bubble no longer clips; the large dot is cut at the bubble's inner edge
    below so it caps the border instead of showing through the see-through inside. */
-html.hc-theming [class~="outer_rmCN9_"] {
+html.hc-theming .outer_rmCN9_ {
     overflow: visible;
     border-color: var(--hc-panel-border) !important;
     background: var(--hc-status-glass);
     backdrop-filter: var(--hc-status-blur);
 }
 
-html.hc-theming [class~="editable_rmCN9_"]:hover > [class~="outer_rmCN9_"] {
+html.hc-theming .editable_rmCN9_:hover > .outer_rmCN9_ {
     background: linear-gradient(rgb(255 255 255 / 4%), rgb(255 255 255 / 4%)), var(--hc-status-glass);
 }
 
 /* The inner span repeats the bubble colour; on glass that would stack a second tint, so only the outer layer paints. */
-html.hc-theming [class~="outer_rmCN9_"] > [class~="inner_rmCN9_"] {
+html.hc-theming .outer_rmCN9_ > .inner_rmCN9_ {
     background: transparent;
 }
 
 /* The two thought-bubble dots sit outside the blurred box, so they take the solid fill with the bubble's top tint. */
-html.hc-theming [class~="outer_rmCN9_"]::before,
-html.hc-theming [class~="outer_rmCN9_"]::after {
+html.hc-theming .outer_rmCN9_::before,
+html.hc-theming .outer_rmCN9_::after {
     background: linear-gradient(rgb(255 255 255 / 4%), rgb(255 255 255 / 4%)), var(--hc-flyout-bg);
 }
 
-html.hc-theming [class~="outer_rmCN9_"]::before {
+html.hc-theming .outer_rmCN9_::before {
     clip-path: inset(0 0 12px);
 }
 
@@ -1458,18 +1466,18 @@ html.hc-theming #app-mount {
 
 /* The channel panel starts level with the rail's top cap, not below it. The sidebar clips only
    sideways so the panel can rise into the title bar row; it opts out of window dragging there. */
-html.hc-theming [class~="sidebar_pog62O"] {
+html.hc-theming .sidebar_pog62O {
     overflow: clip visible;
 }
 
-html.hc-theming [class~="sidebarList_pog62O"] {
+html.hc-theming .sidebarList_pog62O {
     grid-row: 1 / -1; /* covers the notice row too, so a notice never pushes the panel down */
     margin-top: -28px; /* the title bar row, as tall as the cap */
     app-region: no-drag;
 }
 
 /* HaloCord's own title bar: both panels stop a little below the window's top edge instead of touching it. */
-html.hc-theming[data-mc-titlebar="own"] [class~="sidebarList_pog62O"] {
+html.hc-theming[data-mc-titlebar="own"] .sidebarList_pog62O {
     margin-top: -22px;
 }
 
@@ -1482,11 +1490,11 @@ html.hc-theming[data-mc-titlebar="own"] [data-window-chrome] > [class*="trailing
     height: 22px;
 }
 
-html.hc-theming [class~="header_XH4OpX"] {
+html.hc-theming .header_XH4OpX {
     isolation: isolate;
 }
 
-html.hc-theming [class~="header_XH4OpX"]::after {
+html.hc-theming .header_XH4OpX::after {
     position: absolute;
     z-index: -1;
     border: 1px solid transparent;
@@ -1499,7 +1507,7 @@ html.hc-theming [class~="header_XH4OpX"]::after {
     transition: opacity 0.16s ease-out;
 }
 
-html.hc-theming [class~="header_XH4OpX"]:hover::after {
+html.hc-theming .header_XH4OpX:hover::after {
     opacity: 1;
 }
 
@@ -1538,53 +1546,53 @@ html.hc-theming [data-call-tile] :is([class*="streamQualityIndicator_"], [class*
 
 /* The tile grid keeps 64 px free under the last row for the call buttons; the HaloCord dock is a
    little taller than Discord's, so the grid ends 16 px higher and the bottom row never touches it. */
-html.hc-theming [class~="videoGridWrapper_QKgWuD"] > [class~="videoGrid_QKgWuD"] { height: calc(100% - 16px); margin-bottom: 16px; }
+html.hc-theming .videoGridWrapper_QKgWuD > .videoGrid_QKgWuD { height: calc(100% - 16px); margin-bottom: 16px; }
 
 /* One hover look for every sidebar row (channels, voice users, DMs): the Mocha plate with the gradient
    border. The open channel or DM keeps its accent tint and a softer border. A masked ::after draws the
    border inside the row, so nothing shifts. */
-html.hc-theming :is([class~="wrapper_TNyK-N"] [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"] [class~="content_YUoOxm"], [class~="interactive_zln_tS"]) {
+html.hc-theming :is(.wrapper_TNyK-N .link_TNyK-N, .voiceUser_YUoOxm .content_YUoOxm, .interactive_zln_tS) {
     position: relative;
     border-radius: 8px;
     transition: background-color 0.16s ease-out;
 }
 
-html.hc-theming :is([class~="wrapper_TNyK-N"] [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"] [class~="content_YUoOxm"], [class~="interactive_zln_tS"])::after {
+html.hc-theming :is(.wrapper_TNyK-N .link_TNyK-N, .voiceUser_YUoOxm .content_YUoOxm, .interactive_zln_tS)::after {
     content: ""; position: absolute; inset: 0; padding: var(--hc-ring-thin); border-radius: inherit; pointer-events: none;
     background: var(--hc-gradient) border-box;
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
     opacity: 0; transition: opacity 0.16s ease-out;
 }
 
-html.hc-theming :is([class~="wrapper_TNyK-N"]:hover [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"]:hover [class~="content_YUoOxm"], [class~="interactive_zln_tS"]:hover) {
+html.hc-theming :is(.wrapper_TNyK-N:hover .link_TNyK-N, .voiceUser_YUoOxm:hover .content_YUoOxm, .interactive_zln_tS:hover) {
     background: var(--hc-flyout-bg) !important;
 }
-html.hc-theming :is([class~="modeSelected_TNyK-N"] [class~="link_TNyK-N"], [class~="interactiveSelected_zln_tS"])::after { opacity: 0.5; }
-html.hc-theming :is([class~="wrapper_TNyK-N"]:hover [class~="link_TNyK-N"], [class~="voiceUser_YUoOxm"]:hover [class~="content_YUoOxm"], [class~="interactive_zln_tS"]:hover)::after { opacity: 1; }
+html.hc-theming :is(.modeSelected_TNyK-N .link_TNyK-N, .interactiveSelected_zln_tS)::after { opacity: 0.5; }
+html.hc-theming :is(.wrapper_TNyK-N:hover .link_TNyK-N, .voiceUser_YUoOxm:hover .content_YUoOxm, .interactive_zln_tS:hover)::after { opacity: 1; }
 
 /* Collapsed voice channel: round avatars with their meters beside them, no overlap, the shared row hover */
-html.hc-theming [class~="listCollapse_YUoOxm"] { gap: 4px; align-items: center; flex-wrap: wrap; }
-html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] { margin: 0 !important; }
-html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [class~="content_YUoOxm"] { display: flex; align-items: center; gap: 5px; padding: 3px 7px 3px 3px; }
-html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [class~="content_YUoOxm"]:not(:has([data-vu-meter])) { padding-right: 3px; }
-html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] .voice-user-buttons { display: none !important; }
-html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [class~="avatarSmall_YUoOxm"] { flex: none; width: 28px !important; height: 28px !important; margin: 0 !important; border: 0 !important; border-radius: 50% !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; }
-html.hc-theming [class~="listCollapse_YUoOxm"] [class~="userSmall_YUoOxm"] [data-vu-meter] { flex: none; margin-left: 0 !important; align-self: center; }
+html.hc-theming .listCollapse_YUoOxm { gap: 4px; align-items: center; flex-wrap: wrap; }
+html.hc-theming .listCollapse_YUoOxm .userSmall_YUoOxm { margin: 0 !important; }
+html.hc-theming .listCollapse_YUoOxm .userSmall_YUoOxm .content_YUoOxm { display: flex; align-items: center; gap: 5px; padding: 3px 7px 3px 3px; }
+html.hc-theming .listCollapse_YUoOxm .userSmall_YUoOxm .content_YUoOxm:not(:has([data-vu-meter])) { padding-right: 3px; }
+html.hc-theming .listCollapse_YUoOxm .userSmall_YUoOxm .voice-user-buttons { display: none !important; }
+html.hc-theming .listCollapse_YUoOxm .userSmall_YUoOxm .avatarSmall_YUoOxm { flex: none; width: 28px !important; height: 28px !important; margin: 0 !important; border: 0 !important; border-radius: 50% !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; }
+html.hc-theming .listCollapse_YUoOxm .userSmall_YUoOxm [data-vu-meter] { flex: none; margin-left: 0 !important; align-self: center; }
 
 /* The "new unreads" pill at the top and bottom of the channel list: dark glass, gradient border and accent text on hover. */
-html.hc-theming [class~="unreadMentionsBar_5dqHTG"] {
+html.hc-theming .unreadMentionsBar_5dqHTG {
     border: 1px solid var(--hc-panel-border) !important; background: var(--hc-chip-bg) !important;
     backdrop-filter: blur(24px) saturate(140%) var(--hc-backdrop-solid); color: var(--hc-text);
     transition: border-color 0.16s ease-out, color 0.16s ease-out;
 }
 
-html.hc-theming [class~="unreadMentionsBar_5dqHTG"]:hover {
+html.hc-theming .unreadMentionsBar_5dqHTG:hover {
     border-color: transparent !important; color: var(--hc-accent);
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
 }
 
 /* Stream header (clips badge, quality and LIVE badge, chat button): the same dark glass chips as the tile tags, gradient border on hover. */
-html.hc-theming [class~="headerBar_neq5ug"] :is([class~="clipsEnabledIndicator_U6LhXD"] > [class*="badge_"], [class*="streamQualityIndicator_"], [class~="toolbar_neq5ug"] button[class*="lookBlank_"]) {
+html.hc-theming .headerBar_neq5ug :is(.clipsEnabledIndicator_U6LhXD > [class*="badge_"], [class*="streamQualityIndicator_"], .toolbar_neq5ug button[class*="lookBlank_"]) {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -1599,61 +1607,61 @@ html.hc-theming [class~="headerBar_neq5ug"] :is([class~="clipsEnabledIndicator_U
     transition: border-color 0.16s ease-out;
 }
 
-html.hc-theming [class~="headerBar_neq5ug"] [class~="toolbar_neq5ug"] button[class*="lookBlank_"] {
+html.hc-theming .headerBar_neq5ug .toolbar_neq5ug button[class*="lookBlank_"] {
     width: 32px;
     min-width: 0;
     justify-content: center;
     padding: 0;
 }
 
-html.hc-theming [class~="headerBar_neq5ug"] [class~="toolbar_neq5ug"] button[class*="lookBlank_"] :is([class*="controlIcon_"], [class*="controlIcon_"] > svg) {
+html.hc-theming .headerBar_neq5ug .toolbar_neq5ug button[class*="lookBlank_"] :is([class*="controlIcon_"], [class*="controlIcon_"] > svg) {
     width: 16px;
     height: 16px;
 }
 
-html.hc-theming [class~="headerBar_neq5ug"] :is([class~="clipsEnabledIndicator_U6LhXD"] > [class*="badge_"], [class*="streamQualityIndicator_"]) * {
+html.hc-theming .headerBar_neq5ug :is(.clipsEnabledIndicator_U6LhXD > [class*="badge_"], [class*="streamQualityIndicator_"]) * {
     border-radius: 0 !important;
     background: none !important;
     color: inherit;
 }
 
-html.hc-theming [class~="headerBar_neq5ug"] [class*="streamQualityIndicator_"] [class*="pill_"] {
+html.hc-theming .headerBar_neq5ug [class*="streamQualityIndicator_"] [class*="pill_"] {
     padding: 0;
 }
 
-html.hc-theming [class~="headerBar_neq5ug"] [class*="streamQualityIndicator_"] [class*="liveIndicator__"] {
+html.hc-theming .headerBar_neq5ug [class*="streamQualityIndicator_"] [class*="liveIndicator__"] {
     padding-inline-start: 6px;
     border-inline-start: 1px solid var(--hc-panel-border);
     color: var(--hc-live);
     font-weight: 700;
 }
 
-html.hc-theming [class~="headerBar_neq5ug"] :is([class~="clipsEnabledIndicator_U6LhXD"] > [class*="badge_"], [class*="streamQualityIndicator_"], [class~="toolbar_neq5ug"] button[class*="lookBlank_"]):hover {
+html.hc-theming .headerBar_neq5ug :is(.clipsEnabledIndicator_U6LhXD > [class*="badge_"], [class*="streamQualityIndicator_"], .toolbar_neq5ug button[class*="lookBlank_"]):hover {
     border-color: transparent !important;
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
 }
 
-html.hc-theming [class~="headerBar_neq5ug"] [class~="toolbar_neq5ug"] button[class*="lookBlank_"]:hover {
+html.hc-theming .headerBar_neq5ug .toolbar_neq5ug button[class*="lookBlank_"]:hover {
     color: var(--hc-accent);
 }
 
 /* MochaCord rings toolbar buttons with a ::after mask; the chip's own gradient border is the one ring here. */
-html.hc-theming [class~="headerBar_neq5ug"] [class~="toolbar_neq5ug"] button[class*="lookBlank_"]::after {
+html.hc-theming .headerBar_neq5ug .toolbar_neq5ug button[class*="lookBlank_"]::after {
     display: none;
 }
 
 /* The voice area keeps a flat surface on hover: no top-down or bottom-up scrim behind the call controls. */
-html.hc-theming [class~="callContainer_hbKzX7"] [class*="gradientContainer_"] {
+html.hc-theming .callContainer_hbKzX7 [class*="gradientContainer_"] {
     display: none;
 }
 
 /* App notices (reconnect, updates) sit over the page column only, so they never cover the raised channel panel. */
-html.hc-theming [class~="base_pog62O"] > [class*="notice_"] {
+html.hc-theming .base_pog62O > [class*="notice_"] {
     grid-column: channelsEnd / end;
 }
 
 /* Guild header buttons (invite, add): sit inside the header's hover pill, with the rail button hover. */
-html.hc-theming [class~="header_XH4OpX"] :is([class~="inviteButton_XH4OpX"], [class~="addActionButton_XH4OpX"]) {
+html.hc-theming .header_XH4OpX :is(.inviteButton_XH4OpX, .addActionButton_XH4OpX) {
     width: 30px;
     height: 30px;
     margin-inline-end: 4px;
@@ -1661,7 +1669,7 @@ html.hc-theming [class~="header_XH4OpX"] :is([class~="inviteButton_XH4OpX"], [cl
     transition: background-color 0.16s ease-out, color 0.16s ease-out;
 }
 
-html.hc-theming [class~="header_XH4OpX"] :is([class~="inviteButton_XH4OpX"], [class~="addActionButton_XH4OpX"]):hover {
+html.hc-theming .header_XH4OpX :is(.inviteButton_XH4OpX, .addActionButton_XH4OpX):hover {
     background-color: rgb(var(--hc-accent-rgb) / 16%) !important;
     color: var(--hc-accent) !important;
 }
@@ -1679,7 +1687,7 @@ html.hc-theming[data-hc-theme] [class*="layerContainer_"] {
 }
 
 /* Expression picker footer (the inspected emoji or sticker name): glass over the grid scrolling beneath it. */
-html.hc-theming :is([class~="inspector_1bDrGE"], .vc-more-stickers-picker-content-inspector) {
+html.hc-theming :is(.inspector_1bDrGE, .vc-more-stickers-picker-content-inspector) {
     border-top-color: var(--hc-panel-border);
     background: var(--hc-glass-bg) !important;
     backdrop-filter: var(--hc-glass-blur);
@@ -1687,19 +1695,19 @@ html.hc-theming :is([class~="inspector_1bDrGE"], .vc-more-stickers-picker-conten
 
 /* Settings window: a real frosted blur behind its see-through panels, even with the fast theme defaults
    that turn panel blur off; it is one window, so it costs little. */
-html.hc-theming [class~="container_dvN-MP"] {
+html.hc-theming .container_dvN-MP {
     backdrop-filter: blur(28px) saturate(140%) var(--hc-backdrop-solid) !important;
 }
 
 /* Server and channel settings: the theme painted the sidebar as a square solid slab running the full height of the
    window. It becomes a rounded dock floating inside the page, with the rest hairline and the gradient edge on hover. */
-html.hc-theming [class~="sidebarRegion_jnk11m"] {
+html.hc-theming .sidebarRegion_jnk11m {
     box-sizing: border-box;
     padding: 12px 0 12px 12px;
     background: none !important;
 }
 
-html.hc-theming[data-hc-theme] [class~="sidebarRegionScroller_jnk11m"] {
+html.hc-theming[data-hc-theme] .sidebarRegionScroller_jnk11m {
     box-sizing: border-box;
     border: 1px solid var(--hc-panel-border);
     border-radius: 12px;
@@ -1710,34 +1718,34 @@ html.hc-theming[data-hc-theme] [class~="sidebarRegionScroller_jnk11m"] {
 /* One gradient edge recipe for every settings dock: the opaque fill on the padding box over the gradient on the
    border box, so a scrolling sidebar keeps its edge in place. */
 html.hc-theming[data-hc-theme] :is(
-    [class~="sidebarRegionScroller_jnk11m"],
-    [class~="contentRegion_jnk11m"] [class~="cardPrimary_qCN-Ri"],
-    [class~="contentRegion_jnk11m"] [class~="group_8GP31u"]
+    .sidebarRegionScroller_jnk11m,
+    .contentRegion_jnk11m .cardPrimary_qCN-Ri,
+    .contentRegion_jnk11m .group_8GP31u
 ):hover {
     border-color: transparent !important;
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
 }
 
 /* Settings tabs and the permission role list: rounded rows, the dark hover, and the accent on look for the open one. */
-html.hc-theming[data-hc-theme] :is([class~="sidebarRegionScroller_jnk11m"] [class~="side_6zZYhF"], [class~="contentRegion_jnk11m"]) [class~="item_6zZYhF"]:not(#hc-settings) {
+html.hc-theming[data-hc-theme] :is(.sidebarRegionScroller_jnk11m .side_6zZYhF, .contentRegion_jnk11m) .item_6zZYhF:not(#hc-settings) {
     border-radius: 8px;
     background-color: transparent !important;
     transition: background-color 0.16s ease-out, color 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
-html.hc-theming[data-hc-theme] :is([class~="sidebarRegionScroller_jnk11m"] [class~="side_6zZYhF"], [class~="contentRegion_jnk11m"]) [class~="item_6zZYhF"]:not(#hc-settings):hover {
+html.hc-theming[data-hc-theme] :is(.sidebarRegionScroller_jnk11m .side_6zZYhF, .contentRegion_jnk11m) .item_6zZYhF:not(#hc-settings):hover {
     background-color: var(--hc-window-bg) !important;
     box-shadow: inset 0 0 0 1px var(--hc-row-border);
 }
 
-html.hc-theming[data-hc-theme] :is([class~="sidebarRegionScroller_jnk11m"] [class~="side_6zZYhF"], [class~="contentRegion_jnk11m"]) [class~="item_6zZYhF"][class~="selected_6zZYhF"]:not(#hc-settings) {
+html.hc-theming[data-hc-theme] :is(.sidebarRegionScroller_jnk11m .side_6zZYhF, .contentRegion_jnk11m) .item_6zZYhF.selected_6zZYhF:not(#hc-settings) {
     background-color: rgb(var(--hc-accent-rgb) / 16%) !important;
     box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
     color: var(--hc-accent) !important;
 }
 
 /* The "Permissions synced with category" banner: the same dock as the sidebar instead of a square-edged slab. */
-html.hc-theming[data-hc-theme] [class~="contentRegion_jnk11m"] [class~="cardPrimary_qCN-Ri"] {
+html.hc-theming[data-hc-theme] .contentRegion_jnk11m .cardPrimary_qCN-Ri {
     border: 1px solid var(--hc-panel-border) !important;
     border-radius: 12px;
     background: var(--hc-flyout-bg) !important;
@@ -1745,29 +1753,29 @@ html.hc-theming[data-hc-theme] [class~="contentRegion_jnk11m"] [class~="cardPrim
 
 /* The role list column was a second see-through slab the height of the whole page; it reads as part of the page
    now, split from the permissions by one hairline. */
-html.hc-theming [class~="contentRegion_jnk11m"] [class~="scroller_EDKX0U"] {
+html.hc-theming .contentRegion_jnk11m .scroller_EDKX0U {
     border-inline-end: 1px solid var(--hc-row-border);
     background: none !important;
 }
 
 /* Deny, neutral and allow switches: the unset parts drop their grey fill; the set part keeps its red or green. */
-html.hc-theming[data-hc-theme] [class~="contentRegion_jnk11m"] [class~="group_8GP31u"] {
+html.hc-theming[data-hc-theme] .contentRegion_jnk11m .group_8GP31u {
     border: 1px solid var(--hc-panel-border) !important;
     background: var(--hc-flyout-bg) !important;
 }
 
-html.hc-theming [class~="contentRegion_jnk11m"] [class~="group_8GP31u"] > [class~="item_8GP31u"][aria-checked="false"] {
+html.hc-theming .contentRegion_jnk11m .group_8GP31u > .item_8GP31u[aria-checked="false"] {
     background-color: transparent !important;
 }
 
-html.hc-theming [class~="contentRegion_jnk11m"] [class~="group_8GP31u"] > [class~="item_8GP31u"][aria-checked="false"]:hover {
+html.hc-theming .contentRegion_jnk11m .group_8GP31u > .item_8GP31u[aria-checked="false"]:hover {
     background-color: rgb(var(--hc-accent-rgb) / 14%) !important;
 }
 
 /* Call view header ("Public", the channel status line and the chat button): the theme's 46% base let the stream
    show through. It takes the opaque flyout fill, a rest hairline and the gradient edge on hover. It sits 6px
    inside the call frame on three sides with an 8px corner, so the frame's 14px inner corner wraps it evenly. */
-html.hc-theming[data-hc-theme] [class*="callContainer_"] [class~="subtitleContainer_neq5ug"] > [class~="headerBar_neq5ug"][class~="container_ybUK7Z"] {
+html.hc-theming[data-hc-theme] [class*="callContainer_"] .subtitleContainer_neq5ug > .headerBar_neq5ug.container_ybUK7Z {
     box-sizing: border-box;
     margin: 6px 6px 0 !important;
     border-radius: 8px !important;
@@ -1776,13 +1784,13 @@ html.hc-theming[data-hc-theme] [class*="callContainer_"] [class~="subtitleContai
     box-shadow: none !important;
 }
 
-html.hc-theming[data-hc-theme] [class*="callContainer_"] [class~="subtitleContainer_neq5ug"] > [class~="headerBar_neq5ug"][class~="container_ybUK7Z"]:hover {
+html.hc-theming[data-hc-theme] [class*="callContainer_"] .subtitleContainer_neq5ug > .headerBar_neq5ug.container_ybUK7Z:hover {
     border-color: transparent;
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
 }
 
 /* Back and forward: one dock inside the rounded cap, one hover plate for both arrows. */
-html.hc-theming [class~="backForwardButtons_nS9Yqn"] {
+html.hc-theming .backForwardButtons_nS9Yqn {
     min-width: 0;
     margin: 0 auto !important;
     padding: 0 2px;
@@ -1791,12 +1799,12 @@ html.hc-theming [class~="backForwardButtons_nS9Yqn"] {
     transition: background-color 0.16s ease-out, border-color 0.16s ease-out;
 }
 
-html.hc-theming [class~="backForwardButtons_nS9Yqn"]:hover:has(> :not([class~="disabled_nS9Yqn"])) {
+html.hc-theming .backForwardButtons_nS9Yqn:hover:has(> :not(.disabled_nS9Yqn)) {
     border-color: rgb(var(--hc-accent-rgb) / 35%);
     background-color: var(--hc-flyout-bg);
 }
 
-html.hc-theming [class~="backForwardButtons_nS9Yqn"] [class~="button_nS9Yqn"] {
+html.hc-theming .backForwardButtons_nS9Yqn .button_nS9Yqn {
     width: 24px;
     padding-inline: 0;
     border-radius: 6px;
@@ -1804,19 +1812,19 @@ html.hc-theming [class~="backForwardButtons_nS9Yqn"] [class~="button_nS9Yqn"] {
     transition: color 0.16s ease-out;
 }
 
-html.hc-theming [class~="backForwardButtons_nS9Yqn"] [class~="button_nS9Yqn"]:not([class~="disabled_nS9Yqn"]):hover {
+html.hc-theming .backForwardButtons_nS9Yqn .button_nS9Yqn:not(.disabled_nS9Yqn):hover {
     color: var(--hc-accent);
 }
 
 /* Call tile name tags take the hover like the activity tags; Discord's overlay row ignores the pointer, so the tag opts back in (clicks still reach the tile). */
-html.hc-theming [data-call-tile] :is([class~="overlayTitle_7NOr2f"], [class~="experimentOverlayTitle_7NOr2f"]):not([class~="idle_7NOr2f"]) {
+html.hc-theming [data-call-tile] :is(.overlayTitle_7NOr2f, .experimentOverlayTitle_7NOr2f):not(.idle_7NOr2f) {
     pointer-events: auto;
 }
 
 /* Call bar side buttons (participants on the left, pop out and full screen on the right): a plate on hover, accent when on. */
 
 /* The plate gets 6px of room around the 24px icon; the negative margin keeps the icon where Discord put it. */
-html.hc-theming [class~="callContainer_hbKzX7"] :is([class~="leftTrayIcon_hbKzX7"], [class~="rightTrayIcon_hbKzX7"]) {
+html.hc-theming .callContainer_hbKzX7 :is(.leftTrayIcon_hbKzX7, .rightTrayIcon_hbKzX7) {
     box-sizing: content-box;
     padding: 6px;
     margin: -6px;
@@ -1824,59 +1832,59 @@ html.hc-theming [class~="callContainer_hbKzX7"] :is([class~="leftTrayIcon_hbKzX7
     transition: background-color 0.16s ease-out, color 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
-html.hc-theming [class~="callContainer_hbKzX7"] :is([class~="leftTrayIcon_hbKzX7"], [class~="rightTrayIcon_hbKzX7"]):hover {
+html.hc-theming .callContainer_hbKzX7 :is(.leftTrayIcon_hbKzX7, .rightTrayIcon_hbKzX7):hover {
     background-color: var(--hc-flyout-bg);
     box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 55%);
     color: var(--hc-accent);
 }
 
-html.hc-theming [class~="callContainer_hbKzX7"] :is([class~="leftTrayIcon_hbKzX7"], [class~="rightTrayIcon_hbKzX7"]):is([aria-checked="true"], [aria-pressed="true"], [aria-expanded="true"]) {
+html.hc-theming .callContainer_hbKzX7 :is(.leftTrayIcon_hbKzX7, .rightTrayIcon_hbKzX7):is([aria-checked="true"], [aria-pressed="true"], [aria-expanded="true"]) {
     background-color: rgb(var(--hc-accent-rgb) / 18%);
     color: var(--hc-accent);
 }
 
 /* User panel buttons (plugin toggles, mute, deafen, settings, camera, screen share, activities, soundboard): the dark flyout colour instead of the lighter surface. */
-html.hc-theming[data-hc-theme] [class~="panels_pog62O"] :is(button[class~="button_9U6LUN"][class~="buttonColor_9U6LUN"], [class~="buttons_g6VwXp"] button[class~="button_Y-8oZW"]:not([class*="buttonChevron_"])):not([aria-checked="true"]) {
+html.hc-theming[data-hc-theme] .panels_pog62O :is(button.button_9U6LUN.buttonColor_9U6LUN, .buttons_g6VwXp button.button_Y-8oZW:not([class*="buttonChevron_"])):not([aria-checked="true"]) {
     background-color: var(--hc-flyout-bg) !important;
     box-shadow: inset 0 0 0 1px var(--hc-row-border);
     transition: background-color 0.16s ease-out, color 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
-html.hc-theming[data-hc-theme] [class~="panels_pog62O"] :is(button[class~="button_9U6LUN"][class~="buttonColor_9U6LUN"], [class~="buttons_g6VwXp"] button[class~="button_Y-8oZW"]:not([class*="buttonChevron_"])):not([aria-checked="true"]):hover {
+html.hc-theming[data-hc-theme] .panels_pog62O :is(button.button_9U6LUN.buttonColor_9U6LUN, .buttons_g6VwXp button.button_Y-8oZW:not([class*="buttonChevron_"])):not([aria-checked="true"]):hover {
     background-color: rgb(var(--hc-accent-rgb) / 14%) !important;
     box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
     color: var(--hc-accent);
 }
 
 /* User area docks: the version banner on top and the ping, memory and uptime bar below are dark strips with a hairline, and a full width hairline splits the name row from the buttons. */
-html.hc-theming [class~="panels_pog62O"] {
+html.hc-theming .panels_pog62O {
     --hc-dock-strip: rgb(var(--hc-crust-rgb) / 55%);
     --hc-dock-line: rgb(var(--hc-ink-rgb) / 12%);
 }
 
-html.hc-theming [class~="panels_pog62O"] [class*="container_9U6LUN"] {
+html.hc-theming .panels_pog62O [class*="container_9U6LUN"] {
     border-bottom-color: var(--hc-dock-line);
 }
 
 /* The quest card sits straight on Voice Connected (or the buttons) with no divider of its own. */
-html.hc-theming [class~="panels_pog62O"] [class~="wrapperVisible_jdr5pz"] {
+html.hc-theming .panels_pog62O .wrapperVisible_jdr5pz {
     border-bottom: 1px solid var(--hc-dock-line);
 }
 
 /* Hovering expands the card, and the expanded view keeps the collapsed background stacked above the
    content. With the theme's see-through background that layer greys out the whole card and its button. */
-html.hc-theming [class~="panels_pog62O"] [class~="wrapper_jdr5pz"] [class*="contentExpanded_"] [class*="postEnrollmentBackgroundCollapsed_"] {
+html.hc-theming .panels_pog62O .wrapper_jdr5pz [class*="contentExpanded_"] [class*="postEnrollmentBackgroundCollapsed_"] {
     opacity: 0 !important;
 }
 
 /* Square top corners, so the card lines up with the straight divider above it. */
-html.hc-theming [class~="panels_pog62O"] [class~="contentWrapper_jdr5pz"]::after,
-html.hc-theming [class~="panels_pog62O"] :is(
-    [class~="wrapper_jdr5pz"],
-    [class~="contentWrapper_jdr5pz"],
+html.hc-theming .panels_pog62O .contentWrapper_jdr5pz::after,
+html.hc-theming .panels_pog62O :is(
+    .wrapper_jdr5pz,
+    .contentWrapper_jdr5pz,
     [class*="postEnrollmentBackground_"],
     [class*="heroAssetWrapper_"],
-    [class~="wrapper_VCaaii"],
+    .wrapper_VCaaii,
     [class*="background_VCaaii"],
     [class*="borders_VCaaii"],
     [class*="confetti_VCaaii"]
@@ -1885,22 +1893,22 @@ html.hc-theming [class~="panels_pog62O"] :is(
 }
 
 /* Who's Watching is a bordered card of its own; the gradient replaces its grey border on hover. */
-html.hc-theming [class~="panels_pog62O"] .vc-whos-watching-screenshare-panel {
+html.hc-theming .panels_pog62O .vc-whos-watching-screenshare-panel {
     transition: background 0.16s ease-out, border-color 0.16s ease-out;
 }
 
-html.hc-theming [class~="panels_pog62O"] .vc-whos-watching-screenshare-panel:hover {
+html.hc-theming .panels_pog62O .vc-whos-watching-screenshare-panel:hover {
     border-color: transparent !important;
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
 }
 
-html.hc-theming [class~="panels_pog62O"] .vc-devbanner-module-widget {
+html.hc-theming .panels_pog62O .vc-devbanner-module-widget {
     border-bottom: 1px solid var(--hc-dock-line);
     background-color: var(--hc-dock-strip) !important;
     color: var(--hc-text-muted) !important;
 }
 
-html.hc-theming [class~="panels_pog62O"] .vc-panel-sysmonitor-widget {
+html.hc-theming .panels_pog62O .vc-panel-sysmonitor-widget {
     border-top: 1px solid var(--hc-dock-line);
     border-bottom: 0;
     border-radius: 0 0 14px 14px; /* the panel's 16px corner minus its 2px border, so the strip never paints over the border */
@@ -1908,31 +1916,31 @@ html.hc-theming [class~="panels_pog62O"] .vc-panel-sysmonitor-widget {
 }
 
 /* The date and time strip matches the stats strip under it: a line above, the same strip colour and hover. */
-html.hc-theming [class~="panels_pog62O"] .vc-panel-clock-widget {
+html.hc-theming .panels_pog62O .vc-panel-clock-widget {
     border-top: 1px solid var(--hc-dock-line);
     border-bottom: 0;
     background-color: var(--hc-dock-strip);
 }
 
 /* Right under the banner, the banner's own bottom line is the separator, so the clock's would make it two. */
-html.hc-theming [class~="panels_pog62O"] .vc-panel-module-item:has(> .vc-devbanner-module-widget) + .vc-panel-module-item > .vc-panel-clock-widget,
-html.hc-theming [class~="panels_pog62O"] .vc-panel-modules-above:has(> .vc-panel-module-item > .vc-panel-layout-music-controls:empty) .vc-panel-module-item:has(> .vc-devbanner-module-widget) + .vc-panel-module-item + .vc-panel-module-item > .vc-panel-clock-widget {
+html.hc-theming .panels_pog62O .vc-panel-module-item:has(> .vc-devbanner-module-widget) + .vc-panel-module-item > .vc-panel-clock-widget,
+html.hc-theming .panels_pog62O .vc-panel-modules-above:has(> .vc-panel-module-item > .vc-panel-layout-music-controls:empty) .vc-panel-module-item:has(> .vc-devbanner-module-widget) + .vc-panel-module-item + .vc-panel-module-item > .vc-panel-clock-widget {
     border-top-color: transparent;
 }
 
-html.hc-theming [class~="panels_pog62O"] .vc-panel-module-item:last-child > .vc-panel-clock-widget {
+html.hc-theming .panels_pog62O .vc-panel-module-item:last-child > .vc-panel-clock-widget {
     border-radius: 0 0 14px 14px;
 }
 
-html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-panel-clock-widget, .vc-panel-sysmonitor-widget):hover {
+html.hc-theming .panels_pog62O :is(.vc-devbanner-module-widget, .vc-panel-clock-widget, .vc-panel-sysmonitor-widget):hover {
     background-color: rgb(var(--hc-accent-rgb) / 8%) !important; /* the banner's strip colour is !important */
 }
 
-html.hc-theming [class~="panels_pog62O"] :is(.vc-devbanner-module-widget, .vc-panel-clock-widget, .vc-panel-sysmonitor-widget) {
+html.hc-theming .panels_pog62O :is(.vc-devbanner-module-widget, .vc-panel-clock-widget, .vc-panel-sysmonitor-widget) {
     transition: background-color 0.16s ease-out;
 }
 
-html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"] {
+html.hc-theming .panels_pog62O .accountPopoutButtonWrapper_g6VwXp {
     position: relative;
 
     /* Keeps the avatar's full width when the buttons beside it need more room than the panel has: the
@@ -1946,7 +1954,7 @@ html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6V
 }
 
 /* With the buttons on top the name row has the whole width, so the hover tint gets room around the avatar. */
-html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"] {
+html.hc-theming[data-hc-buttons-top] .panels_pog62O .accountPopoutButtonWrapper_g6VwXp {
     margin-top: 16px;
     padding: 4px 7px;
 }
@@ -1964,7 +1972,7 @@ html.hc-theming[data-hc-buttons-top] {
 /* The flex gap and stretched rows left about 23 px between the button grid and the name row. The
    panel's fixed height cannot hold extra dragged-in button rows, so let it hug its content; every
    separator offset below is then measured from the account row, which is always the last one. */
-html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="container_g6VwXp"] {
+html.hc-theming[data-hc-buttons-top] .panels_pog62O .container_g6VwXp {
     /* Panel Layout's grid CSS sets gap with !important. */
     row-gap: 0 !important;
     align-content: flex-start;
@@ -1974,11 +1982,11 @@ html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="container
 
 /* Only with Panel Layout's "All Buttons Top": the wrapper's own strip shrink-wraps with it, so draw
    the separator on the panel instead: full width, centred in the 16px gap above the account row. */
-html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]::before {
+html.hc-theming[data-hc-buttons-top] .panels_pog62O .accountPopoutButtonWrapper_g6VwXp::before {
     content: none !important;
 }
 
-html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="container_g6VwXp"]::after {
+html.hc-theming[data-hc-buttons-top] .panels_pog62O .container_g6VwXp::after {
     content: "";
     position: absolute;
     inset: auto 0 70px; /* the account row: 55px tall + 8px panel padding + 7px above it */
@@ -1988,11 +1996,11 @@ html.hc-theming[data-hc-buttons-top] [class~="panels_pog62O"] [class~="container
 }
 
 /* The name row hovers with a soft tint and the theme's gradient ring, faded in. */
-html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]:hover {
+html.hc-theming .panels_pog62O .accountPopoutButtonWrapper_g6VwXp:hover {
     background: rgb(var(--hc-accent-rgb) / 8%) !important;
 }
 
-html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]::after {
+html.hc-theming .panels_pog62O .accountPopoutButtonWrapper_g6VwXp::after {
     position: absolute;
     padding: 1.5px;
     border-radius: inherit;
@@ -2006,12 +2014,12 @@ html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6V
     transition: opacity 0.16s ease-out;
 }
 
-html.hc-theming [class~="panels_pog62O"] [class~="accountPopoutButtonWrapper_g6VwXp"]:hover::after {
+html.hc-theming .panels_pog62O .accountPopoutButtonWrapper_g6VwXp:hover::after {
     opacity: 1;
 }
 
-html.hc-theming [class~="panels_pog62O"] [class~="buttons_g6VwXp"],
-html.hc-theming [class~="panels_pog62O"] [class~="buttons_g6VwXp"] > * {
+html.hc-theming .panels_pog62O .buttons_g6VwXp,
+html.hc-theming .panels_pog62O .buttons_g6VwXp > * {
     min-width: 0 !important;
 }
 
@@ -2035,37 +2043,37 @@ html.hc-theming[data-hc-theme] :is(.theme-dark, .theme-darker, .theme-midnight) 
     --control-icon-only-border-hover: rgb(var(--hc-accent-rgb) / 35%) !important;
 }
 
-html.hc-theming [class~="content_YUoOxm"] > :is([class~="icons_YUoOxm"], [data-vu-meter]) {
+html.hc-theming .content_YUoOxm > :is(.icons_YUoOxm, [data-vu-meter]) {
     transform: none !important;
 }
 
 /* Friends list row buttons (message, more): a quiet ring at rest, the theme gradient ring on hover. */
-html.hc-theming[data-hc-theme] [class~="peopleListItem_y75PxA"] [class*="actionButton_"] {
+html.hc-theming[data-hc-theme] .peopleListItem_y75PxA [class*="actionButton_"] {
     border: 1px solid var(--hc-ring-rest);
     background: var(--hc-flyout-bg) !important;
     transition: border-color 0.16s ease-out, color 0.16s ease-out;
 }
 
-html.hc-theming[data-hc-theme] [class~="peopleListItem_y75PxA"] [class*="actionButton_"]:hover {
+html.hc-theming[data-hc-theme] .peopleListItem_y75PxA [class*="actionButton_"]:hover {
     border-color: transparent;
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, linear-gradient(135deg, var(--hc-grad-a), var(--hc-grad-b)) border-box !important;
     color: var(--hc-text);
 }
 
 /* Friends page search box and blocked accounts notice: a quiet ring at rest, the gradient ring on hover or focus. */
-html.hc-theming[data-hc-theme] [class~="peopleColumn_zrUwGA"] :is([class~="container_0PLWhS"], [class~="blockedIgnoredSettingsNotice_YgJORb"]) {
+html.hc-theming[data-hc-theme] .peopleColumn_zrUwGA :is(.container_0PLWhS, .blockedIgnoredSettingsNotice_YgJORb) {
     border: 1px solid var(--hc-ring-rest) !important;
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, linear-gradient(var(--hc-ring-rest), var(--hc-ring-rest)) border-box !important;
     transition: border-color 0.16s ease-out;
 }
 
-html.hc-theming[data-hc-theme] [class~="peopleColumn_zrUwGA"] :is([class~="container_0PLWhS"]:is(:hover, :focus-within), [class~="blockedIgnoredSettingsNotice_YgJORb"]:hover) {
+html.hc-theming[data-hc-theme] .peopleColumn_zrUwGA :is(.container_0PLWhS:is(:hover, :focus-within), .blockedIgnoredSettingsNotice_YgJORb:hover) {
     border-color: transparent !important;
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
 }
 
 /* "Go to settings" sits in a small pill dock, with the gradient ring on hover. */
-html.hc-theming[data-hc-theme] [class~="blockedIgnoredSettingsNotice_YgJORb"] a {
+html.hc-theming[data-hc-theme] .blockedIgnoredSettingsNotice_YgJORb a {
     display: inline-block;
     margin-inline-start: 4px;
     padding: 1px 9px;
@@ -2077,7 +2085,7 @@ html.hc-theming[data-hc-theme] [class~="blockedIgnoredSettingsNotice_YgJORb"] a 
     transition: border-color 0.16s ease-out, background-color 0.16s ease-out, color 0.16s ease-out;
 }
 
-html.hc-theming[data-hc-theme] [class~="blockedIgnoredSettingsNotice_YgJORb"] a:hover {
+html.hc-theming[data-hc-theme] .blockedIgnoredSettingsNotice_YgJORb a:hover {
     border-color: transparent;
     background: linear-gradient(rgb(var(--hc-accent-rgb) / 18%), rgb(var(--hc-accent-rgb) / 18%)) padding-box, linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box;
     color: var(--hc-text);
@@ -2131,24 +2139,24 @@ html.hc-theming[data-hc-theme] section[class*="panels_"] {
 /* Profile tabs (Board, Activity, Mutual Friends, Mutual Servers): one dock with pill tabs, the settings tab look,
    instead of Discord's underline. The modal's dock is its tab scroller, so a long tab scrolls inside the dock
    rather than cutting through its edge. */
-html.hc-theming[data-hc-theme] :is([class~="tabBar_OpoUmC"], [class~="tabListScroller_y4ZEM5"]) {
+html.hc-theming[data-hc-theme] :is(.tabBar_OpoUmC, .tabListScroller_y4ZEM5) {
     padding: 3px !important;
     border: 1px solid var(--hc-panel-border) !important;
     border-radius: 12px;
     background: var(--hc-row-bg);
 }
 
-html.hc-theming[data-hc-theme] [class~="tabBar_OpoUmC"] {
+html.hc-theming[data-hc-theme] .tabBar_OpoUmC {
     gap: 2px !important;
     margin: 16px 16px 0;
 }
 
-html.hc-theming[data-hc-theme] [class~="tabListScroller_y4ZEM5"] > [class~="top_6zZYhF"] {
+html.hc-theming[data-hc-theme] .tabListScroller_y4ZEM5 > .top_6zZYhF {
     gap: 2px;
     border-bottom: 0 !important;
 }
 
-html.hc-theming[data-hc-theme] :is([class~="tabBar_OpoUmC"] [class~="tabBarItem_OpoUmC"], [class~="tabBarItem_y4ZEM5"]) {
+html.hc-theming[data-hc-theme] :is(.tabBar_OpoUmC .tabBarItem_OpoUmC, .tabBarItem_y4ZEM5) {
     height: auto !important;
     margin: 0 !important;
     padding: 6px 9px !important;
@@ -2159,17 +2167,17 @@ html.hc-theming[data-hc-theme] :is([class~="tabBar_OpoUmC"] [class~="tabBarItem_
     transition: background-color 0.16s ease-out, color 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
-html.hc-theming[data-hc-theme] :is([class~="tabBar_OpoUmC"] [class~="tabBarItem_OpoUmC"], [class~="tabBarItem_y4ZEM5"])::after {
+html.hc-theming[data-hc-theme] :is(.tabBar_OpoUmC .tabBarItem_OpoUmC, .tabBarItem_y4ZEM5)::after {
     display: none !important;
 }
 
-html.hc-theming[data-hc-theme] :is([class~="tabBar_OpoUmC"] [class~="tabBarItem_OpoUmC"], [class~="tabBarItem_y4ZEM5"]):hover {
+html.hc-theming[data-hc-theme] :is(.tabBar_OpoUmC .tabBarItem_OpoUmC, .tabBarItem_y4ZEM5):hover {
     background-color: var(--hc-window-bg);
     box-shadow: inset 0 0 0 1px var(--hc-row-border);
     color: var(--hc-text);
 }
 
-html.hc-theming[data-hc-theme] :is([class~="tabBar_OpoUmC"] [class~="tabBarItem_OpoUmC"], [class~="tabBarItem_y4ZEM5"]):is([class~="selected_6zZYhF"], [aria-selected="true"]) {
+html.hc-theming[data-hc-theme] :is(.tabBar_OpoUmC .tabBarItem_OpoUmC, .tabBarItem_y4ZEM5):is(.selected_6zZYhF, [aria-selected="true"]) {
     background-color: rgb(var(--hc-accent-rgb) / 16%);
     box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
     color: var(--hc-accent) !important;
@@ -2178,8 +2186,8 @@ html.hc-theming[data-hc-theme] :is([class~="tabBar_OpoUmC"] [class~="tabBarItem_
 /* The buttons on a profile (banner buttons, Close, Add Friend, More) sat almost black on the art; a light frosted
    glass with an edge instead. */
 html.hc-theming[data-hc-theme] :is(
-    [class~="bannerButton_C4gRrZ"],
-    :is([class~="modalHeaderButtons_ZhNJfE"], [class~="profileButtons_s3DB6Y"]) [class~="secondary_F7qvhY"]
+    .bannerButton_C4gRrZ,
+    :is(.modalHeaderButtons_ZhNJfE, .profileButtons_s3DB6Y) .secondary_F7qvhY
 ) {
     border: 1px solid rgb(var(--hc-ink-rgb) / 24%) !important;
     background: rgb(var(--hc-ink-rgb) / 18%) !important;
@@ -2189,8 +2197,8 @@ html.hc-theming[data-hc-theme] :is(
 }
 
 html.hc-theming[data-hc-theme] :is(
-    [class~="bannerButton_C4gRrZ"],
-    :is([class~="modalHeaderButtons_ZhNJfE"], [class~="profileButtons_s3DB6Y"]) [class~="secondary_F7qvhY"]
+    .bannerButton_C4gRrZ,
+    :is(.modalHeaderButtons_ZhNJfE, .profileButtons_s3DB6Y) .secondary_F7qvhY
 ):is(:hover, :active) {
     border-color: rgb(var(--hc-accent-rgb) / 70%) !important;
     background: rgb(var(--hc-ink-rgb) / 26%) !important;
@@ -2198,26 +2206,26 @@ html.hc-theming[data-hc-theme] :is(
 
 /* Profile activity cards (Playing, In voice, recent games) had no edge on the profile art; they take the quiet ring,
    and the accent when one can be clicked. */
-html.hc-theming[data-hc-theme] [class~="card_Bu4Al8"] {
+html.hc-theming[data-hc-theme] .card_Bu4Al8 {
     border: 1px solid var(--hc-ring-rest);
     transition: border-color 0.16s ease-out;
 }
 
-html.hc-theming[data-hc-theme] [class~="clickableContainer_Bu4Al8"]:hover > [class~="card_Bu4Al8"] {
+html.hc-theming[data-hc-theme] .clickableContainer_Bu4Al8:hover > .card_Bu4Al8 {
     border-color: rgb(var(--hc-accent-rgb) / 55%);
 }
 
 /* Settings pages on Discord's new layout (Account, Data & Privacy, Notifications): each category is a dock like the
    Voice & Video groups, with the gradient edge on hover, instead of loose rows split by hairlines. */
-html.hc-theming[data-hc-theme] [class~="categories_nNq2Vb"] {
+html.hc-theming[data-hc-theme] .categories_nNq2Vb {
     gap: 16px;
 }
 
-html.hc-theming[data-hc-theme] [class~="categories_nNq2Vb"] > [class~="divider_nNq2Vb"] {
+html.hc-theming[data-hc-theme] .categories_nNq2Vb > .divider_nNq2Vb {
     display: none !important;
 }
 
-html.hc-theming[data-hc-theme] [class~="categories_nNq2Vb"] > [class~="container_Gl6U0S"] {
+html.hc-theming[data-hc-theme] .categories_nNq2Vb > .container_Gl6U0S {
     margin: 0 !important;
     padding: 16px 20px !important;
     border: 1px solid var(--hc-panel-border);
@@ -2226,54 +2234,54 @@ html.hc-theming[data-hc-theme] [class~="categories_nNq2Vb"] > [class~="container
     transition: border-color 0.16s ease-out;
 }
 
-html.hc-theming[data-hc-theme] [class~="categories_nNq2Vb"] > [class~="container_Gl6U0S"]:hover {
+html.hc-theming[data-hc-theme] .categories_nNq2Vb > .container_Gl6U0S:hover {
     border-color: transparent;
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box;
 }
 
 /* Rows that open something take the settings tab hover: the dark fill and a hairline, not a grey slab. */
-html.hc-theming[data-hc-theme] [class~="baseControlItem_FiiQ6I"] {
+html.hc-theming[data-hc-theme] .baseControlItem_FiiQ6I {
     border-radius: 10px;
     transition: background-color 0.16s ease-out, box-shadow 0.16s ease-out;
 }
 
-html.hc-theming[data-hc-theme] [class~="baseControlItem_FiiQ6I"][class~="clickable_FiiQ6I"]:hover {
+html.hc-theming[data-hc-theme] .baseControlItem_FiiQ6I.clickable_FiiQ6I:hover {
     background-color: var(--hc-window-bg) !important;
     box-shadow: inset 0 0 0 1px var(--hc-row-border);
 }
 
 /* Discord's secondary buttons on settings pages (Edit, Change) match HaloCord's own plugin buttons. */
-html.hc-theming[data-hc-theme] [class~="panel_nNq2Vb"] [class~="button_F7qvhY"][class~="secondary_F7qvhY"] {
+html.hc-theming[data-hc-theme] .panel_nNq2Vb .button_F7qvhY.secondary_F7qvhY {
     border: 1px solid rgb(var(--hc-accent-rgb) / 30%) !important;
     background-color: var(--hc-row-bg) !important;
     color: var(--hc-accent) !important;
     transition: background-color 0.16s ease-out, border-color 0.16s ease-out;
 }
 
-html.hc-theming[data-hc-theme] [class~="panel_nNq2Vb"] [class~="button_F7qvhY"][class~="secondary_F7qvhY"]:hover:not(:disabled) {
+html.hc-theming[data-hc-theme] .panel_nNq2Vb .button_F7qvhY.secondary_F7qvhY:hover:not(:disabled) {
     border-color: rgb(var(--hc-accent-rgb) / 55%) !important;
     background-color: rgb(var(--hc-accent-rgb) / 10%) !important;
 }
 
 /* The sidebar's section jump list marks the open section, and its marker, in the accent. */
-html.hc-theming[data-hc-theme] [class~="subnav_8qMUr2"] [class~="item_8qMUr2"][class~="active_8qMUr2"] {
+html.hc-theming[data-hc-theme] .subnav_8qMUr2 .item_8qMUr2.active_8qMUr2 {
     color: var(--hc-accent) !important;
 }
 
-html.hc-theming[data-hc-theme] [class~="subnav_8qMUr2"] [class~="thumb_8qMUr2"]:not([class~="hidden_8qMUr2"]) {
+html.hc-theming[data-hc-theme] .subnav_8qMUr2 .thumb_8qMUr2:not(.hidden_8qMUr2) {
     background-color: var(--hc-accent) !important;
 }
 
 /* Scrollbars: the blue to mauve gradient thumb everywhere. Chromium ignores ::-webkit-scrollbar on any element that
    sets scrollbar-color or scrollbar-width, so those go back to auto here; bars hidden on purpose stay hidden. */
-html.hc-theming.hc-theming :is([class*="thin_"], [class*="auto_"], [class*="scroller_"], [class*="Scroller_"], .dvx-dd-menu, .vc-update-modal-commits, .vc-vmsg-mics, .panellayout-scrollbar, .deracul-scrollbar, .vc-stream-enhancer-share-grid, .vc-stream-enhancer-camera-body, .vc-presets-summary, .vc-presets-modal-textarea, .vc-presets-merge-list, .vc-presets-stats, .hc-mc-combo-menu, .nai-scroll, .vc-pl-custom-btn-row, .vc-plugin-ui-elements-modal [class*="scroller"], [class*="messageTextArea_"]):not([class*="none_"], [class*="comboBoxInputScroller_"], [class*="noScrollbar_"], [class*="scrollable_ybUK7Z"], [class*="emojis_rAadqU"], [class*="listBox_b5PEJH"], [class~="scroller_5dqHTG"]) {
+html.hc-theming.hc-theming :is([class*="thin_"], [class*="auto_"], [class*="scroller_"], [class*="Scroller_"], .dvx-dd-menu, .vc-update-modal-commits, .vc-vmsg-mics, .panellayout-scrollbar, .deracul-scrollbar, .vc-stream-enhancer-share-grid, .vc-stream-enhancer-camera-body, .vc-presets-summary, .vc-presets-modal-textarea, .vc-presets-merge-list, .vc-presets-stats, .hc-mc-combo-menu, .nai-scroll, .vc-pl-custom-btn-row, .vc-plugin-ui-elements-modal [class*="scroller"], [class*="messageTextArea_"]):not([class*="none_"], [class*="comboBoxInputScroller_"], [class*="noScrollbar_"], [class*="scrollable_ybUK7Z"], [class*="emojis_rAadqU"], [class*="listBox_b5PEJH"], .scroller_5dqHTG) {
     scrollbar-color: auto !important;
     scrollbar-width: auto !important;
 }
 
 /* The server rail scrolls by wheel with no bar: Discord's stable 8px gutter pushed every tile 4px left of the rail's
    centre and left a wider gap on the right. */
-html.hc-theming nav[class*="guilds_"] [class~="scroller_5dqHTG"] {
+html.hc-theming nav[class*="guilds_"] .scroller_5dqHTG {
     scrollbar-gutter: auto;
     scrollbar-width: none;
 }
@@ -2304,23 +2312,23 @@ html.hc-theming ::-webkit-scrollbar-corner {
 /* 2.13.6 borders and fixes batch */
 
 /* Shop banner: readable text over the art. */
-html.hc-theming [class~="container_-hWC0t"] [class~="mainColumn_-hWC0t"] {
+html.hc-theming .container_-hWC0t .mainColumn_-hWC0t {
     color: var(--hc-text);
     text-shadow: 0 1px 3px rgb(0 0 0 / 85%), 0 0 12px rgb(0 0 0 / 60%);
 }
 
 /* Light overlay buttons (Shop): dark text. */
-html.hc-theming [class~="overlay-primary_F7qvhY"] {
+html.hc-theming .overlay-primary_F7qvhY {
     color: rgb(var(--hc-crust-rgb));
 }
 
 /* Profile bio box follows its frame corner. */
-html.hc-theming [class~="bioTextAreaContainer_agtm70"] > [class~="bioTextArea_agtm70"] {
+html.hc-theming .bioTextAreaContainer_agtm70 > .bioTextArea_agtm70 {
     border-radius: 7px;
 }
 
 /* Open server folder: the tint sits exactly behind the icon column, centred. */
-html.hc-theming nav[class*="guilds_"] [class~="folderGroupBackground_RTMSuZ"] {
+html.hc-theming nav[class*="guilds_"] .folderGroupBackground_RTMSuZ {
     inset-inline-start: calc(50% - var(--guildbar-avatar-size, 40px) / 2);
     width: var(--guildbar-avatar-size, 40px);
     border-radius: 12px;
@@ -2328,103 +2336,103 @@ html.hc-theming nav[class*="guilds_"] [class~="folderGroupBackground_RTMSuZ"] {
 
 
 /* "Find or start a conversation": resting ring, gradient on hover. */
-html.hc-theming [class~="searchBar_u88IQl"] > button {
+html.hc-theming .searchBar_u88IQl > button {
     border: 1px solid var(--hc-ring-rest);
     background: var(--hc-flyout-bg);
     border-radius: 8px;
 }
 
-html.hc-theming [class~="searchBar_u88IQl"] > button:is(:hover, :focus-visible) {
+html.hc-theming .searchBar_u88IQl > button:is(:hover, :focus-visible) {
     border-color: transparent;
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box;
 }
 
 /* Friends header tabs: each tab is a small framed dock. */
-html.hc-theming [class~="tabBar_zrUwGA"] > [class~="item_zrUwGA"] {
+html.hc-theming .tabBar_zrUwGA > .item_zrUwGA {
     box-shadow: inset 0 0 0 1px var(--hc-ring-rest);
 }
 
-html.hc-theming [class~="tabBar_zrUwGA"] > [class~="item_zrUwGA"]:hover {
+html.hc-theming .tabBar_zrUwGA > .item_zrUwGA:hover {
     box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 60%);
 }
 
-html.hc-theming [class~="tabBar_zrUwGA"] > [class~="item_zrUwGA"][aria-selected="true"] {
+html.hc-theming .tabBar_zrUwGA > .item_zrUwGA[aria-selected="true"] {
     box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
 }
 
-html.hc-theming [class~="tabBar_zrUwGA"] > [class~="item_zrUwGA"][class~="addFriend_zrUwGA"] {
+html.hc-theming .tabBar_zrUwGA > .item_zrUwGA.addFriend_zrUwGA {
     box-shadow: inset 0 0 0 1px rgb(var(--hc-ink-rgb) / 25%);
 }
 
 /* NEW badge: accent tint instead of plain white. */
-html.hc-theming [class~="badge_4guu7-"][class~="expressive_4guu7-"] {
+html.hc-theming .badge_4guu7-.expressive_4guu7- {
     background: rgb(var(--hc-accent-rgb) / 16%);
     color: rgb(var(--hc-accent-rgb));
     border: 1px solid rgb(var(--hc-accent-rgb) / 45%);
 }
 
 /* Nitro days pill: framed, muted text. */
-html.hc-theming [class~="premiumPill_Ku7pX2"][class~="greyBackgroundPill_Ku7pX2"] {
+html.hc-theming .premiumPill_Ku7pX2.greyBackgroundPill_Ku7pX2 {
     background: rgb(var(--hc-ink-rgb) / 8%);
     border: 1px solid var(--hc-ring-rest);
 }
 
-html.hc-theming [class~="premiumPill_Ku7pX2"] [class~="premiumPillText_Ku7pX2"] {
+html.hc-theming .premiumPill_Ku7pX2 .premiumPillText_Ku7pX2 {
     color: var(--hc-text-muted);
 }
 
 /* Server tag chip on names: framed. */
-html.hc-theming [class~="chipletContainerInner_k8jyN7"] {
+html.hc-theming .chipletContainerInner_k8jyN7 {
     background: var(--hc-flyout-bg);
     box-shadow: inset 0 0 0 1px var(--hc-ring-rest);
     border-radius: 6px;
 }
 
 /* Wave button: resting ring, gradient on hover. */
-html.hc-theming [class~="waveButton_zln_tS"] {
+html.hc-theming .waveButton_zln_tS {
     border: 1px solid var(--hc-ring-rest);
 }
 
-html.hc-theming [class~="waveButton_zln_tS"]:hover {
+html.hc-theming .waveButton_zln_tS:hover {
     border-color: transparent;
     background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box;
 }
 
 /* Dropdowns: one radius, framed field and popout, accent rows. */
-html.hc-theming [class~="selectField_vWC4bk"] {
+html.hc-theming .selectField_vWC4bk {
     border-radius: 8px;
     box-shadow: inset 0 0 0 1px var(--hc-ring-rest);
 }
 
-html.hc-theming [class~="selectDropdown_vWC4bk"], html.hc-theming [class~="popout_uFkqU2"] {
+html.hc-theming .selectDropdown_vWC4bk, html.hc-theming .popout_uFkqU2 {
     background: var(--hc-flyout-bg);
     border: 1px solid var(--hc-ring-rest);
     border-radius: 10px;
 }
 
-html.hc-theming [class~="listBoxItem_b5PEJH"], html.hc-theming [class~="option_uFkqU2"] {
+html.hc-theming .listBoxItem_b5PEJH, html.hc-theming .option_uFkqU2 {
     border-radius: 6px;
 }
 
-html.hc-theming [class~="listBoxItem_b5PEJH"]:focus:not([aria-disabled="true"]),
-html.hc-theming [class~="listBoxItem_b5PEJH"][aria-selected="true"],
-html.hc-theming [class~="option_uFkqU2"]:hover,
-html.hc-theming.mouse-mode [class~="listBoxItem_b5PEJH"]:hover:not([aria-disabled="true"]) {
+html.hc-theming .listBoxItem_b5PEJH:focus:not([aria-disabled="true"]),
+html.hc-theming .listBoxItem_b5PEJH[aria-selected="true"],
+html.hc-theming .option_uFkqU2:hover,
+html.hc-theming.mouse-mode .listBoxItem_b5PEJH:hover:not([aria-disabled="true"]) {
     background-color: rgb(var(--hc-accent-rgb) / 14%);
 }
 
 /* Join Voice and other overlay buttons: accent, never white. */
-html.hc-theming [class~="button_F7qvhY"][class~="overlay-primary_F7qvhY"] {
+html.hc-theming .button_F7qvhY.overlay-primary_F7qvhY {
     background: rgb(var(--hc-accent-rgb));
     color: rgb(var(--hc-crust-rgb));
 }
 
-html.hc-theming [class~="button_F7qvhY"][class~="overlay-primary_F7qvhY"]:hover {
+html.hc-theming .button_F7qvhY.overlay-primary_F7qvhY:hover {
     background: rgb(var(--hc-accent-rgb) / 85%);
 }
 
 /* Emoji picker bottom-left button: glass so the icons behind do not show through. */
-html.hc-theming [class~="unicodeShortcut_ufks4w"] {
+html.hc-theming .unicodeShortcut_ufks4w {
     background: var(--hc-glass-bg);
     backdrop-filter: var(--hc-glass-blur);
     border-top: 1px solid var(--hc-panel-border);

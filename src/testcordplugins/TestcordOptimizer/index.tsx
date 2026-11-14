@@ -19,6 +19,37 @@ import lightningStyle from "./lightning.css?managed";
 import { migrateOptimizerSettings } from "./migration";
 
 const logger = new Logger("TestcordOptimizer");
+const FOCUS_RING_STILL_FRAMES = 30;
+const FOCUS_RING_SLOW_MS = 250;
+const FOCUS_RING_WAKE_EVENTS = ["focusin", "scroll", "resize"] as const;
+
+const focusRing: {
+    stillFrames: number;
+    raf: number | undefined;
+    timeout: ReturnType<typeof setTimeout> | undefined;
+    tick: (() => void) | undefined;
+} = { stillFrames: 0, raf: undefined, timeout: undefined, tick: undefined };
+
+// Returns what Discord stores as its frame handle. Its disableAnimationTracking cancels that handle, and a pending
+// slow tick sees tracking off and ends the chain itself.
+function nextFocusRingFrame(tick: () => void, moved: boolean): number {
+    focusRing.tick = tick;
+    if (focusRing.timeout !== undefined) clearTimeout(focusRing.timeout);
+    if (focusRing.raf !== undefined) cancelAnimationFrame(focusRing.raf);
+    focusRing.timeout = focusRing.raf = undefined;
+    focusRing.stillFrames = moved ? 0 : focusRing.stillFrames + 1;
+    if (focusRing.stillFrames < FOCUS_RING_STILL_FRAMES) return focusRing.raf = requestAnimationFrame(tick);
+    focusRing.timeout = setTimeout(tick, FOCUS_RING_SLOW_MS);
+    return 0;
+}
+
+function wakeFocusRing() {
+    if (focusRing.timeout === undefined || !focusRing.tick) return;
+    clearTimeout(focusRing.timeout);
+    focusRing.timeout = undefined;
+    focusRing.stillFrames = 0;
+    focusRing.raf = requestAnimationFrame(focusRing.tick);
+}
 
 const STRIP_STYLING_CLASS = "vc-optimizer-strip-styling";
 
@@ -737,6 +768,12 @@ export const settings = definePluginSettings({
         default: false,
         restartNeeded: true
     },
+    throttleFocusRing: {
+        type: OptionType.BOOLEAN,
+        description: "Slow Discord's keyboard focus ring check to 4 times a second while the ring is still. Discord otherwise re-measures it every frame (165 times a second on a fast screen) for as long as keyboard mode is on, even with nothing focused.",
+        default: true,
+        restartNeeded: true
+    },
     throttleFluxDispatches: {
         type: OptionType.BOOLEAN,
         description: "Debounce typing flux dispatches. Prevents small React re-render storms without dropping presence or voice updates.",
@@ -1147,6 +1184,16 @@ export default definePlugin({
             },
             noWarn: true
         },
+        {
+            // Keyboard mode starts a requestAnimationFrame loop that re-reads the focus ring's position every frame
+            // and never stops while keyboard mode is on. Keep it per-frame only while the ring moves.
+            find: "enableAnimationTracking(){",
+            predicate: () => settings.store.throttleFocusRing,
+            replacement: {
+                match: /function (\i)\(\)\{if\(!(\i)\)return;let (\i)=null==(\i)\?void 0:\4\.getStyle\(\);null==\3\|\|(\i)\(\3,(\i)\)\?null!=(\i)&&cancelAnimationFrame\(\7\):\(\6=\3,null==\4\|\|\4\.invalidate\(\)\),\7=requestAnimationFrame\(\1\)\}/,
+                replace: "function $1(){if(!$2)return;let $3=null==$4?void 0:$4.getStyle(),hcMoved=!(null==$3||$5($3,$6));hcMoved&&($6=$3,null==$4||$4.invalidate());$7=$self.nextFocusRingFrame($1,hcMoved)}"
+            }
+        },
     ],
 
     originals: {} as {
@@ -1292,6 +1339,7 @@ export default definePlugin({
         try { if (settings.store.disableDragAndDrop) this.installDragAndDropSuppression(); } catch (e) { logger.warn("installDragAndDropSuppression failed", e); }
         try { if (settings.store.disableSpellcheck) this.installSpellcheckOpt(); } catch (e) { logger.warn("installSpellcheckOpt failed", e); }
         try { if (settings.store.throttleFluxDispatches) this.installFluxThrottle(); } catch (e) { logger.warn("installFluxThrottle failed", e); }
+        if (settings.store.throttleFocusRing) for (const type of FOCUS_RING_WAKE_EVENTS) window.addEventListener(type, wakeFocusRing, { capture: true, passive: true });
         try { if (settings.store.killReactionRendering) this.installReactionSimplifier(); } catch (e) { logger.warn("installReactionSimplifier failed", e); }
         try { if (settings.store.disableUnreadBadges) this.installUnreadBadgeKiller(); } catch (e) { logger.warn("installUnreadBadgeKiller failed", e); }
         try { if (settings.store.suppressAllCanvas) this.installCanvasSuppressor(); } catch (e) { logger.warn("installCanvasSuppressor failed", e); }
@@ -1331,6 +1379,7 @@ export default definePlugin({
         this.teardownLazyImages();
         this.teardownLazyIframes();
         this.teardownImageDecodingOptimization();
+        for (const type of FOCUS_RING_WAKE_EVENTS) window.removeEventListener(type, wakeFocusRing, { capture: true });
         if (this.deferCssTimer !== null) {
             if (typeof cancelIdleCallback === "function") cancelIdleCallback(this.deferCssTimer);
             else clearTimeout(this.deferCssTimer);
@@ -3578,5 +3627,7 @@ ${base}:not(:hover){opacity:.6}
     onAudioReset() {
         logger.warn("Audio engine reset, skipped Discord's auto reload");
         showToast("Audio engine reset, skipped reload", Toasts.Type.MESSAGE);
-    }
+    },
+
+    nextFocusRingFrame
 });

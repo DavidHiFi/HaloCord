@@ -191,13 +191,11 @@ m += '\nrequire("./hc-keys.js").init();\n'
 # (registered when equicord/main.js loaded above, so this takes it over).
 m += '\nconst hcUpdate=require("./hc-update.js").init({win:()=>win,hidden:hcDesk.hidden});\n'
 (asrc / "main.js").write_text(m, encoding="utf-8")
-# Display text only; lowercase ids (kurtcordDirect, KurtcordMLKEM, wire tags) stay so P2P and E2EE still talk to Kurtcord users.
+# Display text. userscript.js in desktop/base already carries HaloCord names (2.13.7); preload.js still comes from the base app.
 for f in ("preload.js", "userscript.js"):
     # userscript.js comes from desktop/base (the 2.8.3 original plus HaloCord's direct edits); the fixes below still apply on top.
     s = ((D / "base" / f) if f == "userscript.js" else (asrc / f)).read_text(encoding="utf-8")
     s, k = re.subn(r"Kurtcord(?![A-Za-z])", "HaloCord", s)
-    s = s.replace(r"Made\x20with\x20❤\x20by\x20<a\x20href=\x22https://www.youtube.com/@unpbeatsuk\x22\x20target=\x22_blank\x22>UNP\x20Beats\x20UK</a>\x20·\x20<a\x20href=\x22https://www.youtube.com/@Kurtzonaudio\x22\x20target=\x22_blank\x22>Kurtzon</a>",
-                  r"HaloCord\x20by\x20<a\x20href=\x22https://github.com/DavidHiFi\x22\x20target=\x22_blank\x22>DavidHiFi</a>")
     if f == "preload.js":
         a = 'contextBridge.exposeInMainWorld("__kurtcord",__kcBridge),'
         assert s.count(a) == 1
@@ -279,13 +277,8 @@ for f in ("preload.js", "userscript.js"):
         for a, b in fixes:
             assert s.count(a) == 1, a
             s = s.replace(a, b)
-        # Voice & Video wording. desktop/base no longer carries the "kurtopus 1.6 HD" label (the libopus
-        # version is not 1.6; see notes/2026-11-01-halocord-2.10.0-release-notes.md), so only these remain.
-        for a, b in [
-            (r"Ping\x20(Kurtzon)", r"Ping\x20(HaloCord)"),
-        ]:
-            assert s.count(a) >= 1, a
-            s = s.replace(a, b)
+        # desktop/base no longer carries the "kurtopus 1.6 HD" label (the libopus version is not 1.6;
+        # see notes/2026-11-01-halocord-2.10.0-release-notes.md).
         assert "kurtopus" not in s.lower()
         a = "Gd=GO;return Q['videoGoLive']&&GO&&GO['video']&&(Gd=Object['assign']({},GO),"
         assert s.count(a) == 1
@@ -323,6 +316,36 @@ for f in ("preload.js", "userscript.js"):
                      "if(G4&&h['contains'](G4))return;if(!G4)G4=G5();h['appendChild'](G4);}") + s[b:]
     (asrc / f).write_text(s, encoding="utf-8")
     print(f, "display strings:", k)
+# No Kurtcord names left in the app (2.13.7). The page globals and the preload bridge are only read by these
+# files, so they are renamed together. The base app's preload also played a full-screen skeleton video on
+# 1 in 10,000 page loads (a Kurtcord prank); that block goes.
+def edit(f, pairs):
+    t = (asrc / f).read_text(encoding="utf-8")
+    for a, b, k in pairs:
+        assert t.count(a) == k, (f, a, t.count(a))
+        t = t.replace(a, b)
+    t = t.replace("__kurtcord", "__halocord")
+    (asrc / f).write_text(t, encoding="utf-8")
+edit("main.js", [('"ig"),"kurtcord")', '"ig"),"halocord")', 1),
+                 # Developer builds only (app.isPackaged false); installed builds keep settings in userData.
+                 ('"kurtcord-shared"', '"halocord-shared"', 1)])
+edit("mlkem-bundle.js", [("globalThis.KurtcordMLKEM", "globalThis.HaloCordMLKEM", 1)])
+t = (asrc / "preload.js").read_text(encoding="utf-8")
+a = t.index("!function(){try{var A=process.env.KURTCORD_SKELETON_TEST")
+b = t.index('window.addEventListener("load",r,{once:!0})}catch(c){}}();', a) + len('window.addEventListener("load",r,{once:!0})}catch(c){}}();')
+assert "kurtcord-skeleton" in t[a:b] and "kurtcord-skeleton" not in t[b:]
+(asrc / "preload.js").write_text(t[:a] + t[b:], encoding="utf-8")
+edit("preload.js", [])
+# Allowed: the MIT notice (the base app is MIT, Kurtzon's copyright stays), the E2EE wire label (other
+# clients derive the same keys from it, so changing it breaks encrypted chats), and the old backup label,
+# kept so backups made before 2.13.7 still open.
+KEEP = ("Copyright (c) 2026 Kurtzon (Kurtzon Audio)", "'kurtcord-e2ee-v1'", "'kurtcord-backup'")
+for f in ["main.js", "preload.js", "userscript.js", "mlkem-bundle.js", *(p.name for p in asrc.glob("hc-*.js"))]:
+    t = (asrc / f).read_text(encoding="utf-8")
+    for k in KEEP:
+        t = t.replace(k, "")
+    left = re.findall(r".{0,30}kurt.{0,30}", t, re.I)
+    assert not left, (f, left[:5])
 shutil.copy2(D / "brand" / "icon.png", asrc / "icon.png")
 # Windows picks the .ico's prerendered 16/20/24 px frames for the title bar and tray instead of
 # shrinking the 256 px PNG into a blocky blur.
@@ -334,6 +357,7 @@ for f in ("discord.ico", "halocord.ico", "halocord-mocha.ico"):
 pkg = json.loads((asrc / "package.json").read_text())
 pkg.update(name="halocord", productName="HaloCord", version=VERSION, description="HaloCord", author="DavidHiFi")
 (asrc / "package.json").write_text(json.dumps(pkg, indent=2))
+assert "kurt" not in (asrc / "package.json").read_text().lower()
 (app / "resources" / "app.asar").unlink()
 subprocess.run(["node", str(ASAR), "pack", str(asrc), str(app / "resources" / "app.asar"), "--unpack", "*.node"], creationflags=subprocess.CREATE_NO_WINDOW, check=True)
 exe = app / "HaloCord.exe"
