@@ -89,6 +89,7 @@
     inset: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 @keyframes vc-addon-title {

@@ -1342,6 +1342,11 @@ html.hc-theming #vc-indicators-indicator-items {
     transition: background-color 0.16s ease-out, color 0.16s ease-out;
 }
 
+/* Friend and server counter: one quiet accent edge (2.13.6). */
+html.hc-theming #vc-indicators-indicator-items {
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 35%);
+}
+
 html.hc-theming nav[class*="guilds_"] [class*="circleIconButton_"]:is(:hover, [class*="selected_"]),
 html.hc-theming #vc-indicators-indicator-items:hover {
     background-color: var(--hc-flyout-bg) !important;
@@ -1683,7 +1688,7 @@ html.hc-theming :is([class~="inspector_1bDrGE"], .vc-more-stickers-picker-conten
 /* Settings window: a real frosted blur behind its see-through panels, even with the fast theme defaults
    that turn panel blur off; it is one window, so it costs little. */
 html.hc-theming [class~="container_dvN-MP"] {
-    backdrop-filter: blur(28px) saturate(140%) !important;
+    backdrop-filter: blur(28px) saturate(140%) var(--hc-backdrop-solid) !important;
 }
 
 /* Server and channel settings: the theme painted the sidebar as a square solid slab running the full height of the
@@ -2293,4 +2298,135 @@ html.hc-theming ::-webkit-scrollbar-thumb {
 html.hc-theming ::-webkit-scrollbar-track,
 html.hc-theming ::-webkit-scrollbar-corner {
     background: transparent;
+}
+
+
+/* 2.13.6 borders and fixes batch */
+
+/* Shop banner: readable text over the art. */
+html.hc-theming [class~="container_-hWC0t"] [class~="mainColumn_-hWC0t"] {
+    color: var(--hc-text);
+    text-shadow: 0 1px 3px rgb(0 0 0 / 85%), 0 0 12px rgb(0 0 0 / 60%);
+}
+
+/* Light overlay buttons (Shop): dark text. */
+html.hc-theming [class~="overlay-primary_F7qvhY"] {
+    color: rgb(var(--hc-crust-rgb));
+}
+
+/* Profile bio box follows its frame corner. */
+html.hc-theming [class~="bioTextAreaContainer_agtm70"] > [class~="bioTextArea_agtm70"] {
+    border-radius: 7px;
+}
+
+/* Open server folder: the tint sits exactly behind the icon column, centred. */
+html.hc-theming nav[class*="guilds_"] [class~="folderGroupBackground_RTMSuZ"] {
+    inset-inline-start: calc(50% - var(--guildbar-avatar-size, 40px) / 2);
+    width: var(--guildbar-avatar-size, 40px);
+    border-radius: 12px;
+}
+
+
+/* "Find or start a conversation": resting ring, gradient on hover. */
+html.hc-theming [class~="searchBar_u88IQl"] > button {
+    border: 1px solid var(--hc-ring-rest);
+    background: var(--hc-flyout-bg);
+    border-radius: 8px;
+}
+
+html.hc-theming [class~="searchBar_u88IQl"] > button:is(:hover, :focus-visible) {
+    border-color: transparent;
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box;
+}
+
+/* Friends header tabs: each tab is a small framed dock. */
+html.hc-theming [class~="tabBar_zrUwGA"] > [class~="item_zrUwGA"] {
+    box-shadow: inset 0 0 0 1px var(--hc-ring-rest);
+}
+
+html.hc-theming [class~="tabBar_zrUwGA"] > [class~="item_zrUwGA"]:hover {
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 60%);
+}
+
+html.hc-theming [class~="tabBar_zrUwGA"] > [class~="item_zrUwGA"][aria-selected="true"] {
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 45%);
+}
+
+html.hc-theming [class~="tabBar_zrUwGA"] > [class~="item_zrUwGA"][class~="addFriend_zrUwGA"] {
+    box-shadow: inset 0 0 0 1px rgb(var(--hc-ink-rgb) / 25%);
+}
+
+/* NEW badge: accent tint instead of plain white. */
+html.hc-theming [class~="badge_4guu7-"][class~="expressive_4guu7-"] {
+    background: rgb(var(--hc-accent-rgb) / 16%);
+    color: rgb(var(--hc-accent-rgb));
+    border: 1px solid rgb(var(--hc-accent-rgb) / 45%);
+}
+
+/* Nitro days pill: framed, muted text. */
+html.hc-theming [class~="premiumPill_Ku7pX2"][class~="greyBackgroundPill_Ku7pX2"] {
+    background: rgb(var(--hc-ink-rgb) / 8%);
+    border: 1px solid var(--hc-ring-rest);
+}
+
+html.hc-theming [class~="premiumPill_Ku7pX2"] [class~="premiumPillText_Ku7pX2"] {
+    color: var(--hc-text-muted);
+}
+
+/* Server tag chip on names: framed. */
+html.hc-theming [class~="chipletContainerInner_k8jyN7"] {
+    background: var(--hc-flyout-bg);
+    box-shadow: inset 0 0 0 1px var(--hc-ring-rest);
+    border-radius: 6px;
+}
+
+/* Wave button: resting ring, gradient on hover. */
+html.hc-theming [class~="waveButton_zln_tS"] {
+    border: 1px solid var(--hc-ring-rest);
+}
+
+html.hc-theming [class~="waveButton_zln_tS"]:hover {
+    border-color: transparent;
+    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box;
+}
+
+/* Dropdowns: one radius, framed field and popout, accent rows. */
+html.hc-theming [class~="selectField_vWC4bk"] {
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 1px var(--hc-ring-rest);
+}
+
+html.hc-theming [class~="selectDropdown_vWC4bk"], html.hc-theming [class~="popout_uFkqU2"] {
+    background: var(--hc-flyout-bg);
+    border: 1px solid var(--hc-ring-rest);
+    border-radius: 10px;
+}
+
+html.hc-theming [class~="listBoxItem_b5PEJH"], html.hc-theming [class~="option_uFkqU2"] {
+    border-radius: 6px;
+}
+
+html.hc-theming [class~="listBoxItem_b5PEJH"]:focus:not([aria-disabled="true"]),
+html.hc-theming [class~="listBoxItem_b5PEJH"][aria-selected="true"],
+html.hc-theming [class~="option_uFkqU2"]:hover,
+html.hc-theming.mouse-mode [class~="listBoxItem_b5PEJH"]:hover:not([aria-disabled="true"]) {
+    background-color: rgb(var(--hc-accent-rgb) / 14%);
+}
+
+/* Join Voice and other overlay buttons: accent, never white. */
+html.hc-theming [class~="button_F7qvhY"][class~="overlay-primary_F7qvhY"] {
+    background: rgb(var(--hc-accent-rgb));
+    color: rgb(var(--hc-crust-rgb));
+}
+
+html.hc-theming [class~="button_F7qvhY"][class~="overlay-primary_F7qvhY"]:hover {
+    background: rgb(var(--hc-accent-rgb) / 85%);
+}
+
+/* Emoji picker bottom-left button: glass so the icons behind do not show through. */
+html.hc-theming [class~="unicodeShortcut_ufks4w"] {
+    background: var(--hc-glass-bg);
+    backdrop-filter: var(--hc-glass-blur);
+    border-top: 1px solid var(--hc-panel-border);
+    border-bottom-left-radius: inherit;
 }

@@ -128,7 +128,7 @@ Thank you for starring the repo.
 ## Credits
 
 - **Author:** Myself, [DavidHiFi](https://github.com/DavidHiFi)
-- **Contributors:** [SickoHours](https://github.com/SickoHours), [Dx](https://github.com/DxRx99) (TestCord's owner), and the AI coding agents Claude Code and OpenHands
+- **Contributors:** [SickoHours](https://github.com/SickoHours) and the AI coding agents Claude Code and OpenHands
 
 | Who | What |
 |---|---|

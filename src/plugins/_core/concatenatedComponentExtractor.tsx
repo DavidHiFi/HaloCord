@@ -35,7 +35,7 @@ export default definePlugin({
             find: "UserProfileModalV2EditingPanel",
             replacement: [
                 {
-                    match: /function (\i).{0,50}showNitroIcon:.{0,500}\}\),\i\]\}\)\}/,
+                    match: /function (\i)\(\i\)\{let\{heading:.{0,100}?showNitroIcon:.{0,700}?\}\),\i\]\}\)\}/,
                     replace: "$&$self.setNewCustomizationSection($1);"
                 }
             ]
