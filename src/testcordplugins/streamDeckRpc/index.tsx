@@ -8,7 +8,7 @@ import { TestcordDevs } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import definePlugin, { PluginNative } from "@utils/types";
 import { filters, mapMangledModuleLazy } from "@webpack";
-import { RestAPI, showToast, Toasts } from "@webpack/common";
+import { ChannelStore, PermissionsBits, PermissionStore, RestAPI, showToast, Toasts } from "@webpack/common";
 
 import type { PipeEvent } from "./pipeServer";
 import { type BridgeSocket, createBridge } from "./transport";
@@ -27,6 +27,10 @@ const { server } = mapMangledModuleLazy('"RPC_STORE_WAIT"', {
 });
 const { validateSocket } = mapMangledModuleLazy('"No Client ID Specified"', {
     validateSocket: filters.byCode("No Client ID Specified"),
+});
+// Discord's own GET_CHANNEL reply builder: (channel, includeMessages, fetchMessages).
+const { channelPayload } = mapMangledModuleLazy("user_limit:e.userLimit", {
+    channelPayload: filters.byCode("user_limit:", "voice_states:", "whenReady"),
 });
 
 function authorizeElgato(socket: BridgeSocket, payload: any) {
@@ -54,9 +58,29 @@ function authorizeElgato(socket: BridgeSocket, payload: any) {
     return true;
 }
 
+// Discord's GET_CHANNEL waits for a 30-message fetch before it replies. For a channel the user can't
+// view (shown by ShowHiddenChannels) that fetch never finishes, so the reply never came and the
+// Elgato plugin piled up unanswered requests. Answer those with Discord's own builder, no fetch:
+// what its scoped GET_CHANNEL path does, and what the desktop app returns for them.
+function answerHiddenChannel(socket: BridgeSocket, payload: any) {
+    const { nonce, args } = payload;
+    if (!nonce || socket.authorization.accessToken == null) return false;
+    const channel = ChannelStore.getChannel(args?.channel_id);
+    if (!channel?.guild_id || PermissionStore.can(PermissionsBits.VIEW_CHANNEL, channel)) return false;
+    Promise.resolve(channelPayload(channel, false, false)).then(
+        data => socket.send({ cmd: "GET_CHANNEL", data, evt: null, nonce }),
+        err => {
+            logger.warn("Hidden channel reply failed, passing to Discord:", err?.message);
+            if (!socket.closed) bridge.forward(socket, payload, true);
+        },
+    );
+    return true;
+}
+
 // Only the Elgato plugin gets a silent AUTHORIZE. Every other client goes through Discord's own
 // OAuth2 dialog, exactly like the desktop app.
 function intercept(socket: BridgeSocket, payload: any) {
+    if (payload?.cmd === "GET_CHANNEL") return answerHiddenChannel(socket, payload);
     if (payload?.cmd !== "AUTHORIZE") return false;
     if (socket.clientId !== ELGATO_CLIENT_ID || payload.args?.client_id !== ELGATO_CLIENT_ID) return false;
     if (socket.application.id !== ELGATO_CLIENT_ID || !payload.nonce) return false;
@@ -95,7 +119,12 @@ export default definePlugin({
             }
         }
 
-        (window as any)[BRIDGE] = (event: PipeEvent) => bridge.handle(event);
+        // Main sends events in batches, in arrival order. One bad event must not drop the rest.
+        (window as any)[BRIDGE] = (events: PipeEvent[]) => {
+            for (const event of events) {
+                try { bridge.handle(event); } catch (e) { logger.error("Stream Deck event failed", e); }
+            }
+        };
         const res = await Native.start();
         if (res.ok) logger.info(`Listening on ${res.path}`);
         else logger.error(`Could not open the RPC pipe: ${res.error}`);

@@ -33,10 +33,10 @@ function startStandIn() {
 }
 
 // Main only moves frames. Every command runs in the renderer, inside Discord's own RPC server.
-async function deliver(event: PipeEvent) {
+async function deliver(events: PipeEvent[]) {
     const wc = target;
     if (!wc || wc.isDestroyed()) return false;
-    const script = `(typeof window.${BRIDGE} === "function" ? (window.${BRIDGE}(${JSON.stringify(event)}), true) : false)`;
+    const script = `(typeof window.${BRIDGE} === "function" ? (window.${BRIDGE}(${JSON.stringify(events)}), true) : false)`;
     return await wc.executeJavaScript(script) === true;
 }
 

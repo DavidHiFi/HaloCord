@@ -28,8 +28,8 @@ export type PipeEvent =
     | { t: "disconnect"; id: number; reason: string; };
 
 export interface PipeServerOptions {
-    /** Receives connection events in order. Return false when nobody is listening so the socket gets closed. */
-    deliver(event: PipeEvent): Promise<boolean> | boolean;
+    /** Receives connection events in order, batched. Return false when nobody is listening so the sockets get closed. */
+    deliver(events: PipeEvent[]): Promise<boolean> | boolean;
     log?(message: string): void;
     /** Override for tests. Defaults to \\?\pipe\discord-ipc-N. */
     pipePath?(index: number): string;
@@ -58,15 +58,39 @@ export function createPipeServer(opts: PipeServerOptions) {
     let server: Server | null = null;
     let path: string | null = null;
     let nextId = 1;
-    let queue = Promise.resolve();
+    let pending: PipeEvent[] = [];
+    let draining = false;
 
-    // Events go out strictly in arrival order; a request must never overtake its connect.
-    function emit(conn: Conn, event: PipeEvent) {
-        queue = queue.then(async () => {
-            let ok = false;
-            try { ok = await opts.deliver(event); } catch { ok = false; }
-            if (!ok && event.t !== "disconnect") close(conn.id, CLOSE_ABNORMAL, "Discord is not ready");
-        });
+    async function tryDeliver(batch: PipeEvent[]) {
+        try { return await opts.deliver(batch); } catch { return null; }
+    }
+
+    // Events go out strictly in arrival order; a request must never overtake its connect. Whatever
+    // queued while one round-trip was in flight goes in the next one, so a key press never waits
+    // behind a backlog of channel updates.
+    async function drain() {
+        if (draining) return;
+        draining = true;
+        while (pending.length) {
+            const batch = pending;
+            pending = [];
+            let ok = await tryDeliver(batch);
+            // A throw is a busy or reloading page, not a missing listener: retry once before giving up.
+            if (ok === null) {
+                await new Promise(r => setTimeout(r, 250));
+                ok = await tryDeliver(batch);
+            }
+            if (ok) continue;
+            for (const event of batch) {
+                if (event.t !== "disconnect") close(event.id, CLOSE_ABNORMAL, "Discord is not ready");
+            }
+        }
+        draining = false;
+    }
+
+    function emit(_conn: Conn, event: PipeEvent) {
+        pending.push(event);
+        void drain();
     }
 
     function close(id: number, code: number, message: string) {
