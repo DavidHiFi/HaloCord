@@ -1780,21 +1780,17 @@ html.hc-theming .contentRegion_jnk11m .group_8GP31u > .item_8GP31u[aria-checked=
     background-color: rgb(var(--hc-accent-rgb) / 14%) !important;
 }
 
-/* Call view header ("Public", the channel status line and the chat button): the theme's 46% base let the stream
-   show through. It takes the opaque flyout fill, a rest hairline and the gradient edge on hover. It sits 6px
-   inside the call frame on three sides with an 8px corner, so the frame's 14px inner corner wraps it evenly. */
+/* Call view header ("Public", the channel status line and the chat button): part of the call frame, not a box
+   inside it. No inset, no own border or hover ring (the frame owns the edge). It takes the frame's fill and inner
+   top corners (16px frame minus its 2px border), with one hairline under it as the divider. */
 html.hc-theming[data-hc-theme] [class*="callContainer_"] .subtitleContainer_neq5ug > .headerBar_neq5ug.container_ybUK7Z {
     box-sizing: border-box;
-    margin: 6px 6px 0 !important;
-    border-radius: 8px !important;
-    border: 1px solid var(--hc-panel-border);
-    background: var(--hc-flyout-bg) !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--hc-panel-border) !important;
+    border-radius: 14px 14px 0 0 !important;
+    background: var(--hc-panel-bg) !important;
     box-shadow: none !important;
-}
-
-html.hc-theming[data-hc-theme] [class*="callContainer_"] .subtitleContainer_neq5ug > .headerBar_neq5ug.container_ybUK7Z:hover {
-    border-color: transparent;
-    background: linear-gradient(var(--hc-flyout-bg), var(--hc-flyout-bg)) padding-box, var(--hc-gradient) border-box !important;
 }
 
 /* Back and forward: one dock inside the rounded cap, one hover plate for both arrows. */
@@ -2396,9 +2392,12 @@ html.hc-theming .chipletContainerInner_k8jyN7 {
     border-radius: 6px;
 }
 
-/* Wave button: resting ring, gradient on hover. */
+/* Wave button: a rounded theme pill (was a square box), resting ring, gradient on hover. */
 html.hc-theming .waveButton_zln_tS {
     border: 1px solid var(--hc-ring-rest);
+    border-radius: 8px !important;
+    background-color: var(--hc-flyout-bg) !important;
+    box-shadow: none !important;
 }
 
 html.hc-theming .waveButton_zln_tS:hover {
