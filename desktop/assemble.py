@@ -328,7 +328,10 @@ def edit(f, pairs):
     (asrc / f).write_text(t, encoding="utf-8")
 edit("main.js", [('"ig"),"kurtcord")', '"ig"),"halocord")', 1),
                  # Developer builds only (app.isPackaged false); installed builds keep settings in userData.
-                 ('"kurtcord-shared"', '"halocord-shared"', 1)])
+                 ('"kurtcord-shared"', '"halocord-shared"', 1),
+                 # 2.13.8: the browser identity names the engine's real Chrome version instead of a fixed 138, so it
+                 # matches the version the engine reports in its client hints after every Electron upgrade.
+                 ('Chrome/138.0.0.0 Safari/537.36";', 'Chrome/"+process.versions.chrome.split(".")[0]+".0.0.0 Safari/537.36";', 1)])
 edit("mlkem-bundle.js", [("globalThis.KurtcordMLKEM", "globalThis.HaloCordMLKEM", 1)])
 t = (asrc / "preload.js").read_text(encoding="utf-8")
 a = t.index("!function(){try{var A=process.env.KURTCORD_SKELETON_TEST")

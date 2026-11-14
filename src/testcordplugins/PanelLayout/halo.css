@@ -329,13 +329,26 @@ html.hc-theming section[class*="panels_"] :is(.hc-ua-row, .hc-ua-name) > [data-h
     display: none;
 }
 
-/* Keep every moved button at the grid's 48px box: the audio button wrappers ship with 1px extra
-   padding and read one size bigger than their neighbours wherever they are docked. */
+/* Keep every moved button at the grid's box (the Button Box Size slider): the audio button wrappers ship
+   with 1px extra padding and read one size bigger than their neighbours wherever they are docked. */
 html.hc-theming section[class*="panels_"] [data-hc-ua-key] {
     box-sizing: border-box;
-    width: 48px;
-    height: 48px;
+    width: var(--hc-pl-btn, 48px);
+    height: var(--hc-pl-btn, 48px);
     padding: 0;
+}
+
+/* The plugin button grid fills the panel width in even columns, so smaller boxes don't leave a gap on the right
+   and a short last row keeps the same column width. */
+html.hc-theming .panels_pog62O .buttons_g6VwXp:not(.hc-ua-name) {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(var(--hc-pl-btn, 48px), 1fr)) !important;
+    grid-auto-rows: var(--hc-pl-btn, 48px);
+}
+
+html.hc-theming .panels_pog62O .buttons_g6VwXp:not(.hc-ua-name) > * {
+    width: auto !important;
+    height: auto !important;
 }
 
 /* Mute and Deafen are wrappers around their own bordered button; a dock on the wrapper as well drew a

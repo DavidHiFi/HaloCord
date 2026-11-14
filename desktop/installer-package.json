@@ -1,7 +1,7 @@
 {
   "name": "halocord",
   "productName": "HaloCord",
-  "version": "2.13.7",
+  "version": "2.13.8",
   "description": "HaloCord",
   "author": {
     "name": "DavidHiFi",
@@ -33,6 +33,6 @@
       "artifactName": "HaloCord-Setup-${version}.exe",
       "deleteAppDataOnUninstall": false
     },
-    "electronVersion": "37.6.0"
+    "electronVersion": "45.3.2"
   }
 }

@@ -915,15 +915,17 @@ function buildCSS(): string {
             // Fill: the call buttons share the row like Discord's own layout. Off: fixed 48px columns that
             // line up with the button grid below (Discord's 1fr columns around 48px buttons left wide gaps).
             lines.push(st.callButtonsFill
-                ? `html body section[class*="panels_"] ${S.callControls} { grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)) !important; }
+                ? `html body section[class*="panels_"] ${S.callControls} { grid-template-columns: repeat(auto-fit, minmax(var(--hc-pl-btn, 48px), 1fr)) !important; }
                    html body section[class*="panels_"] ${S.callControls} > [data-hc-ua-key] { width: auto !important; justify-self: stretch !important; }`
-                : `html body section[class*="panels_"] ${S.callControls} { grid-template-columns: repeat(auto-fill, 48px) !important; justify-content: start !important; }`);
+                : `html body section[class*="panels_"] ${S.callControls} { grid-template-columns: repeat(auto-fill, var(--hc-pl-btn, 48px)) !important; justify-content: start !important; }`);
             break;
     }
 
     if (st.iconSize !== 20) {
         lines.push(`${S.panelButtons} ${S.panelButton} svg, ${S.panelButtons} ${S.panelButton} .lottieIcon_69Onuk { width: ${st.iconSize}px !important; height: ${st.iconSize}px !important; }`);
     }
+    // Moved buttons, the call grid and the empty drop slot read their box from this, so the Button Box Size slider sizes all of them.
+    lines.push(`html body section[class*="panels_"] { --hc-pl-btn: ${st.buttonContainerSize ?? 48}px; }`);
     if (st.buttonContainerSize !== 32) {
         lines.push(`
             ${S.panelButtons} ${S.panelButton} {
