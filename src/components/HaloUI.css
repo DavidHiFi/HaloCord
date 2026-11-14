@@ -1116,6 +1116,14 @@ html.hc-theming .callContainer_hbKzX7 {
     background-color: var(--hc-panel-bg) !important;
 }
 
+/* The user panel and the call dock keep MochaCord's 2px border but take the accent edge the Voice & Video
+   card controls use (30%). The theme's 20% lavender nearly vanished over the dark fills, most at the bottom
+   status rows. :not(:hover) leaves the hover state alone, where the border goes transparent and the
+   gradient ring draws the edge. */
+html.hc-theming :is(section[class*="panels_"], .callContainer_hbKzX7):not(:hover) {
+    border-color: rgb(var(--hc-accent-rgb) / 30%) !important;
+}
+
 /* The rest of MochaCord's bordered panels (page title bars such as Quests and Friends, Shop, forums, discovery,
    server settings pages) get the same gradient ring instead of the theme's one-colour hover border. The ring sits
    inside the edge and the border turns transparent on hover, which works whether or not the panel clips. The
