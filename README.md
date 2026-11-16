@@ -79,6 +79,9 @@ To build it yourself, follow [docs/building.md](docs/building.md).
 
 ## Notes
 
+> [!IMPORTANT]
+> **No new major updates.** Discord is rewriting its desktop app in Rust, so HaloCord won't get new major updates. Once Discord ships the Rust version, I'll put my focus into modding that one instead. It will be much faster than the Electron and Chromium build Discord has used for the past 10+ years.
+
 > [!WARNING]
 > **Third-party client.** Discord does not support third-party clients. Spam-like behavior, such as mass friend requests, can get an account actioned. Use HaloCord at your own risk.
 
