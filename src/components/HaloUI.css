@@ -83,6 +83,9 @@ html.hc-theming[data-hc-theme="halocord"] {
 }
 
 html.hc-theming[data-hc-theme="mochacord"] {
+    --hc-home-size: 100%;
+    --hc-home-fit: contain;
+    --hc-home-shadow: none;
     --hc-crust-rgb: 17 17 27;
     --hc-ink-rgb: 205 214 244;
     --hc-ring-rest: #45475a;
@@ -1010,10 +1013,15 @@ html.hc-theming .tabs_TP1WMf [role="tab"] {
     line-height: 1.5;
 }
 
-/* Gradient hover ring. A masked pseudo-element draws the ring over the host's own border, so it
-   keeps the host's radius and works on translucent glass where a border-box background cannot.
-   :where keeps it low specificity so the rail and cap overrides below win. */
-html.hc-theming :where(
+/* The native border owns the curve in every state. Border-area clips only the gradient,
+   while the translucent fill keeps its own padding-box layer. */
+@property --hc-edge-hover {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 0;
+}
+
+:where(html.hc-theming) :where(
     nav[class*="guilds_"],
     [data-window-chrome] > [class*="leading_"],
     [data-window-chrome] > [class*="trailing_"],
@@ -1028,234 +1036,170 @@ html.hc-theming :where(
     .messagesWrapper_8AE1Qq,
     .channelTextArea_z_gUBg,
     .wrapper_ST_Y69,
-    .outer_P1YEjQ,
-    .container_dvN-MP
-)::after {
-    position: absolute;
-    z-index: 1;
-    padding: var(--hc-ring-w);
-    border-radius: inherit;
-    background: var(--hc-gradient);
-    content: "";
-    inset: calc(-1 * var(--hc-ring-w));
-    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    mask-composite: exclude;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.16s ease-out;
-}
-
-html.hc-theming :is(
-    [data-window-chrome] > [class*="trailing_"],
-    .sidebarList_pog62O,
-    .panels_pog62O,
-    .chatContent_z_gUBg,
-    .chat_z_gUBg > .subtitleContainer_z_gUBg,
-    .container_86es0b,
-    .peopleColumn_zrUwGA,
-    .nowPlayingColumn_zrUwGA,
-    .callContainer_hbKzX7,
-    .messagesWrapper_8AE1Qq,
-    .channelTextArea_z_gUBg,
-    .wrapper_ST_Y69,
-    .outer_P1YEjQ,
-    .container_dvN-MP
-):hover::after {
-    opacity: 1;
-}
-
-html.hc-theming :is(
-    .sidebarList_pog62O,
-    .chat_z_gUBg > .subtitleContainer_z_gUBg,
-    .container_86es0b,
-    .peopleColumn_zrUwGA,
-    .nowPlayingColumn_zrUwGA
+    .container_dvN-MP,
+    .container__89463 > .toolbar__89463,
+    .container__89463 > .contentContainer__89463,
+    .content_z_gUBg > .membersWrap_86es0b,
+    .container_zrUwGA > .container_ybUK7Z,
+    .container_nMe-a6 > .container_ybUK7Z,
+    .homeWrapper__0920e > .container_ybUK7Z,
+    .container_FrbQJp > .container_ybUK7Z,
+    .container_UU236g > .container_ybUK7Z,
+    .headerBar_tSk_LE,
+    .container_nMe-a6 > .content_z_gUBg,
+    .shop_Mqg79R,
+    .searchResultsWrap_QHVbp3,
+    .container_BkGrJJ,
+    .chat_UU236g,
+    .container_a592e1,
+    .callContainer_DwQMm_,
+    .chat_z_gUBg > .header_zjGJlN,
+    .chat_z_gUBg > .header_xTP3zy,
+    .chat_z_gUBg > .container_xTP3zy,
+    .outer_P1YEjQ
 ) {
     position: relative;
 }
 
-/* Hosts that clip their content keep overflow: hidden. Letting the ring paint outside the padding box
-   (overflow: clip with a clip margin) also let tiles and banners paint over the border at the
-   rounded corners, which thinned and cut them. Their ring sits just inside the edge instead, and the
-   border turns transparent on hover so only one line shows. */
-/* stylelint-disable-next-line no-descending-specificity -- refines the ring rule above for these hosts */
-html.hc-theming :is(
+html.hc-theming[data-hc-theme] :is(
     nav[class*="guilds_"],
     [data-window-chrome] > [class*="leading_"],
+    [data-window-chrome] > [class*="trailing_"],
     .sidebarList_pog62O,
+    .panels_pog62O,
+    .chatContent_z_gUBg,
+    .chat_z_gUBg > .subtitleContainer_z_gUBg,
     .container_86es0b,
     .peopleColumn_zrUwGA,
     .nowPlayingColumn_zrUwGA,
     .callContainer_hbKzX7,
     .messagesWrapper_8AE1Qq,
+    .channelTextArea_z_gUBg,
+    .wrapper_ST_Y69,
+    .container_dvN-MP,
+    .container__89463 > .toolbar__89463,
+    .container__89463 > .contentContainer__89463,
+    .content_z_gUBg > .membersWrap_86es0b,
+    .container_zrUwGA > .container_ybUK7Z,
+    .container_nMe-a6 > .container_ybUK7Z,
+    .homeWrapper__0920e > .container_ybUK7Z,
+    .container_FrbQJp > .container_ybUK7Z,
+    .container_UU236g > .container_ybUK7Z,
+    .headerBar_tSk_LE,
+    .container_nMe-a6 > .content_z_gUBg,
+    .shop_Mqg79R,
+    .searchResultsWrap_QHVbp3,
+    .container_BkGrJJ,
+    .chat_UU236g,
+    .container_a592e1,
+    .callContainer_DwQMm_,
+    .chat_z_gUBg > .header_zjGJlN,
+    .chat_z_gUBg > .header_xTP3zy,
+    .chat_z_gUBg > .container_xTP3zy,
     .outer_P1YEjQ
-)::after {
-    z-index: 3;
-    inset: 0;
+) {
+    --hc-edge-hover: 0;
+    --hc-edge-a: color-mix(in srgb, var(--hc-edge-rest, var(--hc-ring-rest)) calc((1 - var(--hc-edge-hover)) * 100%), var(--hc-grad-a));
+    --hc-edge-b: color-mix(in srgb, var(--hc-edge-rest, var(--hc-ring-rest)) calc((1 - var(--hc-edge-hover)) * 100%), var(--hc-edge-end, var(--hc-grad-b)));
+
+    border-color: transparent !important;
+    background-image: linear-gradient(var(--hc-edge-angle, 135deg), var(--hc-edge-a), var(--hc-edge-b)), none !important;
+    background-origin: border-box, padding-box !important;
+    background-clip: border-area, padding-box !important;
+    transition: --hc-edge-hover 0.18s ease-out;
 }
 
-html.hc-theming :is(
+html.hc-theming[data-hc-theme] :is(
+    nav[class*="guilds_"],
+    [data-window-chrome] > [class*="leading_"],
+    [data-window-chrome] > [class*="trailing_"],
     .sidebarList_pog62O,
+    .panels_pog62O,
+    .chatContent_z_gUBg,
+    .chat_z_gUBg > .subtitleContainer_z_gUBg,
     .container_86es0b,
     .peopleColumn_zrUwGA,
     .nowPlayingColumn_zrUwGA,
     .callContainer_hbKzX7,
     .messagesWrapper_8AE1Qq,
+    .channelTextArea_z_gUBg,
+    .wrapper_ST_Y69,
+    .container_dvN-MP,
+    .container__89463 > .toolbar__89463,
+    .container__89463 > .contentContainer__89463,
+    .content_z_gUBg > .membersWrap_86es0b,
+    .container_zrUwGA > .container_ybUK7Z,
+    .container_nMe-a6 > .container_ybUK7Z,
+    .homeWrapper__0920e > .container_ybUK7Z,
+    .container_FrbQJp > .container_ybUK7Z,
+    .container_UU236g > .container_ybUK7Z,
+    .headerBar_tSk_LE,
+    .container_nMe-a6 > .content_z_gUBg,
+    .shop_Mqg79R,
+    .searchResultsWrap_QHVbp3,
+    .container_BkGrJJ,
+    .chat_UU236g,
+    .container_a592e1,
+    .callContainer_DwQMm_,
+    .chat_z_gUBg > .header_zjGJlN,
+    .chat_z_gUBg > .header_xTP3zy,
+    .chat_z_gUBg > .container_xTP3zy,
     .outer_P1YEjQ
 ):hover,
-html.hc-theming[data-hc-rail-hover] :is([data-window-chrome] > [class*="leading_"], nav[class*="guilds_"]) {
-    border-color: transparent !important;
+html.hc-theming[data-hc-theme][data-hc-rail-hover] :is([data-window-chrome] > [class*="leading_"], nav[class*="guilds_"]) {
+    --hc-edge-hover: 1;
 }
 
-html.hc-theming .outer_P1YEjQ {
-    --hc-ring-w: 1px;
+html.hc-theming[data-hc-theme] :where(
+    nav[class*="guilds_"],
+    [data-window-chrome] > [class*="leading_"],
+    [data-window-chrome] > [class*="trailing_"],
+    .sidebarList_pog62O,
+    .panels_pog62O,
+    .chatContent_z_gUBg,
+    .chat_z_gUBg > .subtitleContainer_z_gUBg,
+    .container_86es0b,
+    .peopleColumn_zrUwGA,
+    .nowPlayingColumn_zrUwGA,
+    .callContainer_hbKzX7,
+    .messagesWrapper_8AE1Qq,
+    .channelTextArea_z_gUBg,
+    .wrapper_ST_Y69,
+    .container_dvN-MP,
+    .container__89463 > .toolbar__89463,
+    .container__89463 > .contentContainer__89463,
+    .content_z_gUBg > .membersWrap_86es0b,
+    .container_zrUwGA > .container_ybUK7Z,
+    .container_nMe-a6 > .container_ybUK7Z,
+    .homeWrapper__0920e > .container_ybUK7Z,
+    .container_FrbQJp > .container_ybUK7Z,
+    .container_UU236g > .container_ybUK7Z,
+    .headerBar_tSk_LE,
+    .container_nMe-a6 > .content_z_gUBg,
+    .shop_Mqg79R,
+    .searchResultsWrap_QHVbp3,
+    .container_BkGrJJ,
+    .chat_UU236g,
+    .container_a592e1,
+    .callContainer_DwQMm_,
+    .chat_z_gUBg > .header_zjGJlN,
+    .chat_z_gUBg > .header_xTP3zy,
+    .chat_z_gUBg > .container_xTP3zy,
+    .outer_P1YEjQ
+)::after {
+    display: none !important;
 }
 
-/* MochaCord strips the call container's fill, so its 2px border sat over nothing. */
+html.hc-theming[data-hc-theme] [data-window-chrome] > [class*="leading_"] {
+    --hc-edge-end: var(--hc-grad-a);
+}
+
+html.hc-theming[data-hc-theme] nav[class*="guilds_"] {
+    --hc-edge-angle: 180deg;
+}
+
 html.hc-theming .callContainer_hbKzX7 {
     background-color: var(--hc-panel-bg) !important;
-}
-
-/* The user panel and the call dock keep MochaCord's 2px border but take the accent edge the Voice & Video
-   card controls use (30%). The theme's 20% lavender nearly vanished over the dark fills, most at the bottom
-   status rows. :not(:hover) leaves the hover state alone, where the border goes transparent and the
-   gradient ring draws the edge. */
-html.hc-theming :is(section[class*="panels_"], .callContainer_hbKzX7):not(:hover) {
-    border-color: rgb(var(--hc-accent-rgb) / 30%) !important;
-}
-
-/* The rest of MochaCord's bordered panels (page title bars such as Quests and Friends, Shop, forums, discovery,
-   server settings pages) get the same gradient ring instead of the theme's one-colour hover border. The ring sits
-   inside the edge and the border turns transparent on hover, which works whether or not the panel clips. The
-   :where position keeps Discord's own sticky or absolute positioning. */
-:where(html.hc-theming) :where(
-    .container__89463 > .toolbar__89463,
-    .container__89463 > .contentContainer__89463,
-    .content_z_gUBg > .membersWrap_86es0b,
-    .container_zrUwGA > .container_ybUK7Z,
-    .container_nMe-a6 > .container_ybUK7Z,
-    .homeWrapper__0920e > .container_ybUK7Z,
-    .container_FrbQJp > .container_ybUK7Z,
-    .container_UU236g > .container_ybUK7Z,
-    .headerBar_tSk_LE,
-    .container_nMe-a6 > .content_z_gUBg,
-    .shop_Mqg79R,
-    .searchResultsWrap_QHVbp3,
-    .container_BkGrJJ,
-    .chat_UU236g,
-    .container_a592e1,
-    .callContainer_DwQMm_,
-    .chat_z_gUBg > .header_zjGJlN,
-    .chat_z_gUBg > .header_xTP3zy,
-    .chat_z_gUBg > .container_xTP3zy
-) {
-    position: relative;
-}
-
-/* stylelint-disable-next-line no-descending-specificity -- a separate host list from the ring above */
-html.hc-theming :where(
-    .container__89463 > .toolbar__89463,
-    .container__89463 > .contentContainer__89463,
-    .content_z_gUBg > .membersWrap_86es0b,
-    .container_zrUwGA > .container_ybUK7Z,
-    .container_nMe-a6 > .container_ybUK7Z,
-    .homeWrapper__0920e > .container_ybUK7Z,
-    .container_FrbQJp > .container_ybUK7Z,
-    .container_UU236g > .container_ybUK7Z,
-    .headerBar_tSk_LE,
-    .container_nMe-a6 > .content_z_gUBg,
-    .shop_Mqg79R,
-    .searchResultsWrap_QHVbp3,
-    .container_BkGrJJ,
-    .chat_UU236g,
-    .container_a592e1,
-    .callContainer_DwQMm_,
-    .chat_z_gUBg > .header_zjGJlN,
-    .chat_z_gUBg > .header_xTP3zy,
-    .chat_z_gUBg > .container_xTP3zy
-)::after {
-    position: absolute;
-    z-index: 3;
-    padding: var(--hc-ring-w);
-    border-radius: inherit;
-    background: var(--hc-gradient);
-    content: "";
-    inset: 0;
-    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    mask-composite: exclude;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.16s ease-out;
-}
-
-html.hc-theming :is(
-    .container__89463 > .toolbar__89463,
-    .container__89463 > .contentContainer__89463,
-    .content_z_gUBg > .membersWrap_86es0b,
-    .container_zrUwGA > .container_ybUK7Z,
-    .container_nMe-a6 > .container_ybUK7Z,
-    .homeWrapper__0920e > .container_ybUK7Z,
-    .container_FrbQJp > .container_ybUK7Z,
-    .container_UU236g > .container_ybUK7Z,
-    .headerBar_tSk_LE,
-    .container_nMe-a6 > .content_z_gUBg,
-    .shop_Mqg79R,
-    .searchResultsWrap_QHVbp3,
-    .container_BkGrJJ,
-    .chat_UU236g,
-    .container_a592e1,
-    .callContainer_DwQMm_,
-    .chat_z_gUBg > .header_zjGJlN,
-    .chat_z_gUBg > .header_xTP3zy,
-    .chat_z_gUBg > .container_xTP3zy
-):hover {
-    border-color: transparent !important;
-}
-
-html.hc-theming :is(
-    .container__89463 > .toolbar__89463,
-    .container__89463 > .contentContainer__89463,
-    .content_z_gUBg > .membersWrap_86es0b,
-    .container_zrUwGA > .container_ybUK7Z,
-    .container_nMe-a6 > .container_ybUK7Z,
-    .homeWrapper__0920e > .container_ybUK7Z,
-    .container_FrbQJp > .container_ybUK7Z,
-    .container_UU236g > .container_ybUK7Z,
-    .headerBar_tSk_LE,
-    .container_nMe-a6 > .content_z_gUBg,
-    .shop_Mqg79R,
-    .searchResultsWrap_QHVbp3,
-    .container_BkGrJJ,
-    .chat_UU236g,
-    .container_a592e1,
-    .callContainer_DwQMm_,
-    .chat_z_gUBg > .header_zjGJlN,
-    .chat_z_gUBg > .header_xTP3zy,
-    .chat_z_gUBg > .container_xTP3zy
-):hover::after {
-    opacity: 1;
-}
-
-/* With a separated chat bar the chat column has no border; its message box and composer carry the ring. */
-@container body style(--custom-chatbar: separated) {
-    html.hc-theming .chatContent_z_gUBg::after {
-        display: none;
-    }
-}
-
-/* Rail and cap read as one panel: the cap ring has no bottom edge, the rail ring no top edge. */
-html.hc-theming [data-window-chrome] > [class*="leading_"]::after {
-    padding-bottom: 0;
-    background: var(--hc-grad-a);
-}
-
-html.hc-theming nav[class*="guilds_"]::after {
-    padding-top: 0;
-    background: linear-gradient(180deg, var(--hc-grad-a), var(--hc-grad-b));
-}
-
-html.hc-theming[data-hc-rail-hover] :is([data-window-chrome] > [class*="leading_"], nav[class*="guilds_"])::after {
-    opacity: 1;
 }
 
 /* Profiles: the inner card's corners must follow the outer border, or they cover it and the ring thins there. */
@@ -1309,9 +1253,7 @@ html.hc-theming nav[class*="guilds_"] [class*="folderButton_"] > .wrapper_hqZPsU
     inset: -2.4px;
 }
 
-/* The home logo fills its bubble edge to edge like a server icon (MochaCord shrinks it to 31px): the plate is
-   about 90% of the PNG, so the image is 112% and the bubble clips it. The rail ring above already frames it.
-   The bubble has the 12px corner of every other rail tile, so it sits concentric with the rail ring. */
+/* Keep the logo's blue edge visible in MochaCord and centre it within the rail tile. */
 html.hc-theming #app-mount nav[class*="guilds_"] [data-list-item-id="guildsnav___home"] > [class*="childWrapper_"] {
     position: relative;
     overflow: hidden;
@@ -1320,9 +1262,9 @@ html.hc-theming #app-mount nav[class*="guilds_"] [data-list-item-id="guildsnav__
 
 html.hc-theming #app-mount nav[class*="guilds_"] [data-list-item-id="guildsnav___home"] > [class*="childWrapper_"] > img {
     flex: none;
-    width: 112%;
-    height: 112%;
-    object-fit: cover;
+    width: var(--hc-home-size, 112%);
+    height: var(--hc-home-size, 112%);
+    object-fit: var(--hc-home-fit, cover);
 }
 
 /* A quiet accent edge drawn over the home logo like the other tiles' tinted edge. */
@@ -1330,7 +1272,7 @@ html.hc-theming #app-mount nav[class*="guilds_"] [data-list-item-id="guildsnav__
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 35%);
+    box-shadow: var(--hc-home-shadow, inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 35%));
     content: "";
     pointer-events: none;
 }
@@ -1358,9 +1300,8 @@ html.hc-theming #vc-indicators-indicator-items {
     transition: background-color 0.16s ease-out, color 0.16s ease-out;
 }
 
-/* Friend and server counter: one quiet accent edge (2.13.6). */
 html.hc-theming #vc-indicators-indicator-items {
-    box-shadow: inset 0 0 0 1px rgb(var(--hc-accent-rgb) / 35%);
+    box-shadow: none !important;
 }
 
 html.hc-theming nav[class*="guilds_"] [class*="circleIconButton_"]:is(:hover, [class*="selected_"]),
@@ -2331,11 +2272,21 @@ html.hc-theming .bioTextAreaContainer_agtm70 > .bioTextArea_agtm70 {
     border-radius: 7px;
 }
 
-/* Open server folder: the tint sits exactly behind the icon column, centred. */
+/* Open server folder: the backing is 4px wider than the icons on every side, so icons and their
+   voice badges sit inside it. The icon tile radius is 12px, so the backing is 12 + 4. */
 html.hc-theming nav[class*="guilds_"] .folderGroupBackground_RTMSuZ {
-    inset-inline-start: calc(50% - var(--guildbar-avatar-size, 40px) / 2);
-    width: var(--guildbar-avatar-size, 40px);
-    border-radius: 12px;
+    inset-inline-start: calc(50% - var(--guildbar-avatar-size, 40px) / 2 - 4px);
+    width: calc(var(--guildbar-avatar-size, 40px) + 8px);
+    top: -4px;
+    bottom: -4px;
+    height: auto;
+    border-radius: 16px;
+}
+
+/* Discord leaves 4px under the open folder's header and 8px between servers. Moving the spare 4px
+   from the bottom to the top gives one even 8px pitch down the whole rail. The list keeps its height. */
+html.hc-theming nav[class*="guilds_"] .folderGuildsList_RTMSuZ > :first-child {
+    margin-top: 8px !important;
 }
 
 
@@ -2444,4 +2395,168 @@ html.hc-theming .unicodeShortcut_ufks4w {
     backdrop-filter: var(--hc-glass-blur);
     border-top: 1px solid var(--hc-panel-border);
     border-bottom-left-radius: inherit;
+}
+
+/* Pass yapfast (2.13.14): profile card and member list ideas borrowed from yapfast. Tokens only, so every
+   HaloCord variant keeps its own accent. */
+
+/* Profile card: an accent edge and a soft accent glow, like yapfast's lit card frame, on profiles without a Nitro
+   theme of their own. Hover still swaps the edge for the gradient ring. */
+html.hc-theming[data-hc-theme] .outer_P1YEjQ:not(.custom-theme-background) {
+    --hc-edge-rest: rgb(var(--hc-accent-rgb) / 35%);
+
+    box-shadow: 0 0 24px -6px rgb(var(--hc-accent-rgb) / 30%), 0 12px 24px rgb(0 0 0 / 24%) !important;
+}
+
+/* Profile role chips: round pills with the quiet ring, the accent edge on hover. */
+html.hc-theming[data-hc-theme] .role_xL50-d {
+    padding-inline: 8px 10px;
+    border: 1px solid var(--hc-ring-rest) !important;
+    border-radius: 999px !important;
+    background: var(--hc-row-bg);
+    transition: border-color 0.16s ease-out;
+}
+
+html.hc-theming[data-hc-theme] .role_xL50-d:hover {
+    border-color: rgb(var(--hc-accent-rgb) / 55%) !important;
+}
+
+/* Member list: each row is a rounded pill, like yapfast's, and the activity line under the name reads clearly. */
+html.hc-theming[data-hc-theme] .member_Iy0c7A > .childContainer_J1Adu_ {
+    border-radius: 10px;
+}
+
+html.hc-theming[data-hc-theme] .member_Iy0c7A .subText_J1Adu_ {
+    margin-top: 0;
+    color: var(--hc-text-muted);
+}
+
+/* Profile tabs on the full profile: the dock lines up with the cards under it on both sides and no longer sinks into
+   the panel below, and the tabs share its width so no empty strip is left at the right end. */
+html.hc-theming[data-hc-theme] .tabListScroller_y4ZEM5 {
+    margin: -4px 16px 0 32px !important;
+}
+
+html.hc-theming[data-hc-theme] .tabListScroller_y4ZEM5 > .top_6zZYhF {
+    width: 100%;
+}
+
+html.hc-theming[data-hc-theme] .tabBarItem_y4ZEM5 {
+    flex: 1 1 auto;
+    justify-content: center;
+    text-align: center;
+}
+
+/* Keep call content within the native rounded border. */
+html.hc-theming[data-hc-theme] .callContainer_hbKzX7 {
+    border: var(--hc-ring-w) solid transparent !important;
+    padding: 0;
+    border-radius: var(--radius-lg, 16px) !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+}
+
+/* Discord slides the idle header above the rounded frame. Keep it in place and visible. */
+html.hc-theming[data-hc-theme] .callContainer_hbKzX7 .topControls_rTsZa_ {
+    transform: none !important;
+    opacity: 1 !important;
+}
+
+/* The chat title's fill and hover edge must share the same clipping boundary. The dock is a fixed
+   header height, but its edge and ring padding eat 9px of it and Discord's title row keeps 8px above
+   and below, so the bottom of the row (Follow, the topic, the search box) was cut off. The row now
+   sits centred with a small even gap, and the dock grows instead of clipping if the row gets taller. */
+html.hc-theming[data-hc-theme] .chat_z_gUBg > .subtitleContainer_z_gUBg {
+    overflow: hidden !important;
+    height: auto !important;
+    min-height: var(--custom-channel-header-height, 56px);
+    border-radius: var(--radius-lg, 16px) !important;
+}
+
+html.hc-theming[data-hc-theme] .chat_z_gUBg > .subtitleContainer_z_gUBg > section {
+    flex: 1 0 auto;
+    justify-content: center;
+    padding-block: 3px !important;
+    border-radius: inherit !important;
+}
+
+/* 2.13.14: the small floating bubbles share one glass and one edge. The custom status bubble, its pen and bin
+   bar, and the call's chat preview (the "Click to see attachment" pill under the chat button) each get a dense
+   Mocha fill with real blur behind it, and the docks' edge path: a native 2px border kept transparent while the
+   border-area gradient fades from the rest colour into blue to mauve on hover, so the curve never changes. */
+html.hc-theming[data-hc-theme] {
+    --hc-bubble-tint: color-mix(in srgb, var(--hc-flyout-bg) 96%, transparent);
+    --hc-bubble-fill: linear-gradient(180deg, rgb(255 255 255 / 4%), transparent 50%), linear-gradient(var(--hc-bubble-tint), var(--hc-bubble-tint));
+    --hc-bubble-blur: blur(24px) saturate(150%) var(--hc-backdrop-solid);
+}
+
+html.hc-theming[data-hc-theme] :is(.outer_rmCN9_, .bar_UIX3Vg, .messageContentWrapper_YtPzLx) {
+    --hc-edge-hover: 0;
+    --hc-bubble-a: color-mix(in srgb, var(--hc-ring-rest) calc((1 - var(--hc-edge-hover)) * 100%), var(--hc-grad-a));
+    --hc-bubble-b: color-mix(in srgb, var(--hc-ring-rest) calc((1 - var(--hc-edge-hover)) * 100%), var(--hc-grad-b));
+
+    border: 2px solid transparent !important;
+    background-color: transparent !important;
+    background-image: linear-gradient(135deg, var(--hc-bubble-a), var(--hc-bubble-b)), var(--hc-bubble-fill) !important;
+    background-origin: border-box, padding-box, padding-box !important;
+    background-clip: border-area, padding-box, padding-box !important;
+    backdrop-filter: var(--hc-bubble-blur) !important;
+    box-shadow: 0 4px 14px rgb(0 0 0 / 35%);
+    transition: --hc-edge-hover 0.18s ease-out;
+}
+
+html.hc-theming[data-hc-theme] :is(.editable_rmCN9_:hover > .outer_rmCN9_, .bar_UIX3Vg:hover, .toast_YtPzLx:hover .messageContentWrapper_YtPzLx) {
+    --hc-edge-hover: 1;
+}
+
+/* The status text sits 2px further in now that the bubble has a real edge; the dots keep the bubble's solid fill. */
+html.hc-theming[data-hc-theme] .outer_rmCN9_::before,
+html.hc-theming[data-hc-theme] .outer_rmCN9_::after {
+    background: linear-gradient(rgb(255 255 255 / 4%), rgb(255 255 255 / 4%)), var(--hc-flyout-bg);
+    box-shadow: 0 0 0 2px var(--hc-ring-rest);
+}
+
+/* Pen and bin: one pill, two equal round buttons with the icons centred, and the same hover tint as the menus. */
+html.hc-theming[data-hc-theme] .bar_UIX3Vg {
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 999px !important;
+}
+
+html.hc-theming[data-hc-theme] .bar_UIX3Vg .button_UIX3Vg.button_UIX3Vg {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border-radius: 999px !important;
+    background: transparent;
+}
+
+html.hc-theming[data-hc-theme] .bar_UIX3Vg .button_UIX3Vg .icon_UIX3Vg {
+    display: block;
+    width: 16px;
+    height: 16px;
+    color: var(--hc-text-muted, #bac2de);
+    fill: currentcolor;
+}
+
+html.hc-theming[data-hc-theme] .bar_UIX3Vg .button_UIX3Vg.button_UIX3Vg:hover {
+    background: linear-gradient(135deg, rgb(var(--hc-accent-rgb) / 22%), color-mix(in srgb, var(--hc-grad-b) 22%, transparent));
+}
+
+html.hc-theming[data-hc-theme] .bar_UIX3Vg .button_UIX3Vg:hover .icon_UIX3Vg {
+    color: var(--hc-accent);
+    fill: currentcolor;
+}
+
+/* Call chat preview: the pill and the author's avatar both get an edge, and the text keeps Mocha's main colour. */
+html.hc-theming[data-hc-theme] .messageContentWrapper_YtPzLx {
+    color: var(--text-default, #cdd6f4);
+    border-radius: 16px !important;
+}
+
+html.hc-theming[data-hc-theme] .avatar_YtPzLx {
+    box-shadow: 0 0 0 2px var(--hc-ring-rest), 0 4px 14px rgb(0 0 0 / 35%);
 }
