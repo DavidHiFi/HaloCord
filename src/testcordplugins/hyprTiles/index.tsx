@@ -204,13 +204,13 @@ export default definePlugin({
             }
         },
         {
-            // Search autocomplete popout: enable autoInvert so the popout flips
+            // Search autocomplete popout: enable nudgeAlignIntoViewport so the popout flips
             // above the search bar when the tile is near the viewport bottom,
             // preventing it from covering the bar in small bottom-corner tiles.
-            find: /renderPopout:\i,position:"bottom",animation:\i\.\i\.Animation\.NONE,shouldShow:\i,autoInvert:!1/,
+            find: /renderPopout:\i,position:"bottom",shouldShow:\i,nudgeAlignIntoViewport:!1/,
             replacement: {
-                match: /shouldShow:(\i),autoInvert:!1/,
-                replace: "shouldShow:$1,autoInvert:!0"
+                match: /shouldShow:(\i),nudgeAlignIntoViewport:!1/,
+                replace: "shouldShow:$1,nudgeAlignIntoViewport:!0"
             }
         },
         {

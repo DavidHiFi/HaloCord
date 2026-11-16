@@ -265,7 +265,7 @@ export default definePlugin({
                 },
                 {
                     // QUESTS_FETCH_QUEST_TO_DELIVER_BEGIN
-                    match: /(?=let \i=Date.now\(\),\i=\i.recordQuestRequestAttempt.{0,50}QUESTS_FETCH_QUEST_TO_DELIVER_BEGIN)/,
+                    match: /(?=let \i=arguments\.length>2&&void 0!==arguments\[2\]&&arguments\[2\],\i=Date\.now\(\),\i=\i\.recordQuestRequestAttempt\("\/quests\/decision",\i,\i\).{0,50}QUESTS_FETCH_QUEST_TO_DELIVER_BEGIN)/,
                     replace: "return;"
                 }
             ]

@@ -135,7 +135,7 @@ export default definePlugin({
         },
         {
             // Gradient roles in member list
-            find: '="left",className:',
+            find: ".roleStyle);",
             predicate: () => !settings.store.excludeMemberList,
             replacement: {
                 match: /,animateGradient:/,

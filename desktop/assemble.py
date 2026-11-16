@@ -120,16 +120,31 @@ m = m.replace(a, a + 'const hcGuard=require("./hc-guard.js");process.env.DVX_NO_
 # old "Choose what to share" window only opens when nothing was picked. Chromium gets video only;
 # the sound comes from shell/shareaudio.js, which leaves HaloCord's own playback out.
 # Three picker calls (two share handlers, one ac:pick-screenshare-source IPC); two hand video to Chromium.
-for a, b, k in [("const e=await dvxPickSource(", "const e=await hcPickShare(", 3), ("t(e?{video:e}:{})", "hcShareSource=e,t(e?{video:e}:{})", 2)]:
+# The picked source goes to Chromium as {id, name} from the picker's own listing, with no second
+# listing that can stall on a slow PC. Every step writes a "[share]" line to halocord.log, and the
+# old picker opens centred on HaloCord's window (it is modal, so off on another screen it looked
+# like HaloCord froze).
+for a, b, k in [("const e=await dvxPickSource(", "const e=await hcPickShare(", 3), ("t(e?{video:e}:{})", "hcShareSource=e,t(e?{video:e}:{})", 2),
+                ('r.once("ready-to-show",()=>r.show())', 'r.once("ready-to-show",()=>{hcCenterOnWin(r);r.show();r.focus()})', 1)]:
     assert m.count(a) == k, a
     m = m.replace(a, b)
-m += ('\nlet hcShareSel=null,hcShareSource=null;'
-      'async function hcPickShare(o){const p=hcShareSel;hcShareSel=null;if(p&&Date.now()-p.t<2e4)try{'
-      'const s=(await desktopCapturer.getSources({types:["screen","window"],thumbnailSize:{width:0,height:0}})).find(x=>x.id===p.id);'
-      'if(s&&!(o&&o.windowsOnly&&!s.id.startsWith("window:")))return s}catch(e){}return dvxPickSource(o)}'
+m += ('\nlet hcShareSel=null,hcShareSource=null,hcShareNames=new Map,hcShareCount="";'
+      'const hcShareLog=(...a)=>console.log("[share]",...a);'
+      'function hcSources(o,ms){let k;return Promise.race([desktopCapturer.getSources(o),new Promise((_,j)=>{k=setTimeout(()=>j(new Error("listing screens and windows took over "+ms/1e3+" s")),ms)})]).finally(()=>clearTimeout(k))}'
+      'function hcCenterOnWin(r){try{if(!win||win.isDestroyed())return;const b=win.getBounds(),w=require("electron").screen.getDisplayMatching(b).workArea,[W,H]=r.getSize();'
+      'r.setPosition(Math.round(Math.min(Math.max(b.x+(b.width-W)/2,w.x),w.x+w.width-W)),Math.round(Math.min(Math.max(b.y+(b.height-H)/2,w.y),w.y+w.height-H)))}catch(e){}}'
+      'async function hcPickShare(o){const p=hcShareSel;hcShareSel=null;'
+      'if(!p||Date.now()-p.t>=2e4)hcShareLog("no source picked in the share picker, opening the old picker");'
+      'else if(o&&o.windowsOnly&&!p.id.startsWith("window:"))hcShareLog("a screen was picked where only a window can be shared");'
+      'else{let n=hcShareNames.get(p.id);if(!n)try{const s=(await hcSources({types:["screen","window"],thumbnailSize:{width:0,height:0}},8e3)).find(x=>x.id===p.id);n=s&&s.name}catch(e){hcShareLog("lookup failed:",e.message)}'
+      'if(n){hcShareLog("starting",p.id.split(":")[0]);return{id:p.id,name:n}}hcShareLog("the picked source is gone")}'
+      'return dvxPickSource(o)}'
       'ipcMain.handle("halocord:share-sources",async()=>{const own=BrowserWindow.getAllWindows().map(w=>w.getMediaSourceId());'
-      'return(await desktopCapturer.getSources({types:["window","screen"],thumbnailSize:{width:384,height:216},fetchWindowIcons:!0}))'
-      '.filter(s=>s.name&&!own.includes(s.id)).map(s=>({id:s.id,name:s.name,thumb:s.thumbnail.toDataURL(),'
+      'let l;try{l=(await hcSources({types:["window","screen"],thumbnailSize:{width:384,height:216},fetchWindowIcons:!0},15e3)).filter(s=>s.name&&!own.includes(s.id))}'
+      'catch(e){hcShareLog("listing failed:",e.message);throw e}'
+      'hcShareNames=new Map(l.map(s=>[s.id,s.name]));const c=l.filter(s=>s.id.startsWith("screen:")).length+" screens, "+l.filter(s=>s.id.startsWith("window:")).length+" windows";'
+      'if(c!==hcShareCount)hcShareLog("picker lists",hcShareCount=c);'
+      'return l.map(s=>({id:s.id,name:s.name,thumb:s.thumbnail.toDataURL(),'
       'icon:s.appIcon&&!s.appIcon.isEmpty()?s.appIcon.toDataURL():void 0}))});'
       'ipcMain.handle("halocord:share-select",(e,t)=>{hcShareSel={id:String(t),t:Date.now()}});'
       'ipcMain.handle("halocord:share-audio-start",e=>require("./shareaudio.js").start(hcShareSource,e.sender));'

@@ -12,7 +12,7 @@ import type { KeyboardEvent } from "react";
 
 import { loadSaved, modeFor, modes, resolutions, save, type Saved, type Size, sizeFor } from "../quality";
 import { type PickerTab, pickerTabs, streamEnhancerSettings } from "../settings";
-import { setPendingShare, type ShareChoice } from "../shareCapture";
+import { setPendingShare, type ShareChoice, shareFailed, watchShareStart } from "../shareCapture";
 import { openStreamSettings, ToggleRow, useAudioInputs } from "./StreamSettings";
 
 const cl = classNameFactory("vc-stream-enhancer-share-");
@@ -32,6 +32,7 @@ const asTab = (v: unknown): PickerTab => pickerTabs.some(t => t.value === v) ? v
 function SharePicker({ modalProps, onStart }: { modalProps: RenderModalProps; onStart: (choice: ShareChoice, size: Size, fps: number, sound: boolean) => void; }) {
     const [tab, setTab] = useState<PickerTab>(() => asTab(streamEnhancerSettings.store.pickerTab));
     const [sources, setSources] = useState<Source[] | null>(null);
+    const [listError, setListError] = useState<string | null>(null);
     const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
     const inputs = useAudioInputs();
     const [picked, setPicked] = useState<string | null>(null);
@@ -44,7 +45,9 @@ function SharePicker({ modalProps, onStart }: { modalProps: RenderModalProps; on
 
     useEffect(() => {
         let live = true;
-        const load = () => Native()?.getShareSources?.().then(s => live && setSources(s ?? [])).catch(() => live && setSources([]));
+        const load = () => Native()?.getShareSources?.()
+            .then(s => { if (live) { setSources(s ?? []); setListError(null); } })
+            .catch(e => { if (live) { setSources(s => s ?? []); setListError(String(e?.message ?? e).replace(/^Error invoking remote method '[^']+': (Error: )?/, "")); } });
         load();
         const timer = setInterval(load, 3000);
         navigator.mediaDevices.enumerateDevices()
@@ -111,7 +114,7 @@ function SharePicker({ modalProps, onStart }: { modalProps: RenderModalProps; on
             </div>
             <div className={cl("grid")} id={cl("panel")} role="tabpanel" aria-labelledby={tabId(tab)}>
                 {sources == null && tab !== "devices" && <div className={cl("empty")}>Loading…</div>}
-                {(sources != null || tab === "devices") && !tiles.length && <div className={cl("empty")}>{tab === "devices" ? "No cameras or capture devices found." : "Nothing to share here."}</div>}
+                {(sources != null || tab === "devices") && !tiles.length && <div className={cl("empty")}>{tab === "devices" ? "No cameras or capture devices found." : listError ? `Windows didn't list your screens: ${listError}` : "Nothing to share here."}</div>}
                 {tiles.map(t => (
                     <button key={t.id} className={cl("tile", picked === t.id && "tile-on")} onClick={() => shareInstant ? go(t.id) : setPicked(t.id)}>
                         <div className={cl("thumb")}>{t.thumb ? <img src={t.thumb} alt="" /> : <span className={cl("cam")}>🎥</span>}</div>
@@ -137,8 +140,13 @@ function SharePicker({ modalProps, onStart }: { modalProps: RenderModalProps; on
 // The web build starts a stream straight from the Share Screen button, so HaloCord opens a picker
 // laid out like the desktop app's: what to share, quality, sound, then Go Live.
 export const openSharePicker = (start: (size: Size, sound: boolean, fps: number) => void) => {
-    openModal(props => <SharePicker modalProps={props} onStart={(choice, size, fps, sound) => {
-        setPendingShare(choice);
-        start(size, sound, fps);
+    openModal(props => <SharePicker modalProps={props} onStart={async (choice, size, fps, sound) => {
+        await setPendingShare(choice);
+        watchShareStart();
+        try {
+            start(size, sound, fps);
+        } catch (e) {
+            shareFailed(e);
+        }
     }} />);
 };

@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { showNotification } from "@api/Notifications";
+
 import { getConfiguredStreamFps } from "./settings";
 
 // Carries the share picker's choice into Discord's getDisplayMedia call and gives the stream its
@@ -26,10 +28,33 @@ const Native = () => (window as { HaloCordNative?: NativeShare; }).HaloCordNativ
 let pending: ShareChoice | null = null;
 let pendingAt = 0;
 
-export const setPendingShare = (choice: ShareChoice) => {
+// Resolves once the shell holds the pick, so Discord's capture request can't overtake it and open
+// the old picker instead. Capped at 2 s so a stuck shell still lets the share go ahead.
+export const setPendingShare = async (choice: ShareChoice) => {
     pending = choice;
     pendingAt = Date.now();
-    if (choice.kind === "desktop") void Native()?.selectShareSource?.(choice.id);
+    const select = choice.kind === "desktop" ? Native()?.selectShareSource?.(choice.id) : undefined;
+    if (select) await Promise.race([select.catch(() => { }), new Promise(r => setTimeout(r, 2000))]);
+};
+
+// Discord drops a failed capture without a word, which looked like "nothing happens". Each failure
+// now shows a notification and writes a page error to halocord.log with the reason.
+export const shareFailed = (why: unknown) => {
+    const e = why as { name?: string; message?: string; };
+    const reason = e?.name === "NotAllowedError" ? "it was cancelled or Windows blocked the capture"
+        : e?.message || String(why);
+    console.error(`[HaloCord] screen share failed: ${e?.name ? e.name + ": " : ""}${reason}`);
+    showNotification({ title: "Screen share didn't start", body: reason, noPersist: true });
+};
+
+// The capture request should reach getDisplayMedia within moments of Go Live.
+let startTimer: ReturnType<typeof setTimeout> | null = null;
+export const watchShareStart = () => {
+    if (startTimer) clearTimeout(startTimer);
+    startTimer = setTimeout(() => {
+        startTimer = null;
+        shareFailed("Discord never asked for the screen. Leave and rejoin the voice channel, then try again");
+    }, 10000);
 };
 
 // The page's own getUserMedia carries HaloCord's mic chain (noise filter, voice effects), so
@@ -156,11 +181,18 @@ export const installShareCapture = () => {
     const md = navigator.mediaDevices;
     const original = md.getDisplayMedia;
     md.getDisplayMedia = async function (constraints?: MediaStreamConstraints) {
+        if (startTimer) { clearTimeout(startTimer); startTimer = null; }
         const choice = pending && Date.now() - pendingAt < 20000 ? pending : null;
         pending = null;
-        const stream = choice?.kind === "device"
-            ? await cleanMedia().getUserMedia({ video: { ...videoConstraints(constraints), deviceId: { exact: choice.id } }, audio: false })
-            : await original.call(this, constraints);
+        let stream: MediaStream;
+        try {
+            stream = choice?.kind === "device"
+                ? await cleanMedia().getUserMedia({ video: { ...videoConstraints(constraints), deviceId: { exact: choice.id } }, audio: false })
+                : await original.call(this, constraints);
+        } catch (e) {
+            shareFailed(e);
+            throw e;
+        }
         // Chromium's own loopback hears HaloCord too; the shell or the chosen device replaces it.
         for (const t of stream.getAudioTracks()) { stream.removeTrack(t); t.stop(); }
         // Without a hint Chromium encodes a screen as a slideshow: it keeps resolution and drops frames under load.
