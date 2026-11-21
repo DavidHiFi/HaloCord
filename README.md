@@ -20,6 +20,9 @@ Stereo voice up to 96 kHz, extra mics and speakers with their own pan, voice eff
 
 </div>
 
+> [!IMPORTANT]
+> **HaloCord is retired.** It gets no new features. HaloCord carries on as plugins built into Yapfast, a much lighter Discord client: **[HaloCord for Yapfast](https://github.com/DavidHiFi/HaloCord-Yapfast)**. The downloads below still work.
+
 ## Installation
 
 1. Download `HaloCord-Setup` from the [latest release](https://github.com/DavidHiFi/HaloCord/releases/latest).
