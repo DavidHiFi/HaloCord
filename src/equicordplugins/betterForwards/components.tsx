@@ -23,7 +23,7 @@ const ServerProfileComponent = findComponentByCodeLazy("{guildProfile:", "GUILD_
 const getAttachmentType = findByCodeLazy('"PLAINTEXT_PREVIEW":"OTHER"');
 const formatChannelName = findByCodeLazy("#{intl::NO_ACCESS}", "isObfuscated()");
 const getChannelIcon = findByCodeLazy("textFocused:", "isGameInvitesChannel()");
-const navigateTo = findByCodeLazy('transitionToGuild - Transitioning to');
+const navigateTo = findByCodeLazy("transitionToGuild - Transitioning to");
 const fetchBasicGuild = findByCodeLazy('type:"BASIC_GUILD_FETCH_SUCCESS"');
 const fetchGuildProfile = findByCodeLazy('type:"GUILD_PROFILE_FETCH_SUCCESS"');
 
