@@ -134,7 +134,20 @@ Thank you for starring the repo.
 ## Credits
 
 - **Author:** Myself, [DavidHiFi](https://github.com/DavidHiFi)
-- **Contributors:** [SickoHours](https://github.com/SickoHours) and the AI coding agents Claude Code and OpenHands
+
+<!-- contributors:start -->
+- **Contributors:** [SickoHours](https://github.com/SickoHours) and [DxRx99](https://github.com/DxRx99)
+- **AI coding agents:** [Claude Code](https://github.com/anthropics/claude-code)
+
+<p>
+  <a href="https://github.com/DavidHiFi"><img src="https://github.com/DavidHiFi.png?size=96" width="48" height="48" alt="DavidHiFi" title="DavidHiFi"></a>
+  <a href="https://github.com/SickoHours"><img src="https://github.com/SickoHours.png?size=96" width="48" height="48" alt="SickoHours" title="SickoHours"></a>
+  <a href="https://github.com/DxRx99"><img src="https://github.com/DxRx99.png?size=96" width="48" height="48" alt="DxRx99" title="DxRx99"></a>
+  <a href="https://github.com/anthropics/claude-code"><img src="https://github.com/claude.png?size=96" width="48" height="48" alt="Claude Code" title="Claude Code"></a>
+</p>
+
+<sub>GitHub's contributor list also shows openhands-agent. Our machines had the wrong git name set from late October to November 26, 2026, so some commits by the agents above carry that name. OpenHands did not work on this project.</sub>
+<!-- contributors:end -->
 
 | Who | What |
 |---|---|
@@ -152,7 +165,7 @@ Built on [Electron](https://www.electronjs.org/), running [Discord](https://disc
 
 ## Disclaimers
 
-HaloCord's own changes are written with AI coding agents (Claude Code and OpenHands) working for the repo owner, who directs and tests every build.
+HaloCord's own changes are written with AI coding agents, mainly Claude Code, working for the repo owner, who directs and tests every build.
 
 The [MochaCord Theme](https://github.com/DavidHiFi/MochaCord-Theme) is a separate project. Old links to `MochaCord.css` in this repo forward to it.
 
