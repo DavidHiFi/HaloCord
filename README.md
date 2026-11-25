@@ -156,7 +156,7 @@ Thank you for starring the repo.
 | **[Equicord](https://github.com/Equicord/Equicord) contributors** | The base this repo tracks and the plugins in `src/equicordplugins/`. |
 | **[TestCord](https://codeberg.org/Testcord/TestCord) contributors** | The plugins in `src/testcordplugins/`. |
 | **[Catppuccin](https://github.com/catppuccin/catppuccin)** | The Mocha palette behind the built-in MochaCord theme. |
-| **Sudocord** | The layout of the Updater page header and its status pills. |
+| **Sudocord** ([Ernest1101/Sudocord](https://github.com/Ernest1101/Sudocord)) | The layout of the Updater page header and its status pills. |
 | **[Niels Martignène](https://github.com/Koromix/koffi)** | koffi, which the shell uses to call Windows for the acrylic window. |
 
 Built on [Electron](https://www.electronjs.org/), running [Discord](https://discord.com)'s web app, with [Equicord](https://github.com/Equicord/Equicord), [pnpm](https://pnpm.io/), [koffi](https://koromix.dev/koffi) and [electron-builder](https://www.electron.build/).
